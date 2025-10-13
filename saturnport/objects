@@ -1,0 +1,18 @@
+SRCS = 	$(SRCDIR)/util.cpp \
+		$(SRCDIR)/main.cpp \
+		$(SRCDIR)/systemstub_sdl.cpp \
+		$(SRCDIR)/gfs_wrap.cpp \
+		$(SRCDIR)/video.cpp \
+		$(SRCDIR)/sat_mem_checker.cpp \
+		$(SRCDIR)/cinit.cpp \
+		$(SRCDIR)/pcm.cpp
+
+SYSOBJS = $(SRCDIR)/workarea.o $(SRCDIR)/low.o
+OBJS = $(SRCS:.cpp=.o)
+LIBS = C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a $(SGLLDR)/sega_gfs2.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_per.a \
+$(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a 
+
+#L:\saturn\SBL6\SEGALIB\LIB\vbtelf4
+
+#C:/vbt/saturn/vbtsh9/toolchain/sh-elf/lib/libc.a  $(SGLLDR)/sega_sys.a $(SGLLDR)/sega_pcm.a $(SGLLDR)/sega_snd.a $(SGLLDR)/sega_mem.a $(SGLLDR)/sega_per.a $(SGLLDR)/sega_int.a $(SGLLDR)/cdcrep.a C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a $(SGLLDR)/sega_spr.a
+
