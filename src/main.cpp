@@ -125,7 +125,7 @@ static void handleConfigIni(Game *g, const char *section, const char *name, cons
 		}
 	}
 }
-
+#if 0
 static void readConfigIni(const char *filename, Game *g) {
 	FILE *fp = fopen(filename, "rb");
 	if (fp) {
@@ -164,7 +164,7 @@ static void readConfigIni(const char *filename, Game *g) {
 		fclose(fp);
 	}
 }
-
+#endif
 //int main(int argc, char *argv[]) {
 int ss_main() {
 	char *dataPath = 0;
@@ -255,7 +255,9 @@ int ss_main() {
 	}
 #endif
 	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
+#if 0
 	readConfigIni(_configIni, g);
+#endif
 	if (_runBenchmark) {
 		g->benchmarkCpu();
 	}

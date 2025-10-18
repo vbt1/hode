@@ -15,13 +15,14 @@ static const bool kSeekAbsolutePosition = true;
 static const bool kSeekAbsolutePosition = false;
 #endif
 
+#if 0
 File::File()
 	: _fp(0) {
 }
 
 File::~File() {
 }
-
+#endif
 void File::setFp(FILE *fp) {
 	_fp = fp;
 }
@@ -41,13 +42,13 @@ void File::seek(int pos, int whence) {
 int File::read(uint8_t *ptr, int size) {
 	return fread(ptr, 1, size, _fp);
 }
-
+#if 0
 uint8_t File::readByte() {
 	uint8_t buf;
 	read(&buf, 1);
 	return buf;
 }
-
+#endif
 uint16_t File::readUint16() {
 	uint8_t buf[2];
 	read(buf, 2);

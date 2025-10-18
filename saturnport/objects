@@ -6,6 +6,7 @@ SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/paf.cpp \
 		$(SRCDIR)/game.cpp \
 		$(SRCDIR)/andy.cpp \
+		$(SRCDIR)/monsters.cpp \
 		$(SRCDIR)/level1_rock.cpp \
 		$(SRCDIR)/level2_fort.cpp \
 		$(SRCDIR)/level3_pwr1.cpp \
@@ -16,7 +17,9 @@ SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/level8_lar2.cpp \
 		$(SRCDIR)/level9_dark.cpp \
 		$(SRCDIR)/random.cpp \
+		$(SRCDIR)/fs_posix.cpp \
 		$(SRCDIR)/file.cpp \
+		$(SRCDIR)/fileio.cpp \
 		$(SRCDIR)/resource.cpp \
 		$(SRCDIR)/staticres.cpp \
 		$(SRCDIR)/video.cpp \

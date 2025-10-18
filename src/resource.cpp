@@ -2057,7 +2057,7 @@ void Resource::unloadHodDem() {
 	free(_dem.directionKeyMask);
 	memset(&_dem, 0, sizeof(_dem));
 }
-
+#if 0
 bool Resource::writeSetupCfg(const SetupConfig *config) {
 	FILE *fp = _fs->openSaveFile(_setupCfg, true);
 	if (fp) {
@@ -2078,7 +2078,7 @@ bool Resource::readSetupCfg(SetupConfig *config) {
 	}
 	return false;
 }
-
+#endif
 void Resource::setDefaultsSetupCfg(SetupConfig *config, int num) {
 	assert(num >= 0 && num < 4);
 	memset(config->players[num].progress, 0, 10);

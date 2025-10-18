@@ -2656,8 +2656,8 @@ int Game::mstUpdateTaskMonsterObject1(Task *t) {
 			if ((m->monsterInfos[946] & 2) == 0) {
 				MstWalkNode *walkPath = m->walkNode;
 				int vf = (int32_t)READ_LE_UINT32(m->monsterInfos + 904);
-				int vb = MAX(m->goalPosBounds_x1, walkPath->coords[1][1] + vf);
-				int va = MIN(m->goalPosBounds_x2, walkPath->coords[0][1] - vf);
+				int vb = MAX((int)m->goalPosBounds_x1, (int)walkPath->coords[1][1] + vf);
+				int va = MIN((int)m->goalPosBounds_x2, (int)walkPath->coords[0][1] - vf);
 				const uint32_t indexUnk36 = walkPath->movingBoundsIndex2;
 				const uint32_t indexUnk49 = _res->_mstMovingBoundsIndexData[indexUnk36].indexUnk49;
 				uint8_t _bl = _res->_mstMovingBoundsData[indexUnk49].unk14;
@@ -3878,7 +3878,8 @@ int Game::mstTask_main(Task *t) {
 		case 56: { // 34 - arith_task_var_task_var
 				assert(p[1] < kMaxLocals);
 				assert(p[2] < kMaxLocals);
-				arithOp(p[0] - 47, &t->localVars[p[1]], t->localVars[p[2]]);
+//				arithOp(p[0] - 47, &t->localVars[p[1]], t->localVars[p[2]]);
+				arithOp(p[0] - 47, (int*)&t->localVars[p[1]], t->localVars[p[2]]);
 			}
 			break;
 		case 57:
@@ -3893,7 +3894,7 @@ int Game::mstTask_main(Task *t) {
 		case 66: { // 35 - arith_global_var_task_var
 				assert(p[1] < kMaxVars);
 				assert(p[2] < kMaxLocals);
-				arithOp(p[0] - 57, &_mstVars[p[1]], t->localVars[p[2]]);
+				arithOp(p[0] - 57, (int*)&_mstVars[p[1]], t->localVars[p[2]]);
 				if (p[1] == 31 && _mstVars[31] > 0) {
 					_mstTickDelay = _mstVars[31];
 				}
@@ -3918,7 +3919,7 @@ int Game::mstTask_main(Task *t) {
 				if (m) {
 					assert(p[1] < kMaxLocals);
 					assert(p[2] < kMaxLocals);
-					arithOp(p[0] - 67, &m->localVars[p[1]], t->localVars[p[2]]);
+					arithOp(p[0] - 67, (int*)&m->localVars[p[1]], t->localVars[p[2]]);
 				}
 			}
 			break;
@@ -3941,7 +3942,7 @@ int Game::mstTask_main(Task *t) {
 				if (m) {
 					assert(p[1] < kMaxLocals);
 					assert(p[2] < kMaxLocals);
-					arithOp(p[0] - 77, &t->localVars[p[1]], m->localVars[p[2]]);
+					arithOp(p[0] - 77, (int*)&t->localVars[p[1]], m->localVars[p[2]]);
 				}
 			}
 			break;
@@ -3964,7 +3965,7 @@ int Game::mstTask_main(Task *t) {
 				if (m) {
 					assert(p[1] < kMaxVars);
 					assert(p[2] < kMaxLocals);
-					arithOp(p[0] - 87, &_mstVars[p[1]], m->localVars[p[2]]);
+					arithOp(p[0] - 87, (int*)&_mstVars[p[1]], m->localVars[p[2]]);
 					if (p[1] == 31 && _mstVars[31] > 0) {
 						_mstTickDelay = _mstVars[31];
 					}
@@ -3990,7 +3991,7 @@ int Game::mstTask_main(Task *t) {
 				if (m) {
 					assert(p[1] < kMaxLocals);
 					assert(p[2] < kMaxLocals);
-					arithOp(p[0] - 97, &m->localVars[p[1]], m->localVars[p[2]]);
+					arithOp(p[0] - 97, (int*)&m->localVars[p[1]], m->localVars[p[2]]);
 				}
 			}
 			break;
@@ -4006,7 +4007,7 @@ int Game::mstTask_main(Task *t) {
 		case 116: { // 40
 				assert(p[1] < kMaxLocals);
 				assert(p[2] < kMaxVars);
-				arithOp(p[0] - 107, &t->localVars[p[1]], _mstVars[p[2]]);
+				arithOp(p[0] - 107, (int*)&t->localVars[p[1]], _mstVars[p[2]]);
 			}
 			break;
 		case 117:
@@ -4021,7 +4022,7 @@ int Game::mstTask_main(Task *t) {
 		case 126: { // 41
 				assert(p[1] < kMaxVars);
 				assert(p[2] < kMaxVars);
-				arithOp(p[0] - 117, &_mstVars[p[1]], _mstVars[p[2]]);
+				arithOp(p[0] - 117, (int*)&_mstVars[p[1]], _mstVars[p[2]]);
 				if (p[1] == 31 && _mstVars[31] > 0) {
 					_mstTickDelay = _mstVars[31];
 				}
@@ -4046,7 +4047,7 @@ int Game::mstTask_main(Task *t) {
 				if (m) {
 					assert(p[1] < kMaxLocals);
 					assert(p[2] < kMaxVars);
-					arithOp(p[0] - 127, &m->localVars[p[1]], _mstVars[p[2]]);
+					arithOp(p[0] - 127, (int*)&m->localVars[p[1]], _mstVars[p[2]]);
 				}
 			}
 			break;
@@ -4062,7 +4063,7 @@ int Game::mstTask_main(Task *t) {
 		case 146: { // 43
 				const int num = p[2];
 				assert(p[1] < kMaxLocals);
-				arithOp(p[0] - 137, &t->localVars[p[1]], getTaskOtherVar(num, t));
+				arithOp(p[0] - 137, (int*)&t->localVars[p[1]], getTaskOtherVar(num, t));
 			}
 			break;
 		case 147:
@@ -4077,7 +4078,7 @@ int Game::mstTask_main(Task *t) {
 		case 156: { // 44
 				const int num = p[2];
 				assert(p[1] < kMaxVars);
-				arithOp(p[0] - 147, &_mstVars[p[1]], getTaskOtherVar(num, t));
+				arithOp(p[0] - 147, (int*)&_mstVars[p[1]], getTaskOtherVar(num, t));
 				if (p[1] == 31 && _mstVars[31] > 0) {
 					_mstTickDelay = _mstVars[31];
 				}
@@ -4102,7 +4103,7 @@ int Game::mstTask_main(Task *t) {
 				if (m) {
 					const int num = p[2];
 					assert(p[1] < kMaxLocals);
-					arithOp(p[0] - 157, &m->localVars[p[1]], getTaskOtherVar(num, t));
+					arithOp(p[0] - 157, (int*)&m->localVars[p[1]], getTaskOtherVar(num, t));
 				}
 			}
 			break;
@@ -4118,7 +4119,7 @@ int Game::mstTask_main(Task *t) {
 		case 176: { // 46
 				const int16_t num = READ_LE_UINT16(p + 2);
 				assert(p[1] < kMaxLocals);
-				arithOp(p[0] - 167, &t->localVars[p[1]], num);
+				arithOp(p[0] - 167, (int*)&t->localVars[p[1]], num);
 			}
 			break;
 		case 177:
@@ -4133,7 +4134,7 @@ int Game::mstTask_main(Task *t) {
 		case 186: { // 47
 				const int16_t num = READ_LE_UINT16(p + 2);
 				assert(p[1] < kMaxVars);
-				arithOp(p[0] - 177, &_mstVars[p[1]], num);
+				arithOp(p[0] - 177, (int*)&_mstVars[p[1]], num);
 				if (p[1] == 31 && _mstVars[31] > 0) {
 					_mstTickDelay = _mstVars[31];
 				}
@@ -4158,7 +4159,7 @@ int Game::mstTask_main(Task *t) {
 				if (m) {
 					const int16_t num = READ_LE_UINT16(p + 2);
 					assert(p[1] < kMaxLocals);
-					arithOp(p[0] - 187, &m->localVars[p[1]], num);
+					arithOp(p[0] - 187, (int*)&m->localVars[p[1]], num);
 				}
 			}
 			break;
