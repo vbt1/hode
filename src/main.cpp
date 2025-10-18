@@ -58,11 +58,13 @@ static void mixAudio(void *userdata, int16_t *buf, int len) {
 }
 
 static void setupAudio(Game *g) {
+#ifdef SOUND
 	g->_mix._lock = lockAudio;
 	AudioCallback cb;
 	cb.proc = mixAudio;
 	cb.userdata = g;
 	g_system->startAudio(cb);
+#endif
 }
 
 static const char *_defaultDataPath = ".";
@@ -274,7 +276,9 @@ int ss_main() {
 	}
 
 	do {
+#if 0
 		g->loadSetupCfg(resume);
+#endif
 		if (_runMenu && resume) {
 			Menu *m = new Menu(g, g->_paf, g->_res, g->_video);
 			const bool runGame = m->mainLoop();
@@ -292,9 +296,11 @@ int ss_main() {
 			}
 			g->mainLoop(level, checkpoint, levelChanged);
 			// do not save progress when starting from a specific level checkpoint
+#if 0
 			if (resume) {
 				g->saveSetupCfg();
 			}
+#endif
 			if (g->_res->_isDemo) {
 				break;
 			}

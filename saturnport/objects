@@ -1,7 +1,24 @@
 SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/main.cpp \
+		$(SRCDIR)/lzw.cpp \
 		$(SRCDIR)/systemstub_sdl.cpp \
 		$(SRCDIR)/gfs_wrap.cpp \
+		$(SRCDIR)/paf.cpp \
+		$(SRCDIR)/game.cpp \
+		$(SRCDIR)/andy.cpp \
+		$(SRCDIR)/level1_rock.cpp \
+		$(SRCDIR)/level2_fort.cpp \
+		$(SRCDIR)/level3_pwr1.cpp \
+		$(SRCDIR)/level4_isld.cpp \
+		$(SRCDIR)/level5_lava.cpp \
+		$(SRCDIR)/level6_pwr2.cpp \
+		$(SRCDIR)/level7_lar1.cpp \
+		$(SRCDIR)/level8_lar2.cpp \
+		$(SRCDIR)/level9_dark.cpp \
+		$(SRCDIR)/random.cpp \
+		$(SRCDIR)/file.cpp \
+		$(SRCDIR)/resource.cpp \
+		$(SRCDIR)/staticres.cpp \
 		$(SRCDIR)/video.cpp \
 		$(SRCDIR)/sat_mem_checker.cpp \
 		$(SRCDIR)/cinit.cpp \

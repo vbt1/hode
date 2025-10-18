@@ -304,24 +304,30 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 
 // a: type/source (0, 1, 2) b: num/index (3, monster1Index, monster2.monster1Index)
 SssObject *Game::playSound(int num, LvlObject *ptr, int a, int b) {
+#ifdef SOUND	
 	MixerLock ml(&_mix);
+#endif
 	SssObject *so = 0;
+#ifdef SOUND
 	if (num < _res->_sssHdr.infosDataCount) {
 		debug(kDebug_GAME, "playSound num %d/%d a=%d b=%d", num, _res->_sssHdr.infosDataCount, a, b);
 		_currentSoundLvlObject = ptr;
 		so = playSoundObject(&_res->_sssInfosData[num], a, b);
 		_currentSoundLvlObject = 0;
 	}
+#endif
 	return so;
 }
 
 void Game::removeSound(LvlObject *ptr) {
+#ifdef SOUND	
 	MixerLock ml(&_mix);
 	for (int i = 0; i < _sssObjectsCount; ++i) {
 		if (_sssObjectsTable[i].lvlObject == ptr) {
 			_sssObjectsTable[i].lvlObject = 0;
 		}
 	}
+#endif
 	ptr->sssObject = 0;
 }
 
@@ -339,7 +345,9 @@ void Game::setupBackgroundBitmap() {
 		playSound(lvl->backgroundBitmapId, 0, 0, 3);
 	}
 	if (_res->_isPsx) {
+#ifdef PSX
 		_video->decodeBackgroundPsx(bmp + 2, -1, Video::W, Video::H);
+#endif
 	} else {
 		decodeLZW(bmp, _video->_backgroundLayer);
 	}
@@ -1268,7 +1276,9 @@ void Game::restartLevel() {
 		_mstFlags = 0;
 	}
 	if (_res->_sssHdr.infosDataCount != 0) {
+#ifdef SOUND
 		resetSound();
+#endif
 	}
 	const int screenNum = _level->getCheckpointData(_level->_checkpoint)->screenNum;
 	preloadLevelScreenData(screenNum, kNoScreen);
@@ -1817,14 +1827,14 @@ void Game::drawPlasmaCannon() {
 	_plasmaCannonExplodeFlag = false;
 	_plasmaCannonObject = 0;
 }
-
+#ifdef PSX
 void Game::updateBackgroundPsx(int num) {
 	if (_res->_isPsx) {
 		const LvlBackgroundData *lvl = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 		_video->decodeBackgroundPsx(lvl->backgroundBitmapTable[num] + 4, -1, Video::W, Video::H);
 	}
 }
-
+#endif
 void Game::drawScreen() {
 	memcpy(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
 	_video->copyYuvBackBuffer();
@@ -1832,11 +1842,13 @@ void Game::drawScreen() {
 	// redraw background animation sprites
 	LvlBackgroundData *dat = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 	if (_res->_isPsx) {
+#ifdef PSX
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			assert((spr->num & 0x1F) == 0);
 			assert(spr->w == 0xFFFF && spr->h == 0xFFFF);
 			_video->decodeBackgroundOverlayPsx(spr->bitmapBits);
 		}
+#endif
 	} else {
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1F) == 0) {
@@ -1912,7 +1924,9 @@ void Game::drawScreen() {
 }
 
 static void gamePafCallback(void *userdata) {
+#ifdef SOUND
 	((Game *)userdata)->resetSound();
+#endif
 }
 
 void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
@@ -1953,10 +1967,14 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	createLevel();
 	assert(checkpoint < _res->_datHdr.levelCheckpointsCount[level]);
 	_currentLevelCheckpoint = _level->_checkpoint = checkpoint;
+#ifdef SOUND
 	_mix._lock(1);
+#endif
 	_res->loadLevelData(_currentLevel);
+#ifdef SOUND
 	clearSoundObjects();
 	_mix._lock(0);
+#endif
 	_mstAndyCurrentScreenNum = -1;
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
 	_rnd.initTable(rounds);
@@ -2031,7 +2049,9 @@ void Game::mixAudio(int16_t *buf, int len) {
 
 	while (len > 0) {
 		// this enqueues 1764*2 bytes for mono samples and 3528*2 bytes for stereo
+#ifdef SOUND
 		_mix._mixingQueueSize = 0;
+#endif
 		// 17640 + 17640 * 25 / 100 == 22050 (1.25x)
 		if (count == 4) {
 			mixSoundObjects17640(true);
@@ -2042,12 +2062,16 @@ void Game::mixAudio(int16_t *buf, int len) {
 		}
 
 		if (len >= kStereoSamples) {
+#ifdef SOUND
 			_mix.mix(buf, kStereoSamples);
+#endif
 			buf += kStereoSamples;
 			len -= kStereoSamples;
 		} else {
 			memset(_snd_buffer, 0, sizeof(_snd_buffer));
+#ifdef SOUND
 			_mix.mix(_snd_buffer, kStereoSamples);
+#endif
 			memcpy(buf, _snd_buffer, len * sizeof(int16_t));
 			_snd_bufferOffset = len;
 			_snd_bufferSize = kStereoSamples - len;
@@ -2577,10 +2601,12 @@ void Game::levelMainLoop() {
 		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 	}
 	drawScreen();
+#if 0
 	if (g_system->inp.screenshot) {
 		g_system->inp.screenshot = false;
 		captureScreenshot();
 	}
+#endif
 	if (_cheats != 0) {
 		char buffer[256];
 		snprintf(buffer, sizeof(buffer), "P%d S%02d %d R%d", _currentLevel, _andyObject->screenNum, _res->_screensState[_andyObject->screenNum].s0, _level->_checkpoint);
@@ -2595,9 +2621,11 @@ void Game::levelMainLoop() {
 	_rnd.update();
 	g_system->processEvents();
 	if (g_system->inp.keyPressed(SYS_INP_ESC)) {
+#if 0
 		if (displayHintScreen(-1, 0)) { // pause/exit screen
 			g_system->inp.quit = true;
 		}
+#endif
 	} else {
 		// displayHintScreen(1, 0);
 		_video->updateScreen();
@@ -2662,6 +2690,7 @@ void Game::callLevel_terminate() {
 
 void Game::displayLoadingScreen() {
 	if (_res->_isPsx) {
+#ifdef PSX
 		static const int kHintPsxLoading = 39;
 		if (_res->loadDatHintImage(kHintPsxLoading, _video->_frontLayer, 0)) {
 			_video->decodeBackgroundPsx(_video->_frontLayer, _res->_datHdr.hintsImageSizeTable[kHintPsxLoading], Video::W, Video::H);
@@ -2669,6 +2698,7 @@ void Game::displayLoadingScreen() {
 			_video->updateYuvDisplay();
 			g_system->updateScreen(false);
 		}
+#endif
 	} else {
 		if (_res->loadDatLoadingImage(_video->_frontLayer, _video->_palette)) {
 			g_system->setPalette(_video->_palette, 256, 6);
@@ -2677,7 +2707,7 @@ void Game::displayLoadingScreen() {
 		}
 	}
 }
-
+#if 0
 int Game::displayHintScreen(int num, int pause) {
 	static const int kQuitYes = 0;
 	static const int kQuitNo = 1;
@@ -2700,9 +2730,11 @@ int Game::displayHintScreen(int num, int pause) {
 	}
 	if (_res->loadDatHintImage(num, _video->_frontLayer, _video->_palette)) {
 		if (isPsx) {
+#ifdef PSX
 			_video->decodeBackgroundPsx(_video->_frontLayer, _res->_datHdr.hintsImageSizeTable[num], Video::W, Video::H);
 			g_system->fillRect(0, 0, Video::W, Video::H, 0);
 			_video->updateYuvDisplay();
+#endif
 		} else {
 			g_system->setPalette(_video->_palette, 256, 6);
 			g_system->copyRect(0, 0, Video::W, Video::H, _video->_frontLayer, 256);
@@ -2727,9 +2759,12 @@ int Game::displayHintScreen(int num, int pause) {
 		} while (!g_system->inp.quit && !g_system->inp.keyReleased(SYS_INP_JUMP));
 		_video->_paletteChanged = true;
 	}
+#ifdef SOUND
 	unmuteSound();
+#endif
 	return confirmQuit && quit == kQuitYes;
 }
+#endif
 
 void Game::removeLvlObjectFromList(LvlObject **list, LvlObject *ptr) {
 	LvlObject *current = *list;
@@ -4532,7 +4567,7 @@ void Game::updateWormHoleSprites() {
 	}
 	_res->decLvlSpriteDataRefCounter(&tmp);
 }
-
+#if 0
 void Game::loadSetupCfg(bool resume) {
 	_resumeGame = resume;
 	if (!_res->readSetupCfg(&_setupConfig)) {
@@ -4619,3 +4654,4 @@ void Game::captureScreenshot() {
 	}
 	++screenshot;
 }
+#endif

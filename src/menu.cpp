@@ -108,11 +108,14 @@ static uint32_t readSoundData(uint8_t *soundData, uint32_t soundDataSize) {
 }
 
 void Menu::loadData() {
+#ifdef SOUND
 	_g->_mix._lock(1);
+#endif
 	_res->loadDatMenuBuffers();
+#ifdef SOUND
 	_g->clearSoundObjects();
 	_g->_mix._lock(0);
-
+#endif
 	const int version = _res->_datHdr.version;
 
 	const int paletteSize = _res->_isPsx ? 0 : 256 * 3;
@@ -341,8 +344,10 @@ SssObject *Menu::playSound(int num) {
 
 void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
 	if (_res->_isPsx) {
+#ifdef PSX
 		memset(_video->_frontLayer, 0, Video::W * Video::H);
 		_video->decodeBackgroundPsx(data, size, Video::W, Video::H);
+#endif
 	} else {
 		decodeLZW(data, _video->_frontLayer);
 		if (setPalette) {
@@ -357,10 +362,12 @@ void Menu::drawSprite(const DatSpritesGroup *spriteGroup, const uint8_t *ptr, ui
 		const uint16_t size = READ_LE_UINT16(ptr + 2);
 		if (num == i) {
 			if (_res->_isPsx) {
+#ifdef PSX
 				const int count = READ_LE_UINT32(ptr + 4);
 				if (count != 0 && (count & 0x100) == 0) {
 					_video->decodeBackgroundOverlayPsx(ptr);
 				}
+#endif
 			} else {
 				if (x < 0) {
 					x = ptr[0];
@@ -382,10 +389,12 @@ void Menu::drawSpriteAnim(DatSpritesGroup *spriteGroup, const uint8_t *ptr, uint
 	}
 	ptr += spriteGroup[num].currentFrameOffset;
 	if (_res->_isPsx) {
+#ifdef PSX
 		const int count = READ_LE_UINT32(ptr + 4);
 		if (count != 0 && (count & 0x100) == 0) {
 			_video->decodeBackgroundOverlayPsx(ptr);
 		}
+#endif
 	} else {
 		_video->decodeSPR(ptr + 8, _video->_frontLayer, ptr[0], ptr[1], 0, READ_LE_UINT16(ptr + 4), READ_LE_UINT16(ptr + 6));
 	}
@@ -507,8 +516,10 @@ void Menu::drawDigit(int x, int y, int num) {
 
 void Menu::drawBitmap(const DatBitmapsGroup *bitmapsGroup, const uint8_t *bitmapData, int x, int y, int w, int h, uint8_t baseColor) {
 	if (_res->_isPsx) {
+#ifdef PSX
 		const int size = bitmapsGroup->palette - bitmapsGroup->offset;
 		_video->decodeBackgroundPsx(bitmapData, size, w, h, x, y);
+#endif
 		return;
 	}
 	const int srcPitch = w;

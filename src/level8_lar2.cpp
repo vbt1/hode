@@ -440,10 +440,14 @@ void Level_lar2::preScreenUpdate_lar2_screen7() {
 	if (_res->_currentScreenResourceNum == 7) {
 		if (_checkpoint >= 4 && _checkpoint < 7) {
 			_res->_screensState[7].s0 = 1;
+#ifdef PSX
 			_g->updateBackgroundPsx(1);
+#endif
 		} else {
 			_res->_screensState[7].s0 = 0;
+#ifdef PSX
 			_g->updateBackgroundPsx(0);
+#endif
 		}
 		if (_checkpoint == 5) {
 			if (!_paf->_skipCutscenes) {

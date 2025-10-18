@@ -5629,7 +5629,9 @@ int Game::mstOp56_specialAction(Task *t, int code, int num) {
 			const int hint  = getTaskVar(t, op204Data->arg0, type1);
 			const int type2 = (op204Data->arg3 & 15);
 			const int pause = getTaskVar(t, op204Data->arg1, type2);
+#if 0
 			displayHintScreen(hint, pause);
+#endif
 		}
 		break;
 	case 13:

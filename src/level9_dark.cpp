@@ -40,7 +40,9 @@ void Level_dark::postScreenUpdate_dark_screen0() {
 			if (!_paf->_skipCutscenes) {
 				_paf->play(20);
 				_paf->unload(20);
+#if 0
 				_g->displayHintScreen(_res->_datHdr.yesNoQuitImage - 1, 25);
+#endif
 				_paf->preload(21);
 				_paf->play(21);
 				_paf->unload(21);

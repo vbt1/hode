@@ -490,7 +490,7 @@ uint8_t Video::findWhiteColor() const {
 	}
 	return color;
 }
-#if 0
+#ifdef PSX
 void Video::decodeBackgroundPsx(const uint8_t *src, int size, int w, int h, int x, int y) {
 	if (size < 0) {
 		_backgroundPsx = src;

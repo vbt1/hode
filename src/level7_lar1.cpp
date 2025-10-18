@@ -191,7 +191,9 @@ void Level_lar1::postScreenUpdate_lar1_screen0() {
 		} else if (_screenCounterTable[0] >= 45) {
 			_res->_screensState[0].s0 = 1;
 			_res->_resLvlScreenBackgroundDataTable[0].currentBackgroundId = 1;
+#ifdef PSX
 			_g->updateBackgroundPsx(1);
+#endif
 		} else if (_screenCounterTable[0] == 11) {
 			_g->setShakeScreen(3, 2);
 		} else if (_screenCounterTable[0] == 13) {
@@ -209,7 +211,9 @@ void Level_lar1::postScreenUpdate_lar1_screen0() {
 			_res->_resLvlScreenBackgroundDataTable[0].currentMaskId = 2;
 			_g->setupScreenMask(0);
 			_res->_screensState[0].s0 = 2;
+#ifdef PSX
 			_g->updateBackgroundPsx(2);
+#endif
 		}
 		break;
 	}
@@ -356,7 +360,9 @@ void Level_lar1::postScreenUpdate_lar1_screen14() {
 				_g->setupScreenMask(14);
 			} else if (_screenCounterTable[14] >= 20) {
 				_res->_screensState[14].s0 = 1;
+#ifdef PSX
 				_g->updateBackgroundPsx(1);
+#endif
 			} else if (_screenCounterTable[14] == 7 || _screenCounterTable[14] == 9 || _screenCounterTable[14] == 11 || _screenCounterTable[14] == 13 || _screenCounterTable[14] == 15) {
 				_g->setShakeScreen(3, 2);
 			}
@@ -444,7 +450,9 @@ void Level_lar1::postScreenUpdate_lar1_screen19() {
 		} else if (_screenCounterTable[19] >= 14) {
 			_res->_screensState[19].s0 = 1;
 			_res->_resLvlScreenBackgroundDataTable[19].currentBackgroundId = 1;
+#ifdef PSX
 			_g->updateBackgroundPsx(1);
+#endif
 		}
 	}
 }
