@@ -5,7 +5,7 @@
 
 #include "fs.h"
 #include "paf.h"
-#include "system.h"
+#include "systemstub.h"
 #include "util.h"
 
 static const char *_filenames[] = {
@@ -513,7 +513,7 @@ void PafPlayer::mainLoop() {
 		if (_pafCb.frameProc) {
 			_pafCb.frameProc(_pafCb.userdata, i, _pageBuffers[_currentPageBuffer]);
 		} else {
-			g_system->copyRect(0, 0, kVideoWidth, kVideoHeight, _pageBuffers[_currentPageBuffer], kVideoWidth);
+			g_system->copyRect((int)0, (int)0, (int)kVideoWidth, (int)kVideoHeight, _pageBuffers[_currentPageBuffer], (int)kVideoWidth);
 		}
 		if (_paletteChanged) {
 			_paletteChanged = false;

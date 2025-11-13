@@ -34,7 +34,7 @@ struct AudioCallback {
 	void (*proc)(void *param, int16_t *stream, int len); // 22khz
 	void *userdata;
 };
-
+/*
 struct System {
 	PlayerInput inp, pad;
 
@@ -70,7 +70,7 @@ extern void System_earlyInit();
 //extern void System_printLog(GFS_FILE *, const char *s);
 extern void System_fatalError(const char *s);
 extern bool System_hasCommandLine();
-
-extern System *const g_system;
+*/
+//extern System *const g_system;
 
 #endif // SYSTEM_H__

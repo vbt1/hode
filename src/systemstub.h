@@ -59,23 +59,35 @@ struct PlayerInput {
 	bool quit;
 };
 */
-struct SystemStub : System {
+struct System {
 	PlayerInput inp, pad;
-    void init(const char *title, uint16 w, uint16 h);
-    void destroy();
-    void setPaletteEntry(uint16 i, const Color *c);
-    void getPaletteEntry(uint16 i, Color *c);
-    void setOverscanColor(uint8 i);
-    void copyRect(int16 x, int16 y, uint16 w, uint16 h, const uint8 *buf, uint32 pitch);
-    void updateScreen(int shakeOffset) ;
-    void processEvents() ;
-    void sleep(uint32 duration) ;
-    uint32_t getTimeStamp() ;       // must be defined
-    void initTimeStamp() ;
-    uint32 getOutputSampleRate() ;
-    void setup_input(void) ;        // must be defined
+	virtual void init(const char *title, int w, int h) = 0;
+	virtual void destroy() = 0;
+
+	virtual void setScaler(const char *name, int multiplier) = 0;
+	virtual void setGamma(float gamma) = 0;
+
+	virtual void setPalette(const uint8_t *pal, int n, int depth) = 0;
+	virtual void clearPalette() = 0;
+	virtual void copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) = 0;
+	virtual void copyYuv(int w, int h, const uint8_t *y, int ypitch, const uint8_t *u, int upitch, const uint8_t *v, int vpitch) = 0;
+	virtual void fillRect(int x, int y, int w, int h, uint8_t color) = 0;
+	virtual void copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) = 0;
+	virtual void shakeScreen(int dx, int dy) = 0;
+	virtual void updateScreen(bool drawWidescreen) = 0;
+
+	virtual void processEvents() = 0;
+	virtual void sleep(int duration) = 0;
+	virtual uint32_t getTimeStamp() = 0;
+
+	virtual void startAudio(AudioCallback callback) = 0;
+	virtual void stopAudio() = 0;
+	virtual void lockAudio() = 0;
+	virtual void unlockAudio() = 0;
+	virtual AudioCallback setAudioCallback(AudioCallback callback) = 0;
 };
 
-extern SystemStub *SystemStub_SDL_create();
+//extern SystemStub *SystemStub_SDL_create();
 
+extern System *const g_system;
 #endif // __SYSTEMSTUB_H__

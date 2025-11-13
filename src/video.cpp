@@ -6,10 +6,13 @@
 #include "video.h"
 #include "mdec.h"
 #include "system.h"
+#include "systemstub.h"
+#include "util.h"
 
 static const bool kUseShadowColorLut = false;
 
 Video::Video() {
+	emu_printf("video\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;

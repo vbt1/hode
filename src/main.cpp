@@ -17,6 +17,7 @@
 #include "util.h"
 #include "resource.h"
 #include "system.h"
+#include "systemstub.h"
 #include "video.h"
 
 void *__dso_handle = 0;
@@ -256,9 +257,7 @@ emu_printf("ss_main\n");
 		}
 	}
 #endif
-emu_printf("ss_main 1\n");
 	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
-emu_printf("ss_main2\n");
 #if 0
 	readConfigIni(_configIni, g);
 
@@ -266,7 +265,6 @@ emu_printf("ss_main2\n");
 		g->benchmarkCpu();
 	}
 #endif
-emu_printf("ss_main3\n");
 	// load setup.dat (PC) or setup.dax (PSX)
 	g->_res->loadSetupDat();
 emu_printf("ss_main4 %p\n", g_system);

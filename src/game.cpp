@@ -10,6 +10,7 @@
 #include "paf.h"
 #include "screenshot.h"
 #include "system.h"
+#include "systemstub.h"
 #include "util.h"
 #include "video.h"
 
@@ -2707,7 +2708,7 @@ void Game::displayLoadingScreen() {
 	} else {
 		if (_res->loadDatLoadingImage(_video->_frontLayer, _video->_palette)) {
 			g_system->setPalette(_video->_palette, 256, 6);
-			g_system->copyRect(0, 0, Video::W, Video::H, _video->_frontLayer, 256);
+			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (int)256);
 			g_system->updateScreen(false);
 		}
 	}
