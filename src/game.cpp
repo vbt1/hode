@@ -19,9 +19,14 @@ static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
 Game::Game(const char *dataPath, const char *savePath, uint32_t cheats)
 	: _fs(dataPath, savePath) {
 
+emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
+
 	_level = 0;
 	_res = new Resource(&_fs);
+	
+emu_printf("_res %p\n",_res);
 	_paf = new PafPlayer(&_fs);
+emu_printf("_paf %p\n",_paf);
 	_rnd.setSeed();
 	_video = new Video();
 	_cheats = cheats;
@@ -4599,7 +4604,7 @@ void Game::captureScreenshot() {
 
 	char name[64];
 	snprintf(name, sizeof(name), "screenshot-%03d.bmp", screenshot);
-	FILE *fp = _fs.openSaveFile(name, true);
+	GFS_FILE *fp = _fs.openSaveFile(name, true);
 	if (fp) {
 		saveBMP(fp, _video->_frontLayer, _video->_palette, Video::W, Video::H);
 		_fs.closeFile(fp);

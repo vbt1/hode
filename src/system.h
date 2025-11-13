@@ -67,7 +67,7 @@ struct System {
 };
 
 extern void System_earlyInit();
-extern void System_printLog(FILE *, const char *s);
+//extern void System_printLog(GFS_FILE *, const char *s);
 extern void System_fatalError(const char *s);
 extern bool System_hasCommandLine();
 

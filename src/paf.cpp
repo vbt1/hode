@@ -9,16 +9,16 @@
 #include "util.h"
 
 static const char *_filenames[] = {
-	"hod.paf",
-	"hod_demo.paf",
-	"hod_demo2.paf",
-	"hod_oem.paf",
+	"HOD.PAF",
+	"HOD_DEMO.PAF",
+	"HOD_DEMO2.PAF",
+	"HOD_OEM.PAF",
 	0
 };
 
 static bool openPaf(FileSystem *fs, File *f) {
 	for (int i = 0; _filenames[i]; ++i) {
-		FILE *fp = fs->openAssetFile(_filenames[i]);
+		GFS_FILE *fp = fs->openAssetFile(_filenames[i]);
 		if (fp) {
 			f->setFp(fp);
 			return true;

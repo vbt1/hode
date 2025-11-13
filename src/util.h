@@ -29,4 +29,9 @@ void warning(const char *msg, ...);
 #define debug(x, ...)
 #endif
 
+extern "C" {
+void emu_printf(const char *format, ...);
+void SCU_DMAWait(void);
+}
+
 #endif // UTIL_H__

@@ -9,8 +9,8 @@
 #endif
 #include <stdio.h>
 #include <stdarg.h>
-extern void System_printLog(FILE *, const char *s);
-extern void System_fatalError(const char *s);
+//extern void System_printLog(GFS_FILE *, const char *s);
+//extern void System_fatalError(const char *s);
 
 int g_debugMask;
 
@@ -24,7 +24,7 @@ void debug(int mask, const char *msg, ...) {
 #ifdef __ANDROID__
 		__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "%s", buf);
 #endif
-		System_printLog(stdout, buf);
+//		System_printLog(stdout, buf);
 	}
 }
 
@@ -37,7 +37,7 @@ void error(const char *msg, ...) {
 #ifdef __ANDROID__
 	__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "%s", buf);
 #endif
-	System_fatalError(buf);
+//	System_fatalError(buf);
 }
 
 void warning(const char *msg, ...) {
@@ -49,5 +49,5 @@ void warning(const char *msg, ...) {
 #ifdef __ANDROID__
 	__android_log_print(ANDROID_LOG_WARN, LOG_TAG, "%s", buf);
 #endif
-	System_printLog(stderr, buf);
+//	System_printLog(stderr, buf);
 }

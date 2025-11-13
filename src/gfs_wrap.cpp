@@ -1,5 +1,5 @@
 //#pragma GCC optimize ("O2")
-
+#include "util.h"
 extern "C" {
 
 #include <string.h>
@@ -121,7 +121,7 @@ void init_GFS() { //Initialize GFS system
 }
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
-//slSynch();
+emu_printf("sat_fopen %s\n", path);	
 	memset(satpath, 0, 25);
 
 	if (path == NULL) 
@@ -141,11 +141,13 @@ emu_printf("name %s\n",path_token);
 		satpath[idx] = toupper(satpath[idx]);
 emu_printf("name %s\n",path_token);
 */
+emu_printf("ducon name %s %d\n",satpath, GFS_NameToId((Sint8*)satpath));
 	GfsHn fid = NULL;
 	// OPEN FILE
 	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
 	
 	if(fid != NULL) { // Opened!
+emu_printf("fid %p\n", fid);	
 		Sint32 fsize;
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 
@@ -153,7 +155,8 @@ emu_printf("name %s\n",path_token);
 		fp->fid = fid;
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 		fp->f_size = fsize;
-//		emu_printf("reopen position %d %p pos %d\n", position, fp->fid, fp->f_seek_pos);
+		emu_printf("position %d %p fsize %d\n", position, fp->fid, fsize);
+/*
 		if (!position) // on conserve le cache existant
 		{
 			fp->f_seek_pos = 0;
@@ -164,9 +167,14 @@ emu_printf("name %s\n",path_token);
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
 		}
 		else
+*/
 		{
 			GFS_Seek(fp->fid, position, GFS_SEEK_SET);
 		}
+	}
+	else
+	{
+		emu_printf("no fid!!!\n");	
 	}
 
 	// Now... get back to the roots!
@@ -175,14 +183,14 @@ emu_printf("name %s\n",path_token);
 }
 
 int sat_fclose(GFS_FILE* fp) {
-//emu_printf("sat_fclose\n");	
+emu_printf("sat_fclose\n");	
 	GFS_Close(fp->fid);
-//	sat_free(fp);
 
 	return 0; // always ok :-)
 }
 
 int sat_fseek(GFS_FILE *stream, long offset, int whence) {
+emu_printf("sat_fseek\n");	
 	if(stream == NULL) return -1;
 
 	switch(whence) {
@@ -212,19 +220,17 @@ int sat_fseek(GFS_FILE *stream, long offset, int whence) {
 
 	return 0;
 }
-/*
-long sat_ftell(GFS_FILE *stream) {
-	if (stream == NULL) return -1;
 
-	return stream->f_seek_pos;
+int sat_ftell(GFS_FILE *stream)
+{
+	return (stream ? GFS_Tell(stream->fid) : 0);
 }
-*/
+
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
-//if(nmemb==4)
-//emu_printf("sat_fread nmemb %d fsize %d\n", nmemb, stream->f_size);	
+emu_printf("sat_fread ptr %p size %d\n", ptr, size);	
 
 	if (ptr == NULL || stream == NULL) return 0; // nothing to do then
 	if (size == 0 || nmemb == 0) return 0;
@@ -264,7 +270,7 @@ partial_cache:
 		if(((stream->f_seek_pos + dataToRead) < end_offset) && (stream->f_seek_pos >= cache_offset)) {
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
 
-//emu_printf("offset_in_cache %d \n", offset_in_cache);			
+emu_printf("offset_in_cache %d \n", offset_in_cache);			
 			memcpy(ptr, cache + offset_in_cache, dataToRead);
 			stream->f_seek_pos += dataToRead;
 			return dataToRead;
@@ -287,12 +293,12 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-//emu_printf("skip bytes\n");
+emu_printf("skip bytes\n");
 		read_buffer = (Uint8*)current_lwram;
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 	} else {
-//emu_printf("no skip bytes\n");
+emu_printf("no skip bytes\n");
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
 	}
 	stream->f_seek_pos += (readBytes - skip_bytes); // Update the seek cursor 

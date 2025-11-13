@@ -216,15 +216,15 @@ SystemStub *SystemStub_SDL_create() {
 }
 */
 void SystemStub_SDL::init(const char *title, int w, int h) {
+emu_printf("init system\n");
 	memset(&inp, 0, sizeof(inp)); // Clean inout
-//slPrint((char *)"load_audio_driver     ",slLocate(10,12));
+emu_printf("load_audio_driver\n");
 	load_audio_driver(); // Load M68K audio driver
-//slPrint((char *)"prepareGfxMode     ",slLocate(10,12));
 	init_cdda();
 	sound_external_audio_enable(7, 7);
+emu_printf("prepareGfxMode\n");
 	prepareGfxMode(); // Prepare graphic output
-//		//emu_printf("prepareGfxMode\n");	
-//slPrint((char *)"setup_input     ",slLocate(10,12));
+emu_printf("setup_input\n");
 	setup_input(); // Setup controller inputs
 
 	memset(_pal, 0, sizeof(_pal));
@@ -244,8 +244,8 @@ void SystemStub_SDL::init(const char *title, int w, int h) {
 		tickPerVblank = 17;
 	else
 		tickPerVblank = 20;
-
-	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
+emu_printf("slIntFunction\n");
+//	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
 
 	return;
 }
@@ -714,7 +714,7 @@ uint8 isNTSC (void) {
 		return 0;
 }
 
-void System_printLog(FILE *fp, const char *s) {
+void System_printLog(GFS_FILE *fp, const char *s) {
 }
 
 void System_fatalError(const char *s) {

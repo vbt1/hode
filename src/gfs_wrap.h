@@ -10,7 +10,7 @@
 //#define   DIR_MAX   (Sint32)170
 
 #define   OPEN_MAX  (Sint32)8
-#define   DIR_MAX   (Sint32)152
+#define   DIR_MAX   (Sint32)48
 
 
 #define SECTOR_SIZE 2048 // Bytes for each sector
@@ -41,6 +41,8 @@ int sat_feof(GFS_FILE *stream);
 int sat_ferror(GFS_FILE *stream);
 
 long sat_fsize(GFS_FILE *stream);
+
+int sat_ftell(GFS_FILE *stream);
 
 //char *sat_match(const char *path);
 

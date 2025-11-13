@@ -26,29 +26,42 @@ static const char *_setupDax = "SETUP.DAX";
 static const char *_hodDem = "HOD.DEM";
 
 static const char *_prefixes[] = {
-	"rock",
-	"fort",
-	"pwr1",
-	"isld",
-	"lava",
-	"pwr2",
-	"lar1",
-	"lar2",
-	"dark",
-	"test"
+	"ROCK",
+	"FORT",
+	"PWR1",
+	"ISLD",
+	"LAVA",
+	"PWR2",
+	"LAR1",
+	"LAR2",
+	"DARK",
+	"TEST"
 };
-
+/*
+static void stringUpperCase(char *p) {
+	while (*p) {
+		if (*p >= 'a' && *p <= 'z') {
+			*p -= 'a' - 'A';
+		}
+		++p;
+	}
+}
+*/
 static bool openDat(FileSystem *fs, const char *name, File *f) {
-	FILE *fp = fs->openAssetFile(name);
+	GFS_FILE *fp = fs->openAssetFile(name);
 	if (fp) {
+		emu_printf("openDat %s found\n", name);
 		f->setFp(fp);
+		emu_printf("seek %s f %p\n", name, f);
 		f->seek(0, SEEK_SET);
+		emu_printf("seek %s done\n", name);
 		return true;
 	}
 	return false;
 }
 
 static void closeDat(FileSystem *fs, File *f) {
+	emu_printf("closeDat\n");
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -98,6 +111,7 @@ Resource::Resource(FileSystem *fs)
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
 
 	if (sectorAlignedGameData()) {
+emu_printf("_version = V1_2\n");
 		_datFile = new SectorFile;
 		_lvlFile = new SectorFile;
 		_mstFile = new SectorFile;
@@ -105,6 +119,7 @@ Resource::Resource(FileSystem *fs)
 		// from v1.2, game data files are 'sector aligned'
 		_version = V1_2;
 	} else {
+emu_printf("_version NOT V1_2\n");
 		_datFile = new File;
 		_lvlFile = new File;
 		_mstFile = new File;
@@ -112,25 +127,33 @@ Resource::Resource(FileSystem *fs)
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[32];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
+emu_printf("filename %s\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
+emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
+emu_printf("skipUint32 %s\n", filename);
 			_lvlFile->skipUint32();
+emu_printf("readUint32 %s\n", filename);
 			const int size = _lvlFile->readUint32();
 			if (size == 0) {
 				_version = V1_0;
 			}
+emu_printf("closeDat %s\n", filename);
 			closeDat(_fs, _lvlFile);
+emu_printf("closeDat %s done\n", filename);
 		}
 	}
 	// detect if this is a demo version by trying to open the second level data files
 	char filename[32];
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
 	if (openDat(_fs, filename, _lvlFile)) {
+emu_printf("NOT DEMO\n");
 		closeDat(_fs, _lvlFile);
 	} else {
+emu_printf("DEMO\n");
 		_isDemo = true;
 	}
-	debug(kDebug_RESOURCE, "psx %d demo %d version %d", _isPsx, _isDemo, _version);
+	emu_printf("psx %d demo %d version %d\n", _isPsx, _isDemo, _version);
 	memset(&_datHdr, 0, sizeof(_datHdr));
 	memset(&_lvlHdr, 0, sizeof(_lvlHdr));
 	memset(&_mstHdr, 0, sizeof(_mstHdr));
@@ -158,31 +181,38 @@ Resource::~Resource() {
 }
 
 bool Resource::sectorAlignedGameData() {
-	FILE *fp = _fs->openAssetFile(_setupDat);
+emu_printf("sectorAlignedGameData %s\n", _setupDat);
+	GFS_FILE *fp = _fs->openAssetFile(_setupDat);
+	/*
 	if (!fp) {
 		fp = _fs->openAssetFile(_setupDax);
 		if (!fp) {
-			error("Unable to open '%s' or '%s'", _setupDat, _setupDax);
+			emu_printf("Unable to open '%s' or '%s\n", _setupDat, _setupDax);
 			return false;
 		}
-	}
+	}*/
 	bool ret = false;
 	uint8_t buf[2048];
-	if (fread(buf, 1, sizeof(buf), fp) == sizeof(buf)) {
+	if (sat_fread(buf, 1, sizeof(buf), fp) == sizeof(buf)) {
 		ret = fioUpdateCRC(0, buf, sizeof(buf)) == 0;
 	}
 	_fs->closeFile(fp);
+emu_printf("sectorAlignedGameData true ? %d\n", ret);
 	return ret;
 }
 
 void Resource::loadSetupDat() {
+emu_printf("loadSetupDat\n");
+#if 0
 	if (!openDat(_fs, _setupDat, _datFile)) {
 		_isPsx = openDat(_fs, _setupDax, _datFile);
 	}
-
+#else
+	openDat(_fs, _setupDat, _datFile);
+#endif
 	_datHdr.version = _datFile->readUint32();
 	if (_datHdr.version != 10 && _datHdr.version != 11) {
-		warning("Unhandled .dat version %d", _datHdr.version);
+		emu_printf("Unhandled .dat version %d\n", _datHdr.version);
 		return;
 	}
 
@@ -1965,35 +1995,43 @@ enum {
 
 static uint8_t _checksum;
 
-static void persistUint8(FILE *fp, const uint8_t &val) {
+static void persistUint8(GFS_FILE *fp, const uint8_t &val) {
+#if 0
 	fputc(val, fp);
 	_checksum ^= val;
+#endif
 }
 
-static void persistUint8(FILE *fp, uint8_t &val) {
+static void persistUint8(GFS_FILE *fp, uint8_t &val) {
+#if 0
 	val = fgetc(fp);
 	_checksum ^= val;
+#endif
 }
 
-static void persistUint32(FILE *fp, const uint32_t &val) {
+static void persistUint32(GFS_FILE *fp, const uint32_t &val) {
+#if 0
 	for (int i = 0; i < 4; ++i) {
 		const uint8_t b = (val >> (i * 8)) & 0xFF;
 		fputc(b, fp);
 		_checksum ^= b;
 	}
+#endif
 }
 
-static void persistUint32(FILE *fp, uint32_t &val) {
+static void persistUint32(GFS_FILE *fp, uint32_t &val) {
+#if 0
 	val = 0;
 	for (int i = 0; i < 4; ++i) {
 		const uint8_t b = fgetc(fp);
 		val |= b << (i * 8);
 		_checksum ^= b;
 	}
+#endif
 }
 
 template <int M, typename T>
-static void persistSetupCfg(FILE *fp, T *config) {
+static void persistSetupCfg(GFS_FILE *fp, T *config) {
 	_checksum = 0;
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 10; ++j) {
@@ -2059,7 +2097,7 @@ void Resource::unloadHodDem() {
 }
 #if 0
 bool Resource::writeSetupCfg(const SetupConfig *config) {
-	FILE *fp = _fs->openSaveFile(_setupCfg, true);
+	GFS_FILE *fp = _fs->openSaveFile(_setupCfg, true);
 	if (fp) {
 		persistSetupCfg<kModeSave>(fp, config);
 		_fs->closeFile(fp);
@@ -2070,7 +2108,7 @@ bool Resource::writeSetupCfg(const SetupConfig *config) {
 }
 
 bool Resource::readSetupCfg(SetupConfig *config) {
-	FILE *fp = _fs->openSaveFile(_setupCfg, false);
+	GFS_FILE *fp = _fs->openSaveFile(_setupCfg, false);
 	if (fp) {
 		persistSetupCfg<kModeLoad>(fp, config);
 		_fs->closeFile(fp);

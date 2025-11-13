@@ -127,7 +127,7 @@ static void handleConfigIni(Game *g, const char *section, const char *name, cons
 }
 #if 0
 static void readConfigIni(const char *filename, Game *g) {
-	FILE *fp = fopen(filename, "rb");
+	GFS_FILE *fp = fopen(filename, "rb");
 	if (fp) {
 		char *section = 0;
 		char buf[256];
@@ -175,6 +175,8 @@ int ss_main() {
 
 	g_debugMask = 0; //kDebug_GAME | kDebug_RESOURCE | kDebug_SOUND | kDebug_MONSTER;
 	int cheats = 0;
+
+emu_printf("ss_main\n");
 
 #ifdef WII
 	System_earlyInit();
@@ -254,22 +256,26 @@ int ss_main() {
 		}
 	}
 #endif
+emu_printf("ss_main 1\n");
 	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
+emu_printf("ss_main2\n");
 #if 0
 	readConfigIni(_configIni, g);
-#endif
+
 	if (_runBenchmark) {
 		g->benchmarkCpu();
 	}
-	// load setup.dat (PC) or setup.dax (PSX)
-#if 0
-	g->_res->loadSetupDat();
 #endif
+emu_printf("ss_main3\n");
+	// load setup.dat (PC) or setup.dax (PSX)
+	g->_res->loadSetupDat();
+emu_printf("ss_main4 %p\n", g_system);
 //	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;
 	g_system->init(_title, Video::W, Video::H);
-	setupAudio(g);
+emu_printf("ss_main5 %p\n", g_system);
 #if 0
+	setupAudio(g);
 	if (isPsx) {
 		g->_video->initPsx();
 	}

@@ -7,19 +7,23 @@
 #define FILEIO_H__
 
 #include "intern.h"
+extern "C" {
+#include "gfs_wrap.h"
+}
 
 struct File {
 
-	FILE *_fp;
+	GFS_FILE *_fp;
 
 	File();
 	virtual ~File();
 
-	void setFp(FILE *fp);
+	void setFp(GFS_FILE *fp);
 
 	virtual void seekAlign(uint32_t pos);
 	virtual void seek(int pos, int whence);
 	virtual int read(uint8_t *ptr, int size);
+	virtual uint8_t batchRead (uint8_t *ptr, uint32_t len);
 	uint8_t readByte();
 	uint16_t readUint16();
 	uint32_t readUint32();
