@@ -12,12 +12,13 @@
 static const bool kUseShadowColorLut = false;
 
 Video::Video() {
-	emu_printf("video\n");
+	emu_printf("video init\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
+#if 0
 	_shadowLayer = (uint8_t *)malloc(W * H + 1); // projectionData offset can be equal to W * H
 	_frontLayer = (uint8_t *)malloc(W * H);
 	_backgroundLayer = (uint8_t *)malloc(W * H);
@@ -34,6 +35,7 @@ Video::Video() {
 	_transformShadowLayerDelta = 0;
 	memset(&_mdec, 0, sizeof(_mdec));
 	_backgroundPsx = 0;
+#endif
 }
 
 Video::~Video() {

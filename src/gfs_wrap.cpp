@@ -141,13 +141,11 @@ emu_printf("name %s\n",path_token);
 		satpath[idx] = toupper(satpath[idx]);
 emu_printf("name %s\n",path_token);
 */
-emu_printf("ducon name %s %d\n",satpath, GFS_NameToId((Sint8*)satpath));
 	GfsHn fid = NULL;
 	// OPEN FILE
 	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
 	
 	if(fid != NULL) { // Opened!
-emu_printf("fid %p\n", fid);	
 		Sint32 fsize;
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 

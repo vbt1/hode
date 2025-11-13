@@ -56,21 +56,13 @@ extern void snd_init();
 #define SYS_CDINIT2() ((**(void(**)(void))0x600029c)())
 
 /* Needed for audio */
-#define SND_BUFFER_SIZE (1024)
+#define SND_BUFFER_SIZE (128)
 #define SND_BUF_SLOTS 1
 
 /* Needed for video */
 #define TVSTAT	(*(Uint16 *)0x25F80004)
 #define CRAM_BANK 0x5f00000 // Beginning of color ram memory addresses
 #define BACK_COL_ADR (VDP2_VRAM_A1 + 0x1fffe) // Address for background colour
-
-#ifdef _352_CLOCK_
-#define HOR_OFFSET (-29.0)
-#define HOR_OFFSET (0.0)// vbt pas d'offset
-#else
-#define HOR_OFFSET (-30.0)
-#define HOR_OFFSET (0.0) // vbt pas d'offset
-#endif
 
 /* Input devices */
 #define MAX_INPUT_DEVICES 1
@@ -112,7 +104,7 @@ typedef struct {
 */
 /* Required for audio sound buffers */
 //Uint8 buffer_filled[2];
-//Uint8 ring_bufs[2][SND_BUFFER_SIZE * SND_BUF_SLOTS];
+Uint8 ring_bufs[2][SND_BUFFER_SIZE * SND_BUF_SLOTS];
 #ifdef SOUND
 static PcmWork pcm_work[2];
 static PcmHn pcm[2];
@@ -159,24 +151,16 @@ struct SystemStub_SDL : System {
 	/* Controller data */
 	PerDigital *input_devices[MAX_INPUT_DEVICES];
 	Uint8 connected_devices;
-
-	virtual ~SystemStub_SDL() {}
+	SystemStub_SDL();
+	virtual ~SystemStub_SDL();
 	virtual void init(const char *title, int w, int h);
 	virtual void destroy();
 	virtual void setPaletteEntry(uint16 i, const Color *c);
 	virtual void getPaletteEntry(uint16 i, Color *c);
 	virtual void setOverscanColor(uint8 i);
-//	virtual void copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb);
 	virtual void initTimeStamp();
-//	virtual void startAudio(AudioCallback callback, void *param);
-//	virtual void stopAudio();
 	virtual uint32 getOutputSampleRate();
-//	virtual void *createMutex();
-//	virtual void destroyMutex(void *mutex);
-//	virtual void lockMutex(void *mutex);
-//	virtual void unlockMutex(void *mutex);
 	virtual void setup_input (void); // Setup input controllers
-
 	virtual void setScaler(const char *name, int multiplier);
 	virtual void setGamma(float gamma);
 	virtual void setPalette(const uint8_t *pal, int n, int depth);
@@ -194,16 +178,11 @@ struct SystemStub_SDL : System {
 	virtual void stopAudio();
 	virtual void lockAudio();
 	virtual void unlockAudio();
-	virtual AudioCallback setAudioCallback(AudioCallback callback) { return callback; }
+	virtual AudioCallback setAudioCallback(AudioCallback callback);
 
 
 
-//	virtual void setPalette(uint8 *palette, uint16 colors);
 	void prepareGfxMode();
-//	void cleanupGfxMode();
-//	void forceGfxRedraw();
-//	void drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch);
-
 	void load_audio_driver(void);
 	void init_cdda(void);
 	void sound_external_audio_enable(uint8_t vol_l, uint8_t vol_r);
@@ -211,16 +190,30 @@ struct SystemStub_SDL : System {
 
 SystemStub_SDL system_saturn;
 System *const g_system = &system_saturn;
+// static const int AUDIO_FREQ = 44100;
+static const int AUDIO_SAMPLES_COUNT = 2048;
 
-/*
-SystemStub *SystemStub_SDL_create() {
-	sys = new SystemStub_SDL();
-	return sys;
+static const int SCREEN_W = 480;
+static const int SCREEN_H = 272;
+static const int SCREEN_PITCH = 512;
+
+static const int GAME_W = 256;
+static const int GAME_H = 192;
+
+static const int BLUR_TEX_W = 16;
+static const int BLUR_TEX_H = 16;
+
+static uint32_t __attribute__((aligned(16))) _clut[256];
+
+SystemStub_SDL::SystemStub_SDL() {
 }
-*/
+
+SystemStub_SDL::~SystemStub_SDL() {
+}
+
 void SystemStub_SDL::init(const char *title, int w, int h) {
-#if 0
 emu_printf("init system\n");
+#if 0
 	memset(&inp, 0, sizeof(inp)); // Clean inout
 emu_printf("load_audio_driver\n");
 	load_audio_driver(); // Load M68K audio driver
@@ -254,10 +247,34 @@ emu_printf("slIntFunction\n");
 	return;
 }
 
+
 void SystemStub_SDL::destroy() {
 //	cleanupGfxMode();
 	SYS_Exit(0);
 }
+
+void SystemStub_SDL::setScaler(const char *name, int multiplier) {
+}
+
+void SystemStub_SDL::setGamma(float gamma) {
+}
+
+void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
+	const int shift = 8 - depth;
+	for (int i = 0; i < n; ++i) {
+		int r = pal[i * 3];
+		int g = pal[i * 3 + 1];
+		int b = pal[i * 3 + 2];
+		if (shift != 0) {
+			r = (r << shift) | (r >> (depth - shift));
+			g = (g << shift) | (g >> (depth - shift));
+			b = (b << shift) | (b >> (depth - shift));
+		}
+		_clut[i] = RGB(r, g, b);
+	}
+//	sceKernelDcacheWritebackRange(_clut, sizeof(_clut));
+}
+
 /*
 void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 	assert(colors <= 256);
@@ -559,9 +576,6 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	return;
 }*/
 
-	void SystemStub_SDL::setScaler(const char *name, int multiplier) {}
-	void SystemStub_SDL::setGamma(float gamma) {}
-	void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {}
 	void SystemStub_SDL::clearPalette() {}
 	void SystemStub_SDL::copyYuv(int w, int h, const uint8_t *y, int ypitch,
 						 const uint8_t *u, int upitch, const uint8_t *v, int vpitch) {}
@@ -616,6 +630,15 @@ void SystemStub_SDL::setup_input (void) {
 void SystemStub_SDL::load_audio_driver(void) {
 	snd_init();
 	return;
+}
+
+
+AudioCallback SystemStub_SDL::setAudioCallback(AudioCallback callback) {
+	AudioCallback cb; //_audioCb;
+/*	lockAudio();
+	_audioCb = callback;
+	unlockAudio();*/
+	return cb;
 }
 
 void SystemStub_SDL::init_cdda(void)
@@ -693,6 +716,7 @@ inline void timeTick() {
 		ticker += tickPerVblank;
 	}
 }
+
 void vblIn (void) {
 //emu_printf("vblIn\n");
 	// Process input
@@ -721,15 +745,6 @@ uint8 isNTSC (void) {
 		return 1;
 	else
 		return 0;
-}
-
-void System_printLog(GFS_FILE *fp, const char *s) {
-}
-
-void System_fatalError(const char *s) {
-//	fprintf(stderr, "ERROR: %s\n", s);
-//	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Heart of Darkness", s, system_sdl2._window);
-//	exit(-1);
 }
 
 void SCU_DMAWait(void) {

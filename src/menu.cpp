@@ -95,7 +95,7 @@ static uint32_t readBitmapsGroup(int count, DatBitmapsGroup *bitmapsGroup, uint3
 	}
 	return ptrOffset - baseOffset;
 }
-
+#ifdef SOUND
 static uint32_t readSoundData(uint8_t *soundData, uint32_t soundDataSize) {
 	const int soundListsCount = READ_LE_UINT32(soundData + 4);
 	const uint8_t *listData = soundData + 8 + soundListsCount * 8;
@@ -107,7 +107,7 @@ static uint32_t readSoundData(uint8_t *soundData, uint32_t soundDataSize) {
 	assert((uint32_t)(listData - soundData) == soundDataSize);
 	return soundDataSize;
 }
-
+#endif
 void Menu::loadData() {
 #ifdef SOUND
 	_g->_mix._lock(1);
@@ -167,8 +167,9 @@ void Menu::loadData() {
 		}
 
 		_soundData = ptr + ptrOffset;
+#ifdef SOUND
 		readSoundData(_res->_menuBuffer1 + ptrOffset, _res->_datHdr.soundDataSize);
-
+#endif
 	} else if (version == 11) {
 
 		hdrOffset = 4;
@@ -248,10 +249,12 @@ void Menu::loadData() {
 		ptrOffset += size;
 
 		_soundData = ptr + ptrOffset;
+#ifdef SOUND
 		readSoundData(_res->_menuBuffer0 + ptrOffset, _res->_datHdr.soundDataSize);
+#endif
 		ptrOffset += _res->_datHdr.soundDataSize;
 	}
-
+#ifdef PSX
 	if (_res->_isPsx) {
 		for (int i = 0; i < 3; ++i) {
 			_psxSprites[i] = (DatSpritesGroup *)(ptr + ptrOffset);
@@ -262,7 +265,7 @@ void Menu::loadData() {
 			ptrOffset += 0x300;
 		}
 	}
-
+#endif
 	_iconsSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 	const int iconsCount = _res->_datHdr.iconsCount;
 	ptrOffset += iconsCount * sizeof(DatSpritesGroup);
@@ -518,13 +521,13 @@ void Menu::drawDigit(int x, int y, int num) {
 }
 
 void Menu::drawBitmap(const DatBitmapsGroup *bitmapsGroup, const uint8_t *bitmapData, int x, int y, int w, int h, uint8_t baseColor) {
-	if (_res->_isPsx) {
 #ifdef PSX
+	if (_res->_isPsx) {
 		const int size = bitmapsGroup->palette - bitmapsGroup->offset;
 		_video->decodeBackgroundPsx(bitmapData, size, w, h, x, y);
-#endif
 		return;
 	}
+#endif
 	const int srcPitch = w;
 	if (x < 0) {
 		bitmapData -= x;
@@ -640,7 +643,9 @@ void Menu::drawPlayerProgress(int state, int cursor) {
 }
 
 void Menu::handleAssignPlayer() {
+
 	if (_res->_isPsx) {
+#ifdef PSX
 		memset(_paletteBuffer, 0, 256 * 3);
 		static const int16_t indexes[] = { 0, 3, 6, 18, 36, 53, 67, 81, 99, 111, 125, 139, 156, 169, 181, 186, 191, -1 };
 		static const uint8_t colors[] = {
@@ -653,6 +658,7 @@ void Menu::handleAssignPlayer() {
 			memcpy(&_paletteBuffer[indexes[i] * 3], &colors[offset], 3);
 			offset += 3;
 		}
+#endif
 	} else {
 		memcpy(_paletteBuffer, _playerBitmapData + _playerBitmapSize, 256 * 3);
 	}

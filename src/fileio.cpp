@@ -50,28 +50,28 @@ emu_printf("File::seek\n");
 }
 
 int File::read(uint8_t *ptr, int size) {
-emu_printf("sat_fread %d\n", size);
+//emu_printf("sat_fread %d\n", size);
 	return sat_fread(ptr, 1, size, _fp);
 }
 
 uint8_t File::readByte() {
-	uint8_t buf;
+emu_printf("readByte\n");
+	static uint8_t buf;
 	read(&buf, 1);
 	return buf;
 }
 
 uint16_t File::readUint16() {
-	uint8_t buf[2];
+emu_printf("readUint16\n");
+	static uint8_t buf[2];
 	read(buf, 2);
 	return READ_LE_UINT16(buf);
 }
 
 uint32_t File::readUint32() {
-	uint8_t buf[4];
+emu_printf("readUint32\n");
+	static uint8_t buf[4];
 	read(buf, 4);
-	
-emu_printf("%d %d %d %d\n",buf[0],buf[1],buf[2],buf[3]);	
-	
 	return READ_LE_UINT32(buf);
 }
 

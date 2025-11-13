@@ -95,7 +95,7 @@ static const char *_levelNames[] = {
 	"dark",
 	0
 };
-
+#if 0
 static bool configBool(const char *value) {
 	return strcasecmp(value, "true") == 0 || (strlen(value) == 2 && (value[0] == 't' || value[0] == '1'));
 }
@@ -137,7 +137,7 @@ static void handleConfigIni(Game *g, const char *section, const char *name, cons
 		}
 	}
 }
-#if 0
+
 static void readConfigIni(const char *filename, Game *g) {
 	GFS_FILE *fp = fopen(filename, "rb");
 	if (fp) {
@@ -278,7 +278,6 @@ emu_printf("ss_main\n");
 #endif
 	// load setup.dat (PC) or setup.dax (PSX)
 	g->_res->loadSetupDat();
-	slSynch();
 emu_printf("ss_main4 %p\n", g_system);
 //	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;

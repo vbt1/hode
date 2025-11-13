@@ -127,7 +127,7 @@ emu_printf("_version NOT V1_2\n");
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[32];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
-emu_printf("filename %s\n", filename);
+emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
 emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
@@ -141,6 +141,10 @@ emu_printf("readUint32 %s\n", filename);
 emu_printf("closeDat %s\n", filename);
 			closeDat(_fs, _lvlFile);
 emu_printf("closeDat %s done\n", filename);
+		}
+		else
+		{
+			emu_printf("openDat %s failed\n", filename);		
 		}
 	}
 	// detect if this is a demo version by trying to open the second level data files
@@ -219,7 +223,7 @@ emu_printf("loadSetupDat\n");
 		emu_printf("Unhandled .dat version %d\n", _datHdr.version);
 		return;
 	}
-
+emu_printf("version found %d\n", _datHdr.version);
 	_datHdr.bufferSize0    = _datFile->readUint32();
 	_datHdr.bufferSize1    = _datFile->readUint32();
 	_datHdr.sssOffset      = _datFile->readUint32();
@@ -260,12 +264,15 @@ emu_printf("loadSetupDat\n");
 
 		// font
 		static const int kFontSize = 16 * 16 * 64;
+		emu_printf("malloc(kFontSize) %d\n", kFontSize);		
 		_fontBuffer = (uint8_t *)malloc(kFontSize);
 		if (_fontBuffer) {
 			/* size = READ_LE_UINT32(_loadingImageBuffer + offset); */ offset += 4;
 			if (_datHdr.version == 11) {
 				const uint32_t uncompressedSize = decodeLZW(_loadingImageBuffer + offset, _fontBuffer);
-				assert(uncompressedSize == kFontSize);
+//				assert(uncompressedSize == kFontSize);
+				if(uncompressedSize != kFontSize)
+					emu_printf("font decompression error\n");
 			} else {
 				memcpy(_fontBuffer, _loadingImageBuffer + offset, kFontSize);
 			}
@@ -276,8 +283,15 @@ emu_printf("loadSetupDat\n");
 				}
 			}
 		}
+		else
+			emu_printf("malloc(kFontSize) failed\n");
 	}
-	assert(_datHdr.yesNoQuitImage == hintsCount - 3);
+//	assert(_datHdr.yesNoQuitImage == hintsCount - 3);
+	if(_datHdr.yesNoQuitImage != hintsCount - 3)
+	{
+		emu_printf("_datHdr.yesNoQuitImage != hintsCount - 3\n");
+		return;
+	}
 	_menuBuffersOffset = _datHdr.hintsImageOffsetTable[_datHdr.yesNoQuitImage + 2];
 }
 

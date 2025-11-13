@@ -30,6 +30,7 @@ emu_printf("_res %p\n",_res);
 emu_printf("_paf %p\n",_paf);
 	_rnd.setSeed();
 	_video = new Video();
+emu_printf("_video %p\n",_video);
 	_cheats = cheats;
 	_playDemo = false;
 
