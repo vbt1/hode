@@ -5,6 +5,7 @@
 #include "paf.h"
 #include "resource.h"
 #include "system.h"
+#include "systemstub.h"
 #include "util.h"
 #include "video.h"
 
@@ -450,7 +451,9 @@ bool Menu::mainLoop() {
 			_paf->setCallback(&pafCb);
 			playSound(kSound_0xA0);
 			ret = handleOptions();
+#ifdef SOUND
 			_g->resetSound();
+#endif
 			_paf->setCallback(0);
 		} else if (option == kTitleScreen_Quit) {
 		}
@@ -1364,6 +1367,7 @@ void Menu::handleSoundScreen(int num) {
 			drawSoundScreen();
 			if (so) {
 				int frames, panning = so->panning;
+#ifdef SOUND
 				while ((frames = _g->getSoundPosition(so)) > 0) {
 					if (frames <= 20) {
 						if (_soundTestSpriteNum != 7) {
@@ -1388,6 +1392,7 @@ void Menu::handleSoundScreen(int num) {
 					}
 					g_system->sleep(kDelayMs);
 				}
+#endif
 			}
 			_soundTestSpriteNum = 24;
 		} else if (_soundNum == kSoundNum_Cancel) {

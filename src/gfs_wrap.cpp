@@ -7,7 +7,7 @@ extern "C" {
 #include <ctype.h>
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
-Uint8 *current_lwram;
+Uint8 *current_lwram = (Uint8 *)VBT_L_START;
 char 	*strtok (char *__restrict, const char *__restrict);
 int	 strncasecmp(const char *, const char *, size_t) __pure;
 GfsDirTbl gfsDirTbl;
@@ -299,7 +299,7 @@ emu_printf("skip bytes\n");
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 	} else {
-emu_printf("no skip bytes\n");
+emu_printf("no skip bytes %d %p\n", tot_bytes, ptr);
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
 	}
 	stream->f_seek_pos += (readBytes - skip_bytes); // Update the seek cursor 

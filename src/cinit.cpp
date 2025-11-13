@@ -15,6 +15,7 @@ void *memset4_fast(void *, long, size_t);
 
 #define		SystemWork		0x060ffc00		/* System Variable Address */
 #define		SystemSize		(0x06100000-0x060ffc00)		/* System Variable Size */
+
 extern Uint32 _bstart, _bend;
 
 extern void ss_main( void );

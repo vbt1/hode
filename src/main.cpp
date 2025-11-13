@@ -6,6 +6,16 @@
 //#if !defined(PSP) && !defined(WII)
 //#include <SDL.h>
 //#endif
+
+extern "C" {
+#include 	<sl_def.h>
+#include	<sega_sys.h>
+#include	"gfs_wrap.h"
+#include <stdarg.h>
+#include <string.h>
+void *memset4_fast(void *, long, size_t);
+}
+
 #include <ctype.h>
 #include <getopt.h>
 #include <sys/stat.h>
@@ -20,10 +30,11 @@
 #include "systemstub.h"
 #include "video.h"
 
+
 void *__dso_handle = 0;
 
 static const char *_title = "Heart of Darkness";
-
+/*
 static const char *_configIni = "hode.ini";
 
 static const char *_usage =
@@ -34,11 +45,11 @@ static const char *_usage =
 	"  --level=NUM       Start at level NUM\n"
 	"  --checkpoint=NUM  Start at checkpoint NUM\n"
 ;
-
+*/
 static bool _fullscreen = false;
 static bool _widescreen = false;
 
-static const bool _runBenchmark = false;
+//static const bool _runBenchmark = false;
 static bool _runMenu = true;
 static bool _displayLoadingScreen = true;
 
@@ -267,6 +278,7 @@ emu_printf("ss_main\n");
 #endif
 	// load setup.dat (PC) or setup.dax (PSX)
 	g->_res->loadSetupDat();
+	slSynch();
 emu_printf("ss_main4 %p\n", g_system);
 //	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;
@@ -277,6 +289,8 @@ emu_printf("ss_main5 %p\n", g_system);
 	if (isPsx) {
 		g->_video->initPsx();
 	}
+#endif
+
 	if (_displayLoadingScreen) {
 		g->displayLoadingScreen();
 	}
@@ -315,7 +329,7 @@ emu_printf("ss_main5 %p\n", g_system);
 			levelChanged = true;
 		}
 	} while (!g_system->inp.quit && resume && !isPsx); // do not return to menu when starting from a specific level checkpoint
-#endif
+
 	g_system->stopAudio();
 	g_system->destroy();
 	delete g;

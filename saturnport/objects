@@ -6,6 +6,7 @@ SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/paf.cpp \
 		$(SRCDIR)/game.cpp \
 		$(SRCDIR)/andy.cpp \
+		$(SRCDIR)/menu.cpp \
 		$(SRCDIR)/monsters.cpp \
 		$(SRCDIR)/level1_rock.cpp \
 		$(SRCDIR)/level2_fort.cpp \

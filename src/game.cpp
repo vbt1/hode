@@ -2695,6 +2695,7 @@ void Game::callLevel_terminate() {
 }
 
 void Game::displayLoadingScreen() {
+emu_printf("displayLoadingScreen\n");
 	if (_res->_isPsx) {
 #ifdef PSX
 		static const int kHintPsxLoading = 39;
