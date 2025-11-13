@@ -17,14 +17,14 @@ static const bool kSeekAbsolutePosition = true;
 static const bool kSeekAbsolutePosition = false;
 #endif
 
-#if 0
+
 File::File()
 	: _fp(0) {
 }
 
 File::~File() {
 }
-#endif
+
 void File::setFp(GFS_FILE *fp) {
 emu_printf("setFp\n");
 	_fp = fp;
@@ -38,25 +38,28 @@ emu_printf("File::seek\n");
 
 void File::seek(int pos, int whence) {
 emu_printf("File::seek\n");
-	if (kSeekAbsolutePosition && whence == SEEK_CUR) {
-		pos += sat_ftell(_fp);
-		whence = SEEK_SET;
+	if(_fp)
+	{
+		if (kSeekAbsolutePosition && whence == SEEK_CUR) {
+			pos += sat_ftell(_fp);
+			whence = SEEK_SET;
+		}
+	emu_printf("sat_fseek\n");
+		sat_fseek(_fp, pos, whence);
 	}
-emu_printf("sat_fseek\n");
-	sat_fseek(_fp, pos, whence);
 }
 
 int File::read(uint8_t *ptr, int size) {
 emu_printf("sat_fread %d\n", size);
 	return sat_fread(ptr, 1, size, _fp);
 }
-#if 0
+
 uint8_t File::readByte() {
 	uint8_t buf;
 	read(&buf, 1);
 	return buf;
 }
-#endif
+
 uint16_t File::readUint16() {
 	uint8_t buf[2];
 	read(buf, 2);
@@ -82,7 +85,7 @@ int fioAlignSizeTo2048(int size) {
 }
 
 uint32_t fioUpdateCRC(uint32_t sum, const uint8_t *buf, uint32_t size) {
-	assert((size & 3) == 0);
+//	assert((size & 3) == 0);
 	for (uint32_t offset = 0; offset < size; offset += 4) {
 		sum ^= READ_LE_UINT32(buf + offset);
 	}
@@ -110,8 +113,8 @@ emu_printf("SectorFile::refillBuffer %p\n", ptr);
 		}*/
 	} else {
 emu_printf("SectorFile no pointer %p buf %p\n", ptr, _buf);
-//		const int size = sat_fread(_buf, 1, kFioBufferSize, _fp);
-		const int size = batchRead (_buf, kFioBufferSize);
+		const int size = sat_fread(_buf, 1, kFioBufferSize, _fp);
+//		const int size = batchRead (_buf, kFioBufferSize);
 		
 		if(size != kFioBufferSize)
 		{
@@ -142,11 +145,11 @@ emu_printf("refillBuffer seekalign\n");
 void SectorFile::seek(int pos, int whence) {
 emu_printf("SectorFile::seek\n");
 	if (whence == SEEK_SET) {
-		assert((pos & 2047) == 0);
+//		assert((pos & 2047) == 0);
 		_bufPos = 2044;
 		File::seek(pos, SEEK_SET);
 	} else {
-		assert(whence == SEEK_CUR && pos >= 0);
+//		assert(whence == SEEK_CUR && pos >= 0);
 		const int bufLen = 2044 - _bufPos;
 		if (pos < bufLen) {
 			_bufPos += pos;

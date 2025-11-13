@@ -18,7 +18,6 @@ SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/level9_dark.cpp \
 		$(SRCDIR)/random.cpp \
 		$(SRCDIR)/fs_posix.cpp \
-		$(SRCDIR)/file.cpp \
 		$(SRCDIR)/fileio.cpp \
 		$(SRCDIR)/resource.cpp \
 		$(SRCDIR)/staticres.cpp \

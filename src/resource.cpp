@@ -52,7 +52,7 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 	if (fp) {
 		emu_printf("openDat %s found\n", name);
 		f->setFp(fp);
-		emu_printf("seek %s f %p\n", name, f);
+		emu_printf("seek %s f %p %d\n", name, f, fp->f_size);
 		f->seek(0, SEEK_SET);
 		emu_printf("seek %s done\n", name);
 		return true;
@@ -193,7 +193,11 @@ emu_printf("sectorAlignedGameData %s\n", _setupDat);
 	}*/
 	bool ret = false;
 	uint8_t buf[2048];
-	if (sat_fread(buf, 1, sizeof(buf), fp) == sizeof(buf)) {
+	int sz = sat_fread(buf, 1, sizeof(buf), fp);
+	
+	emu_printf("aligned sz %d buf sz %d\n", sz, sizeof(buf));
+	
+	if (sz == sizeof(buf)) {
 		ret = fioUpdateCRC(0, buf, sizeof(buf)) == 0;
 	}
 	_fs->closeFile(fp);

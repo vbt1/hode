@@ -166,10 +166,11 @@ emu_printf("fid %p\n", fid);
 			cache_offset = 0;
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
 		}
-		else
-*/
+		else*/
 		{
+			Sint32 tot_sectors = TOT_SECTOR;
 			GFS_Seek(fp->fid, position, GFS_SEEK_SET);
+			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
 		}
 	}
 	else

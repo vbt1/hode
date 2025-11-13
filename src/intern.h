@@ -41,7 +41,7 @@ static const bool kByteSwapData = true; //(__BYTE_ORDER == __BIG_ENDIAN);
 
 #define ARRAYSIZE(a) (sizeof(a)/sizeof(a[0]))
 #define PACKED __attribute__((packed))
-
+/*
 inline uint16_t READ_LE_UINT16(const void *ptr) {
 	if (1 && (((uintptr_t)ptr) & 1) != 0) {
 		uint16_t value;
@@ -60,6 +60,16 @@ inline uint32_t READ_LE_UINT32(const void *ptr) {
 	} else {
 		return le32toh(*(const uint32_t *)ptr);
 	}
+}
+*/
+inline uint16_t READ_LE_UINT16(const void *ptr) {
+	const uint8_t *b = (const uint8_t *)ptr;
+	return (b[1] << 8) | b[0];
+}
+
+inline uint32_t READ_LE_UINT32(const void *ptr) {
+	const uint8_t *b = (const uint8_t *)ptr;
+	return (b[3] << 24) | (b[2] << 16) | (b[1] << 8) | b[0];
 }
 
 inline void WRITE_LE_UINT16(void *ptr, uint16_t v) {
