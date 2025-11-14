@@ -2,7 +2,9 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-
+extern "C" {
+#include <sl_def.h>
+};
 #include "game.h"
 #include "fileio.h"
 #include "level.h"
@@ -2708,11 +2710,16 @@ emu_printf("displayLoadingScreen\n");
 		}
 #endif
 	} else {
+			slScrAutoDisp(NBG1ON); 
 		if (_res->loadDatLoadingImage(_video->_frontLayer, _video->_palette)) {
 			g_system->setPalette(_video->_palette, 256, 6);
 			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (int)256);
 			g_system->updateScreen(false);
+			
 		}
+		slSynch();
+emu_printf("picture loaded\n");
+//		while(1);
 	}
 }
 #if 0

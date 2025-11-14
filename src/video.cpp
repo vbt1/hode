@@ -18,7 +18,7 @@ Video::Video() {
 	_drawLine.y1 = 0;
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
-#if 0
+#if 1
 	_shadowLayer = (uint8_t *)malloc(W * H + 1); // projectionData offset can be equal to W * H
 	_frontLayer = (uint8_t *)malloc(W * H);
 	_backgroundLayer = (uint8_t *)malloc(W * H);

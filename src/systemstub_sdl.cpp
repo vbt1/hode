@@ -155,9 +155,9 @@ struct SystemStub_SDL : System {
 	virtual ~SystemStub_SDL();
 	virtual void init(const char *title, int w, int h);
 	virtual void destroy();
-	virtual void setPaletteEntry(uint16 i, const Color *c);
-	virtual void getPaletteEntry(uint16 i, Color *c);
-	virtual void setOverscanColor(uint8 i);
+//	virtual void setPaletteEntry(uint16 i, const Color *c);
+//	virtual void getPaletteEntry(uint16 i, Color *c);
+//	virtual void setOverscanColor(uint8 i);
 	virtual void initTimeStamp();
 	virtual uint32 getOutputSampleRate();
 	virtual void setup_input (void); // Setup input controllers
@@ -187,14 +187,6 @@ struct SystemStub_SDL : System {
 	void init_cdda(void);
 	void sound_external_audio_enable(uint8_t vol_l, uint8_t vol_r);
 };
-/*
-g_system_ptr = new SystemStub_SDL();
-    g_system = g_system_ptr;
-*/
-//SystemStub_SDL system_saturn;// = new SystemStub_SDL();;
-//System const *g_system = &system_saturn;
-
-SystemStub_SDL* system_saturn = nullptr;
 System* g_system = nullptr;
 
 // static const int AUDIO_FREQ = 44100;
@@ -210,7 +202,7 @@ static const int GAME_H = 192;
 static const int BLUR_TEX_W = 16;
 static const int BLUR_TEX_H = 16;
 
-static uint32_t __attribute__((aligned(16))) _clut[256];
+static uint16_t __attribute__((aligned(16))) _clut[256];
 System *SystemStub_SDL_create() {
 	return new SystemStub_SDL();
 }
@@ -272,6 +264,7 @@ void SystemStub_SDL::setGamma(float gamma) {
 void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
 	const int shift = 8 - depth;
 	for (int i = 0; i < n; ++i) {
+
 		int r = pal[i * 3];
 		int g = pal[i * 3 + 1];
 		int b = pal[i * 3 + 2];
@@ -280,8 +273,11 @@ void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
 			g = (g << shift) | (g >> (depth - shift));
 			b = (b << shift) | (b >> (depth - shift));
 		}
-		_clut[i] = RGB(r, g, b);
+		
+		emu_printf("r%d g%d b%d\n",r,g,b);
+		_clut[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag; // BGR for saturn		
 	}
+	slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
 //	sceKernelDcacheWritebackRange(_clut, sizeof(_clut));
 }
 
@@ -296,7 +292,7 @@ void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 		_pal[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag; // BGR for saturn
 	}
 }
-*/
+
 void SystemStub_SDL::setPaletteEntry(uint16 i, const Color *c) {
 	_pal[i] = RGB(c->r, c->g, c->b);
 }
@@ -310,36 +306,24 @@ void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
 	c->g = g;
 	c->b = b;
 }
-
-void SystemStub_SDL::setOverscanColor(uint8 i) {
-//	_overscanColor = i;
-	const int size = 512*448;
-	memset((void*)VDP2_VRAM_A0, i, size);
-}
-
+*/
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
 	// Calculate initial source and destination pointers
-//emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
+emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
-	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + y * pitch + x);
+	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
-//	if (x == 0) {
-	if (w == pitch) {
-//		memcpyl(dstPtr, srcPtr, w * h);
-		DMA_ScuMemCopy(dstPtr, srcPtr, w * h);
+	for (uint16 idx = 0; idx < h; ++idx) {
+		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+		srcPtr += pitch;
+		dstPtr += (pitch*2);
 		SCU_DMAWait();
-	} else {
-		for (uint16 idx = 0; idx < h; ++idx) {
-			DMA_ScuMemCopy(dstPtr, srcPtr, w);
-			srcPtr += pitch;
-			dstPtr += pitch;
-			SCU_DMAWait();
-		}
 	}
 }
 
 void SystemStub_SDL::updateScreen(bool drawWidescreen) {
-	slTransferEntry((void*)_pal, (void*)(CRAM_BANK + 512), 256 * 4);  // vbt à remettre
+	slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);  // vbt à remettre
+	slTransferEntry((void*)_clut, (void*)(CRAM_BANK+512), 256 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {
@@ -530,7 +514,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
 #endif
 	
-	memset((void*)VDP2_VRAM_A0, 0x00, 512*448); // Clean the VRAM banks. // à remettre
+	memset((void*)VDP2_VRAM_A0, 0x00, 512*240); // Clean the VRAM banks. // à remettre
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
 	slPriorityNbg0(4); // Game screen
 	slPriorityNbg1(6); // Game screen
@@ -544,12 +528,12 @@ void SystemStub_SDL::prepareGfxMode() {
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
 	slBack1ColSet((void *)BACK_COL_ADR, 0x8000); // Black color background
 	
-	extern Uint16 VDP2_RAMCTL;	
-	VDP2_RAMCTL = VDP2_RAMCTL & 0xFCFF;
-	extern Uint16 VDP2_TVMD;
-	VDP2_TVMD &= 0xFEFF;
-	slScrAutoDisp(NBG0ON|NBG1ON|SPRON); // à faire toujours en dernier
-	slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
+//	extern Uint16 VDP2_RAMCTL;	
+//	VDP2_RAMCTL = VDP2_RAMCTL & 0xFCFF;
+//	extern Uint16 VDP2_TVMD;
+//	VDP2_TVMD &= 0xFEFF;
+	slScrAutoDisp(NBG1ON); // à faire toujours en dernier
+//	slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
 /*
 	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224);
 
@@ -562,11 +546,11 @@ void SystemStub_SDL::prepareGfxMode() {
 	slScrWindowModeNbg1(win1_IN);
 	slScrWindowModeSPR(win0_IN);
 */	
-//	slScrPosNbg0(toFIXED(-63),0) ;
-	slScrPosNbg1(toFIXED(-63),0) ;
-	slSpecialPrioModeNbg0(spPRI_Dot);
-	slSpecialPrioBitNbg0(1); // obligatoire
-	slSpecialFuncCodeA(sfCOL_ef);
+	slScrPosNbg0(0,0) ;
+	slScrPosNbg1(0,0) ;
+//	slSpecialPrioModeNbg0(spPRI_Dot);
+//	slSpecialPrioBitNbg0(1); // obligatoire
+//	slSpecialFuncCodeA(sfCOL_ef);
 //	slSpecialFuncCodeB(0x4);
 	slTVOn(); // Initialization completed... tv back on
 	slSynch();  // faire un slsynch à la fin de la config

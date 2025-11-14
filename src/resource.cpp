@@ -318,10 +318,15 @@ bool Resource::loadDatHintImage(int num, uint8_t *dst, uint8_t *pal) {
 }
 
 bool Resource::loadDatLoadingImage(uint8_t *dst, uint8_t *pal) {
-	assert(!_isPsx);
+emu_printf("loadDatLoadingImage\n");
+//	assert(!_isPsx);
 	if (_loadingImageBuffer) {
+emu_printf("_loadingImageBuffer\n");		
 		const uint32_t bufferSize = READ_LE_UINT32(_loadingImageBuffer);
 		const int size = decodeLZW(_loadingImageBuffer + 8, dst);
+
+emu_printf("size %d expect %d dst %p\n", size, 256 * 192, dst);			
+		
 		assert(size == 256 * 192);
 		// palette follows compressed bitmap
 		memcpy(pal, _loadingImageBuffer + 8 + bufferSize, 256 * 3);

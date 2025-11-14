@@ -32,11 +32,9 @@ void *memset4_fast(void *, long, size_t);
 
 
 void *__dso_handle = 0;
-extern System *system_saturn;
 System *SystemStub_SDL_create();
 
 static const char *_title = "Heart of Darkness";
-//extern SystemStub_SDL *system_saturn;
 /*
 static const char *_configIni = "hode.ini";
 
@@ -285,9 +283,7 @@ emu_printf("ss_main4 %p\n", g_system);
 //	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;
 	
-	system_saturn = SystemStub_SDL_create();
-    g_system = system_saturn;
-	
+	g_system = SystemStub_SDL_create();
 	g_system->init(_title, Video::W, Video::H);
 emu_printf("ss_main5 %p\n", g_system);
 #if 0
