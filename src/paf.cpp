@@ -163,7 +163,7 @@ bool PafPlayer::readPafHeader() {
 uint32_t *PafPlayer::readPafHeaderTable(int count) {
 	uint32_t *dst = (uint32_t *)malloc(count * sizeof(uint32_t));
 	if (!dst) {
-		warning("readPafHeaderTable() Unable to allocate %d bytes", count * sizeof(uint32_t));
+		emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		return 0;
 	}
 	for (int i = 0; i < count; ++i) {
@@ -397,7 +397,7 @@ void PafPlayer::decodeAudioFrame(const uint8_t *src, uint32_t offset, uint32_t s
 
 	// copy should be sequential
 	if (offset != _audioBufferOffsetWr) {
-		warning("Unexpected offset 0x%x wr 0x%x rd 0x%x num %d", offset, _audioBufferOffsetWr, _audioBufferOffsetRd, _videoNum);
+		emu_printf("Unexpected offset 0x%x wr 0x%x rd 0x%x num %d\n", offset, _audioBufferOffsetWr, _audioBufferOffsetRd, _videoNum);
 		assert(offset == 0);
 		// this happens in paf #3 of Italian release, there is a flush at 0x16800 instead of 0x1f000
 		_audioBufferOffsetWr = 0;
@@ -429,6 +429,10 @@ void PafPlayer::decodeAudioFrame(const uint8_t *src, uint32_t offset, uint32_t s
 			}
 			_audioQueueTail = sq;
 			g_system->unlockAudio();
+		}
+		else
+		{
+			emu_printf("PafAudioQueue() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		}
 
 		_audioBufferOffsetRd += count * kAudioStrideSize;

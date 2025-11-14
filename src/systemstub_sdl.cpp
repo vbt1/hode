@@ -187,9 +187,16 @@ struct SystemStub_SDL : System {
 	void init_cdda(void);
 	void sound_external_audio_enable(uint8_t vol_l, uint8_t vol_r);
 };
+/*
+g_system_ptr = new SystemStub_SDL();
+    g_system = g_system_ptr;
+*/
+//SystemStub_SDL system_saturn;// = new SystemStub_SDL();;
+//System const *g_system = &system_saturn;
 
-SystemStub_SDL system_saturn;
-System *const g_system = &system_saturn;
+SystemStub_SDL* system_saturn = nullptr;
+System* g_system = nullptr;
+
 // static const int AUDIO_FREQ = 44100;
 static const int AUDIO_SAMPLES_COUNT = 2048;
 
@@ -204,6 +211,9 @@ static const int BLUR_TEX_W = 16;
 static const int BLUR_TEX_H = 16;
 
 static uint32_t __attribute__((aligned(16))) _clut[256];
+System *SystemStub_SDL_create() {
+	return new SystemStub_SDL();
+}
 
 SystemStub_SDL::SystemStub_SDL() {
 }
@@ -734,9 +744,9 @@ void vblIn (void) {
 			frame_y = 0;
 		}
 #endif
-		system_saturn.updateScreen(0);
+//		system_saturn.updateScreen(0);
 	}
-	system_saturn.processEvents();
+//	system_saturn.processEvents();
 	timeTick();
 }
 

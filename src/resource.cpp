@@ -245,7 +245,7 @@ emu_printf("version found %d\n", _datHdr.version);
 		_datHdr.hintsImageSizeTable[i] = _datFile->readUint32();
 	}
 	_datFile->seek(2048, SEEK_SET); // align to next sector
-
+	emu_printf("malloc(loadingImageSize) %d\n", _datHdr.loadingImageSize);
 	_loadingImageBuffer = (uint8_t *)malloc(_datHdr.loadingImageSize);
 	if (_loadingImageBuffer) {
 		_datFile->read(_loadingImageBuffer, _datHdr.loadingImageSize);
@@ -285,6 +285,10 @@ emu_printf("version found %d\n", _datHdr.version);
 		}
 		else
 			emu_printf("malloc(kFontSize) failed\n");
+	}
+	else
+	{
+		emu_printf("_loadingImageBuffer Unable to allocate %d bytes\n", _datHdr.loadingImageSize);
 	}
 //	assert(_datHdr.yesNoQuitImage == hintsCount - 3);
 	if(_datHdr.yesNoQuitImage != hintsCount - 3)

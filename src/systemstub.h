@@ -89,5 +89,5 @@ struct System {
 
 //extern SystemStub *SystemStub_SDL_create();
 
-extern System *const g_system;
+extern System *g_system;
 #endif // __SYSTEMSTUB_H__
