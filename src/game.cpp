@@ -2715,11 +2715,7 @@ emu_printf("displayLoadingScreen\n");
 			g_system->setPalette(_video->_palette, 256, 6);
 			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (int)256);
 			g_system->updateScreen(false);
-			
 		}
-		slSynch();
-emu_printf("picture loaded\n");
-//		while(1);
 	}
 }
 #if 0
@@ -4582,15 +4578,18 @@ void Game::updateWormHoleSprites() {
 	}
 	_res->decLvlSpriteDataRefCounter(&tmp);
 }
-#if 0
+
 void Game::loadSetupCfg(bool resume) {
 	_resumeGame = resume;
-	if (!_res->readSetupCfg(&_setupConfig)) {
+#if 0	
+	if (!_res->readSetupCfg(&_setupConfig)) 
+#endif
+	{
 		memset(&_setupConfig, 0, sizeof(_setupConfig));
 		_res->setDefaultsSetupCfg(&_setupConfig, 0);
 	}
 }
-
+#if 0
 void Game::saveSetupCfg() {
 	const int num = _setupConfig.currentPlayer;
 	if (_currentLevelCheckpoint > _setupConfig.players[num].progress[_currentLevel]) {

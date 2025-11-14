@@ -273,8 +273,7 @@ void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
 			g = (g << shift) | (g >> (depth - shift));
 			b = (b << shift) | (b >> (depth - shift));
 		}
-		
-		emu_printf("r%d g%d b%d\n",r,g,b);
+//		emu_printf("r%d g%d b%d\n",r,g,b);
 		_clut[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag; // BGR for saturn		
 	}
 	slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
@@ -319,6 +318,7 @@ emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 		dstPtr += (pitch*2);
 		SCU_DMAWait();
 	}
+emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
 }
 
 void SystemStub_SDL::updateScreen(bool drawWidescreen) {

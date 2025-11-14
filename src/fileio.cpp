@@ -32,19 +32,19 @@ emu_printf("setFp %p\n", _fp);
 }
 
 void File::seekAlign(uint32_t pos) {
-emu_printf("File::seek\n");
+//emu_printf("File::seek\n");
 	sat_fseek(_fp, pos, SEEK_SET);
 }
 
 void File::seek(int pos, int whence) {
-emu_printf("File::seek\n");
+//emu_printf("File::seek\n");
 	if(_fp)
 	{
 		if (kSeekAbsolutePosition && whence == SEEK_CUR) {
 			pos += sat_ftell(_fp);
 			whence = SEEK_SET;
 		}
-	emu_printf("sat_fseek\n");
+//	emu_printf("sat_fseek\n");
 		sat_fseek(_fp, pos, whence);
 	}
 }
@@ -55,22 +55,22 @@ int File::read(uint8_t *ptr, int size) {
 }
 
 uint8_t File::readByte() {
-emu_printf("readByte\n");
-	static uint8_t buf;
+//emu_printf("readByte\n");
+	uint8_t buf;
 	read(&buf, 1);
 	return buf;
 }
 
 uint16_t File::readUint16() {
-emu_printf("readUint16\n");
-	static uint8_t buf[2];
+//emu_printf("readUint16\n");
+	uint8_t buf[2];
 	read(buf, 2);
 	return READ_LE_UINT16(buf);
 }
 
 uint32_t File::readUint32() {
-emu_printf("readUint32\n");
-	static uint8_t buf[4];
+//emu_printf("readUint32\n");
+	uint8_t buf[4];
 	read(buf, 4);
 	return READ_LE_UINT32(buf);
 }

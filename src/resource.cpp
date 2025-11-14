@@ -54,14 +54,14 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 		f->setFp(fp);
 		emu_printf("seek %s f %p %d\n", name, f, fp->f_size);
 		f->seek(0, SEEK_SET);
-		emu_printf("seek %s done\n", name);
+//		emu_printf("seek %s done\n", name);
 		return true;
 	}
 	return false;
 }
 
 static void closeDat(FileSystem *fs, File *f) {
-	emu_printf("closeDat\n");
+//	emu_printf("closeDat\n");
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -138,9 +138,9 @@ emu_printf("readUint32 %s\n", filename);
 			if (size == 0) {
 				_version = V1_0;
 			}
-emu_printf("closeDat %s\n", filename);
+//emu_printf("closeDat %s\n", filename);
 			closeDat(_fs, _lvlFile);
-emu_printf("closeDat %s done\n", filename);
+//emu_printf("closeDat %s done\n", filename);
 		}
 		else
 		{
@@ -151,10 +151,10 @@ emu_printf("closeDat %s done\n", filename);
 	char filename[32];
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
 	if (openDat(_fs, filename, _lvlFile)) {
-emu_printf("NOT DEMO\n");
+//emu_printf("NOT DEMO\n");
 		closeDat(_fs, _lvlFile);
 	} else {
-emu_printf("DEMO\n");
+//emu_printf("DEMO\n");
 		_isDemo = true;
 	}
 	emu_printf("psx %d demo %d version %d\n", _isPsx, _isDemo, _version);
@@ -336,20 +336,26 @@ emu_printf("size %d expect %d dst %p\n", size, 256 * 192, dst);
 }
 
 void Resource::loadDatMenuBuffers() {
+emu_printf("loadDatMenuBuffers\n");
 	assert((_datHdr.sssOffset & 0x7FF) == 0);
 	_datFile->seek(_datHdr.sssOffset, SEEK_SET);
+#ifdef SOUND
 	loadSssData(_datFile, _datHdr.sssOffset);
-
+#endif
 	const uint32_t baseOffset = _menuBuffersOffset;
 	_datFile->seek(baseOffset, SEEK_SET);
-	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
+emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
+//	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
+	_menuBuffer1 = (uint8_t *)0x22400000;
 	if (_menuBuffer1) {
 		_datFile->read(_menuBuffer1, _datHdr.bufferSize1);
 	}
 	if (_datHdr.version == 11) {
 		_datFile->seek(baseOffset + fioAlignSizeTo2048(_datHdr.bufferSize1), SEEK_SET); // align to next sector
 	}
-	_menuBuffer0 = (uint8_t *)malloc(_datHdr.bufferSize0);
+emu_printf("malloc(_datHdr.bufferSize0) %d\n", _datHdr.bufferSize0);
+//	_menuBuffer0 = (uint8_t *)malloc(_datHdr.bufferSize0);
+	_menuBuffer0 = (uint8_t *)0x22600000;
 	if (_menuBuffer0) {
 		_datFile->read(_menuBuffer0, _datHdr.bufferSize0);
 	}
@@ -860,8 +866,8 @@ int Resource::findScreenGridIndex(int screenNum) const {
 }
 
 void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
-
-	assert(fp == _sssFile || fp == _datFile || fp == _lvlFile);
+emu_printf("loadSssData\n");
+//	assert(fp == _sssFile || fp == _datFile || fp == _lvlFile);
 
 	if (_sssHdr.bufferSize != 0) {
 		unloadSssData();
@@ -870,7 +876,7 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 	}
 	_sssHdr.version = fp->readUint32();
 	if (_sssHdr.version != 6 && _sssHdr.version != 10 && _sssHdr.version != 12) {
-		warning("Unhandled .sss version %d", _sssHdr.version);
+		emu_printf("Unhandled .sss version %d\n", _sssHdr.version);
 		closeDat(_fs, _sssFile);
 		return;
 	}

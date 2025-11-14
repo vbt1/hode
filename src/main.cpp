@@ -34,6 +34,49 @@ void *memset4_fast(void *, long, size_t);
 void *__dso_handle = 0;
 System *SystemStub_SDL_create();
 
+
+Uint32 CartRAMsize = 0;
+
+Sint16 CartRAM_init(Uint8 cs) {
+	Uint32 setReg, refReg, *DRAM0, *DRAM1;
+	Uint8 id;
+	
+	id = *((Uint8 *)0x24ffffff);
+    if(id == 0x5a) {
+		CartRAMsize = 0x80000; // 512kb (*2 banks)
+    } else if(id == 0x5c) {
+        CartRAMsize = 0x200000; // 2Mb (*2 banks)
+    } else {
+        CartRAMsize = 0x0; // No Connection
+        return -1;
+    }
+
+	*((Uint16 *)0x257efffe) = 1;
+	setReg = refReg = 0;
+
+	if(cs == 0) {
+        // set cs0 for 32MBit
+        setReg |= 1 << 29;  // After-READ precharge insert bit
+        setReg |= 3 << 24;  // Burst cycle wait number
+        setReg |= 3 << 20;  // Normal cycle wait number
+    } else {
+        // set cs1 for 8MBit
+        setReg |= 1 << 28;  // external wait effective bit
+        setReg |= 15 << 24; // Burst cycle wait number
+        setReg |= 15 << 20; // Normal cycle wait number
+    }
+	
+	*((Uint32 *)0x25fe00B0) = setReg;
+
+    DRAM0 = (Uint32 *)0x22400000;
+    DRAM1 = (Uint32 *)0x22600000;
+
+	memset(DRAM0, 0, CartRAMsize); // Clean up the expanded ram.
+	memset(DRAM1, 0, CartRAMsize);
+
+	return id;
+}
+
 static const char *_title = "Heart of Darkness";
 /*
 static const char *_configIni = "hode.ini";
@@ -180,6 +223,8 @@ static void readConfigIni(const char *filename, Game *g) {
 #endif
 //int main(int argc, char *argv[]) {
 int ss_main() {
+	CartRAM_init(0);
+
 	char *dataPath = 0;
 	char *savePath = 0;
 	int level = 0;
@@ -279,13 +324,11 @@ emu_printf("ss_main\n");
 #endif
 	// load setup.dat (PC) or setup.dax (PSX)
 	g->_res->loadSetupDat();
-emu_printf("ss_main4 %p\n", g_system);
 //	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;
 	
 	g_system = SystemStub_SDL_create();
 	g_system->init(_title, Video::W, Video::H);
-emu_printf("ss_main5 %p\n", g_system);
 #if 0
 	setupAudio(g);
 	if (isPsx) {
@@ -298,11 +341,13 @@ emu_printf("ss_main5 %p\n", g_system);
 	}
 
 	do {
-#if 0
+emu_printf("loadSetupCfg\n");
 		g->loadSetupCfg(resume);
-#endif
+
 		if (_runMenu && resume) {
+emu_printf("new Menu\n");
 			Menu *m = new Menu(g, g->_paf, g->_res, g->_video);
+emu_printf("mainloop\n");
 			const bool runGame = m->mainLoop();
 			delete m;
 			if (!runGame) {
@@ -312,9 +357,7 @@ emu_printf("ss_main5 %p\n", g_system);
 		bool levelChanged = false;
 		while (!g_system->inp.quit && level < kLvl_test) {
 			if (_displayLoadingScreen) {
-#if 0
 				g->displayLoadingScreen();
-#endif
 			}
 			g->mainLoop(level, checkpoint, levelChanged);
 			// do not save progress when starting from a specific level checkpoint

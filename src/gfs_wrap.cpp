@@ -189,7 +189,7 @@ emu_printf("sat_fclose\n");
 }
 
 int sat_fseek(GFS_FILE *stream, long offset, int whence) {
-emu_printf("sat_fseek\n");	
+//emu_printf("sat_fseek\n");	
 	if(stream == NULL) return -1;
 
 	switch(whence) {
@@ -229,7 +229,7 @@ int sat_ftell(GFS_FILE *stream)
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
-emu_printf("sat_fread ptr %p size %d\n", ptr, size);	
+//emu_printf("sat_fread ptr %p size %d\n", ptr, size);	
 
 	if (ptr == NULL || stream == NULL) return 0; // nothing to do then
 	if (size == 0 || nmemb == 0) return 0;
@@ -269,7 +269,7 @@ partial_cache:
 		if(((stream->f_seek_pos + dataToRead) < end_offset) && (stream->f_seek_pos >= cache_offset)) {
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
 
-emu_printf("offset_in_cache %d \n", offset_in_cache);			
+//emu_printf("offset_in_cache %d \n", offset_in_cache);			
 			memcpy(ptr, cache + offset_in_cache, dataToRead);
 			stream->f_seek_pos += dataToRead;
 			return dataToRead;

@@ -109,6 +109,7 @@ static uint32_t readSoundData(uint8_t *soundData, uint32_t soundDataSize) {
 }
 #endif
 void Menu::loadData() {
+emu_printf("loadData\n");
 #ifdef SOUND
 	_g->_mix._lock(1);
 #endif
@@ -125,24 +126,28 @@ void Menu::loadData() {
 	uint32_t hdrOffset, ptrOffset = 0;
 
 	if (version == 10) {
-
+emu_printf("version == 10\n");
 		_titleSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_titleSprites->size = le32toh(_titleSprites->size);
+emu_printf("_titleSprites->size %d\n", _titleSprites->size);
 		_titleSprites->count = le16toh(_titleSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_titleSprites->firstFrameOffset = 0;
 
 		_playerSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_playerSprites->size = le32toh(_playerSprites->size);
+emu_printf("_playerSprites->size %d\n", _playerSprites->size);
 		_playerSprites->count = le16toh(_playerSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _playerSprites->size;
 		_playerSprites->firstFrameOffset = 0;
 
 		_titleBitmapSize = READ_LE_UINT32(ptr + ptrOffset);
+emu_printf("_titleBitmapSize %d\n", _titleBitmapSize);
 		_titleBitmapData = ptr + ptrOffset + sizeof(DatBitmap);
 		ptrOffset += sizeof(DatBitmap) + _titleBitmapSize + paletteSize;
 
 		_playerBitmapSize = READ_LE_UINT32(ptr + ptrOffset);
+emu_printf("_playerBitmapSize %d\n", _playerBitmapSize);
 		_playerBitmapData = ptr + ptrOffset + sizeof(DatBitmap);
 		ptrOffset += sizeof(DatBitmap) + _playerBitmapSize + paletteSize;
 
@@ -171,7 +176,7 @@ void Menu::loadData() {
 		readSoundData(_res->_menuBuffer1 + ptrOffset, _res->_datHdr.soundDataSize);
 #endif
 	} else if (version == 11) {
-
+emu_printf("version == 11\n");
 		hdrOffset = 4;
 
 		ptrOffset = 4 + (2 + kOptionsCount) * sizeof(DatBitmap);
@@ -452,7 +457,9 @@ bool Menu::mainLoop() {
 			pafCb.endProc = 0;
 			pafCb.userdata = this;
 			_paf->setCallback(&pafCb);
+#ifdef SOUND
 			playSound(kSound_0xA0);
+#endif
 			ret = handleOptions();
 #ifdef SOUND
 			_g->resetSound();
