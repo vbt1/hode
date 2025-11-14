@@ -357,6 +357,7 @@ emu_printf("mainloop\n");
 		bool levelChanged = false;
 		while (!g_system->inp.quit && level < kLvl_test) {
 			if (_displayLoadingScreen) {
+emu_printf("displayLoadingScreen 2\n");
 				g->displayLoadingScreen();
 			}
 			g->mainLoop(level, checkpoint, levelChanged);

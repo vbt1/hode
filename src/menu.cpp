@@ -448,7 +448,7 @@ bool Menu::mainLoop() {
 		const int option = handleTitleScreen();
 		if (option == kTitleScreen_AssignPlayer) {
 			handleAssignPlayer();
-			debug(kDebug_MENU, "currentPlayer %d", _config->currentPlayer);
+			emu_printf("currentPlayer %d\n", _config->currentPlayer);
 			continue;
 		} else if (option == kTitleScreen_Play) {
 			ret = true;
@@ -495,7 +495,6 @@ emu_printf("handleTitleScreen\n");
 			break;
 		}
 		if (g_system->inp.keyReleased(SYS_INP_UP)) {
-emu_printf("up released\n");
 			if (currentOption > firstOption) {
 #ifdef SOUND
 				playSound(kSound_0x70);
@@ -504,7 +503,6 @@ emu_printf("up released\n");
 			}
 		}
 		if (g_system->inp.keyReleased(SYS_INP_DOWN)) {
-emu_printf("down released\n");
 			if (currentOption < lastOption) {
 #ifdef SOUND
 				playSound(kSound_0x70);

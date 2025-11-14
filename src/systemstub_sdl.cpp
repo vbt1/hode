@@ -306,6 +306,24 @@ void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
 	c->b = b;
 }
 */
+void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) 
+{
+	int pitch = 256;
+	int x = 0;
+	int y = 0;
+	emu_printf("copyRect %d %d\n",w,h);
+		uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
+		uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
+
+		for (uint16 idx = 0; idx < h; ++idx) {
+			DMA_ScuMemCopy(dstPtr, srcPtr, w);
+			srcPtr += pitch;
+			dstPtr += (pitch*2);
+			SCU_DMAWait();
+		}
+	emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
+}
+
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
 	// Calculate initial source and destination pointers
 emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
@@ -597,7 +615,6 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	void SystemStub_SDL::copyYuv(int w, int h, const uint8_t *y, int ypitch,
 						 const uint8_t *u, int upitch, const uint8_t *v, int vpitch) {}
 	void SystemStub_SDL::fillRect(int x, int y, int w, int h, uint8_t color) {}
-	void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) {}
 	void SystemStub_SDL::shakeScreen(int dx, int dy) {}
 	void processEvents() {}
 	

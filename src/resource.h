@@ -519,14 +519,17 @@ struct ResStruct {
 	}
 
 	void deallocate() {
-		free(ptr);
+//		free(ptr);
 		ptr = 0;
 		count = 0;
 	}
+	uint8_t *x = (uint8_t *)0x22600000;
 	void allocate(unsigned int size) {
-		free(ptr);
+//		free(ptr);
 		count = size;
-		ptr = (T *)malloc(size * sizeof(T));
+//		ptr = (T *)malloc(size * sizeof(T));
+		ptr = (T *)x;
+		x+=(size * sizeof(T));
 	}
 
 	const T& operator[](int i) const {

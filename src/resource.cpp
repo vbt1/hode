@@ -11,9 +11,9 @@
 #include "util.h"
 
 // load and uncompress .sss pcm on level start
-static const bool kPreloadSssPcm = true;
+static const bool kPreloadSssPcm = false;
 
-static const bool kPreloadLvlBackgroundData = true;
+static const bool kPreloadLvlBackgroundData = false;
 
 static const bool kCheckSssBytecode = false;
 
@@ -362,9 +362,9 @@ emu_printf("malloc(_datHdr.bufferSize0) %d\n", _datHdr.bufferSize0);
 }
 
 void Resource::unloadDatMenuBuffers() {
-	free(_menuBuffer1);
+//	free(_menuBuffer1);
 	_menuBuffer1 = 0;
-	free(_menuBuffer0);
+//	free(_menuBuffer0);
 	_menuBuffer0 = 0;
 }
 
@@ -378,18 +378,24 @@ void Resource::loadLevelData(int levelNum) {
 	if (openDat(_fs, filename, _lvlFile)) {
 		loadLvlData(_lvlFile);
 	} else {
-		error("Unable to open '%s'", filename);
+		emu_printf("Unable to open '%s'\n", filename);
 	}
 
+#if 0
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
 		loadMstData(_mstFile);
 	} else {
-		warning("Unable to open '%s'", filename);
+		emu_printf("Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 	}
-
+#else
+		snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+		emu_printf("Unable to open '%s'\n", filename);
+		memset(&_mstHdr, 0, sizeof(_mstHdr));
+#endif
+#ifdef SOUND
 	closeDat(_fs, _sssFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.SSS", levelName);
 	if (openDat(_fs, filename, _sssFile)) {
@@ -402,6 +408,7 @@ void Resource::loadLevelData(int levelNum) {
 		warning("Unable to open '%s'", filename);
 		memset(&_sssHdr, 0, sizeof(_sssHdr));
 	}
+#endif
 }
 
 void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
@@ -568,7 +575,9 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 	assert(readSize <= size);
-	uint8_t *ptr = (uint8_t *)malloc(size);
+	emu_printf("malloc sprite %d\n", size);
+//	uint8_t *ptr = (uint8_t *)malloc(size);
+	uint8_t *ptr = (uint8_t *)0x22400000;
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
@@ -610,14 +619,14 @@ void Resource::loadLvlScreenMaskData() {
 static const uint32_t _lvlTag = 0x484F4400; // 'HOD\x00'
 
 void Resource::loadLvlData(File *fp) {
-
-	assert(fp == _lvlFile);
+emu_printf("loadLvlData\n");
+//	assert(fp == _lvlFile);
 
 	unloadLvlData();
 
 	const uint32_t tag = _lvlFile->readUint32();
 	if (tag != _lvlTag) {
-		error("Unhandled .lvl tag 0x%x", tag);
+		emu_printf("Unhandled .lvl tag 0x%x\n", tag);
 		closeDat(_fs, _lvlFile);
 		return;
 	}
@@ -626,7 +635,7 @@ void Resource::loadLvlData(File *fp) {
 	_lvlHdr.staticLvlObjectsCount = _lvlFile->readByte();
 	_lvlHdr.otherLvlObjectsCount = _lvlFile->readByte();
 	_lvlHdr.spritesCount = _lvlFile->readByte();
-	debug(kDebug_RESOURCE, "Resource::loadLvlData() %d %d %d %d", _lvlHdr.screensCount, _lvlHdr.staticLvlObjectsCount, _lvlHdr.otherLvlObjectsCount, _lvlHdr.spritesCount);
+	emu_printf("Resource::loadLvlData() %d %d %d %d\n", _lvlHdr.screensCount, _lvlHdr.staticLvlObjectsCount, _lvlHdr.otherLvlObjectsCount, _lvlHdr.spritesCount);
 
 	_lvlFile->seekAlign(0x8);
 	for (int i = 0; i < _lvlHdr.screensCount; ++i) {
@@ -649,14 +658,14 @@ void Resource::loadLvlData(File *fp) {
 	_lvlFile->seekAlign(0x288);
 	static const int kSizeOfLvlObject = 96;
 	const int lvlObjectsCount = (_lvlSpritesOffset - 0x288) / kSizeOfLvlObject;
-	debug(kDebug_RESOURCE, "Resource::loadLvlData() lvlObjectsCount %d", lvlObjectsCount);
+	emu_printf("Resource::loadLvlData() lvlObjectsCount %d\n", lvlObjectsCount);
 	for (int i = 0; i < lvlObjectsCount; ++i) {
 		LvlObject *dat = &_resLvlScreenObjectDataTable[i];
 		uint8_t buf[kSizeOfLvlObject];
 		_lvlFile->read(buf, kSizeOfLvlObject);
 		loadLvlScreenObjectData(dat, buf);
 	}
-
+emu_printf("loadLvlScreenMaskData\n");
 	loadLvlScreenMaskData();
 
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
@@ -666,6 +675,7 @@ void Resource::loadLvlData(File *fp) {
 	uint8_t spr[kMaxSpriteTypes * 16];
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
+emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}
@@ -692,10 +702,10 @@ void Resource::unloadLvlData() {
 	for (unsigned int i = 0; i < kMaxSpriteTypes; ++i) {
 		LvlObjectData *dat = &_resLevelData0x2988Table[i];
 		if (dat->unk0 == 1) {
-			free(dat->framesOffsetsTable);
+//			free(dat->framesOffsetsTable);
 			dat->framesOffsetsTable = 0;
 		}
-		free(_resLvlSpriteDataPtrTable[i]);
+//		free(_resLvlSpriteDataPtrTable[i]);
 		_resLvlSpriteDataPtrTable[i] = 0;
 	}
 }
@@ -756,6 +766,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 }
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
+emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert((unsigned int)num < kMaxScreens);
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
@@ -773,7 +784,9 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 	assert(readSize <= size);
-	uint8_t *ptr = (uint8_t *)malloc(size);
+emu_printf("loadLvlScreenBackgroundData malloc %d size\n", size);
+//	uint8_t *ptr = (uint8_t *)malloc(size);
+	uint8_t *ptr = (uint8_t *)0x280000;
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
@@ -1355,7 +1368,7 @@ void Resource::loadMstData(File *fp) {
 
 	_mstHdr.version = fp->readUint32();
 	if (_mstHdr.version != 160) {
-		warning("Unhandled .mst version %d", _mstHdr.version);
+		emu_printf("Unhandled .mst version %d\n", _mstHdr.version);
 		closeDat(_fs, _mstFile);
 		return;
 	}
@@ -1716,6 +1729,8 @@ void Resource::loadMstData(File *fp) {
 	}
 
 	const int mapDataSize = _mstHdr.infoMonster1Count * kMonsterInfoDataSize;
+	
+emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
 	fp->read(_mstMonsterInfos, mapDataSize);
 	bytesRead += mapDataSize;
