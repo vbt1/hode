@@ -215,18 +215,18 @@ SystemStub_SDL::~SystemStub_SDL() {
 
 void SystemStub_SDL::init(const char *title, int w, int h) {
 emu_printf("init system\n");
-#if 0
+#if 1
 	memset(&inp, 0, sizeof(inp)); // Clean inout
 emu_printf("load_audio_driver\n");
 	load_audio_driver(); // Load M68K audio driver
 	init_cdda();
 	sound_external_audio_enable(7, 7);
 emu_printf("prepareGfxMode\n");
-	prepareGfxMode(); // Prepare graphic output
+//	prepareGfxMode(); // Prepare graphic output
 emu_printf("setup_input\n");
 	setup_input(); // Setup controller inputs
 
-	memset(_pal, 0, sizeof(_pal));
+//	memset(_pal, 0, sizeof(_pal));
 
 //	audioEnabled = 0;
 //	curBuf = 0;
@@ -327,38 +327,61 @@ void SystemStub_SDL::updateScreen(bool drawWidescreen) {
 }
 
 void SystemStub_SDL::processEvents() {
+emu_printf("processEvents\n");
+	inp.prevMask = inp.mask;
+	inp.mask = 0;
+	
 	Uint16 push;
 	Uint16 pull;
 
 	switch(input_devices[0]->id) { // Check only the first controller...
 		case PER_ID_StnAnalog: // ANALOG PAD
 		case PER_ID_StnPad: // DIGITAL PAD 
-#if 0
-			inp.lastChar = 0;
+
+//			inp.lastChar = 0;
 
 			push = (volatile Uint16)(input_devices[0]->push);
 			pull = (volatile Uint16)(input_devices[0]->pull);
 
-			if (PAD_PULL_UP)
-				inp.dirMask &= ~PlayerInput::DIR_UP;
-			else if (PAD_PUSH_UP)
-				inp.dirMask |= PlayerInput::DIR_UP;
-
-			if (PAD_PULL_DOWN)
-				inp.dirMask &= ~PlayerInput::DIR_DOWN;
-			else if (PAD_PUSH_DOWN)
-				inp.dirMask |= PlayerInput::DIR_DOWN;
-
-			if (PAD_PULL_LEFT)
+/*			if (PAD_PULL_UP)
+			{
+				emu_printf("pull up\n");
+				inp.mask &= ~SYS_INP_UP;
+			}
+			else*/ if (PAD_PUSH_UP)
+			{
+				emu_printf("push up\n");
+				inp.mask |= SYS_INP_UP;
+			}
+/*			if (PAD_PULL_DOWN)
+			{
+				emu_printf("pull down\n");
+				inp.mask &= ~SYS_INP_DOWN;
+			}
+			else*/ if (PAD_PUSH_DOWN)
+			{
+				emu_printf("push down\n");
+				inp.mask |= SYS_INP_DOWN;
+			}
+/*			if (PAD_PULL_LEFT)
 				inp.dirMask &= ~PlayerInput::DIR_LEFT;
-			else if (PAD_PUSH_LEFT)
-				inp.dirMask |= PlayerInput::DIR_LEFT;
+			else*/ if (PAD_PUSH_LEFT)
+				inp.mask |= SYS_INP_LEFT;
 
-			if (PAD_PULL_RIGHT)
+/*			if (PAD_PULL_RIGHT)
 				inp.dirMask &= ~PlayerInput::DIR_RIGHT;
-			else if (PAD_PUSH_RIGHT)
-				inp.dirMask |= PlayerInput::DIR_RIGHT;
+			else*/ if (PAD_PUSH_RIGHT)
+				inp.mask |= SYS_INP_RIGHT;
+				
+			if (PAD_PULL_A)
+				inp.mask |= SYS_INP_JUMP;
 
+			if (PAD_PULL_B)
+				inp.mask |= SYS_INP_SHOOT;
+			
+			if (PAD_PULL_C)
+				inp.mask |= SYS_INP_RUN;
+#if 0
 			if (PAD_PULL_START)
 				//inp.enter = false;
 				inp.backspace = false;

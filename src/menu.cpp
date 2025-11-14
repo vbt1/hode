@@ -153,6 +153,7 @@ emu_printf("_playerBitmapSize %d\n", _playerBitmapSize);
 
 		const int size = READ_LE_UINT32(ptr + ptrOffset); ptrOffset += 4;
 		assert((size % (16 * 10)) == 0);
+emu_printf("_digitsData %d\n", size);
 		_digitsData = ptr + ptrOffset;
 		ptrOffset += size;
 
@@ -474,12 +475,16 @@ bool Menu::mainLoop() {
 }
 
 void Menu::drawTitleScreen(int option) {
+emu_printf("drawTitleScreen\n");
 	drawBitmap(_titleBitmapData, _titleBitmapSize, true);
+emu_printf("_titleSprites\n");
 	drawSprite(_titleSprites, (const uint8_t *)&_titleSprites[1], option);
+emu_printf("refreshScreen\n");
 	refreshScreen();
 }
 
 int Menu::handleTitleScreen() {
+emu_printf("handleTitleScreen\n");
 	const int firstOption = _res->_isPsx ? kTitleScreen_Play : kTitleScreen_AssignPlayer;
 	const int lastOption = _res->_isPsx ? kTitleScreen_Options : kTitleScreen_Quit;
 	int currentOption = kTitleScreen_Play;
@@ -490,23 +495,31 @@ int Menu::handleTitleScreen() {
 			break;
 		}
 		if (g_system->inp.keyReleased(SYS_INP_UP)) {
+emu_printf("up released\n");
 			if (currentOption > firstOption) {
+#ifdef SOUND
 				playSound(kSound_0x70);
+#endif
 				--currentOption;
 			}
 		}
 		if (g_system->inp.keyReleased(SYS_INP_DOWN)) {
+emu_printf("down released\n");
 			if (currentOption < lastOption) {
+#ifdef SOUND
 				playSound(kSound_0x70);
+#endif
 				++currentOption;
 			}
 		}
 		if (g_system->inp.keyReleased(SYS_INP_SHOOT) || g_system->inp.keyReleased(SYS_INP_JUMP)) {
+	#ifdef SOUND
 			playSound(kSound_0x78);
+	#endif
 			break;
 		}
 		drawTitleScreen(currentOption);
-		g_system->sleep(kDelayMs);
+//		g_system->sleep(kDelayMs);
 	}
 	return currentOption;
 }
