@@ -336,16 +336,16 @@ emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 		dstPtr += (pitch*2);
 		SCU_DMAWait();
 	}
-emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
+//emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
 }
 
 void SystemStub_SDL::updateScreen(bool drawWidescreen) {
 	slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);  // vbt à remettre
-	slTransferEntry((void*)_clut, (void*)(CRAM_BANK+512), 256 * 2);  // vbt à remettre
+//	slTransferEntry((void*)_clut, (void*)(CRAM_BANK+512), 256 * 2);  // vbt à remettre
 }
 
 void SystemStub_SDL::processEvents() {
-emu_printf("processEvents\n");
+//emu_printf("processEvents\n");
 	inp.prevMask = inp.mask;
 	inp.mask = 0;
 	
@@ -355,8 +355,6 @@ emu_printf("processEvents\n");
 	switch(input_devices[0]->id) { // Check only the first controller...
 		case PER_ID_StnAnalog: // ANALOG PAD
 		case PER_ID_StnPad: // DIGITAL PAD 
-
-//			inp.lastChar = 0;
 
 			push = (volatile Uint16)(input_devices[0]->push);
 			pull = (volatile Uint16)(input_devices[0]->pull);
@@ -368,7 +366,7 @@ emu_printf("processEvents\n");
 			}
 			else*/ if (PAD_PUSH_UP)
 			{
-				emu_printf("push up\n");
+//				emu_printf("push up\n");
 				inp.mask |= SYS_INP_UP;
 			}
 /*			if (PAD_PULL_DOWN)
@@ -378,7 +376,7 @@ emu_printf("processEvents\n");
 			}
 			else*/ if (PAD_PUSH_DOWN)
 			{
-				emu_printf("push down\n");
+//				emu_printf("push down\n");
 				inp.mask |= SYS_INP_DOWN;
 			}
 /*			if (PAD_PULL_LEFT)

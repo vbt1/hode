@@ -127,13 +127,13 @@ emu_printf("_version NOT V1_2\n");
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[32];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
-emu_printf("filename %s here\n", filename);
+//emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
-emu_printf("seek %s %p\n", filename, _lvlFile);
+//emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
-emu_printf("skipUint32 %s\n", filename);
+//emu_printf("skipUint32 %s\n", filename);
 			_lvlFile->skipUint32();
-emu_printf("readUint32 %s\n", filename);
+//emu_printf("readUint32 %s\n", filename);
 			const int size = _lvlFile->readUint32();
 			if (size == 0) {
 				_version = V1_0;
@@ -141,10 +141,6 @@ emu_printf("readUint32 %s\n", filename);
 //emu_printf("closeDat %s\n", filename);
 			closeDat(_fs, _lvlFile);
 //emu_printf("closeDat %s done\n", filename);
-		}
-		else
-		{
-			emu_printf("openDat %s failed\n", filename);		
 		}
 	}
 	// detect if this is a demo version by trying to open the second level data files
@@ -246,7 +242,10 @@ emu_printf("version found %d\n", _datHdr.version);
 	}
 	_datFile->seek(2048, SEEK_SET); // align to next sector
 	emu_printf("malloc(loadingImageSize) %d\n", _datHdr.loadingImageSize);
-	_loadingImageBuffer = (uint8_t *)malloc(_datHdr.loadingImageSize);
+//	_loadingImageBuffer = (uint8_t *)malloc(_datHdr.loadingImageSize);
+	_loadingImageBuffer = (uint8_t *)current_lwram;
+	current_lwram += SAT_ALIGN(_datHdr.loadingImageSize);
+
 	if (_loadingImageBuffer) {
 		_datFile->read(_loadingImageBuffer, _datHdr.loadingImageSize);
 
@@ -265,7 +264,10 @@ emu_printf("version found %d\n", _datHdr.version);
 		// font
 		static const int kFontSize = 16 * 16 * 64;
 		emu_printf("malloc(kFontSize) %d\n", kFontSize);		
-		_fontBuffer = (uint8_t *)malloc(kFontSize);
+//		_fontBuffer = (uint8_t *)malloc(kFontSize);
+		_fontBuffer = (uint8_t *)current_lwram;
+		current_lwram += SAT_ALIGN(kFontSize);
+	
 		if (_fontBuffer) {
 			/* size = READ_LE_UINT32(_loadingImageBuffer + offset); */ offset += 4;
 			if (_datHdr.version == 11) {
@@ -283,8 +285,6 @@ emu_printf("version found %d\n", _datHdr.version);
 				}
 			}
 		}
-		else
-			emu_printf("malloc(kFontSize) failed\n");
 	}
 	else
 	{
@@ -321,13 +321,10 @@ bool Resource::loadDatLoadingImage(uint8_t *dst, uint8_t *pal) {
 emu_printf("loadDatLoadingImage\n");
 //	assert(!_isPsx);
 	if (_loadingImageBuffer) {
-emu_printf("_loadingImageBuffer\n");		
 		const uint32_t bufferSize = READ_LE_UINT32(_loadingImageBuffer);
+emu_printf("_loadingImageBuffer %d\n", bufferSize);
 		const int size = decodeLZW(_loadingImageBuffer + 8, dst);
-
-emu_printf("size %d expect %d dst %p\n", size, 256 * 192, dst);			
-		
-		assert(size == 256 * 192);
+//		assert(size == 256 * 192);
 		// palette follows compressed bitmap
 		memcpy(pal, _loadingImageBuffer + 8 + bufferSize, 256 * 3);
 		return true;
@@ -346,7 +343,10 @@ emu_printf("loadDatMenuBuffers\n");
 	_datFile->seek(baseOffset, SEEK_SET);
 emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
 //	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
-	_menuBuffer1 = (uint8_t *)0x22400000;
+emu_printf("current_lwram %x next %x\n", current_lwram+_datHdr.bufferSize1);
+
+//	_menuBuffer1 = (uint8_t *)0x22400000;
+	_menuBuffer1 = (uint8_t *)current_lwram; // vbt size : 30593
 	if (_menuBuffer1) {
 		_datFile->read(_menuBuffer1, _datHdr.bufferSize1);
 	}

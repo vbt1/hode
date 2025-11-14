@@ -29,9 +29,13 @@ void warning(const char *msg, ...);
 #define debug(x, ...)
 #endif
 
+#define SAT_ALIGN(a) ((a+3)&~3)
+#define SAT_ALIGN8(a) ((a+15)&~15)
+
 extern "C" {
 void emu_printf(const char *format, ...);
 void SCU_DMAWait(void);
+extern Uint8 *current_lwram;
 }
 
 #endif // UTIL_H__
