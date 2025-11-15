@@ -1,3 +1,11 @@
+extern "C" {
+#include 	<sl_def.h>
+#include	<sega_sys.h>
+#include	"gfs_wrap.h"
+#include <stdarg.h>
+#include <string.h>
+void *memset4_fast(void *, long, size_t);
+}
 
 #include "game.h"
 #include "menu.h"
@@ -9,6 +17,7 @@
 #include "util.h"
 #include "video.h"
 
+SAT_sprite _sprData[10];
 enum {
 	kTitleScreen_AssignPlayer = 0,
 	kTitleScreen_Play = 1,
@@ -135,6 +144,7 @@ emu_printf("version == 10\n");
 		ptrOffset += sizeof(DatSpritesGroup) + _titleSprites->size;
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_titleSprites->firstFrameOffset = 0;
+		_video->SAT_loadTitleSprites(_titleSprites, (const uint8_t *)&_titleSprites[1]);
 
 		_playerSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_playerSprites->size = le32toh(_playerSprites->size);
@@ -397,6 +407,8 @@ void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
 
 void Menu::drawSprite(const DatSpritesGroup *spriteGroup, const uint8_t *ptr, uint32_t num, int x, int y) {
 	ptr += spriteGroup->firstFrameOffset;
+	emu_printf("drawSprite %p %p num %p %d %d\n",spriteGroup,ptr+8,num, x,y);
+
 	for (uint32_t i = 0; i < spriteGroup->count; ++i) {
 		const uint16_t size = READ_LE_UINT16(ptr + 2);
 		if (num == i) {
@@ -415,6 +427,7 @@ void Menu::drawSprite(const DatSpritesGroup *spriteGroup, const uint8_t *ptr, ui
 					y = ptr[1];
 				}
 				_video->decodeSPR(ptr + 8, _video->_frontLayer, x, y, 0, READ_LE_UINT16(ptr + 4), READ_LE_UINT16(ptr + 6));
+emu_printf("num%d x%d y%d w%d h%d\n",num, x,y,READ_LE_UINT16(ptr + 4),READ_LE_UINT16(ptr + 6));
 			}
 			break;
 		}
@@ -504,19 +517,27 @@ bool Menu::mainLoop() {
 	_res->unloadDatMenuBuffers();
 	return ret;
 }
-int done =0;
+Uint32 position_vram = 0;
+
 void Menu::drawTitleScreen(int option) {
 // vbt : supprimer le redraw permanent
-//if (!done)
-{
-emu_printf("drawTitleScreen\n");
-	drawBitmap(_titleBitmapData, _titleBitmapSize, true);
-	done = 1;
-}
-emu_printf("_titleSprites\n");
-	drawSprite(_titleSprites, (const uint8_t *)&_titleSprites[1], option);
-//emu_printf("refreshScreen\n");
+//	drawBitmap(_titleBitmapData, _titleBitmapSize, true);
+
+    SPRITE user_sprite;
+    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
+    user_sprite.COLR = 0;
+    user_sprite.SIZE = _sprData[option].size;
+    user_sprite.CTRL = 0;
+    user_sprite.XA = _sprData[option].x;
+    user_sprite.YA = _sprData[option].y;
+    user_sprite.GRDA = 0;
+
+    user_sprite.SRCA = _sprData[option].cgaddr;
+    slSetSprite(&user_sprite, toFIXED2(240));
+
+//	drawSprite(_titleSprites, (const uint8_t *)&_titleSprites[1], option);
 	refreshScreen();
+	slSynch();
 }
 
 int Menu::handleTitleScreen() {
@@ -524,6 +545,10 @@ emu_printf("handleTitleScreen\n");
 	const int firstOption = _res->_isPsx ? kTitleScreen_Play : kTitleScreen_AssignPlayer;
 	const int lastOption = _res->_isPsx ? kTitleScreen_Options : kTitleScreen_Quit;
 	int currentOption = kTitleScreen_Play;
+
+// vbt : déplacement pour ne pas le réafficher
+	drawBitmap(_titleBitmapData, _titleBitmapSize, true);
+
 	while (1) {
 		g_system->processEvents();
 		if (g_system->inp.quit) {

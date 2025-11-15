@@ -32,6 +32,23 @@ void warning(const char *msg, ...);
 #define SAT_ALIGN(a) ((a+3)&~3)
 #define SAT_ALIGN8(a) ((a+15)&~15)
 
+#define	    SpriteVRAM		0x25c00000
+#define	cgaddress	0x1000 //SpriteBufSize
+#define pal1 COL_256
+#undef TEXDEF
+#define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
+#define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))
+
+struct __attribute__((__packed__)) SAT_sprite {
+    uint32_t cgaddr : 26;  // 32 bits
+    uint16_t x_flip : 6; 
+    uint16_t size : 14;  // 14 bits
+//    int8_t color : 8;  // 8 bits
+    int16_t x : 10;  // 10 bits (values between -512 and +511)
+    int16_t y : 10;  // 10 bits (values between -512 and +511)
+
+};
+
 extern "C" {
 void emu_printf(const char *format, ...);
 void SCU_DMAWait(void);

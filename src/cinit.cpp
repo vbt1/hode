@@ -38,7 +38,7 @@ int	main( void )
 
 	init_GFS(); // Initialize GFS system
 
-	slInitSystem(TV_320x240, (TEXTURE*)NULL, 1); // Init SGL
+	slInitSystem(TV_320x224, (TEXTURE*)NULL, 1); // Init SGL
 //	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 
 	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);

@@ -3,12 +3,16 @@
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
 
+#include "game.h"
+#include "menu.h"
 #include "video.h"
 #include "mdec.h"
 #include "system.h"
 #include "systemstub.h"
 #include "util.h"
 
+extern Uint32 position_vram;
+extern SAT_sprite _sprData[10];
 static const bool kUseShadowColorLut = false;
 
 Video::Video() {
@@ -111,6 +115,127 @@ void Video::clearBackBuffer() {
 void Video::clearPalette() {
 	memset(_palette, 0, sizeof(_palette));
 	g_system->clearPalette();
+}
+
+void Video::SAT_loadTitleSprites(const DatSpritesGroup *spriteGroup, const uint8_t *ptr)
+{
+	ptr += spriteGroup->firstFrameOffset;
+
+	for (uint32_t i = 0; i < spriteGroup->count; ++i) {
+		const uint16_t size = READ_LE_UINT16(ptr + 2);
+		const uint16_t w_raw = READ_LE_UINT16(ptr + 4);
+		const uint16_t w = (w_raw + 7) & ~7;
+		const uint16_t h = READ_LE_UINT16(ptr + 6);
+
+		TEXTURE tx = TEXDEF(w, h, position_vram);
+		uint8_t *src = (uint8_t *)ptr+8;
+		uint8_t dst[300*19];
+		memset(dst,0x00, w*h);
+		SAT_decodeSPR(src, dst, 0, 0, 0, w_raw, h);
+		memcpy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)dst, w*h);
+		position_vram += w*h;
+
+		_sprData[i].cgaddr = tx.CGadr;
+		_sprData[i].size   = (w/8)<<8|h;
+		_sprData[i].x      = ptr[0] - 160;
+		_sprData[i].y      = ptr[1] - 112;
+		ptr += size + 2;
+	}
+}
+
+void Video::SAT_decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
+
+	const int y2 = y + spr_h - 1;
+	const int x2 = x + spr_w - 1;
+
+	if (flags & kSprHorizFlip) {
+		x = x2;
+	}
+	if (flags & kSprVertFlip) {
+		y = y2;
+	}
+	const int xOrig = x;
+	const uint16_t w = (spr_w + 7) & ~7;
+
+	while (1) {
+		uint8_t *p = dst + y * w + x;
+		int code = *src++;
+		int count = code & 0x3F;
+		int clippedCount = count;
+
+		switch (code >> 6) {
+		case 0:
+			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+				memcpy(p, src, clippedCount);
+				x += count;
+			} else if (flags & kSprHorizFlip) {
+				for (int i = 0; i < clippedCount; ++i) {
+					if (x - i >= 0 && x - i < spr_w) {
+						p[-i] = src[i];
+					}
+				}
+				x -= count;
+			} else {
+				for (int i = 0; i < clippedCount; ++i) {
+					if (x + i >= 0 && x + i < spr_w) {
+						p[i] = src[i];
+					}
+				}
+				x += count;
+			}
+			src += count;
+			break;
+		case 1:
+			code = *src++;
+			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+				memset(p, code, clippedCount);
+				x += count;
+			} else if (flags & kSprHorizFlip) {
+				for (int i = 0; i < clippedCount; ++i) {
+					if (x - i >= 0 && x - i < spr_w) {
+						p[-i] = code;
+					}
+				}
+				x -= count;
+			} else {
+				for (int i = 0; i < clippedCount; ++i) {
+					if (x + i >= 0 && x + i < spr_w) {
+						p[i] = code;
+					}
+				}
+				x += count;
+			}
+			break;
+		case 2:
+			if (count == 0) {
+				count = *src++;
+			}
+			if (flags & kSprHorizFlip) {
+				x -= count;
+			} else {
+				x += count;
+			}
+			break;
+		case 3:
+			if (count == 0) {
+				count = *src++;
+				if (count == 0) {
+					return;
+				}
+			}
+			if (flags & kSprVertFlip) {
+				y -= count;
+			} else {
+				y += count;
+			}
+			if (flags & kSprHorizFlip) {
+				x = xOrig - *src++;
+			} else {
+				x = xOrig + *src++;
+			}
+			break;
+		}
+	}
 }
 
 void Video::decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
