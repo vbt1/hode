@@ -536,7 +536,7 @@ void Menu::drawTitleScreen(int option) {
     slSetSprite(&user_sprite, toFIXED2(240));
 
 //	drawSprite(_titleSprites, (const uint8_t *)&_titleSprites[1], option);
-	refreshScreen();
+//	refreshScreen();
 	slSynch();
 }
 
@@ -548,6 +548,7 @@ emu_printf("handleTitleScreen\n");
 
 // vbt : déplacement pour ne pas le réafficher
 	drawBitmap(_titleBitmapData, _titleBitmapSize, true);
+	refreshScreen();
 
 	while (1) {
 		g_system->processEvents();
@@ -580,6 +581,7 @@ emu_printf("handleTitleScreen\n");
 		drawTitleScreen(currentOption);
 //		g_system->sleep(kDelayMs);
 	}
+	_video->SAT_cleanSprites();
 	return currentOption;
 }
 

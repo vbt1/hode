@@ -3,6 +3,9 @@
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
 
+extern "C" {
+#include <sl_def.h>
+}
 #include "game.h"
 #include "menu.h"
 #include "video.h"
@@ -236,6 +239,26 @@ void Video::SAT_decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_
 			break;
 		}
 	}
+}
+
+void Video::SAT_cleanSprites()
+{
+	SPRITE user_sprite;
+	user_sprite.CTRL= FUNC_End;
+	user_sprite.PMOD=0;
+	user_sprite.SRCA=0;
+	user_sprite.COLR=0;
+
+	user_sprite.SIZE=0;
+	user_sprite.XA=0;
+	user_sprite.YA=0;
+
+	user_sprite.XB=0;
+	user_sprite.YB=0;
+	user_sprite.GRDA=0;
+
+	slSetSprite(&user_sprite, toFIXED2(240));	// à remettre // ennemis et objets
+	slSynch(); // vbt à remettre
 }
 
 void Video::decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
