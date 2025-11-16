@@ -2634,9 +2634,7 @@ emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
 	if (_currentLevel == kLvl_rock || _currentLevel == kLvl_lar2 || _currentLevel == kLvl_test) {
 		if (_andyObject->spriteNum == 0 && _plasmaExplosionObject && _plasmaExplosionObject->nextPtr != 0) {
 emu_printf("updatePlasmaCannonExplosionLvlObject\n");
-#if 0
 			updatePlasmaCannonExplosionLvlObject(_plasmaExplosionObject->nextPtr);
-#endif
 		}
 	}
 	if (_video->_paletteChanged) {
@@ -2653,12 +2651,14 @@ emu_printf("drawScreen\n");
 		g_system->inp.screenshot = false;
 		captureScreenshot();
 	}
+#endif
 	if (_cheats != 0) {
+emu_printf("_cheats\n");
 		char buffer[256];
 		snprintf(buffer, sizeof(buffer), "P%d S%02d %d R%d", _currentLevel, _andyObject->screenNum, _res->_screensState[_andyObject->screenNum].s0, _level->_checkpoint);
 		_video->drawString(buffer, (Video::W - strlen(buffer) * 8) / 2, 8, _video->findWhiteColor(), _video->_frontLayer);
 	}
-#endif
+
 	if (_shakeScreenDuration != 0 || _levelRestartCounter != 0 || _video->_displayShadowLayer) {
 		shakeScreen();
 		_video->updateGameDisplay(_video->_displayShadowLayer ? _video->_shadowLayer : _video->_frontLayer);
@@ -2666,13 +2666,12 @@ emu_printf("drawScreen\n");
 		_video->updateGameDisplay(_video->_frontLayer);
 	}
 	_rnd.update();
+emu_printf("processEvents\n");
 	g_system->processEvents();
 	if (g_system->inp.keyPressed(SYS_INP_ESC)) {
-#if 0
 		if (displayHintScreen(-1, 0)) { // pause/exit screen
 			g_system->inp.quit = true;
 		}
-#endif
 	} else {
 		// displayHintScreen(1, 0);
 		_video->updateScreen();
@@ -2756,7 +2755,7 @@ emu_printf("displayLoadingScreen\n");
 		}
 	}
 }
-#if 0
+
 int Game::displayHintScreen(int num, int pause) {
 	static const int kQuitYes = 0;
 	static const int kQuitNo = 1;
@@ -2767,7 +2766,9 @@ int Game::displayHintScreen(int num, int pause) {
 		_video->_shadowLayer,
 	};
 	const bool isPsx = _res->_isPsx;
+#ifdef SOUND
 	muteSound();
+#endif
 	if (num == -1) {
 		if (isPsx) {
 			num = 35; // 'Pause' on PSX
@@ -2813,7 +2814,7 @@ int Game::displayHintScreen(int num, int pause) {
 #endif
 	return confirmQuit && quit == kQuitYes;
 }
-#endif
+
 
 void Game::removeLvlObjectFromList(LvlObject **list, LvlObject *ptr) {
 	LvlObject *current = *list;

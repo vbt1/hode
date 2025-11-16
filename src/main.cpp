@@ -314,6 +314,7 @@ emu_printf("ss_main\n");
 		}
 	}
 #endif
+	cheats = 0xffff;
 	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
 #if 0
 	readConfigIni(_configIni, g);
