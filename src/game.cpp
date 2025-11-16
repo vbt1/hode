@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -75,8 +76,8 @@ emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 	memset(_monsterObjects1Table, 0, sizeof(_monsterObjects1Table));
 	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
 
-	_sssDisabled = false;
-	_snd_muted = false;
+	_sssDisabled = true;
+	_snd_muted = true;
 	_snd_bufferOffset = _snd_bufferSize = 0;
 	_snd_masterPanning = kDefaultSoundPanning;
 	_snd_masterVolume = kDefaultSoundVolume;
@@ -233,11 +234,13 @@ void Game::transformShadowLayer(int delta) {
 		}
 	}
 	uint8_t r = 0;
+#if 0
 	if (_currentLevel == kLvl_pwr1) {
 		r = _pwr1_screenTransformLut[_res->_currentScreenResourceNum * 2 + 1];
 	} else if (_currentLevel == kLvl_pwr2) {
 		r = _pwr2_screenTransformLut[_res->_currentScreenResourceNum * 2 + 1];
 	}
+#endif
 	if (r != 0) {
 		assert(r < ARRAYSIZE(_screenTransformRects));
 		const BoundingBox *b = &_screenTransformRects[r];
@@ -1978,7 +1981,8 @@ emu_printf("game mainloop\n");
 	_video->_font = _res->_fontBuffer;
 //	assert(level < kLvl_test);
 
-//	level = kLvl_lar2;
+//	level = kLvl_fort;
+//	level = 8;
 	_currentLevel = level;
 emu_printf("createLevel %d\n", _currentLevel);
 //while(1);
@@ -1994,7 +1998,7 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-_mstDisabled = true; // vbt : ajout pour test
+//_mstDisabled = true; // vbt : ajout pour test
 _paf->_skipCutscenes = true; // vbt : ajout pour test
 	_mstAndyCurrentScreenNum = -1;
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
@@ -2688,7 +2692,7 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
-	case 1:
+/*	case 1:
 		_level = Level_fort_create();
 		break;
 	case 2:
@@ -2711,7 +2715,7 @@ Level *Game::createLevel() {
 		break;
 	case 8:
 		_level = Level_dark_create();
-		break;
+		break;*/
 	}
 	return _level;
 }
@@ -3002,7 +3006,7 @@ int Game::calcScreenMaskDx(int x, int y, int num) {
 	}
 	return 0;
 }
-
+#if 0
 void Game::lvlObjectType0CallbackBreathBubbles(LvlObject *ptr) {
 
 	AndyLvlObjectData *vf = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
@@ -3090,7 +3094,7 @@ void Game::lvlObjectType0CallbackBreathBubbles(LvlObject *ptr) {
 		--vf->unk2;
 	}
 }
-
+#endif
 void Game::setupSpecialPowers(LvlObject *ptr) {
 	assert(ptr == _andyObject);
 	AndyLvlObjectData *vf = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
@@ -3310,9 +3314,11 @@ int Game::lvlObjectType0Callback(LvlObject *ptr) {
 		}
 		break;
 	case 2: // pwr1_hod
+#if 0
 		if (!_hideAndyObjectFlag && vf->unk4 == 6) {
 			lvlObjectType0CallbackBreathBubbles(ptr);
 		}
+#endif
 		// fall through
 	case 3:
 	case 4:

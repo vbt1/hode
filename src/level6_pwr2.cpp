@@ -1,4 +1,4 @@
-
+#pragma GCC optimize ("Os")
 // pwr2_hod - "caverns of doom"
 
 #include "game.h"

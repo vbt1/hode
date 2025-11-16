@@ -1,4 +1,4 @@
-
+#pragma GCC optimize ("Os")
 // isld_hod - "space island"
 
 #include "game.h"

@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)

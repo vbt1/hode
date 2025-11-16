@@ -1,4 +1,4 @@
-
+#pragma GCC optimize ("Os")
 // dark_hod
 
 #include "game.h"

@@ -1,4 +1,4 @@
-
+#pragma GCC optimize ("Os")
 // lava_hod - "river of fire"
 
 #include "game.h"

@@ -346,7 +346,7 @@ emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
 //	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
 emu_printf("current_lwram %x next %x\n", current_lwram+_datHdr.bufferSize1);
 
-	_menuBuffer1 = (uint8_t *)0x22400000;
+	_menuBuffer1 = (uint8_t *)0x22600000;
 //	_menuBuffer1 = (uint8_t *)current_lwram; // vbt size : 30593
 	if (_menuBuffer1) {
 		_datFile->read(_menuBuffer1, _datHdr.bufferSize1);
@@ -354,6 +354,7 @@ emu_printf("current_lwram %x next %x\n", current_lwram+_datHdr.bufferSize1);
 	if (_datHdr.version == 11) {
 		_datFile->seek(baseOffset + fioAlignSizeTo2048(_datHdr.bufferSize1), SEEK_SET); // align to next sector
 emu_printf("malloc(_datHdr.bufferSize0) %d\n", _datHdr.bufferSize0);
+	_menuBuffer1 = (uint8_t *)0x22700000;
 //	_menuBuffer0 = (uint8_t *)malloc(_datHdr.bufferSize0);
 //	_menuBuffer0 = (uint8_t *)current_lwram;
 		if (_menuBuffer0) {
@@ -382,18 +383,18 @@ void Resource::loadLevelData(int levelNum) {
 		emu_printf("Unable to open '%s'\n", filename);
 	}
 
-#if 0
+#if 1
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
 		loadMstData(_mstFile);
 	} else {
-		emu_printf("Unable to open '%s'\n", filename);
+		emu_printf("xxx Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 	}
 #else
 		snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
-		emu_printf("Unable to open '%s'\n", filename);
+		emu_printf("yyy Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 #endif
 #ifdef SOUND
@@ -580,9 +581,21 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 	assert(readSize <= size);
 //	emu_printf("malloc sprite %d\n", size);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
-	uint8_t *ptr = (uint8_t *)current_lwram;
+uint8_t *ptr = NULL;
+	if(((int)current_lwram)+SAT_ALIGN(size)<0x300000)
+	{
+	ptr = (uint8_t *)current_lwram;
 	current_lwram += SAT_ALIGN(size);
 	emu_printf("current_lwram %p\n", current_lwram);
+	}
+	else
+	{
+	ptr = (uint8_t *)cs1ram;
+	cs1ram += SAT_ALIGN(size);
+	emu_printf("cs1ram %p\n", cs1ram);
+	}
+
+
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
@@ -1385,8 +1398,11 @@ emu_printf("loadMstData\n");
 	}
 
 	_mstHdr.dataSize = fp->readUint32();
+emu_printf("dataSize %d\n", _mstHdr.dataSize);
 	_mstHdr.walkBoxDataCount = fp->readUint32();
+emu_printf("walkBoxDataCount %d\n", _mstHdr.walkBoxDataCount);
 	_mstHdr.walkCodeDataCount = fp->readUint32();
+emu_printf("walkCodeDataCount %d\n", _mstHdr.walkCodeDataCount);
 	_mstHdr.movingBoundsIndexDataCount = fp->readUint32();
 	_mstHdr.levelCheckpointCodeDataCount = fp->readUint32();
 	_mstHdr.screenAreaDataCount = fp->readUint32();
@@ -1416,7 +1432,7 @@ emu_printf("loadMstData\n");
 	_mstHdr.op204DataCount = fp->readUint32();
 	_mstHdr.codeSize = fp->readUint32();
 	_mstHdr.screensCount = fp->readUint32();
-	emu_printf("_mstHdr.version %d _mstHdr.codeSize %d\n", _mstHdr.version, _mstHdr.codeSize);
+	emu_printf("_mstHdr.version %d\n", _mstHdr.version);
 
 	fp->seek(2048, SEEK_SET); // align to the next sector
 

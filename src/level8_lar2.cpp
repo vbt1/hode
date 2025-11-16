@@ -1,4 +1,4 @@
-
+#pragma GCC optimize ("Os")
 // lar2_hod - "heart of darkness"
 
 #include "game.h"

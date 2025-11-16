@@ -140,18 +140,19 @@ emu_printf("version == 10\n");
 // vbt : textes du menu principal
 		_titleSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_titleSprites->size = le32toh(_titleSprites->size);
-//emu_printf("_titleSprites->size %d\n", _titleSprites->size);
+emu_printf("_titleSprites->size %d\n", _titleSprites->size);
 		_titleSprites->count = le16toh(_titleSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _titleSprites->size;
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_titleSprites->firstFrameOffset = 0;
+emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
 		_video->SAT_loadTitleSprites(_titleSprites, (const uint8_t *)&_titleSprites[1]);
 // vbt : boutons du menu assign player
 		_playerSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_playerSprites->size = le32toh(_playerSprites->size);
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_playerSprites->count = le16toh(_playerSprites->count);
-//emu_printf("_playerSprites->count %d\n", _playerSprites->count);
+emu_printf("_playerSprites->count %d\n", _playerSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _playerSprites->size;
 		_playerSprites->firstFrameOffset = 0;
 		xx += sizeof(DatSpritesGroup) + _playerSprites->size;
@@ -273,6 +274,9 @@ emu_printf("version == 11\n");
 		_titleSprites->count = le16toh(_titleSprites->count);
 		_titleSprites->firstFrameOffset = 0;
 
+emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
+		_video->SAT_loadTitleSprites(_titleSprites, (const uint8_t *)&_titleSprites[1]);
+#ifdef SOUND
 		_playerSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_playerSprites->size = le32toh(_playerSprites->size);
 		ptrOffset += sizeof(DatSpritesGroup) + _playerSprites->size;
@@ -288,10 +292,11 @@ emu_printf("version == 11\n");
 		ptrOffset += size;
 
 		_soundData = ptr + ptrOffset;
-#ifdef SOUND
 		readSoundData(_res->_menuBuffer0 + ptrOffset, _res->_datHdr.soundDataSize);
 #endif
 		ptrOffset += _res->_datHdr.soundDataSize;
+
+
 	}
 #ifdef PSX
 	if (_res->_isPsx) {
@@ -395,13 +400,16 @@ SssObject *Menu::playSound(int num) {
 }
 #endif
 void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
+	emu_printf("drawBitmap\n");
 	if (_res->_isPsx) {
 #ifdef PSX
 		memset(_video->_frontLayer, 0, Video::W * Video::H);
 		_video->decodeBackgroundPsx(data, size, Video::W, Video::H);
 #endif
 	} else {
+	emu_printf("decodeLZW\n");
 		decodeLZW(data, _video->_frontLayer);
+	emu_printf("decodeLZW done\n");
 		if (setPalette) {
 			g_system->setPalette(data + size, 256, 6);
 		}

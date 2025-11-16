@@ -1,4 +1,4 @@
-
+#pragma GCC optimize ("Os")
 // lar1_hod - "into the lair"
 
 #include "game.h"
