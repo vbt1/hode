@@ -936,6 +936,7 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	if (!_res->isLvlBackgroundDataLoaded(num)) {
 		_res->loadLvlScreenBackgroundData(num);
 	}
+#ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {
 		const SssPreloadInfo *preloadInfo = &_res->_sssPreloadInfosData[num];
 		for (unsigned int i = 0; i < preloadInfo->count; ++i) {
@@ -946,6 +947,7 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 			}
 		}
 	}
+#endif
 }
 
 void Game::setLvlObjectPosRelativeToObject(LvlObject *ptr1, int num1, LvlObject *ptr2, int num2) {
@@ -1946,13 +1948,13 @@ static void gamePafCallback(void *userdata) {
 
 void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 emu_printf("game mainloop\n");
-	if (_playDemo && _res->loadHodDem()) {
+/*	if (_playDemo && _res->loadHodDem()) {
 		_rnd._rndSeed = _res->_dem.randSeed;
 		level = _res->_dem.level;
 		checkpoint = _res->_dem.checkpoint;
 		_difficulty = _res->_dem.difficulty;
 		_res->_demOffset = 0;
-	} else if (_resumeGame) {
+	} else*/ if (_resumeGame) {
 		const int num = _setupConfig.currentPlayer;
 		level = _setupConfig.players[num].levelNum;
 		if (level > kLvl_dark) {
@@ -1997,7 +1999,7 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	_mix._lock(0);
 #endif
 _mstDisabled = true; // vbt : ajout pour test
-//_paf->_skipCutscenes = true; // vbt : ajout pour test
+_paf->_skipCutscenes = true; // vbt : ajout pour test
 	_mstAndyCurrentScreenNum = -1;
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
 	_rnd.initTable(rounds);

@@ -8,6 +8,9 @@
 
 #include "defs.h"
 #include "intern.h"
+#include "util.h"
+
+extern uint8_t *cs1ram;
 
 struct DatHdr {
 	uint32_t version; // 0x0
@@ -523,13 +526,13 @@ struct ResStruct {
 		ptr = 0;
 		count = 0;
 	}
-	uint8_t *x = (uint8_t *)0x22600000;
+
 	void allocate(unsigned int size) {
-//		free(ptr);
+		free(ptr);
 		count = size;
-//		ptr = (T *)malloc(size * sizeof(T));
-		ptr = (T *)x;
-		x+=(size * sizeof(T));
+// vbt : on garde malloc, peu couteux
+		ptr = (T *)malloc(size * sizeof(T));
+		emu_printf("allocate %d\n", size * sizeof(T));
 	}
 
 	const T& operator[](int i) const {

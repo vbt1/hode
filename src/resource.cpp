@@ -10,6 +10,7 @@
 #include "resource.h"
 #include "util.h"
 
+uint8_t *cs1ram = (uint8_t *)0x22400000;
 // load and uncompress .sss pcm on level start
 static const bool kPreloadSssPcm = false;
 
@@ -345,19 +346,19 @@ emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
 //	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
 emu_printf("current_lwram %x next %x\n", current_lwram+_datHdr.bufferSize1);
 
-//	_menuBuffer1 = (uint8_t *)0x22400000;
-	_menuBuffer1 = (uint8_t *)current_lwram; // vbt size : 30593
+	_menuBuffer1 = (uint8_t *)0x22400000;
+//	_menuBuffer1 = (uint8_t *)current_lwram; // vbt size : 30593
 	if (_menuBuffer1) {
 		_datFile->read(_menuBuffer1, _datHdr.bufferSize1);
 	}
 	if (_datHdr.version == 11) {
 		_datFile->seek(baseOffset + fioAlignSizeTo2048(_datHdr.bufferSize1), SEEK_SET); // align to next sector
-	}
 emu_printf("malloc(_datHdr.bufferSize0) %d\n", _datHdr.bufferSize0);
 //	_menuBuffer0 = (uint8_t *)malloc(_datHdr.bufferSize0);
-	_menuBuffer0 = (uint8_t *)0x22600000;
-	if (_menuBuffer0) {
-		_datFile->read(_menuBuffer0, _datHdr.bufferSize0);
+//	_menuBuffer0 = (uint8_t *)current_lwram;
+		if (_menuBuffer0) {
+			_datFile->read(_menuBuffer0, _datHdr.bufferSize0);
+		}
 	}
 }
 
@@ -526,6 +527,7 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 	}
 
 	if (dat->unk0 == 1) { // fixed size offset table
+#if 0
 		assert(isPsx);
 		dat->framesOffsetsTable = (uint8_t *)malloc(dat->framesCount * sizeof(uint32_t));
 		uint32_t framesOffset = 6 * dat->framesCount;
@@ -538,6 +540,7 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 			framesOffset += size;
 		}
 		dat->coordsOffsetsTable = ptr;
+#endif
 		return 0;
 	}
 
@@ -575,9 +578,11 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 	assert(readSize <= size);
-	emu_printf("malloc sprite %d\n", size);
+//	emu_printf("malloc sprite %d\n", size);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
-	uint8_t *ptr = (uint8_t *)0x22400000;
+	uint8_t *ptr = (uint8_t *)current_lwram;
+	current_lwram += SAT_ALIGN(size);
+	emu_printf("current_lwram %p\n", current_lwram);
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
@@ -607,7 +612,9 @@ void Resource::loadLvlScreenMaskData() {
 	_lvlFile->seekAlign(_lvlMasksOffset);
 	const uint32_t offset = _lvlFile->readUint32();
 	const uint32_t size = _lvlFile->readUint32();
-	_resLevelData0x470CTable = (uint8_t *)malloc(size);
+//	_resLevelData0x470CTable = (uint8_t *)malloc(size);
+	_resLevelData0x470CTable = (uint8_t *)current_lwram;
+	current_lwram += SAT_ALIGN(size);
 	_lvlFile->seek(offset, SEEK_SET);
 	_lvlFile->read(_resLevelData0x470CTable, size);
 	_resLevelData0x470CTablePtrHdr = _resLevelData0x470CTable;
@@ -755,7 +762,9 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 8; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		if (offs != 0) {
-			dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)malloc(sizeof(LvlObjectData));
+//			dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)malloc(sizeof(LvlObjectData));
+			dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)current_lwram;
+			current_lwram += SAT_ALIGN(sizeof(LvlObjectData));
 			offsetsSize += resFixPointersLevelData0x2988(ptr + offs, offsetsPtr + offsetsSize, dat->backgroundLvlObjectDataTable[i], isPsx);
 		} else {
 			dat->backgroundLvlObjectDataTable[i] = 0;
@@ -786,7 +795,8 @@ emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert(readSize <= size);
 emu_printf("loadLvlScreenBackgroundData malloc %d size\n", size);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
-	uint8_t *ptr = (uint8_t *)0x280000;
+	uint8_t *ptr = (uint8_t *)cs1ram;
+	cs1ram+= SAT_ALIGN(size);
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
@@ -877,7 +887,7 @@ int Resource::findScreenGridIndex(int screenNum) const {
 	}
 	return -1;
 }
-
+#ifdef SOUND
 void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 emu_printf("loadSssData\n");
 //	assert(fp == _sssFile || fp == _datFile || fp == _lvlFile);
@@ -1357,9 +1367,10 @@ void Resource::preloadSssPcmList(const SssPreloadInfoData *preloadInfoData) {
 		}
 	}
 }
-
+#endif
 void Resource::loadMstData(File *fp) {
-	assert(fp == _mstFile);
+emu_printf("loadMstData\n");
+//	assert(fp == _mstFile);
 
 	if (_mstHdr.dataSize != 0) {
 		unloadMstData();
@@ -1405,19 +1416,19 @@ void Resource::loadMstData(File *fp) {
 	_mstHdr.op204DataCount = fp->readUint32();
 	_mstHdr.codeSize = fp->readUint32();
 	_mstHdr.screensCount = fp->readUint32();
-	debug(kDebug_RESOURCE, "_mstHdr.version %d _mstHdr.codeSize %d", _mstHdr.version, _mstHdr.codeSize);
+	emu_printf("_mstHdr.version %d _mstHdr.codeSize %d\n", _mstHdr.version, _mstHdr.codeSize);
 
 	fp->seek(2048, SEEK_SET); // align to the next sector
 
 	int bytesRead = 0;
-
+emu_printf("_mstHdr.screensCount\n");
 	_mstPointOffsets.allocate(_mstHdr.screensCount);
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstPointOffsets[i].xOffset = fp->readUint32();
 		_mstPointOffsets[i].yOffset = fp->readUint32();
 		bytesRead += 8;
 	}
-
+emu_printf("_mstHdr.walkBoxDataCount\n");
 	_mstWalkBoxData.allocate(_mstHdr.walkBoxDataCount);
 	for (int i = 0; i < _mstHdr.walkBoxDataCount; ++i) {
 		_mstWalkBoxData[i].right  = fp->readUint32();
@@ -1430,16 +1441,20 @@ void Resource::loadMstData(File *fp) {
 		_mstWalkBoxData[i].flags[3] = fp->readByte();
 		bytesRead += 20;
 	}
-
+emu_printf("_mstHdr.walkCodeDataCount\n");
 	_mstWalkCodeData.allocate(_mstHdr.walkCodeDataCount);
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		fp->skipUint32();
 		_mstWalkCodeData[i].codeDataCount = fp->readUint32();
-		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+emu_printf("malloc1 %d\n",_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+//		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+		_mstWalkCodeData[i].codeData = (uint32_t *)0x24000000;
 		fp->skipUint32();
 		_mstWalkCodeData[i].indexDataCount = fp->readUint32();
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
-			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
+emu_printf("malloc2 %d\n",_mstWalkCodeData[i].indexDataCount);
+//			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
+			_mstWalkCodeData[i].indexData = (uint8_t *)0x26000000;
 		} else {
 			_mstWalkCodeData[i].indexData = 0;
 		}
@@ -1454,7 +1469,7 @@ void Resource::loadMstData(File *fp) {
 			bytesRead += readBytesAlign(fp, _mstWalkCodeData[i].indexData, _mstWalkCodeData[i].indexDataCount);
 		}
 	}
-
+emu_printf("_mstHdr.movingBoundsIndexDataCount\n");
 	_mstMovingBoundsIndexData.allocate(_mstHdr.movingBoundsIndexDataCount);
 	for (int i = 0; i < _mstHdr.movingBoundsIndexDataCount; ++i) {
 		_mstMovingBoundsIndexData[i].indexUnk49 = fp->readUint32();
@@ -1466,7 +1481,7 @@ void Resource::loadMstData(File *fp) {
 	_mstTickDelay    = fp->readUint32();
 	_mstTickCodeData = fp->readUint32();
 	bytesRead += 8;
-
+emu_printf("_mstHdr.levelCheckpointCodeDataCount\n");
 	_mstLevelCheckpointCodeData.allocate(_mstHdr.levelCheckpointCodeDataCount);
 	for (int i = 0; i < _mstHdr.levelCheckpointCodeDataCount; ++i) {
 		_mstLevelCheckpointCodeData[i] = fp->readUint32();
@@ -2077,7 +2092,7 @@ static void persistUint32(GFS_FILE *fp, uint32_t &val) {
 	}
 #endif
 }
-
+#if 0
 template <int M, typename T>
 static void persistSetupCfg(GFS_FILE *fp, T *config) {
 	_checksum = 0;
@@ -2143,7 +2158,7 @@ void Resource::unloadHodDem() {
 	free(_dem.directionKeyMask);
 	memset(&_dem, 0, sizeof(_dem));
 }
-#if 0
+
 bool Resource::writeSetupCfg(const SetupConfig *config) {
 	GFS_FILE *fp = _fs->openSaveFile(_setupCfg, true);
 	if (fp) {

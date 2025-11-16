@@ -137,6 +137,7 @@ int xx = 0;
 
 	if (version == 10) {
 emu_printf("version == 10\n");
+// vbt : textes du menu principal
 		_titleSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_titleSprites->size = le32toh(_titleSprites->size);
 //emu_printf("_titleSprites->size %d\n", _titleSprites->size);
@@ -145,22 +146,26 @@ emu_printf("version == 10\n");
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_titleSprites->firstFrameOffset = 0;
 		_video->SAT_loadTitleSprites(_titleSprites, (const uint8_t *)&_titleSprites[1]);
-
+// vbt : boutons du menu assign player
 		_playerSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_playerSprites->size = le32toh(_playerSprites->size);
-//emu_printf("_playerSprites->size %d\n", _playerSprites->size);
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_playerSprites->count = le16toh(_playerSprites->count);
+//emu_printf("_playerSprites->count %d\n", _playerSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _playerSprites->size;
 		_playerSprites->firstFrameOffset = 0;
-
+		xx += sizeof(DatSpritesGroup) + _playerSprites->size;
+//		_video->SAT_loadTitleSprites(_playerSprites, (const uint8_t *)&_playerSprites[1]);
+// vbt : ecran du menu principal
 		_titleBitmapSize = READ_LE_UINT32(ptr + ptrOffset);
-emu_printf("_titleBitmapSize %d p %p\n", _titleBitmapSize, ptrOffset);
 		_titleBitmapData = ptr + ptrOffset + sizeof(DatBitmap);
 		ptrOffset += sizeof(DatBitmap) + _titleBitmapSize + paletteSize;
-emu_printf("_titleBitmapSize %d p %p aft\n", _titleBitmapSize, ptrOffset);
 		xx += sizeof(DatBitmap) + _titleBitmapSize + paletteSize;
+emu_printf("needed ram1 %d %p\n", xx, ptr+ptrOffset);
+		_res->_menuBuffer0 = _res->_menuBuffer1+ptrOffset;
 
+#ifdef SOUND
+// vbt : ecrans du menu assign player
 		_playerBitmapSize = READ_LE_UINT32(ptr + ptrOffset);
 //emu_printf("_playerBitmapSize %d\n", _playerBitmapSize);
 		_playerBitmapData = ptr + ptrOffset + sizeof(DatBitmap);
@@ -168,8 +173,6 @@ emu_printf("_titleBitmapSize %d p %p aft\n", _titleBitmapSize, ptrOffset);
 		xx += sizeof(DatBitmap) + _playerBitmapSize + paletteSize;
 
 emu_printf("needed ram1 %d\n", xx);
-
-#ifdef SOUND
 		const int size = READ_LE_UINT32(ptr + ptrOffset); ptrOffset += 4;
 		assert((size % (16 * 10)) == 0);
 //emu_printf("_digitsData %d\n", size);
@@ -320,7 +323,7 @@ emu_printf("version == 11\n");
 		yy += _iconsSprites[i].size;
 	}
 
-emu_printf("ram needed 2 %d\n", yy);
+emu_printf("needed ram2 %d\n", yy);
 
 	_optionsButtonSpritesCount = READ_LE_UINT32(ptr + ptrOffset); ptrOffset += 4;
 	if (_optionsButtonSpritesCount != 0) {
