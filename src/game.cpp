@@ -26,13 +26,9 @@ emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 
 	_level = 0;
 	_res = new Resource(&_fs);
-	
-emu_printf("_res %p\n",_res);
 	_paf = new PafPlayer(&_fs);
-emu_printf("_paf %p\n",_paf);
 	_rnd.setSeed();
 	_video = new Video();
-emu_printf("_video %p\n",_video);
 	_cheats = cheats;
 	_playDemo = false;
 
@@ -2050,10 +2046,11 @@ emu_printf("restartLevel\n");
 emu_printf("levelMainLoop\n");
 		levelMainLoop();
 		if (g_system->inp.quit || _endLevel) {
+emu_printf("levelMainLoop quit\n");
 			break;
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
-		g_system->sleep(delay);
+//		g_system->sleep(delay);
 	}
 	_animBackgroundDataCount = 0;
 	callLevel_terminate();

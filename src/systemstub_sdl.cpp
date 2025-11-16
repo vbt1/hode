@@ -355,10 +355,8 @@ void SystemStub_SDL::processEvents() {
 	switch(input_devices[0]->id) { // Check only the first controller...
 		case PER_ID_StnAnalog: // ANALOG PAD
 		case PER_ID_StnPad: // DIGITAL PAD 
-
 			push = (volatile Uint16)(input_devices[0]->push);
 			pull = (volatile Uint16)(input_devices[0]->pull);
-
 /*			if (PAD_PULL_UP)
 			{
 				emu_printf("pull up\n");
@@ -397,10 +395,10 @@ void SystemStub_SDL::processEvents() {
 			
 			if (PAD_PULL_C)
 				inp.mask |= SYS_INP_RUN;
-#if 0
+
 			if (PAD_PULL_START)
-				//inp.enter = false;
-				inp.backspace = false;
+				inp.mask |= SYS_INP_ESC;
+#if 0
 			else if (PAD_PUSH_START)
 			{
 				//inp.enter = true;
@@ -437,7 +435,8 @@ void SystemStub_SDL::processEvents() {
 				inp.escape = true;
 			break;
 		
-#endif		
+#endif
+			break;
 		default:
 			break;
 	}
@@ -618,12 +617,14 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	
 	void SystemStub_SDL::sleep(int duration) 
 	{
+/*
 		static Uint8 counter = 0;
 
 		uint32 wait_tick = ticker + duration;
 		counter++;
 
 		while(wait_tick >= ticker);
+*/
 	}
 
 	void SystemStub_SDL::startAudio(AudioCallback callback) {}
