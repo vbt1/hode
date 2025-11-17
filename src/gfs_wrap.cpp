@@ -204,12 +204,13 @@ int sat_fseek(GFS_FILE *stream, long offset, int whence) {
 			stream->f_seek_pos = offset;
 			
 			break;
-/*
+
 		case SEEK_CUR:
 			if((offset + stream->f_seek_pos) >= stream->f_size) return -1;
 			stream->f_seek_pos += offset;
 			
 			break;
+/*
 		case SEEK_END:
 			if(stream->f_size + offset < 0) return -1;
 			stream->f_seek_pos = (stream->f_size + offset);

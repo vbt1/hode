@@ -383,7 +383,7 @@ void Resource::loadLevelData(int levelNum) {
 		emu_printf("Unable to open '%s'\n", filename);
 	}
 
-#if 1
+#if 0
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
@@ -789,13 +789,15 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
-	assert((unsigned int)num < kMaxScreens);
+//	assert((unsigned int)num < kMaxScreens);
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
 
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
+emu_printf("a\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
+emu_printf("b\n");
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
 	}
@@ -805,21 +807,27 @@ emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 		return;
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
-	assert(readSize <= size);
+//	assert(readSize <= size);
 emu_printf("loadLvlScreenBackgroundData malloc %d size\n", size);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = (uint8_t *)cs1ram;
+emu_printf("c\n");
 	cs1ram+= SAT_ALIGN(size);
+emu_printf("d %p\n", cs1ram);
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
+emu_printf("e\n");
 	_lvlFile->read(ptr, readSize);
-
+emu_printf("f %d\n", readSize);
 	uint8_t hdr[160];
 	_lvlFile->seekAlign(baseOffset + kMaxScreens * 16 + num * 160);
+emu_printf("g %d\n", baseOffset + kMaxScreens * 16 + num * 160);
 	_lvlFile->read(hdr, 160);
 	LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2B88(hdr, ptr, ptr + readSize, dat, _isPsx);
 	const uint32_t allocatedOffsetsSize = size - readSize;
-	assert(allocatedOffsetsSize == readOffsetsSize);
+	
+emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
+//	assert(allocatedOffsetsSize == readOffsetsSize);
 
 	_resLvlScreenBackgroundDataPtrTable[num] = ptr;
 	_resLevelData0x2B88SizeTable[num] = size;
@@ -1437,11 +1445,12 @@ emu_printf("walkCodeDataCount %d\n", _mstHdr.walkCodeDataCount);
 	fp->seek(2048, SEEK_SET); // align to the next sector
 
 	int bytesRead = 0;
-emu_printf("_mstHdr.screensCount\n");
+//emu_printf("_mstHdr.screensCount\n");
 	_mstPointOffsets.allocate(_mstHdr.screensCount);
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstPointOffsets[i].xOffset = fp->readUint32();
 		_mstPointOffsets[i].yOffset = fp->readUint32();
+//emu_printf("screensCount %d x %d y %d\n",i, _mstPointOffsets[i].xOffset, _mstPointOffsets[i].yOffset);
 		bytesRead += 8;
 	}
 emu_printf("_mstHdr.walkBoxDataCount\n");
@@ -1455,22 +1464,25 @@ emu_printf("_mstHdr.walkBoxDataCount\n");
 		_mstWalkBoxData[i].flags[1] = fp->readByte();
 		_mstWalkBoxData[i].flags[2] = fp->readByte();
 		_mstWalkBoxData[i].flags[3] = fp->readByte();
+//emu_printf("vbt0 %d walkBoxDataCount r%d l %d b %d t %d\n", i, _mstWalkBoxData[i].right, _mstWalkBoxData[i].left, _mstWalkBoxData[i].bottom, _mstWalkBoxData[i].top);
+
 		bytesRead += 20;
 	}
-emu_printf("_mstHdr.walkCodeDataCount\n");
+//emu_printf("_mstHdr.walkCodeDataCount\n");
 	_mstWalkCodeData.allocate(_mstHdr.walkCodeDataCount);
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		fp->skipUint32();
 		_mstWalkCodeData[i].codeDataCount = fp->readUint32();
-emu_printf("malloc1 %d\n",_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
-//		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
-		_mstWalkCodeData[i].codeData = (uint32_t *)0x24000000;
+//emu_printf("vbt0 %d codeDataCount %d\n", i, _mstWalkCodeData[i].codeDataCount);
+//emu_printf("malloc1 %d\n",_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+//		_mstWalkCodeData[i].codeData = (uint32_t *)0x24000000;
 		fp->skipUint32();
 		_mstWalkCodeData[i].indexDataCount = fp->readUint32();
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
-emu_printf("malloc2 %d\n",_mstWalkCodeData[i].indexDataCount);
-//			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
-			_mstWalkCodeData[i].indexData = (uint8_t *)0x26000000;
+//emu_printf("malloc2 %d\n",_mstWalkCodeData[i].indexDataCount);
+			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
+//			_mstWalkCodeData[i].indexData = (uint8_t *)0x26000000;
 		} else {
 			_mstWalkCodeData[i].indexData = 0;
 		}
@@ -1485,7 +1497,7 @@ emu_printf("malloc2 %d\n",_mstWalkCodeData[i].indexDataCount);
 			bytesRead += readBytesAlign(fp, _mstWalkCodeData[i].indexData, _mstWalkCodeData[i].indexDataCount);
 		}
 	}
-emu_printf("_mstHdr.movingBoundsIndexDataCount\n");
+//emu_printf("_mstHdr.movingBoundsIndexDataCount\n");
 	_mstMovingBoundsIndexData.allocate(_mstHdr.movingBoundsIndexDataCount);
 	for (int i = 0; i < _mstHdr.movingBoundsIndexDataCount; ++i) {
 		_mstMovingBoundsIndexData[i].indexUnk49 = fp->readUint32();
@@ -1497,7 +1509,7 @@ emu_printf("_mstHdr.movingBoundsIndexDataCount\n");
 	_mstTickDelay    = fp->readUint32();
 	_mstTickCodeData = fp->readUint32();
 	bytesRead += 8;
-emu_printf("_mstHdr.levelCheckpointCodeDataCount\n");
+//emu_printf("_mstHdr.levelCheckpointCodeDataCount\n");
 	_mstLevelCheckpointCodeData.allocate(_mstHdr.levelCheckpointCodeDataCount);
 	for (int i = 0; i < _mstHdr.levelCheckpointCodeDataCount; ++i) {
 		_mstLevelCheckpointCodeData[i] = fp->readUint32();

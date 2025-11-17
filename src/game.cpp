@@ -1196,6 +1196,7 @@ void Game::setupScreenLvlObjects(int num) {
 					break;
 				}
 			}
+emu_printf("setupLvlObjectBitmap %p\n", ptr);
 			setupLvlObjectBitmap(ptr);
 			break;
 		}
@@ -1219,20 +1220,26 @@ void Game::setupScreen(uint8_t num) {
 	}
 	prev = _res->_currentScreenResourceNum;
 	_res->_currentScreenResourceNum = num;
+emu_printf("setupScreenLvlObjects\n");
 	setupScreenLvlObjects(num);
+emu_printf("callLevel_preScreenUpdate\n");
 	callLevel_preScreenUpdate(num);
 	if (_res->_screensState[num].s0 >= _res->_screensState[num].s1) {
 		_res->_screensState[num].s0 = _res->_screensState[num].s1 - 1;
 	}
+emu_printf("callLevel_postScreenUpdate\n");
 	callLevel_postScreenUpdate(num);
 	i = _res->_screensGrid[num][kPosTopScreen];
 	if (i != kNoScreen && prev != i) {
+	emu_printf("callLevel_preScreenUpdate\n");
 		callLevel_preScreenUpdate(i);
+	emu_printf("setupScreenMask\n");
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
 	i = _res->_screensGrid[num][kPosRightScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
+emu_printf("setupScreenLvlObjects1\n");
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -1240,20 +1247,26 @@ void Game::setupScreen(uint8_t num) {
 	}
 	i = _res->_screensGrid[num][kPosBottomScreen];
 	if (i != kNoScreen && prev != i) {
+emu_printf("callLevel_preScreenUpdate1\n");
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
 	i = _res->_screensGrid[num][kPosLeftScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
+emu_printf("setupScreenLvlObjects1\n");
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
+emu_printf("callLevel_postScreenUpdate fin\n");
 	callLevel_postScreenUpdate(num);
+emu_printf("setupBackgroundBitmap fin\n");
 	setupBackgroundBitmap();
+emu_printf("setupScreenMask fin\n");
 	setupScreenMask(num);
+emu_printf("resetDisplay fin\n");
 	resetDisplay();
 }
 
@@ -1998,7 +2011,7 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-//_mstDisabled = true; // vbt : ajout pour test
+_mstDisabled = true; // vbt : ajout pour test
 _paf->_skipCutscenes = true; // vbt : ajout pour test
 	_mstAndyCurrentScreenNum = -1;
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
