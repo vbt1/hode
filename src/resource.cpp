@@ -383,7 +383,7 @@ void Resource::loadLevelData(int levelNum) {
 		emu_printf("Unable to open '%s'\n", filename);
 	}
 
-#if 1
+#if 0
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
@@ -1480,14 +1480,14 @@ emu_printf("_mstHdr.walkBoxDataCount\n");
 //emu_printf("malloc1 %d\n",_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
 //		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
 		_mstWalkCodeData[i].codeData = (uint32_t *)cs1ram;
-		cs1ram+=(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+		cs1ram+=SAT_ALIGN(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
 		fp->skipUint32();
 		_mstWalkCodeData[i].indexDataCount = fp->readUint32();
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
 //emu_printf("malloc2 %d\n",_mstWalkCodeData[i].indexDataCount);
 //			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
 			_mstWalkCodeData[i].indexData = (uint8_t *)cs1ram;
-			cs1ram+=(_mstWalkCodeData[i].indexDataCount);
+			cs1ram+=SAT_ALIGN(_mstWalkCodeData[i].indexDataCount);
 		} else {
 			_mstWalkCodeData[i].indexData = 0;
 		}
@@ -1560,7 +1560,9 @@ emu_printf("_mstHdr.walkBoxDataCount\n");
 	for (int i = 0; i < _mstHdr.behaviorIndexDataCount; ++i) {
 		fp->skipUint32();
 		_mstBehaviorIndexData[i].count1 = fp->readUint32();
-		_mstBehaviorIndexData[i].behavior = (uint32_t *)malloc(_mstBehaviorIndexData[i].count1 * sizeof(uint32_t));
+//		_mstBehaviorIndexData[i].behavior = (uint32_t *)malloc(_mstBehaviorIndexData[i].count1 * sizeof(uint32_t));
+		_mstBehaviorIndexData[i].behavior = (uint32_t *)cs1ram;
+		cs1ram+=SAT_ALIGN(_mstBehaviorIndexData[i].count1 * sizeof(uint32_t));
 		fp->skipUint32();
 		_mstBehaviorIndexData[i].dataCount = fp->readUint32();
 		if (_mstBehaviorIndexData[i].dataCount != 0) {
@@ -1801,7 +1803,7 @@ emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 //		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)cs1ram;
-		cs1ram+=(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
+		cs1ram+=SAT_ALIGN(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		const int start = _mstMovingBoundsData[i].indexMonsterInfo;
 		assert(start < _mstHdr.infoMonster1Count);
 		for (uint32_t j = 0; j < _mstMovingBoundsData[i].count1; ++j) {
@@ -1838,7 +1840,7 @@ emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 	for (int i = 0; i < _mstHdr.shootDataCount; ++i) {
 //		_mstShootData[i].data = (MstShootAction *)malloc(_mstShootData[i].count * sizeof(MstShootAction));
 		_mstShootData[i].data = (MstShootAction *)cs1ram;
-		cs1ram+=(_mstShootData[i].count * sizeof(MstShootAction));
+		cs1ram+=SAT_ALIGN(_mstShootData[i].count * sizeof(MstShootAction));
 		for (uint32_t j = 0; j < _mstShootData[i].count; ++j) {
 			_mstShootData[i].data[j].codeData = fp->readUint32();
 			_mstShootData[i].data[j].unk4 = fp->readUint32();
@@ -1865,7 +1867,7 @@ emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {
 //		_mstShootIndexData[i].indexUnk50Unk1 = (uint32_t *)malloc(_mstShootIndexData[i].count * 9 * sizeof(uint32_t));
 		_mstShootIndexData[i].indexUnk50Unk1 = (uint32_t *)cs1ram;
-		cs1ram+=(_mstShootIndexData[i].count * 9 * sizeof(uint32_t));
+		cs1ram+=SAT_ALIGN(_mstShootIndexData[i].count * 9 * sizeof(uint32_t));
 		for (uint32_t j = 0; j < _mstShootIndexData[i].count * 9; ++j) {
 			_mstShootIndexData[i].indexUnk50Unk1[j] = fp->readUint32();
 			assert(_mstShootIndexData[i].indexUnk50Unk1[j] < _mstShootData[_mstShootIndexData[i].indexUnk50].count);
@@ -1997,7 +1999,7 @@ emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 
 //	_mstCodeData = (uint8_t *)malloc(_mstHdr.codeSize * 4);
 	_mstCodeData = (uint8_t *)cs1ram;
-	cs1ram+=(_mstHdr.codeSize * 4);
+	cs1ram+=SAT_ALIGN(_mstHdr.codeSize * 4);
 	fp->read(_mstCodeData, _mstHdr.codeSize * 4);
 	bytesRead += _mstHdr.codeSize * 4;
 

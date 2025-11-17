@@ -290,7 +290,7 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 			const int w = _shadowScreenMasksTable[i].w = READ_LE_UINT16(dst + 0x10);
 			const int h = _shadowScreenMasksTable[i].h = READ_LE_UINT16(dst + 0x12);
 
-			debug(kDebug_GAME, "shadow screen mask #%d pos %d,%d dim %d,%d size %d", i, x, y, w, h, decodedSize);
+			emu_printf("shadow screen mask #%d pos %d,%d dim %d,%d size %d\n", i, x, y, w, h, decodedSize);
 
 			const int size = w * h;
 			uint8_t *p = _shadowScreenMasksTable[i].projectionDataPtr + 2;
@@ -346,20 +346,24 @@ void Game::setupBackgroundBitmap() {
 	lvl->backgroundPaletteId = READ_LE_UINT16(pal); pal += 2;
 	const uint8_t *bmp = lvl->backgroundBitmapTable[num];
 	lvl->backgroundBitmapId = READ_LE_UINT16(bmp); bmp += 2;
+#ifdef SOUND
 	if (lvl->backgroundPaletteId != 0xFFFF) {
 		playSound(lvl->backgroundPaletteId, 0, 0, 3);
 	}
 	if (lvl->backgroundBitmapId != 0xFFFF) {
 		playSound(lvl->backgroundBitmapId, 0, 0, 3);
 	}
+#endif
 	if (_res->_isPsx) {
 #ifdef PSX
 		_video->decodeBackgroundPsx(bmp + 2, -1, Video::W, Video::H);
 #endif
 	} else {
+emu_printf("decodeLZW %p %p\n", bmp, _video->_backgroundLayer);
 		decodeLZW(bmp, _video->_backgroundLayer);
 	}
 	if (lvl->shadowCount != 0) {
+emu_printf("decodeShadowScreenMask\n");
 		decodeShadowScreenMask(lvl);
 	}
 	for (int i = 0; i < 256 * 3; ++i) {
@@ -1265,7 +1269,7 @@ emu_printf("setupScreenLvlObjects1\n");
 	}
 emu_printf("callLevel_postScreenUpdate fin\n");
 	callLevel_postScreenUpdate(num);
-emu_printf("setupBackgroundBitmap fin\n");
+emu_printf("setupBackgroundBitmap fin lw %p cs1 %p\n", current_lwram, cs1ram);
 	setupBackgroundBitmap();
 emu_printf("setupScreenMask fin\n");
 	setupScreenMask(num);
