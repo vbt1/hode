@@ -383,7 +383,7 @@ void Resource::loadLevelData(int levelNum) {
 		emu_printf("Unable to open '%s'\n", filename);
 	}
 
-#if 0
+#if 1
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
@@ -870,7 +870,10 @@ void Resource::decLvlSpriteDataRefCounter(LvlObject *ptr) {
 }
 
 const uint8_t *Resource::getLvlSpriteFramePtr(LvlObjectData *dat, int frame, uint16_t *w, uint16_t *h) const {
-	assert(frame < dat->framesCount);
+	emu_printf("getLvlSpriteFramePtr %d %d\n", frame , dat->framesCount);
+	if(frame >= dat->framesCount)
+		return (uint8_t *)NULL;
+//	assert(frame < dat->framesCount);
 	const uint8_t *p = dat->framesData;
 	if (dat->unk0 == 1) {
 		p += frame * 6;
@@ -1475,14 +1478,16 @@ emu_printf("_mstHdr.walkBoxDataCount\n");
 		_mstWalkCodeData[i].codeDataCount = fp->readUint32();
 //emu_printf("vbt0 %d codeDataCount %d\n", i, _mstWalkCodeData[i].codeDataCount);
 //emu_printf("malloc1 %d\n",_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
-		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
-//		_mstWalkCodeData[i].codeData = (uint32_t *)0x24000000;
+//		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+		_mstWalkCodeData[i].codeData = (uint32_t *)cs1ram;
+		cs1ram+=(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
 		fp->skipUint32();
 		_mstWalkCodeData[i].indexDataCount = fp->readUint32();
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
 //emu_printf("malloc2 %d\n",_mstWalkCodeData[i].indexDataCount);
-			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
-//			_mstWalkCodeData[i].indexData = (uint8_t *)0x26000000;
+//			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
+			_mstWalkCodeData[i].indexData = (uint8_t *)cs1ram;
+			cs1ram+=(_mstWalkCodeData[i].indexDataCount);
 		} else {
 			_mstWalkCodeData[i].indexData = 0;
 		}
@@ -1774,7 +1779,9 @@ emu_printf("_mstHdr.walkBoxDataCount\n");
 	const int mapDataSize = _mstHdr.infoMonster1Count * kMonsterInfoDataSize;
 	
 emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
-	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
+//	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
+	_mstMonsterInfos = (uint8_t *)cs1ram;
+	cs1ram+=mapDataSize;
 	fp->read(_mstMonsterInfos, mapDataSize);
 	bytesRead += mapDataSize;
 
@@ -1792,7 +1799,9 @@ emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 		bytesRead += 24;
 	}
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
-		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
+//		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
+		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)cs1ram;
+		cs1ram+=(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		const int start = _mstMovingBoundsData[i].indexMonsterInfo;
 		assert(start < _mstHdr.infoMonster1Count);
 		for (uint32_t j = 0; j < _mstMovingBoundsData[i].count1; ++j) {
@@ -1827,7 +1836,9 @@ emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 		bytesRead += 8;
 	}
 	for (int i = 0; i < _mstHdr.shootDataCount; ++i) {
-		_mstShootData[i].data = (MstShootAction *)malloc(_mstShootData[i].count * sizeof(MstShootAction));
+//		_mstShootData[i].data = (MstShootAction *)malloc(_mstShootData[i].count * sizeof(MstShootAction));
+		_mstShootData[i].data = (MstShootAction *)cs1ram;
+		cs1ram+=(_mstShootData[i].count * sizeof(MstShootAction));
 		for (uint32_t j = 0; j < _mstShootData[i].count; ++j) {
 			_mstShootData[i].data[j].codeData = fp->readUint32();
 			_mstShootData[i].data[j].unk4 = fp->readUint32();
@@ -1852,7 +1863,9 @@ emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 		bytesRead += 12;
 	}
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {
-		_mstShootIndexData[i].indexUnk50Unk1 = (uint32_t *)malloc(_mstShootIndexData[i].count * 9 * sizeof(uint32_t));
+//		_mstShootIndexData[i].indexUnk50Unk1 = (uint32_t *)malloc(_mstShootIndexData[i].count * 9 * sizeof(uint32_t));
+		_mstShootIndexData[i].indexUnk50Unk1 = (uint32_t *)cs1ram;
+		cs1ram+=(_mstShootIndexData[i].count * 9 * sizeof(uint32_t));
 		for (uint32_t j = 0; j < _mstShootIndexData[i].count * 9; ++j) {
 			_mstShootIndexData[i].indexUnk50Unk1[j] = fp->readUint32();
 			assert(_mstShootIndexData[i].indexUnk50Unk1[j] < _mstShootData[_mstShootIndexData[i].indexUnk50].count);
@@ -1982,7 +1995,9 @@ emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 		bytesRead += 16;
 	}
 
-	_mstCodeData = (uint8_t *)malloc(_mstHdr.codeSize * 4);
+//	_mstCodeData = (uint8_t *)malloc(_mstHdr.codeSize * 4);
+	_mstCodeData = (uint8_t *)cs1ram;
+	cs1ram+=(_mstHdr.codeSize * 4);
 	fp->read(_mstCodeData, _mstHdr.codeSize * 4);
 	bytesRead += _mstHdr.codeSize * 4;
 
