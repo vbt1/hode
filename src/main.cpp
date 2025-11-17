@@ -14,6 +14,8 @@ extern "C" {
 #include <stdarg.h>
 #include <string.h>
 void *memset4_fast(void *, long, size_t);
+void 	free(void *ptr);
+void	*malloc(size_t);
 }
 
 #include <ctype.h>

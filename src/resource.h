@@ -10,6 +10,12 @@
 #include "intern.h"
 #include "util.h"
 
+extern "C" {
+void 	free(void *ptr);
+void	*malloc(size_t);
+void *calloc(size_t nmemb, size_t size);
+}
+
 extern uint8_t *cs1ram;
 
 struct DatHdr {

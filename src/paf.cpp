@@ -8,6 +8,12 @@
 #include "systemstub.h"
 #include "util.h"
 
+extern "C" {
+void 	free(void *ptr);
+void	*malloc(size_t);
+void *calloc(size_t nmemb, size_t size);
+}
+
 static const char *_filenames[] = {
 	"HOD.PAF",
 	"HOD_DEMO.PAF",
