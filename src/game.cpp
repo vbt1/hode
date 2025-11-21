@@ -27,7 +27,9 @@ emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 
 	_level = 0;
 	_res = new Resource(&_fs);
+#ifdef PAF
 	_paf = new PafPlayer(&_fs);
+#endif
 	_rnd.setSeed();
 	_video = new Video();
 	_cheats = cheats;
@@ -88,7 +90,9 @@ emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 }
 
 Game::~Game() {
+#if PAF
 	delete _paf;
+#endif
 	delete _res;
 	delete _video;
 }
@@ -362,6 +366,7 @@ void Game::setupBackgroundBitmap() {
 emu_printf("decodeLZW %p %p\n", bmp, _video->_backgroundLayer);
 		decodeLZW(bmp, _video->_backgroundLayer);
 	}
+//lvl->shadowCount = 1;
 	if (lvl->shadowCount != 0) {
 emu_printf("decodeShadowScreenMask\n");
 		decodeShadowScreenMask(lvl);
@@ -497,7 +502,7 @@ void Game::setupScreenMask(uint8_t num) {
 	}
 	int mask = _res->_resLvlScreenBackgroundDataTable[num].currentMaskId;
 	if (_res->_screensState[num].s3 != mask) {
-		debug(kDebug_GAME, "setupScreenMask num %d mask %d", num, mask);
+		emu_printf("setupScreenMask num %d mask %d\n", num, mask);
 		_res->_screensState[num].s3 = mask;
 		const uint8_t *maskData = _res->getLvlScreenMaskDataPtr(num * 4 + mask);
 		if (maskData) {
@@ -1288,10 +1293,13 @@ void Game::resetScreen() {
 		_res->_screensState[i].s0 = *dat2++;
 		_level->_screenCounterTable[i] = *dat2++;
 	}
+emu_printf("4\n");
 	resetScreenMask();
+emu_printf("5\n");
 	for (int i = screenNum; i < _res->_lvlHdr.screensCount; ++i) {
 		_level->setupScreenCheckpoint(i);
 	}
+emu_printf("6\n");
 	resetWormHoleSprites();
 }
 
@@ -1338,6 +1346,7 @@ void Game::playAndyFallingCutscene(int type) {
 			play = true;
 		}
 	}
+#if PAF
 	if (!_paf->_skipCutscenes && play) {
 		switch (_currentLevel) {
 		case kLvl_rock:
@@ -1357,6 +1366,7 @@ void Game::playAndyFallingCutscene(int type) {
 			break;
 		}
 	}
+#endif
 	if (type != 0 && play) {
 		restartLevel();
 	}
@@ -1983,21 +1993,23 @@ emu_printf("game mainloop\n");
 		if (checkpoint != 0 && checkpoint >= _res->_datHdr.levelCheckpointsCount[level]) {
 			checkpoint = _setupConfig.players[num].progress[level];
 		}
+#if PAF
 		debug(kDebug_GAME, "Restart at level %d checkpoint %d cutscenes 0x%x", level, checkpoint, _paf->_playedMask);
 		_paf->_playedMask = _setupConfig.players[num].cutscenesMask;
 		_snd_masterVolume = _setupConfig.players[num].volume;
 		_paf->setVolume(_snd_masterVolume);
+#endif
 		_difficulty = _setupConfig.players[num].difficulty;
 		// resume once, on the starting level
 		_resumeGame = false;
 	}
-
+#if PAF
 	PafCallback pafCb;
 	pafCb.frameProc = 0;
 	pafCb.endProc = gamePafCallback;
 	pafCb.userdata = this;
 	_paf->setCallback(&pafCb);
-
+#endif
 	_video->_font = _res->_fontBuffer;
 //	assert(level < kLvl_test);
 
@@ -2019,7 +2031,9 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	_mix._lock(0);
 #endif
 _mstDisabled = true; // vbt : ajout pour test
+#if PAF
 _paf->_skipCutscenes = true; // vbt : ajout pour test
+#endif
 	_mstAndyCurrentScreenNum = -1;
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
 	_rnd.initTable(rounds);
@@ -2049,6 +2063,7 @@ emu_printf("resetPlasmaCannonState\n");
 	if (!_mstDisabled) {
 		startMstCode();
 	}
+#if PAF
 	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 && !levelChanged) {
 		const uint8_t num = _cutscenes[_currentLevel];
 		_paf->preload(num);
@@ -2058,6 +2073,7 @@ emu_printf("resetPlasmaCannonState\n");
 			return;
 		}
 	}
+#endif
 	_endLevel = false;
 emu_printf("resetShootLvlObjectDataTable\n");
 	resetShootLvlObjectDataTable();
@@ -2611,7 +2627,7 @@ emu_printf("updateInput\n");
 		_andyObject->directionKeyMask = _directionKeyMask;
 		_andyObject->actionKeyMask = _actionKeyMask;
 	}
-emu_printf("clearBackBuffer\n");
+//emu_printf("clearBackBuffer\n");
 
 	_video->clearBackBuffer();
 	if (_andyObject->screenNum != _res->_currentScreenResourceNum) {
@@ -2674,7 +2690,7 @@ emu_printf("drawScreen\n");
 	}
 #endif
 	if (_cheats != 0) {
-emu_printf("_cheats\n");
+//emu_printf("_cheats\n");
 		char buffer[256];
 		snprintf(buffer, sizeof(buffer), "P%d S%02d %d R%d", _currentLevel, _andyObject->screenNum, _res->_screensState[_andyObject->screenNum].s0, _level->_checkpoint);
 		_video->drawString(buffer, (Video::W - strlen(buffer) * 8) / 2, 8, _video->findWhiteColor(), _video->_frontLayer);
@@ -2687,7 +2703,7 @@ emu_printf("_cheats\n");
 		_video->updateGameDisplay(_video->_frontLayer);
 	}
 	_rnd.update();
-emu_printf("processEvents\n");
+//emu_printf("processEvents\n");
 	g_system->processEvents();
 	if (g_system->inp.keyPressed(SYS_INP_ESC)) {
 		if (displayHintScreen(-1, 0)) { // pause/exit screen
@@ -2741,7 +2757,9 @@ Level *Game::createLevel() {
 }
 
 void Game::callLevel_initialize() {
-	_level->setPointers(this, _andyObject, _paf, _res, _video);
+#if PAF
+	_level->setPointers(this, _andyObject, NULL, _res, _video);
+#endif
 	_level->initialize();
 }
 

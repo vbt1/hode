@@ -8,7 +8,7 @@
 
 #include "game.h"
 #include "level.h"
-#include "paf.h"
+//#include "paf.h"
 #include "util.h"
 #include "video.h"
 
@@ -166,11 +166,13 @@ void Level_rock::postScreenUpdate_rock_screen9() {
 				xPos -= 14;
 			}
 			if (_andyObject->xPos > xPos && _andyObject->yPos < 86) {
+#if PAF
 				if (!_paf->_skipCutscenes) {
 					_paf->play(1);
 					_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 					_video->_paletteChanged = true;
 				}
+#endif
 				if (_checkpoint == 4) {
 					_checkpoint = 5;
 				}
@@ -345,6 +347,7 @@ void Level_rock::postScreenUpdate_rock_screen19() {
 		break;
 	case 2:
 		if (_andyObject->yPos < 1) {
+#if PAF
 			if (!_paf->_skipCutscenes) {
 				_paf->play(2);
 				_paf->unload(2);
@@ -352,6 +355,7 @@ void Level_rock::postScreenUpdate_rock_screen19() {
 					_paf->play(21);
 				}
 			}
+#endif
 			_video->clearPalette();
 			_g->_endLevel = true;
 		}
@@ -660,9 +664,11 @@ void Level_rock::preScreenUpdate_rock_screen7() {
 void Level_rock::preScreenUpdate_rock_screen9() {
 	switch (_res->_screensState[9].s0) {
 	case 0:
+#if PAF
 		if (!_paf->_skipCutscenes) {
 			_paf->preload(1);
 		}
+#endif
 		_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 0;
 		break;
 	default:
@@ -677,10 +683,12 @@ void Level_rock::preScreenUpdate_rock_screen10() {
 		if (_checkpoint == 4) {
 			_checkpoint = 5;
 		}
+#if PAF
 		if (!_paf->_skipCutscenes) {
 			_paf->unload(22);
 			_paf->preload(23);
 		}
+#endif
 	}
 }
 
@@ -689,9 +697,11 @@ void Level_rock::preScreenUpdate_rock_screen13() {
 		if (_checkpoint == 5) {
 			_checkpoint = 6;
 		}
+#if PAF
 		if (!_paf->_skipCutscenes) {
 			_paf->unload(1);
 		}
+#endif
 	}
 }
 
@@ -783,11 +793,13 @@ void Level_rock::preScreenUpdate_rock_screen19() {
 #endif
 	_res->_resLvlScreenBackgroundDataTable[19].currentBackgroundId = _al;
 	_res->_resLvlScreenBackgroundDataTable[19].currentMaskId = _al;
+#if PAF
 	if (_res->_currentScreenResourceNum == 19) {
 		if (!_paf->_skipCutscenes) {
 			_paf->preload(2);
 		}
 	}
+#endif
 }
 
 void Level_rock::preScreenUpdate(int num) {
@@ -844,6 +856,7 @@ void Level_rock::preScreenUpdate(int num) {
 }
 
 void Level_rock::initialize() {
+#if PAF
 	if (!_paf->_skipCutscenes) {
 		if (_andyObject->spriteNum == 0) {
 			_paf->preload(22);
@@ -851,6 +864,7 @@ void Level_rock::initialize() {
 			_paf->preload(23);
 		}
 	}
+#endif
 }
 
 void Level_rock::tick() {
@@ -860,6 +874,7 @@ void Level_rock::tick() {
 }
 
 void Level_rock::terminate() {
+#if PAF
 	if (!_paf->_skipCutscenes) {
 		if (_andyObject->spriteNum == 0) {
 			_paf->unload(22);
@@ -867,6 +882,7 @@ void Level_rock::terminate() {
 			_paf->unload(23);
 		}
 	}
+#endif
 }
 
 void Level_rock::setupScreenCheckpoint_rock_screen2() {

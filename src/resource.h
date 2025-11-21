@@ -538,7 +538,7 @@ struct ResStruct {
 		count = size;
 // vbt : on garde malloc, peu couteux
 		ptr = (T *)malloc(size * sizeof(T));
-		emu_printf("allocate %d\n", size * sizeof(T));
+//		emu_printf("allocate %d\n", size * sizeof(T));
 	}
 
 	const T& operator[](int i) const {

@@ -76,8 +76,8 @@ static bool isEmptySetupCfg(SetupConfig *config, int num) {
 	return config->players[num].levelNum == 0 && config->players[num].checkpointNum == 0 && config->players[num].cutscenesMask == 0;
 }
 
-Menu::Menu(Game *g, PafPlayer *paf, Resource *res, Video *video)
-	: _g(g), _paf(paf), _res(res), _video(video) {
+Menu::Menu(Game *g, /*PafPlayer *paf,*/ Resource *res, Video *video)
+	: _g(g), /*_paf(paf),*/ _res(res), _video(video) {
 
 	_config = &_g->_setupConfig;
 }
@@ -512,15 +512,15 @@ bool Menu::mainLoop() {
 			pafCb.frameProc = menuPafCallback;
 			pafCb.endProc = 0;
 			pafCb.userdata = this;
-			_paf->setCallback(&pafCb);
 #ifdef SOUND
+			_paf->setCallback(&pafCb);
 			playSound(kSound_0xA0);
 #endif
 			ret = handleOptions();
 #ifdef SOUND
 			_g->resetSound();
-#endif
 			_paf->setCallback(0);
+#endif
 		} else if (option == kTitleScreen_Quit) {
 		}
 		break;
@@ -1666,9 +1666,11 @@ void Menu::changeToOption(int num) {
 		_currentOptionButtonSound = 0;
 		_currentOptionButtonSprite = 0;
 	}
+#if PAF	
 	if (!_paf->_skipCutscenes) {
 		_paf->play(data[5]);
 	}
+#endif
 	if (_optionNum == kMenu_NewGame + 1) {
 		_config->players[_config->currentPlayer].levelNum = 0;
 		_config->players[_config->currentPlayer].checkpointNum = 0;

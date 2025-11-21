@@ -154,17 +154,17 @@ emu_printf("name %s\n",path_token);
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 		fp->f_size = fsize;
 		emu_printf("position %d %p fsize %d\n", position, fp->fid, fsize);
-/*
+
 		if (!position) // on conserve le cache existant
 		{
 			fp->f_seek_pos = 0;
 			Sint32 tot_sectors = TOT_SECTOR;
 			GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
-//			memset4_fast((Uint8*)cache, 0, CACHE_SIZE);
+			memset4_fast((Uint8*)cache, 0, CACHE_SIZE);
 			cache_offset = 0;
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
 		}
-		else*/
+		else
 		{
 			Sint32 tot_sectors = TOT_SECTOR;
 			GFS_Seek(fp->fid, position, GFS_SEEK_SET);
@@ -293,8 +293,8 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-emu_printf("skip bytes\n");
-		read_buffer = (Uint8*)current_lwram;
+emu_printf("skip bytes %d %d\n", tot_bytes,skip_bytes);
+		read_buffer = (Uint8*)0x26000000;//current_lwram;
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 	} else {

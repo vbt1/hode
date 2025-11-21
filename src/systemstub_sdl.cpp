@@ -326,7 +326,7 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
 	// Calculate initial source and destination pointers
-emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
+//emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 

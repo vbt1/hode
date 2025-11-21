@@ -32,7 +32,7 @@ emu_printf("setFp %p\n", _fp);
 }
 
 void File::seekAlign(uint32_t pos) {
-//emu_printf("File::seek\n");
+emu_printf("File::seekAlign %d\n", pos);
 	sat_fseek(_fp, pos, SEEK_SET);
 }
 

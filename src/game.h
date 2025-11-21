@@ -88,8 +88,8 @@ struct Game {
 	Level *_level;
 #ifdef SOUND
 	Mixer _mix;
-#endif
 	PafPlayer *_paf;
+#endif
 	Random _rnd;
 	Resource *_res;
 	Video *_video;
