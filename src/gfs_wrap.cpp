@@ -129,7 +129,7 @@ emu_printf("sat_fopen %s\n", path);
 		return NULL; // nothing to do...
 	}
 	Uint16 idx;
-	static GFS_FILE fp[1];
+	GFS_FILE *fp = NULL;
 	idx = 0;
 
 	Uint16 path_len = strlen(path);
@@ -150,6 +150,8 @@ emu_printf("name %s\n",path_token);
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 
 		// Encapsulate the file data
+		fp = (GFS_FILE*)malloc(sizeof(GFS_FILE));
+		if (fp == NULL) {return NULL;}
 		fp->fid = fid;
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 		fp->f_size = fsize;
@@ -189,16 +191,15 @@ emu_printf("sat_fclose\n");
 }
 
 int sat_fseek(GFS_FILE *stream, long offset, int whence) {
-//emu_printf("sat_fseek\n");	
+emu_printf("sat_fseek %d %d\n", offset, whence);	
 	if(stream == NULL) return -1;
 
 	switch(whence) {
 		case SEEK_SET:
+emu_printf("sat_fseek SEEK_SET\n");		
 			if(offset < 0 || offset >= stream->f_size)
 			{
-#ifdef DEBUG_GFS
 				emu_printf("SEEK_SET failed !\n");
-#endif
 				return -1;
 			}
 			stream->f_seek_pos = offset;
@@ -206,9 +207,14 @@ int sat_fseek(GFS_FILE *stream, long offset, int whence) {
 			break;
 
 		case SEEK_CUR:
-			if((offset + stream->f_seek_pos) >= stream->f_size) return -1;
+emu_printf("sat_fseek SEEK_CUR\n");	
+			if((offset + stream->f_seek_pos) >= stream->f_size) 
+			{
+emu_printf("SEEK_CUR failed !\n");	
+				return -1;
+			}
 			stream->f_seek_pos += offset;
-			
+emu_printf("stream->f_seek_pos %d\n", stream->f_seek_pos);			
 			break;
 /*
 		case SEEK_END:
@@ -230,7 +236,7 @@ int sat_ftell(GFS_FILE *stream)
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
-//emu_printf("sat_fread ptr %p size %d\n", ptr, size);	
+emu_printf("sat_fread ptr %p size %d pos %d stream->fid %d\n", ptr, size, stream->f_seek_pos, stream->f_size);	
 
 	if (ptr == NULL || stream == NULL) return 0; // nothing to do then
 	if (size == 0 || nmemb == 0) return 0;

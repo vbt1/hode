@@ -37,10 +37,12 @@ emu_printf("File::seekAlign %d\n", pos);
 }
 
 void File::seek(int pos, int whence) {
-//emu_printf("File::seek\n");
+emu_printf("File::seek %d %d\n");
 	if(_fp)
 	{
 		if (kSeekAbsolutePosition && whence == SEEK_CUR) {
+	emu_printf("here\n");
+	while(1);
 			pos += sat_ftell(_fp);
 			whence = SEEK_SET;
 		}
@@ -146,10 +148,14 @@ void SectorFile::seek(int pos, int whence) {
 emu_printf("SectorFile::seek\n");
 	if (whence == SEEK_SET) {
 //		assert((pos & 2047) == 0);
+		if((pos & 2047) != 0)
+			return;
 		_bufPos = 2044;
 		File::seek(pos, SEEK_SET);
 	} else {
 //		assert(whence == SEEK_CUR && pos >= 0);
+		if(!(whence == SEEK_CUR && pos >= 0))
+			return;
 		const int bufLen = 2044 - _bufPos;
 		if (pos < bufLen) {
 			_bufPos += pos;

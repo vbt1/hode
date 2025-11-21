@@ -2,7 +2,9 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-
+extern "C" {
+#include 	<sl_def.h>
+}
 #include "fileio.h"
 #include "fs.h"
 #include "game.h"
@@ -10,7 +12,7 @@
 #include "resource.h"
 #include "util.h"
 
-uint8_t *cs1ram = (uint8_t *)0x22400000;
+uint8_t *cs1ram = (uint8_t *)0x22402000;
 // load and uncompress .sss pcm on level start
 static const bool kPreloadSssPcm = false;
 
@@ -380,6 +382,8 @@ void Resource::loadLevelData(int levelNum) {
 
 	closeDat(_fs, _lvlFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
+emu_printf("filename %s\n",filename);
+
 	if (openDat(_fs, filename, _lvlFile)) {
 		loadLvlData(_lvlFile);
 	} else {
@@ -649,7 +653,6 @@ emu_printf("loadLvlData\n");
 //	assert(fp == _lvlFile);
 
 	unloadLvlData();
-
 	const uint32_t tag = _lvlFile->readUint32();
 	if (tag != _lvlTag) {
 		emu_printf("Unhandled .lvl tag 0x%x\n", tag);
@@ -768,6 +771,8 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		dat->backgroundMaskTable[i] = (offs != 0) ? ptr + offs : 0;
+		emu_printf("dat->backgroundMaskTable[%d] %d\n", i, dat->backgroundMaskTable[i]);
+		
 	}
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
@@ -805,7 +810,7 @@ emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	if (!buf) {
 emu_printf("a\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
-emu_printf("b\n");
+emu_printf("b %d\n", baseOffset);
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
 	}
@@ -816,7 +821,7 @@ emu_printf("b\n");
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 	assert(readSize <= size);
-//emu_printf("loadLvlScreenBackgroundData malloc %d size\n", size);
+emu_printf("loadLvlScreenBackgroundData malloc %d size\n", size);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = (uint8_t *)cs1ram;
 emu_printf("c\n");
@@ -824,6 +829,7 @@ emu_printf("c\n");
 emu_printf("d %p\n", ptr);
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
 emu_printf("e\n");
+
 	_lvlFile->read(ptr, readSize);
 emu_printf("f %d\n", readSize);
 	uint8_t hdr[160];
@@ -1624,7 +1630,7 @@ emu_printf("_mstHdr._mstScreenAreaByValueIndexData[%d] %d\n", i, _mstScreenAreaB
 			bytesRead += readBytesAlign(fp, _mstBehaviorIndexData[i].data, _mstBehaviorIndexData[i].dataCount);
 		}
 	}
-emu_printf("x1\n");
+//emu_printf("x1\n");
 	_mstMonsterActionIndexData.allocate(_mstHdr.monsterActionIndexDataCount);
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
 		fp->skipUint32();
@@ -1643,7 +1649,7 @@ emu_printf("x1\n");
 		}
 		bytesRead += 16;
 	}
-emu_printf("x2\n");
+//emu_printf("x2\n");
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
 		for (uint32_t j = 0; j < _mstMonsterActionIndexData[i].count1; ++j) {
 			_mstMonsterActionIndexData[i].indexUnk48[j] = fp->readUint32();
@@ -1653,7 +1659,7 @@ emu_printf("x2\n");
 			bytesRead += readBytesAlign(fp, _mstMonsterActionIndexData[i].data, _mstMonsterActionIndexData[i].dataCount);
 		}
 	}
-emu_printf("x3\n");
+//emu_printf("x3\n");
 	_mstWalkPathData.allocate(_mstHdr.walkPathDataCount);
 	for (int i = 0; i < _mstHdr.walkPathDataCount; ++i) {
 		fp->skipUint32();
@@ -1704,7 +1710,7 @@ emu_printf("x4\n");
 				_mstWalkPathData[i].data[j].unk60[1] = 0;
 			}
 		}
-emu_printf("x6\n");
+//emu_printf("x6\n");
 		_mstWalkPathData[i].walkNodeData = (uint32_t *)cs1ram;
 		cs1ram+=SAT_ALIGN(_mstHdr.screensCount * sizeof(uint32_t));
 		for (int j = 0; j < _mstHdr.screensCount; ++j) {
@@ -1717,7 +1723,7 @@ emu_printf("x6\n");
 			}
 		}
 	}
-emu_printf("x7\n");
+//emu_printf("x7\n");
 	_mstInfoMonster2Data.allocate(_mstHdr.infoMonster2Count);
 	for (int i = 0; i < _mstHdr.infoMonster2Count; ++i) {
 		_mstInfoMonster2Data[i].type = fp->readByte();
@@ -1727,14 +1733,14 @@ emu_printf("x7\n");
 		_mstInfoMonster2Data[i].codeData2 = fp->readUint32();
 		bytesRead += 12;
 	}
-emu_printf("x8\n");
+//emu_printf("x8\n");
 	_mstBehaviorData.allocate(_mstHdr.behaviorDataCount);
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 		fp->skipUint32();
 		_mstBehaviorData[i].count = fp->readUint32();
 		bytesRead += 8;
 	}
-emu_printf("x9\n");
+//emu_printf("x9\n");
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 //		_mstBehaviorData[i].data  = (MstBehaviorState *)malloc(_mstBehaviorData[i].count * sizeof(MstBehaviorState));
 		_mstBehaviorData[i].data  = (MstBehaviorState *)cs1ram;
@@ -1757,14 +1763,14 @@ emu_printf("x9\n");
 			_mstBehaviorData[i].data[j].codeData    = READ_LE_UINT32(data + 0x28);
 		}
 	}
-emu_printf("x10\n");
+//emu_printf("x10\n");
 	_mstAttackBoxData.allocate(_mstHdr.attackBoxDataCount);
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 		fp->skipUint32();
 		_mstAttackBoxData[i].count = fp->readUint32();
 		bytesRead += 8;
 	}
-emu_printf("x11\n");
+//emu_printf("x11\n");
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 //		_mstAttackBoxData[i].data = (uint8_t *)malloc(_mstAttackBoxData[i].count * 20);
 		_mstAttackBoxData[i].data = (uint8_t *)cs1ram;
@@ -1772,7 +1778,7 @@ emu_printf("x11\n");
 		fp->read(_mstAttackBoxData[i].data, _mstAttackBoxData[i].count * 20);
 		bytesRead += _mstAttackBoxData[i].count * 20;
 	}
-emu_printf("x12\n");
+//emu_printf("x12\n");
 	_mstMonsterActionData.allocate(_mstHdr.monsterActionDataCount);
 	for (int i = 0; i < _mstHdr.monsterActionDataCount; ++i) {
 		MstMonsterAction *m = &_mstMonsterActionData[i];
@@ -1790,7 +1796,7 @@ emu_printf("x12\n");
 		m->count[1] = fp->readUint32();
 		bytesRead += 44;
 	}
-emu_printf("x13\n");
+//emu_printf("x13\n");
 	for (int i = 0; i < _mstHdr.monsterActionDataCount; ++i) {
 		MstMonsterAction *m = &_mstMonsterActionData[i];
 		for (int j = 0; j < 2; ++j) {
@@ -1819,7 +1825,7 @@ emu_printf("x13\n");
 
 		MstMonsterArea *m12 = (MstMonsterArea *)cs1ram;
 		cs1ram+=SAT_ALIGN(m->areaCount * sizeof(MstMonsterArea));
-emu_printf("x14 %p count %d\n", cs1ram, m->areaCount);
+//emu_printf("x14 %p count %d\n", cs1ram, m->areaCount);
 		for (int j = 0; j < m->areaCount; ++j) {
 			m12[j].unk0  = fp->readByte();
 			fp->skipByte();
@@ -1827,31 +1833,40 @@ emu_printf("x14 %p count %d\n", cs1ram, m->areaCount);
 			fp->skipByte();
 			m12[j].data  = 0; fp->skipUint32();
 			m12[j].count = fp->readUint32();
-emu_printf("m12[%d].count %d\n", j, m12[j].count);
+//emu_printf("m12[%d].count %d\n", j, m12[j].count);
 			bytesRead += 12;
 		}
-emu_printf("x15\n");
+emu_printf("x15 %d\n", m->areaCount);
 		for (int j = 0; j < m->areaCount; ++j) {
+			slSynch();
 //			m12[j].data = (MstMonsterAreaAction *)malloc(m12[j].count * sizeof(MstMonsterAreaAction));
 			m12[j].data = (MstMonsterAreaAction *)cs1ram;
-emu_printf("j%d %d count %d\n", j, m12[j].count * sizeof(MstMonsterAreaAction),m->areaCount);
+//emu_printf("j%d %d count %d\n", j, m12[j].count * sizeof(MstMonsterAreaAction),m->areaCount);
 			cs1ram+=SAT_ALIGN(m12[j].count * sizeof(MstMonsterAreaAction));
 			for (uint32_t k = 0; k < m12[j].count; ++k) {
 				uint8_t data[28];
-
+emu_printf("before fp->read(data, sizeof(data)\n");
 				fp->read(data, sizeof(data));
 				m12[j].data[k].indexMonsterInfo = READ_LE_UINT32(data);
 emu_printf("m12[%d].data[%d].indexMonsterInfo %d\n", j,k,m12[j].data[k].indexMonsterInfo);
 				m12[j].data[k].indexUnk51 = READ_LE_UINT32(data + 0x4);
 emu_printf("m12[%d].data[%d].indexUnk51 %d\n", j,k,m12[j].data[k].indexUnk51);
 				m12[j].data[k].xPos = READ_LE_UINT32(data + 0x8);
+emu_printf("m12[%d].data[%d].xPos %d\n", j,k,m12[j].data[k].xPos);
 				m12[j].data[k].yPos = READ_LE_UINT32(data + 0xC);
+emu_printf("m12[%d].data[%d].yPos %d\n", j,k,m12[j].data[k].yPos);
 				m12[j].data[k].codeData = READ_LE_UINT32(data + 0x10);
+emu_printf("m12[%d].data[%d].codeData %d\n", j,k,m12[j].data[k].codeData);
 				m12[j].data[k].codeData2 = READ_LE_UINT32(data + 0x14);
+emu_printf("m12[%d].data[%d].codeData2 %d\n", j,k,m12[j].data[k].codeData2);
 				m12[j].data[k].unk18 = data[0x18];
+emu_printf("m12[%d].data[%d].unk18 %d\n", j,k,m12[j].data[k].unk18);
 				m12[j].data[k].direction = data[0x19];
+emu_printf("m12[%d].data[%d].direction %d\n", j,k,m12[j].data[k].direction);
 				m12[j].data[k].screenNum = data[0x1A];
+emu_printf("m12[%d].data[%d].screenNum %d\n", j,k,m12[j].data[k].screenNum);
 				m12[j].data[k].monster1Index = data[0x1B];
+emu_printf("m12[%d].data[%d].monster1Index %d\n", j,k,m12[j].data[k].monster1Index);
 				bytesRead += 28;
 			}
 		}
@@ -1882,7 +1897,6 @@ emu_printf("_mstMovingBoundsData[%d].indexMonsterInfo %d\n", i, _mstMovingBounds
 		bytesRead += 24;
 	}
 emu_printf("x17\n");
-while(1);
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 //		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)cs1ram;

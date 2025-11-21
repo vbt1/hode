@@ -307,7 +307,6 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 
 			const int shadowPaletteSize = decodedSize - 20 - w * h * sizeof(uint16_t);
 			assert(shadowPaletteSize >= 144);
-
 			_video->buildShadowColorLookupTable(_shadowScreenMasksTable[i].shadowPalettePtr, _video->_shadowColorLookupTable);
 			dst += decodedSize;
 		}
@@ -1322,7 +1321,7 @@ emu_printf("clearLvlObjectsList3\n");
 #endif
 	}
 	const int screenNum = _level->getCheckpointData(_level->_checkpoint)->screenNum;
-emu_printf("preloadLevelScreenData\n");
+emu_printf("preloadLevelScreenData1\n");
 	preloadLevelScreenData(screenNum, kNoScreen);
 	_andyObject->levelData0x2988 = _res->_resLevelData0x2988PtrTable[_andyObject->spriteNum];
 	memset(_video->_backgroundLayer, 0, Video::W * Video::H);
@@ -1330,6 +1329,7 @@ emu_printf("preloadLevelScreenData\n");
 emu_printf("resetScreen\n");
 	resetScreen();
 	if (_andyObject->screenNum != screenNum) {
+emu_printf("preloadLevelScreenData2\n");		
 		preloadLevelScreenData(_andyObject->screenNum, kNoScreen);
 	}
 emu_printf("setupScreen\n");
@@ -2631,6 +2631,7 @@ emu_printf("updateInput\n");
 
 	_video->clearBackBuffer();
 	if (_andyObject->screenNum != _res->_currentScreenResourceNum) {
+emu_printf("preloadLevelScreenData3\n");
 		preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
 		setupScreen(_andyObject->screenNum);
 	} else if (_fadePalette && _levelRestartCounter == 0) {
