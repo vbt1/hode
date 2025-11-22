@@ -347,9 +347,9 @@ void SystemStub_SDL::updateScreen(bool drawWidescreen) {
 void SystemStub_SDL::processEvents() {
 //emu_printf("processEvents\n");
 	inp.prevMask = inp.mask;
-	pad.prevMask = pad.mask;
+//	pad.prevMask = pad.mask;
 //	pad.mask &= ~(SYS_INP_UP | SYS_INP_DOWN | SYS_INP_LEFT | SYS_INP_RIGHT);
-	inp.mask = 0;
+//	inp.mask = 0;
 	
 	Uint16 push;
 	Uint16 pull;
@@ -361,68 +361,68 @@ void SystemStub_SDL::processEvents() {
 			pull = (volatile Uint16)(input_devices[0]->pull);
 
 			if (PAD_PUSH_DOWN)
-				pad.mask |= SYS_INP_DOWN;
+				inp.mask |= SYS_INP_DOWN;
 			else
 			{
 				if (PAD_PULL_DOWN)
-					pad.mask &= ~SYS_INP_DOWN;
+					inp.mask &= ~SYS_INP_DOWN;
 			}
 
 			if (PAD_PUSH_UP)
-				pad.mask |= SYS_INP_UP;
+				inp.mask |= SYS_INP_UP;
 			else
 			{
 				if (PAD_PULL_UP)
-					pad.mask &= ~SYS_INP_UP;
+					inp.mask &= ~SYS_INP_UP;
 			}
 
 			if (PAD_PUSH_RIGHT)
-				pad.mask |= SYS_INP_RIGHT;
+				inp.mask |= SYS_INP_RIGHT;
 			else
 			{
 				if (PAD_PULL_RIGHT)
-					pad.mask &= ~SYS_INP_RIGHT;
+					inp.mask &= ~SYS_INP_RIGHT;
 			}
 
 			if (PAD_PUSH_LEFT)
-				pad.mask |= SYS_INP_LEFT;
+				inp.mask |= SYS_INP_LEFT;
 			else
 			{
 				if (PAD_PULL_LEFT)
-					pad.mask &= ~SYS_INP_LEFT;
+					inp.mask &= ~SYS_INP_LEFT;
 			}
 
 			if (PAD_PUSH_A)
-				pad.mask |= SYS_INP_JUMP;
+				inp.mask |= SYS_INP_JUMP;
 			else
 			{
 				if (PAD_PULL_A)
-					pad.mask &= ~SYS_INP_JUMP;
+					inp.mask &= ~SYS_INP_JUMP;
 			}
 
 			if (PAD_PUSH_B)
-				pad.mask |= SYS_INP_SHOOT;
+				inp.mask |= SYS_INP_SHOOT;
 			else
 			{
 				if (PAD_PULL_B)
-					pad.mask &= ~SYS_INP_SHOOT;
+					inp.mask &= ~SYS_INP_SHOOT;
 			}
 
 			if (PAD_PUSH_C)
-				pad.mask |= SYS_INP_RUN;
+				inp.mask |= SYS_INP_RUN;
 			else
 			{
 				if (PAD_PULL_C)
-					pad.mask &= ~SYS_INP_RUN;
+					inp.mask &= ~SYS_INP_RUN;
 			}
 			
 			if (PAD_PUSH_START)
-				pad.mask |= SYS_INP_ESC;
+				inp.mask |= SYS_INP_ESC;
 			break;
 		default:
 			break;
 	}
-	inp.mask |= pad.mask;
+//	inp.mask |= pad.mask;
 	return;
 }
 /*

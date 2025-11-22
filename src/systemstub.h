@@ -60,7 +60,7 @@ struct PlayerInput {
 };
 */
 struct System {
-	PlayerInput inp, pad;
+	PlayerInput inp; //, pad;
 	virtual void init(const char *title, int w, int h) = 0;
 	virtual void destroy() = 0;
 
