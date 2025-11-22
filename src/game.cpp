@@ -610,14 +610,14 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
-emu_printf("getLvlSpriteFramePtr\n");
+//emu_printf("getLvlSpriteFramePtr\n");
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 
 	const int w = ptr->width - 1;
 	const int h = ptr->height - 1;
 
 	if (ptr->type == 8 && (ptr->spriteNum == 2 || ptr->spriteNum == 0)) {
-emu_printf("getLvlObjectDataPtr\n");
+//emu_printf("getLvlObjectDataPtr\n");
 		AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 		dataPtr->boundingBox.x1 = ptr->xPos;
 		dataPtr->boundingBox.y1 = ptr->yPos;
@@ -647,8 +647,7 @@ emu_printf("getLvlObjectDataPtr\n");
 			break;
 		}
 	}
-emu_printf("setupLvlObjectBitmap end\n");
-
+//emu_printf("setupLvlObjectBitmap end\n");
 }
 
 void Game::randomizeInterpolatePoints(int32_t *pts, int count) {
@@ -2076,18 +2075,18 @@ emu_printf("resetPlasmaCannonState\n");
 	}
 #endif
 	_endLevel = false;
-emu_printf("resetShootLvlObjectDataTable\n");
+//emu_printf("resetShootLvlObjectDataTable\n");
 	resetShootLvlObjectDataTable();
-emu_printf("callLevel_initialize\n");
+//emu_printf("callLevel_initialize\n");
 	callLevel_initialize();
-emu_printf("restartLevel\n");
+//emu_printf("restartLevel\n");
 	restartLevel();
 	while (true) {
 		const int frameTimeStamp = g_system->getTimeStamp() + _frameMs;
-emu_printf("levelMainLoop\n");
+//emu_printf("levelMainLoop\n");
 		levelMainLoop();
 		if (g_system->inp.quit || _endLevel) {
-emu_printf("levelMainLoop quit\n");
+//emu_printf("levelMainLoop quit\n");
 			break;
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
@@ -2618,7 +2617,7 @@ void Game::levelMainLoop() {
 	_spritesTable[kMaxSprites - 1].nextPtr = 0;
 	_directionKeyMask = 0;
 	_actionKeyMask = 0;
-emu_printf("updateInput\n");
+//emu_printf("updateInput\n");
 	updateInput();
 	if (_playDemo && _res->_demOffset < _res->_dem.keyMaskLen) {
 		_andyObject->actionKeyMask = _res->_dem.actionKeyMask[_res->_demOffset];
@@ -2632,7 +2631,7 @@ emu_printf("updateInput\n");
 
 	_video->clearBackBuffer();
 	if (_andyObject->screenNum != _res->_currentScreenResourceNum) {
-emu_printf("preloadLevelScreenData3\n");
+//emu_printf("preloadLevelScreenData3\n");
 		preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
 		setupScreen(_andyObject->screenNum);
 	} else if (_fadePalette && _levelRestartCounter == 0) {
@@ -2654,36 +2653,36 @@ emu_printf("preloadLevelScreenData3\n");
 		callLevel_tick();
 		return;
 	}
-emu_printf("executeMstCode\n");
+//emu_printf("executeMstCode\n");
 	executeMstCode();
-emu_printf("updateLvlObjectLists\n");
+//emu_printf("updateLvlObjectLists\n");
 	updateLvlObjectLists();
-emu_printf("callLevel_tick\n");
+//emu_printf("callLevel_tick\n");
 	callLevel_tick();
-emu_printf("updateAndyMonsterObjects\n");
+//emu_printf("updateAndyMonsterObjects\n");
 	updateAndyMonsterObjects();
 	if (!_hideAndyObjectFlag) {
-emu_printf("addToSpriteList\n");
+//emu_printf("addToSpriteList\n");
 		addToSpriteList(_andyObject);
 	}
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dxPos = 0;
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dyPos = 0;
-emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
+//emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
 	updateAnimatedLvlObjectsLeftRightCurrentScreens();
 	if (_currentLevel == kLvl_rock || _currentLevel == kLvl_lar2 || _currentLevel == kLvl_test) {
 		if (_andyObject->spriteNum == 0 && _plasmaExplosionObject && _plasmaExplosionObject->nextPtr != 0) {
-emu_printf("updatePlasmaCannonExplosionLvlObject\n");
+//emu_printf("updatePlasmaCannonExplosionLvlObject\n");
 			updatePlasmaCannonExplosionLvlObject(_plasmaExplosionObject->nextPtr);
 		}
 	}
 	if (_video->_paletteChanged) {
 		_video->_paletteChanged = false;
-emu_printf("updateGamePalette\n");
+//emu_printf("updateGamePalette\n");
 		_video->updateGamePalette(_video->_displayPaletteBuffer);
-emu_printf("copyRectWidescreen\n");
+//emu_printf("copyRectWidescreen\n");
 		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 	}
-emu_printf("drawScreen\n");
+//emu_printf("drawScreen\n");
 	drawScreen();
 #if 0
 	if (g_system->inp.screenshot) {
@@ -2776,7 +2775,7 @@ void Game::callLevel_terminate() {
 }
 
 void Game::displayLoadingScreen() {
-emu_printf("displayLoadingScreen\n");
+//emu_printf("displayLoadingScreen\n");
 	if (_res->_isPsx) {
 #ifdef PSX
 		static const int kHintPsxLoading = 39;

@@ -244,7 +244,7 @@ emu_printf("setup_input\n");
 	else
 		tickPerVblank = 20;
 emu_printf("slIntFunction\n");
-//	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
+	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
 #endif
 	return;
 }
@@ -347,6 +347,8 @@ void SystemStub_SDL::updateScreen(bool drawWidescreen) {
 void SystemStub_SDL::processEvents() {
 //emu_printf("processEvents\n");
 	inp.prevMask = inp.mask;
+	pad.prevMask = pad.mask;
+//	pad.mask &= ~(SYS_INP_UP | SYS_INP_DOWN | SYS_INP_LEFT | SYS_INP_RIGHT);
 	inp.mask = 0;
 	
 	Uint16 push;
@@ -357,93 +359,70 @@ void SystemStub_SDL::processEvents() {
 		case PER_ID_StnPad: // DIGITAL PAD 
 			push = (volatile Uint16)(input_devices[0]->push);
 			pull = (volatile Uint16)(input_devices[0]->pull);
-			if (PAD_PULL_UP)
-			{
-				inp.mask &= ~SYS_INP_UP;
-			}
-			else if (PAD_PUSH_UP)
-			{
-				inp.mask |= SYS_INP_UP;
-			}
-			if (PAD_PULL_DOWN)
-			{
-				inp.mask &= ~SYS_INP_DOWN;
-			}
+
 			if (PAD_PUSH_DOWN)
+				pad.mask |= SYS_INP_DOWN;
+			else
 			{
-				inp.mask |= SYS_INP_DOWN;
+				if (PAD_PULL_DOWN)
+					pad.mask &= ~SYS_INP_DOWN;
 			}
-			if (PAD_PULL_LEFT)
-				inp.mask &= ~SYS_INP_LEFT;
-			else if (PAD_PUSH_LEFT)
-				inp.mask |= SYS_INP_LEFT;
 
-			if (PAD_PULL_RIGHT)
-				inp.mask &= ~SYS_INP_RIGHT;
-			else if (PAD_PUSH_RIGHT)
-				inp.mask |= SYS_INP_RIGHT;
-
-			if (PAD_PULL_A)
-				inp.mask &= ~SYS_INP_JUMP;
-			else if (PAD_PUSH_A)
-				inp.mask |= SYS_INP_JUMP;
-
-			if (PAD_PULL_B)
-				inp.mask &= ~SYS_INP_SHOOT;
-			else if (PAD_PUSH_B)
-				inp.mask |= SYS_INP_SHOOT;
-
-			if (PAD_PULL_C)
-				inp.mask &= ~SYS_INP_RUN;
-			else if (PAD_PUSH_C)
-				inp.mask |= SYS_INP_RUN;
-			
-			if (PAD_PULL_START)
-				inp.mask |= SYS_INP_ESC;
-			
-			
-#if 0
-			else if (PAD_PUSH_START)
+			if (PAD_PUSH_UP)
+				pad.mask |= SYS_INP_UP;
+			else
 			{
-				//inp.enter = true;
-				inp.backspace = true;
+				if (PAD_PULL_UP)
+					pad.mask &= ~SYS_INP_UP;
 			}
-			if (PAD_PULL_A)
-				inp.space = false;
-			else if (PAD_PUSH_A)
-				inp.space = true;
-			if (PAD_PULL_C)
-				inp.enter = false;
-			else if (PAD_PUSH_C)
-				inp.enter = true;
-			if (PAD_PULL_B)
-				inp.shift = false;
-			else if (PAD_PUSH_B)
-				inp.shift = true;
 
-			if (PAD_PULL_LTRIG)
-				//inp.ltrig = false;
-				;
-			else if (PAD_PUSH_LTRIG)
-				inp.ltrig = true;
+			if (PAD_PUSH_RIGHT)
+				pad.mask |= SYS_INP_RIGHT;
+			else
+			{
+				if (PAD_PULL_RIGHT)
+					pad.mask &= ~SYS_INP_RIGHT;
+			}
 
-			if (PAD_PULL_RTRIG)
-				//inp.rtrig = false;
-				;
-			else if (PAD_PUSH_RTRIG)
-				inp.rtrig = true;
+			if (PAD_PUSH_LEFT)
+				pad.mask |= SYS_INP_LEFT;
+			else
+			{
+				if (PAD_PULL_LEFT)
+					pad.mask &= ~SYS_INP_LEFT;
+			}
 
-			if (PAD_PULL_Z)
-				inp.escape = false;
-			else if (PAD_PUSH_Z)
-				inp.escape = true;
-			break;
-		
-#endif
+			if (PAD_PUSH_A)
+				pad.mask |= SYS_INP_JUMP;
+			else
+			{
+				if (PAD_PULL_A)
+					pad.mask &= ~SYS_INP_JUMP;
+			}
+
+			if (PAD_PUSH_B)
+				pad.mask |= SYS_INP_SHOOT;
+			else
+			{
+				if (PAD_PULL_B)
+					pad.mask &= ~SYS_INP_SHOOT;
+			}
+
+			if (PAD_PUSH_C)
+				pad.mask |= SYS_INP_RUN;
+			else
+			{
+				if (PAD_PULL_C)
+					pad.mask &= ~SYS_INP_RUN;
+			}
+			
+			if (PAD_PUSH_START)
+				pad.mask |= SYS_INP_ESC;
 			break;
 		default:
 			break;
 	}
+	inp.mask |= pad.mask;
 	return;
 }
 /*
@@ -617,7 +596,7 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 						 const uint8_t *u, int upitch, const uint8_t *v, int vpitch) {}
 	void SystemStub_SDL::fillRect(int x, int y, int w, int h, uint8_t color) {}
 	void SystemStub_SDL::shakeScreen(int dx, int dy) {}
-	void processEvents() {}
+	void SystemStub_SDL::processEvents();
 	
 	void SystemStub_SDL::sleep(int duration) 
 	{
@@ -757,7 +736,7 @@ inline void timeTick() {
 void vblIn (void) {
 //emu_printf("vblIn\n");
 	// Process input
-
+/*
 //	if(!loadingMap)
 	{
 		uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
@@ -772,8 +751,8 @@ void vblIn (void) {
 		}
 #endif
 //		system_saturn.updateScreen(0);
-	}
-//	system_saturn.processEvents();
+	}*/
+	g_system->processEvents();
 	timeTick();
 }
 

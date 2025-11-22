@@ -887,7 +887,7 @@ void Resource::decLvlSpriteDataRefCounter(LvlObject *ptr) {
 }
 
 const uint8_t *Resource::getLvlSpriteFramePtr(LvlObjectData *dat, int frame, uint16_t *w, uint16_t *h) const {
-	emu_printf("getLvlSpriteFramePtr %d %d\n", frame , dat->framesCount);
+//	emu_printf("getLvlSpriteFramePtr %d %d\n", frame , dat->framesCount);
 	if(frame >= dat->framesCount)
 		return (uint8_t *)NULL;
 	assert(frame < dat->framesCount);

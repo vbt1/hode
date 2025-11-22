@@ -236,7 +236,7 @@ int sat_ftell(GFS_FILE *stream)
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
-emu_printf("sat_fread ptr %p size %d pos %d stream->fid %d\n", ptr, size, stream->f_seek_pos, stream->f_size);	
+//emu_printf("sat_fread ptr %p size %d pos %d stream->fid %d\n", ptr, size, stream->f_seek_pos, stream->f_size);	
 
 	if (ptr == NULL || stream == NULL) return 0; // nothing to do then
 	if (size == 0 || nmemb == 0) return 0;
