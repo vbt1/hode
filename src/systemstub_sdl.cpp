@@ -357,47 +357,51 @@ void SystemStub_SDL::processEvents() {
 		case PER_ID_StnPad: // DIGITAL PAD 
 			push = (volatile Uint16)(input_devices[0]->push);
 			pull = (volatile Uint16)(input_devices[0]->pull);
-/*			if (PAD_PULL_UP)
+			if (PAD_PULL_UP)
 			{
-				emu_printf("pull up\n");
 				inp.mask &= ~SYS_INP_UP;
 			}
-			else*/ if (PAD_PUSH_UP)
+			else if (PAD_PUSH_UP)
 			{
-//				emu_printf("push up\n");
 				inp.mask |= SYS_INP_UP;
 			}
-/*			if (PAD_PULL_DOWN)
+			if (PAD_PULL_DOWN)
 			{
-				emu_printf("pull down\n");
 				inp.mask &= ~SYS_INP_DOWN;
 			}
-			else*/ if (PAD_PUSH_DOWN)
+			if (PAD_PUSH_DOWN)
 			{
-//				emu_printf("push down\n");
 				inp.mask |= SYS_INP_DOWN;
 			}
-/*			if (PAD_PULL_LEFT)
-				inp.dirMask &= ~PlayerInput::DIR_LEFT;
-			else*/ if (PAD_PUSH_LEFT)
+			if (PAD_PULL_LEFT)
+				inp.mask &= ~SYS_INP_LEFT;
+			else if (PAD_PUSH_LEFT)
 				inp.mask |= SYS_INP_LEFT;
 
-/*			if (PAD_PULL_RIGHT)
-				inp.dirMask &= ~PlayerInput::DIR_RIGHT;
-			else*/ if (PAD_PUSH_RIGHT)
+			if (PAD_PULL_RIGHT)
+				inp.mask &= ~SYS_INP_RIGHT;
+			else if (PAD_PUSH_RIGHT)
 				inp.mask |= SYS_INP_RIGHT;
-				
+
 			if (PAD_PULL_A)
+				inp.mask &= ~SYS_INP_JUMP;
+			else if (PAD_PUSH_A)
 				inp.mask |= SYS_INP_JUMP;
 
 			if (PAD_PULL_B)
+				inp.mask &= ~SYS_INP_SHOOT;
+			else if (PAD_PUSH_B)
 				inp.mask |= SYS_INP_SHOOT;
-			
-			if (PAD_PULL_C)
-				inp.mask |= SYS_INP_RUN;
 
+			if (PAD_PULL_C)
+				inp.mask &= ~SYS_INP_RUN;
+			else if (PAD_PUSH_C)
+				inp.mask |= SYS_INP_RUN;
+			
 			if (PAD_PULL_START)
 				inp.mask |= SYS_INP_ESC;
+			
+			
 #if 0
 			else if (PAD_PUSH_START)
 			{

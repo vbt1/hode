@@ -76,8 +76,8 @@ static bool isEmptySetupCfg(SetupConfig *config, int num) {
 	return config->players[num].levelNum == 0 && config->players[num].checkpointNum == 0 && config->players[num].cutscenesMask == 0;
 }
 
-Menu::Menu(Game *g, /*PafPlayer *paf,*/ Resource *res, Video *video)
-	: _g(g), /*_paf(paf),*/ _res(res), _video(video) {
+Menu::Menu(Game *g, PafPlayer *paf, Resource *res, Video *video)
+	: _g(g), _paf(paf), _res(res), _video(video) {
 
 	_config = &_g->_setupConfig;
 }

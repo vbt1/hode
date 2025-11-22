@@ -3,6 +3,7 @@ SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/lzw.cpp \
 		$(SRCDIR)/systemstub_sdl.cpp \
 		$(SRCDIR)/gfs_wrap.cpp \
+		$(SRCDIR)/paf.cpp \
 		$(SRCDIR)/game.cpp \
 		$(SRCDIR)/andy.cpp \
 		$(SRCDIR)/menu.cpp \

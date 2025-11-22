@@ -41,7 +41,7 @@ struct Menu {
 	};
 
 	Game *_g;
-//	PafPlayer *_paf;
+	PafPlayer *_paf;
 	Resource *_res;
 	Video *_video;
 
@@ -98,7 +98,7 @@ struct Menu {
 	int _soundCounter;
 	int _soundTestSpriteNum;
 
-	Menu(Game *g, /*PafPlayer *paf,*/ Resource *res, Video *video);
+	Menu(Game *g, PafPlayer *paf, Resource *res, Video *video);
 
 	void setVolume();
 

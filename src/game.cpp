@@ -1,4 +1,5 @@
 #pragma GCC optimize ("Os")
+#define PAF 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
