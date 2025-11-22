@@ -53,6 +53,9 @@ extern "C" {
 void emu_printf(const char *format, ...);
 void SCU_DMAWait(void);
 extern Uint8 *current_lwram;
+extern Uint8 *save_current_lwram;
+extern Uint8 *cs1ram;
+extern Uint8 *save_cs1ram;
 }
 
 #endif // UTIL_H__

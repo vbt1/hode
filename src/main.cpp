@@ -358,6 +358,8 @@ emu_printf("mainloop\n");
 			}
 		}
 		bool levelChanged = false;
+		save_current_lwram = (uint8_t *)current_lwram;
+		save_cs1ram = (uint8_t *)cs1ram;
 		while (!g_system->inp.quit && level < kLvl_test) {
 			if (_displayLoadingScreen) {
 emu_printf("displayLoadingScreen 2\n");
@@ -376,6 +378,8 @@ emu_printf("displayLoadingScreen 2\n");
 			level = g->_currentLevel + 1;
 			checkpoint = 0;
 			levelChanged = true;
+			current_lwram = (uint8_t *)save_current_lwram;
+			cs1ram = (uint8_t *)save_cs1ram;
 		}
 	} while (!g_system->inp.quit && resume && !isPsx); // do not return to menu when starting from a specific level checkpoint
 

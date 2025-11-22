@@ -2014,7 +2014,7 @@ emu_printf("game mainloop\n");
 //	assert(level < kLvl_test);
 
 //	level = kLvl_fort;
-//	level = 8;
+//	level = 1;
 	_currentLevel = level;
 emu_printf("createLevel %d\n", _currentLevel);
 //while(1);
@@ -2030,7 +2030,7 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-//_mstDisabled = true; // vbt : ajout pour test
+_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 _paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2729,9 +2729,10 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
-/*	case 1:
+	case 1:
 		_level = Level_fort_create();
 		break;
+/*
 	case 2:
 		_level = Level_pwr1_create();
 		break;

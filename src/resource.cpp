@@ -13,6 +13,7 @@ extern "C" {
 #include "util.h"
 
 uint8_t *cs1ram = (uint8_t *)0x22402000;
+uint8_t *save_cs1ram;
 // load and uncompress .sss pcm on level start
 static const bool kPreloadSssPcm = false;
 
@@ -651,7 +652,6 @@ static const uint32_t _lvlTag = 0x484F4400; // 'HOD\x00'
 void Resource::loadLvlData(File *fp) {
 emu_printf("loadLvlData\n");
 //	assert(fp == _lvlFile);
-
 	unloadLvlData();
 	const uint32_t tag = _lvlFile->readUint32();
 	if (tag != _lvlTag) {
@@ -723,7 +723,7 @@ emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes
 }
 
 void Resource::unloadLvlData() {
-	free(_resLevelData0x470CTable);
+//	free(_resLevelData0x470CTable);
 	_resLevelData0x470CTable = 0;
 	for (unsigned int i = 0; i < kMaxScreens; ++i) {
 		unloadLvlScreenBackgroundData(i);

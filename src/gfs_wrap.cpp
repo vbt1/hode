@@ -8,6 +8,7 @@ extern "C" {
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
 Uint8 *current_lwram = (Uint8 *)VBT_L_START;
+Uint8 *save_current_lwram;
 char 	*strtok (char *__restrict, const char *__restrict);
 int	 strncasecmp(const char *, const char *, size_t) __pure;
 GfsDirTbl gfsDirTbl;

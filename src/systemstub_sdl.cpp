@@ -311,7 +311,7 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 	int pitch = 256;
 	int x = 0;
 	int y = 0;
-	emu_printf("copyRect %d %d\n",w,h);
+//	emu_printf("copyRect %d %d\n",w,h);
 		uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
 		uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
@@ -321,7 +321,7 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 			dstPtr += (pitch*2);
 			SCU_DMAWait();
 		}
-	emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
+	//emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
 }
 
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
