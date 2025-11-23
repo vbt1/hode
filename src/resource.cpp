@@ -771,7 +771,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		dat->backgroundMaskTable[i] = (offs != 0) ? ptr + offs : 0;
-		emu_printf("dat->backgroundMaskTable[%d] %d\n", i, dat->backgroundMaskTable[i]);
+//		emu_printf("dat->backgroundMaskTable[%d] %d\n", i, dat->backgroundMaskTable[i]);
 		
 	}
 	for (int i = 0; i < 4; ++i) {
@@ -821,15 +821,12 @@ emu_printf("b %d\n", baseOffset);
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 	assert(readSize <= size);
-emu_printf("loadLvlScreenBackgroundData malloc %d size\n", size);
+emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = (uint8_t *)cs1ram;
-emu_printf("c\n");
 	cs1ram+= SAT_ALIGN(size);
 emu_printf("d %p\n", ptr);
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
-emu_printf("e\n");
-
 	_lvlFile->read(ptr, readSize);
 emu_printf("f %d\n", readSize);
 	uint8_t hdr[160];
