@@ -590,12 +590,17 @@ void SystemStub_SDL::forceGfxRedraw() {
 void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 dstPitch) {
 	return;
 }*/
+	void SystemStub_SDL::shakeScreen(int dx, int dy) 
+	{
+emu_printf("shake %d %d\n", dx, dy);
+		slScrPosNbg1(toFIXED(dx), toFIXED(dy));
+	}
 
 	void SystemStub_SDL::clearPalette() {}
 	void SystemStub_SDL::copyYuv(int w, int h, const uint8_t *y, int ypitch,
 						 const uint8_t *u, int upitch, const uint8_t *v, int vpitch) {}
 	void SystemStub_SDL::fillRect(int x, int y, int w, int h, uint8_t color) {}
-	void SystemStub_SDL::shakeScreen(int dx, int dy) {}
+	void SystemStub_SDL::shakeScreen(int dx, int dy); 
 	void SystemStub_SDL::processEvents();
 	
 	void SystemStub_SDL::sleep(int duration) 

@@ -504,7 +504,7 @@ void Game::setupScreenMask(uint8_t num) {
 	}
 	int mask = _res->_resLvlScreenBackgroundDataTable[num].currentMaskId;
 	if (_res->_screensState[num].s3 != mask) {
-		emu_printf("setupScreenMask num %d mask %d\n", num, mask);
+//		emu_printf("setupScreenMask num %d mask %d\n", num, mask);
 		_res->_screensState[num].s3 = mask;
 		const uint8_t *maskData = _res->getLvlScreenMaskDataPtr(num * 4 + mask);
 		if (maskData) {
@@ -1240,13 +1240,13 @@ emu_printf("callLevel_preScreenUpdate\n");
 	if (_res->_screensState[num].s0 >= _res->_screensState[num].s1) {
 		_res->_screensState[num].s0 = _res->_screensState[num].s1 - 1;
 	}
-emu_printf("callLevel_postScreenUpdate\n");
+//emu_printf("callLevel_postScreenUpdate\n");
 	callLevel_postScreenUpdate(num);
 	i = _res->_screensGrid[num][kPosTopScreen];
 	if (i != kNoScreen && prev != i) {
-	emu_printf("callLevel_preScreenUpdate\n");
+//	emu_printf("callLevel_preScreenUpdate\n");
 		callLevel_preScreenUpdate(i);
-	emu_printf("setupScreenMask\n");
+//	emu_printf("setupScreenMask\n");
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
@@ -2016,10 +2016,9 @@ emu_printf("game mainloop\n");
 //	assert(level < kLvl_test);
 
 //	level = kLvl_fort;
-	level = 2;
+//	level = 2;
 	_currentLevel = level;
-emu_printf("createLevel %d\n", _currentLevel);
-//while(1);
+//emu_printf("createLevel %d\n", _currentLevel);
 	createLevel();
 	assert(checkpoint < _res->_datHdr.levelCheckpointsCount[level]);
 	_currentLevelCheckpoint = _level->_checkpoint = checkpoint;

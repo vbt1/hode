@@ -122,7 +122,7 @@ void init_GFS() { //Initialize GFS system
 }
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
-emu_printf("sat_fopen %s\n", path);	
+//emu_printf("sat_fopen %s\n", path);	
 	memset(satpath, 0, 25);
 
 	if (path == NULL) 
@@ -156,7 +156,7 @@ emu_printf("name %s\n",path_token);
 		fp->fid = fid;
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 		fp->f_size = fsize;
-		emu_printf("position %d %p fsize %d\n", position, fp->fid, fsize);
+//		emu_printf("position %d %p fsize %d\n", position, fp->fid, fsize);
 
 		if (!position) // on conserve le cache existant
 		{
@@ -176,7 +176,7 @@ emu_printf("name %s\n",path_token);
 	}
 	else
 	{
-		emu_printf("no fid!!!\n");	
+//		emu_printf("no fid!!!\n");	
 	}
 
 	// Now... get back to the roots!
@@ -185,19 +185,19 @@ emu_printf("name %s\n",path_token);
 }
 
 int sat_fclose(GFS_FILE* fp) {
-emu_printf("sat_fclose\n");	
+//emu_printf("sat_fclose\n");	
 	GFS_Close(fp->fid);
 
 	return 0; // always ok :-)
 }
 
 int sat_fseek(GFS_FILE *stream, long offset, int whence) {
-emu_printf("sat_fseek %d %d\n", offset, whence);	
+//emu_printf("sat_fseek %d %d\n", offset, whence);	
 	if(stream == NULL) return -1;
 
 	switch(whence) {
 		case SEEK_SET:
-emu_printf("sat_fseek SEEK_SET\n");		
+//emu_printf("sat_fseek SEEK_SET\n");		
 			if(offset < 0 || offset >= stream->f_size)
 			{
 				emu_printf("SEEK_SET failed !\n");
@@ -208,14 +208,14 @@ emu_printf("sat_fseek SEEK_SET\n");
 			break;
 
 		case SEEK_CUR:
-emu_printf("sat_fseek SEEK_CUR\n");	
+//emu_printf("sat_fseek SEEK_CUR\n");	
 			if((offset + stream->f_seek_pos) >= stream->f_size) 
 			{
-emu_printf("SEEK_CUR failed !\n");	
+//emu_printf("SEEK_CUR failed !\n");	
 				return -1;
 			}
 			stream->f_seek_pos += offset;
-emu_printf("stream->f_seek_pos %d\n", stream->f_seek_pos);			
+//emu_printf("stream->f_seek_pos %d\n", stream->f_seek_pos);			
 			break;
 /*
 		case SEEK_END:
