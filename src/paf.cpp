@@ -79,16 +79,21 @@ void PafPlayer::preload(int num) {
 		unload();
 		return;
 	}
-	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
+	uint8_t *buffer = (uint8_t *)cs1ram;//calloc(kPageBufferSize * 4 + 256 * 4, 1);
 	if (!buffer) {
 		warning("preloadPaf() Unable to allocate page buffers");
 		unload();
 		return;
 	}
+	cs1ram+=(kPageBufferSize * 4 + 256 * 4);
+	
 	for (int i = 0; i < 4; ++i) {
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 	}
-	_demuxVideoFrameBlocks = (uint8_t *)calloc(_pafHdr.maxVideoFrameBlocksCount, _pafHdr.readBufferSize);
+	_demuxVideoFrameBlocks = (uint8_t *)cs1ram;//calloc(_pafHdr.maxVideoFrameBlocksCount, _pafHdr.readBufferSize);
+	cs1ram+=(_pafHdr.maxVideoFrameBlocksCount* _pafHdr.readBufferSize);
+	
+	_pafHdr.maxAudioFrameBlocksCount = 0; // vbt : on enleve le son
 	if (_pafHdr.maxAudioFrameBlocksCount != 0) {
 		_demuxAudioFrameBlocks = (uint8_t *)calloc(_pafHdr.maxAudioFrameBlocksCount, _pafHdr.readBufferSize);
 		_flushAudioSize = (_pafHdr.maxAudioFrameBlocksCount - 1) * _pafHdr.readBufferSize;
