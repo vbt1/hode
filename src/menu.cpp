@@ -407,9 +407,9 @@ void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
 		_video->decodeBackgroundPsx(data, size, Video::W, Video::H);
 #endif
 	} else {
-	emu_printf("decodeLZW\n");
+//	emu_printf("decodeLZW\n");
 		decodeLZW(data, _video->_frontLayer);
-	emu_printf("decodeLZW done\n");
+//	emu_printf("decodeLZW done\n");
 		if (setPalette) {
 			g_system->setPalette(data + size, 256, 6);
 		}

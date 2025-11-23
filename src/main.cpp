@@ -124,24 +124,23 @@ static void setupAudio(Game *g) {
 	g_system->startAudio(cb);
 #endif
 }
-
+#if 0
 static const char *_defaultDataPath = ".";
-
 static const char *_defaultSavePath = ".";
 
 static const char *_levelNames[] = {
-	"rock",
-	"fort",
-	"pwr1",
-	"isld",
-	"lava",
-	"pwr2",
-	"lar1",
-	"lar2",
-	"dark",
+	"ROCK",
+	"FORT",
+	"PWR1",
+	"ISLD",
+	"LAVA",
+	"PWR2",
+	"LAR1",
+	"LAR2",
+	"DARK",
 	0
 };
-#if 0
+
 static bool configBool(const char *value) {
 	return strcasecmp(value, "true") == 0 || (strlen(value) == 2 && (value[0] == 't' || value[0] == '1'));
 }
@@ -317,7 +316,8 @@ emu_printf("ss_main\n");
 	}
 #endif
 	cheats = 0xffff;
-	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
+//	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
+	Game *g = new Game(dataPath, savePath, cheats);
 #if 0
 	readConfigIni(_configIni, g);
 

@@ -1235,7 +1235,7 @@ void Game::setupScreen(uint8_t num) {
 	_res->_currentScreenResourceNum = num;
 emu_printf("setupScreenLvlObjects\n");
 	setupScreenLvlObjects(num);
-emu_printf("callLevel_preScreenUpdate\n");
+//emu_printf("callLevel_preScreenUpdate\n");
 	callLevel_preScreenUpdate(num);
 	if (_res->_screensState[num].s0 >= _res->_screensState[num].s1) {
 		_res->_screensState[num].s0 = _res->_screensState[num].s1 - 1;
@@ -1252,7 +1252,7 @@ emu_printf("callLevel_preScreenUpdate\n");
 	}
 	i = _res->_screensGrid[num][kPosRightScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-emu_printf("setupScreenLvlObjects1\n");
+//emu_printf("setupScreenLvlObjects1\n");
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -2031,7 +2031,7 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-_mstDisabled = true; // vbt : ajout pour test
+//_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif

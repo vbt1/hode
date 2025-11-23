@@ -592,7 +592,7 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 }*/
 	void SystemStub_SDL::shakeScreen(int dx, int dy) 
 	{
-emu_printf("shake %d %d\n", dx, dy);
+//emu_printf("shake %d %d\n", dx, dy);
 		slScrPosNbg1(toFIXED(dx), toFIXED(dy));
 	}
 
