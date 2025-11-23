@@ -2703,6 +2703,7 @@ void Game::levelMainLoop() {
 		_video->updateGameDisplay(_video->_displayShadowLayer ? _video->_shadowLayer : _video->_frontLayer);
 	} else {
 		_video->updateGameDisplay(_video->_frontLayer);
+		g_system->shakeScreen(0, 0);
 	}
 	_rnd.update();
 //emu_printf("processEvents\n");

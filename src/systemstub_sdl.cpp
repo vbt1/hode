@@ -522,6 +522,7 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 	return;
 }
 */
+#if 0
 void SystemStub_SDL::prepareGfxMode() {
 	slTVOff(); // Turn off display for initialization
 
@@ -537,17 +538,17 @@ void SystemStub_SDL::prepareGfxMode() {
 	
 	memset((void*)VDP2_VRAM_A0, 0x00, 512*240); // Clean the VRAM banks. // à remettre
 	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
-	slPriorityNbg0(4); // Game screen
+//	slPriorityNbg0(4); // Game screen
 	slPriorityNbg1(6); // Game screen
 	slPrioritySpr0(4);
 	
-	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG1 scroll
+//	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
 //	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
 //	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
 
 
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
-	slBack1ColSet((void *)BACK_COL_ADR, 0x8000); // Black color background
+//	slBack1ColSet((void *)BACK_COL_ADR, 0x8000); // Black color background
 	
 //	extern Uint16 VDP2_RAMCTL;	
 //	VDP2_RAMCTL = VDP2_RAMCTL & 0xFCFF;
@@ -577,6 +578,7 @@ void SystemStub_SDL::prepareGfxMode() {
 	slSynch();  // faire un slsynch à la fin de la config
 	return;
 }
+#endif
 /*
 void SystemStub_SDL::cleanupGfxMode() {
 	slTVOff();
