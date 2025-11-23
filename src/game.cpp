@@ -239,10 +239,12 @@ void Game::transformShadowLayer(int delta) {
 		}
 	}
 	uint8_t r = 0;
-#if 0
+
 	if (_currentLevel == kLvl_pwr1) {
 		r = _pwr1_screenTransformLut[_res->_currentScreenResourceNum * 2 + 1];
-	} else if (_currentLevel == kLvl_pwr2) {
+	} 
+#if 0
+	else if (_currentLevel == kLvl_pwr2) {
 		r = _pwr2_screenTransformLut[_res->_currentScreenResourceNum * 2 + 1];
 	}
 #endif
@@ -2014,7 +2016,7 @@ emu_printf("game mainloop\n");
 //	assert(level < kLvl_test);
 
 //	level = kLvl_fort;
-//	level = 1;
+	level = 2;
 	_currentLevel = level;
 emu_printf("createLevel %d\n", _currentLevel);
 //while(1);
@@ -2732,10 +2734,10 @@ Level *Game::createLevel() {
 	case 1:
 		_level = Level_fort_create();
 		break;
-/*
 	case 2:
 		_level = Level_pwr1_create();
 		break;
+/*
 	case 3:
 		_level = Level_isld_create();
 		break;
@@ -3046,7 +3048,7 @@ int Game::calcScreenMaskDx(int x, int y, int num) {
 	}
 	return 0;
 }
-#if 0
+#if 1
 void Game::lvlObjectType0CallbackBreathBubbles(LvlObject *ptr) {
 
 	AndyLvlObjectData *vf = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
@@ -3354,11 +3356,11 @@ int Game::lvlObjectType0Callback(LvlObject *ptr) {
 		}
 		break;
 	case 2: // pwr1_hod
-#if 0
+
 		if (!_hideAndyObjectFlag && vf->unk4 == 6) {
 			lvlObjectType0CallbackBreathBubbles(ptr);
 		}
-#endif
+
 		// fall through
 	case 3:
 	case 4:
