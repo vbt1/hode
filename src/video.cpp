@@ -613,7 +613,7 @@ void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_
 		dst += W;
 	}
 }
-
+#if 0
 void Video::drawString(const char *s, int x, int y, uint8_t color, uint8_t *dst) {
 	for (int i = 0; s[i]; ++i) {
 		uint8_t chr = s[i];
@@ -630,7 +630,7 @@ void Video::drawString(const char *s, int x, int y, uint8_t color, uint8_t *dst)
 		x += 8;
 	}
 }
-
+#endif
 uint8_t Video::findWhiteColor() const {
 	uint8_t color = 0;
 	int whiteQuant = 0;

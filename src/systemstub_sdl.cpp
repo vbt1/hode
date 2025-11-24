@@ -521,65 +521,7 @@ void SystemStub_SDL::unlockMutex(void *mutex) {
 #endif
 	return;
 }
-*/
-#if 0
-void SystemStub_SDL::prepareGfxMode() {
-	slTVOff(); // Turn off display for initialization
 
-	slColRAMMode(CRM16_2048); // Color mode: 1024 colors, choosed between 16 bit
-
-//	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); // Set this scroll plane in bitmap mode
-	slBMPaletteNbg0(1); // NBG1 (game screen) uses palette 1 in CRAM
-	slBMPaletteNbg1(2); // NBG1 (game screen) uses palette 2 in CRAM
-	slColRAMOffsetSpr(2) ;  // spr palette
-#ifdef _352_CLOCK_
-	// As we are using 352xYYY as resolution and not 320xYYY, this will take the game back to the original aspect ratio
-#endif
-	
-	memset((void*)VDP2_VRAM_A0, 0x00, 512*240); // Clean the VRAM banks. // à remettre
-	memset((void*)(SpriteVRAM + cgaddress),0,0x30000);
-//	slPriorityNbg0(4); // Game screen
-	slPriorityNbg1(6); // Game screen
-	slPrioritySpr0(4);
-	
-//	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
-//	slZoomNbg0(toFIXED(0.8), toFIXED(1.0));
-//	slZoomNbg1(toFIXED(0.8), toFIXED(1.0));
-
-
-	slZdspLevel(7); // vbt : ne pas d?placer !!!
-//	slBack1ColSet((void *)BACK_COL_ADR, 0x8000); // Black color background
-	
-//	extern Uint16 VDP2_RAMCTL;	
-//	VDP2_RAMCTL = VDP2_RAMCTL & 0xFCFF;
-//	extern Uint16 VDP2_TVMD;
-//	VDP2_TVMD &= 0xFEFF;
-	slScrAutoDisp(NBG1ON); // à faire toujours en dernier
-//	slScrCycleSet(0x55EEEEEE , NULL , 0x44EEEEEE , NULL);
-/*
-	slWindow(63 , 0 , 574 , 447 , 241 ,320 , 224);
-
-	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
-	(*sys_clip).XC = 574;
-
-	slScrWindow0(63 , 0 , 574 , 447 );
-	slScrWindowModeNbg0(win0_IN);
-	slScrWindow1(63 , 0 , 574 , 447 );
-	slScrWindowModeNbg1(win1_IN);
-	slScrWindowModeSPR(win0_IN);
-*/	
-	slScrPosNbg0(0,0) ;
-	slScrPosNbg1(0,0) ;
-//	slSpecialPrioModeNbg0(spPRI_Dot);
-//	slSpecialPrioBitNbg0(1); // obligatoire
-//	slSpecialFuncCodeA(sfCOL_ef);
-//	slSpecialFuncCodeB(0x4);
-	slTVOn(); // Initialization completed... tv back on
-	slSynch();  // faire un slsynch à la fin de la config
-	return;
-}
-#endif
-/*
 void SystemStub_SDL::cleanupGfxMode() {
 	slTVOff();
 	return;
@@ -598,7 +540,15 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 		slScrPosNbg1(toFIXED(dx), toFIXED(dy));
 	}
 
-	void SystemStub_SDL::clearPalette() {}
+	void SystemStub_SDL::clearPalette() 
+	{
+		for (int i = 0; i < 256; ++i) {
+			_clut[i] = RGB(0, 0, 0);
+		}
+		slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
+	}
+	
+	void SystemStub_SDL::clearPalette();
 	void SystemStub_SDL::copyYuv(int w, int h, const uint8_t *y, int ypitch,
 						 const uint8_t *u, int upitch, const uint8_t *v, int vpitch) {}
 	void SystemStub_SDL::fillRect(int x, int y, int w, int h, uint8_t color) {}

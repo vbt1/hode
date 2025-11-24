@@ -2690,13 +2690,14 @@ void Game::levelMainLoop() {
 		g_system->inp.screenshot = false;
 		captureScreenshot();
 	}
-#endif
+
 	if (_cheats != 0) {
 //emu_printf("_cheats\n");
 		char buffer[256];
 		snprintf(buffer, sizeof(buffer), "P%d S%02d %d R%d", _currentLevel, _andyObject->screenNum, _res->_screensState[_andyObject->screenNum].s0, _level->_checkpoint);
 		_video->drawString(buffer, (Video::W - strlen(buffer) * 8) / 2, 8, _video->findWhiteColor(), _video->_frontLayer);
 	}
+#endif
 
 	if (_shakeScreenDuration != 0 || _levelRestartCounter != 0 || _video->_displayShadowLayer) {
 		shakeScreen();
