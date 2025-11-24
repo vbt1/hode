@@ -140,7 +140,7 @@ emu_printf("num %d w%d h%d\n", i,w,h);
 
 		_sprData[i].cgaddr = tx.CGadr;
 		_sprData[i].size   = (w/8)<<8|h;
-		_sprData[i].x      = ptr[0] - 160;
+		_sprData[i].x      = ptr[0];
 		_sprData[i].y      = ptr[1] - 112;
 		ptr += size + 2;
 	}
