@@ -590,7 +590,7 @@ emu_printf("handleTitleScreen\n");
 			break;
 		}
 		drawTitleScreen(currentOption);
-//		g_system->sleep(kDelayMs);
+		g_system->sleep(kDelayMs);
 	}
 	_video->SAT_cleanSprites();
 	return currentOption;
@@ -837,7 +837,7 @@ void Menu::handleAssignPlayer() {
 			}
 		}
 		drawPlayerProgress(state, cursor);
-//		g_system->sleep(kDelayMs);
+		g_system->sleep(kDelayMs);
 	}
 }
 
@@ -1063,7 +1063,7 @@ void Menu::handleControlsScreen(int num) {
 	}
 	drawControlsScreen();
 	_condMask = 0x20;
-//	g_system->sleep(kDelayMs);
+	g_system->sleep(kDelayMs);
 }
 
 void Menu::drawJoystickKeyCode(int num) {
@@ -1271,7 +1271,7 @@ void Menu::handleJoystickControlsScreen(int num) {
 	if (_joystickControlsNum == 8) {
 		_condMask = 8;
 	}
-//	g_system->sleep(kDelayMs);
+	g_system->sleep(kDelayMs);
 }
 /*
 void Menu::drawKeyboardKeyCode(int num) {
@@ -1473,7 +1473,7 @@ void Menu::handleDifficultyScreen(int num) {
 		}
 	}
 	drawDifficultyScreen();
-//	g_system->sleep(kDelayMs);
+	g_system->sleep(kDelayMs);
 }
 
 void Menu::drawSoundScreen() {
@@ -1651,7 +1651,7 @@ void Menu::handleSoundScreen(int num) {
 		_soundCounter = 0;
 	}
 	drawSoundScreen();
-//	g_system->sleep(kDelayMs);
+	g_system->sleep(kDelayMs);
 }
 
 void Menu::changeToOption(int num) {
@@ -1777,7 +1777,7 @@ void Menu::handleLoadLevel(int num) {
 		}
 	}
 	drawLevelScreen();
-//	g_system->sleep(kDelayMs);
+	g_system->sleep(kDelayMs);
 }
 
 void Menu::handleLoadCheckpoint(int num) {
@@ -1841,7 +1841,7 @@ void Menu::handleLoadCheckpoint(int num) {
 		}
 	}
 	drawCheckpointScreen();
-//	g_system->sleep(kDelayMs);
+	g_system->sleep(kDelayMs);
 }
 #if 0
 void Menu::handleLoadCutscene(int num) {

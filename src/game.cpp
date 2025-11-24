@@ -2091,7 +2091,7 @@ emu_printf("resetPlasmaCannonState\n");
 			break;
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
-//		g_system->sleep(delay);
+		g_system->sleep(delay);
 	}
 	_animBackgroundDataCount = 0;
 	callLevel_terminate();
