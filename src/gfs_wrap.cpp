@@ -17,6 +17,7 @@ Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
 Sint32 gfsDirN;
 extern Sint32  gfcd_fatal_err;
 extern GfsMng   *gfs_mng_ptr;
+void	*malloc(size_t);
 }
 
 #define MNG_SVR(mng)            ((mng)->svr)

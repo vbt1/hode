@@ -2067,9 +2067,11 @@ emu_printf("resetPlasmaCannonState\n");
 #if PAF
 	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 && !levelChanged) {
 		const uint8_t num = _cutscenes[_currentLevel];
+		uint8_t *cs1ram_cut = cs1ram;
 		_paf->preload(num);
 		_paf->play(num);
 		_paf->unload(num);
+		cs1ram = cs1ram_cut;
 		if (g_system->inp.quit) {
 			return;
 		}

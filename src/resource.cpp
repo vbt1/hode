@@ -786,8 +786,9 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 8; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		if (offs != 0) {
-//emu_printf("backgroundLvlObjectDataTable %d %d\n", i,sizeof(LvlObjectData) );
 			dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)malloc(sizeof(LvlObjectData));
+emu_printf("backgroundLvlObjectDataTable %d %d %p\n", i,sizeof(LvlObjectData),dat->backgroundLvlObjectDataTable[i]  );
+
 //			dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)current_lwram;
 //			current_lwram += SAT_ALIGN(sizeof(LvlObjectData));
 			offsetsSize += resFixPointersLevelData0x2988(ptr + offs, offsetsPtr + offsetsSize, dat->backgroundLvlObjectDataTable[i], isPsx);
@@ -799,18 +800,18 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	assert((src - start) == 160);
 	return offsetsSize;
 }
+uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert((unsigned int)num < kMaxScreens);
+	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
 
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
-emu_printf("a\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
-emu_printf("b %d\n", baseOffset);
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
 	}
@@ -825,19 +826,17 @@ emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ra
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = (uint8_t *)cs1ram;
 	cs1ram+= SAT_ALIGN(size);
-emu_printf("d %p\n", ptr);
 	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
-emu_printf("f %d\n", readSize);
 	uint8_t hdr[160];
 	_lvlFile->seekAlign(baseOffset + kMaxScreens * 16 + num * 160);
-emu_printf("g %d\n", baseOffset + kMaxScreens * 16 + num * 160);
+//emu_printf("g %d\n", baseOffset + kMaxScreens * 16 + num * 160);
 	_lvlFile->read(hdr, 160);
 	LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2B88(hdr, ptr, ptr + readSize, dat, _isPsx);
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	
-emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
+//emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
 //	assert(allocatedOffsetsSize == readOffsetsSize);
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;
@@ -854,9 +853,10 @@ emu_printf("unloadLvlScreenBackgroundData %d\n");
 		_resLevelData0x2B88SizeTable[num] = 0;
 
 		LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
-		for (int i = 0; i < 4; ++i) {
+		/*for (int i = 0; i < 4; ++i) {
 			free(dat->backgroundLvlObjectDataTable[i]);
-		}
+		}*/
+		cs1ram = cs1ram_bg;
 		memset(dat, 0, sizeof(LvlBackgroundData));
 	}
 }
@@ -1833,7 +1833,7 @@ emu_printf("x4\n");
 //emu_printf("m12[%d].count %d\n", j, m12[j].count);
 			bytesRead += 12;
 		}
-emu_printf("x15 %d\n", m->areaCount);
+//emu_printf("x15 %d\n", m->areaCount);
 		for (int j = 0; j < m->areaCount; ++j) {
 			slSynch();
 //			m12[j].data = (MstMonsterAreaAction *)malloc(m12[j].count * sizeof(MstMonsterAreaAction));
@@ -1869,10 +1869,10 @@ emu_printf("m12[%d].data[%d].monster1Index %d\n", j,k,m12[j].data[k].monster1Ind
 		}
 		m->area = m12;
 	}
-emu_printf("x16\n");
+//emu_printf("x16\n");
 	const int mapDataSize = _mstHdr.infoMonster1Count * kMonsterInfoDataSize;
 	
-emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
+//emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 //	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
 	_mstMonsterInfos = (uint8_t *)cs1ram;
 	cs1ram+=SAT_ALIGN(mapDataSize);
@@ -1893,7 +1893,7 @@ emu_printf("_mstMovingBoundsData[%d].indexMonsterInfo %d\n", i, _mstMovingBounds
 		_mstMovingBoundsData[i].unk17   = fp->readByte();
 		bytesRead += 24;
 	}
-emu_printf("x17\n");
+//emu_printf("x17\n");
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 //		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)cs1ram;
@@ -1926,7 +1926,7 @@ emu_printf("x17\n");
 			_mstMovingBoundsData[i].indexData = 0;
 		}
 	}
-emu_printf("x18\n");
+//emu_printf("x18\n");
 	_mstShootData.allocate(_mstHdr.shootDataCount);
 	for (int i = 0; i < _mstHdr.shootDataCount; ++i) {
 		_mstShootData[i].data  = 0; fp->skipUint32();
@@ -1951,7 +1951,7 @@ emu_printf("x18\n");
 			bytesRead += 40;
 		}
 	}
-emu_printf("x19\n");
+//emu_printf("x19\n");
 
 	_mstShootIndexData.allocate(_mstHdr.shootIndexDataCount);
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {

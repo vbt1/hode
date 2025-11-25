@@ -45,6 +45,7 @@ int	main( void )
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); 
 	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
 	slZoomNbg1(26350, toFIXED(1.0));
+	slScrPosNbg1(0, toFIXED(-16));
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
 	slSynch();
 

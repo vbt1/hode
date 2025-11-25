@@ -136,11 +136,11 @@ void PafPlayer::unload(int num) {
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
 //	free(_demuxVideoFrameBlocks);
 	_demuxVideoFrameBlocks = 0;
-	free(_demuxAudioFrameBlocks);
+//	free(_demuxAudioFrameBlocks);
 	_demuxAudioFrameBlocks = 0;
-	free(_pafHdr.frameBlocksCountTable);
-	free(_pafHdr.framesOffsetTable);
-	free(_pafHdr.frameBlocksOffsetTable);
+//	free(_pafHdr.frameBlocksCountTable);
+//	free(_pafHdr.framesOffsetTable);
+//	free(_pafHdr.frameBlocksOffsetTable);
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
 	_videoNum = -1;
 #ifdef SOUND
@@ -186,7 +186,9 @@ bool PafPlayer::readPafHeader() {
 }
 
 uint32_t *PafPlayer::readPafHeaderTable(int count) {
-	uint32_t *dst = (uint32_t *)malloc(count * sizeof(uint32_t));
+//	uint32_t *dst = (uint32_t *)malloc(count * sizeof(uint32_t));
+	uint32_t *dst = (uint32_t *)cs1ram;
+	cs1ram+=(count * sizeof(uint32_t));
 	if (!dst) {
 		//emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		return 0;
