@@ -590,19 +590,17 @@ void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 // returns the font index
 uint8_t Video::findStringCharacterFontIndex(uint8_t chr) const {
 	// bugfix: the original code seems to ignore the last 3 entries
-#if 0
 	for (int i = 0; i < 39 * 2; i += 2) {
 		if (_fontCharactersTable[i] == chr) {
 			return _fontCharactersTable[i + 1];
 		}
 	}
-#endif
 	return 255;
 }
 
 void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_t *dst) {
 	const uint8_t *p = _font + ((chr & 15) + (chr >> 4) * 256) * 16;
-	dst += y * W + x;
+	dst += y * 512 + x;
 	for (int j = 0; j < 16; ++j) {
 		for (int i = 0; i < 16; ++i) {
 			if (p[i] != 0) {
@@ -610,10 +608,10 @@ void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_
 			}
 		}
 		p += 16 * 16;
-		dst += W;
+		dst += 512;
 	}
 }
-#if 0
+#if 1
 void Video::drawString(const char *s, int x, int y, uint8_t color, uint8_t *dst) {
 	for (int i = 0; s[i]; ++i) {
 		uint8_t chr = s[i];
@@ -630,7 +628,7 @@ void Video::drawString(const char *s, int x, int y, uint8_t color, uint8_t *dst)
 		x += 8;
 	}
 }
-#endif
+
 uint8_t Video::findWhiteColor() const {
 	uint8_t color = 0;
 	int whiteQuant = 0;
@@ -643,6 +641,8 @@ uint8_t Video::findWhiteColor() const {
 	}
 	return color;
 }
+#endif
+
 #ifdef PSX
 void Video::decodeBackgroundPsx(const uint8_t *src, int size, int w, int h, int x, int y) {
 	if (size < 0) {

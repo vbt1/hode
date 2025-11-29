@@ -725,8 +725,10 @@ emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes
 void Resource::unloadLvlData() {
 //	free(_resLevelData0x470CTable);
 	_resLevelData0x470CTable = 0;
-	for (unsigned int i = 0; i < kMaxScreens; ++i) {
-		unloadLvlScreenBackgroundData(i);
+	if (kPreloadLvlBackgroundData) {
+		for (unsigned int i = 0; i < kMaxScreens; ++i) {
+			unloadLvlScreenBackgroundData(i);
+		}
 	}
 	for (unsigned int i = 0; i < kMaxSpriteTypes; ++i) {
 		LvlObjectData *dat = &_resLevelData0x2988Table[i];

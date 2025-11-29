@@ -4,8 +4,16 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
+#define FRAME 1
+
 extern "C" {
 #include <sl_def.h>
+
+#ifdef FRAME
+unsigned char frame_x = 0;
+unsigned char frame_y = 0;
+unsigned char frame_z = 0;
+#endif
 };
 #include "game.h"
 #include "fileio.h"
@@ -2084,6 +2092,7 @@ emu_printf("resetPlasmaCannonState\n");
 	callLevel_initialize();
 //emu_printf("restartLevel\n");
 	restartLevel();
+	frame_y = frame_x = 0;
 	while (true) {
 		const int frameTimeStamp = g_system->getTimeStamp() + _frameMs;
 //emu_printf("levelMainLoop\n");
@@ -2094,6 +2103,7 @@ emu_printf("resetPlasmaCannonState\n");
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
 		g_system->sleep(delay);
+		frame_x++;
 	}
 	_animBackgroundDataCount = 0;
 	callLevel_terminate();
@@ -2686,6 +2696,13 @@ void Game::levelMainLoop() {
 		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 	}
 //emu_printf("drawScreen\n");
+ #define TVSTAT	(*(Uint16 *)0x25F80004)
+uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
+		char buffer[256];
+		snprintf(buffer, sizeof(buffer), "%02d", frame_z);
+//		_video->drawString(buffer, 8, 8, _video->findWhiteColor(), _video->_frontLayer);
+		_video->drawString(buffer, (Video::W - (strlen(buffer)+1) * 8), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
+
 	drawScreen();
 #if 0
 	if (g_system->inp.screenshot) {
@@ -2710,7 +2727,8 @@ void Game::levelMainLoop() {
 	}
 	_rnd.update();
 //emu_printf("processEvents\n");
-	g_system->processEvents();
+//	g_system->processEvents();
+
 	if (g_system->inp.keyPressed(SYS_INP_ESC)) {
 		if (displayHintScreen(-1, 0)) { // pause/exit screen
 			g_system->inp.quit = true;

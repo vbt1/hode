@@ -5,7 +5,7 @@
 //#define SLAVE_SOUND 1
 //#define SOUND 1
 #define FONT_ADDR 0x25c01000
-
+#define FRAME 1
 extern "C" {
 #include <sl_def.h>
 #include <string.h>	
@@ -691,7 +691,7 @@ inline void timeTick() {
 void vblIn (void) {
 //emu_printf("vblIn\n");
 	// Process input
-/*
+
 //	if(!loadingMap)
 	{
 		uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
@@ -703,12 +703,13 @@ void vblIn (void) {
 			frame_z = frame_x;
 			frame_x = 0;
 			frame_y = 0;
+//			emu_printf("fps %d/%d \n", frame_z, hz);
 		}
 #endif
 //		system_saturn.updateScreen(0);
-	}*/
+	}
 	g_system->processEvents();
-	timeTick();
+//	timeTick();
 }
 
 uint8 isNTSC (void) {
