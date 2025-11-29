@@ -78,6 +78,7 @@ struct System {
 
 	virtual void processEvents() = 0;
 	virtual void sleep(int duration) = 0;
+	virtual void initTimeStamp() = 0;
 	virtual uint32_t getTimeStamp() = 0;
 
 	virtual void startAudio(AudioCallback callback) = 0;

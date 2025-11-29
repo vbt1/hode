@@ -41,11 +41,17 @@ int	main( void )
 	slInitSystem(TV_640x224, (TEXTURE*)NULL, 1); // Init SGL
 //	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 
-//	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void *)VDP2_VRAM_B0);
+//	slBitMapNbg0(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A1);
 	slBitMapNbg1(COL_TYPE_256, BM_512x512, (void*)VDP2_VRAM_A0); 
+//	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG0 scroll
 	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
 	slZoomNbg1(26350, toFIXED(1.0));
+//	slZoomNbg0(26350, toFIXED(1.0));
+//	slScrPosNbg0(0, toFIXED(-16));
 	slScrPosNbg1(0, toFIXED(-16));
+//	slPriorityNbg0(5);
+//	slPriorityNbg1(6);
+//	slPrioritySpr0(7);
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
 	slSynch();
 

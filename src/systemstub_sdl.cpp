@@ -435,6 +435,7 @@ void SystemStub_SDL::sleep(uint32 duration) {
 	while(wait_tick >= ticker);
 }
 */
+
 uint32_t SystemStub_SDL::getTimeStamp() {
 	return ticker;
 }
@@ -537,6 +538,7 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	void SystemStub_SDL::shakeScreen(int dx, int dy) 
 	{
 //emu_printf("shake %d %d\n", dx, dy);
+//		slScrPosNbg0(toFIXED(dx), toFIXED(dy-16));
 		slScrPosNbg1(toFIXED(dx), toFIXED(dy-16));
 	}
 
@@ -709,7 +711,7 @@ void vblIn (void) {
 //		system_saturn.updateScreen(0);
 	}
 	g_system->processEvents();
-//	timeTick();
+	timeTick();
 }
 
 uint8 isNTSC (void) {

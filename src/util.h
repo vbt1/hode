@@ -52,6 +52,8 @@ struct __attribute__((__packed__)) SAT_sprite {
 extern "C" {
 void emu_printf(const char *format, ...);
 void SCU_DMAWait(void);
+void *memset4_fast(void *, long, size_t);
+void memcpyl(void *, void *, int);
 extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 extern Uint8 *cs1ram;

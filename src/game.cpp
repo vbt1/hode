@@ -1,5 +1,6 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
+#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1892,9 +1893,23 @@ void Game::updateBackgroundPsx(int num) {
 }
 #endif
 void Game::drawScreen() {
-	memcpy(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
-	_video->copyYuvBackBuffer();
 
+#ifdef DEBUG
+	unsigned int s1 = g_system->getTimeStamp();
+#endif
+
+	memcpyl(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
+//	memset4_fast(_video->_frontLayer, 0x00, Video::W * Video::H);
+#ifdef DEBUG
+	unsigned int e1 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","memcpyl", e1-s1);
+#endif
+
+	_video->copyYuvBackBuffer();
+#ifdef DEBUG
+	unsigned int e2 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","copyYuvBackBuffer", e2-e1);
+#endif
 	// redraw background animation sprites
 	LvlBackgroundData *dat = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 	if (_res->_isPsx) {
@@ -1986,7 +2001,7 @@ static void gamePafCallback(void *userdata) {
 }
 
 void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
-emu_printf("game mainloop\n");
+//emu_printf("game mainloop\n");
 /*	if (_playDemo && _res->loadHodDem()) {
 		_rnd._rndSeed = _res->_dem.randSeed;
 		level = _res->_dem.level;
@@ -2004,7 +2019,7 @@ emu_printf("game mainloop\n");
 			checkpoint = _setupConfig.players[num].progress[level];
 		}
 #if PAF
-		debug(kDebug_GAME, "Restart at level %d checkpoint %d cutscenes 0x%x", level, checkpoint, _paf->_playedMask);
+		emu_printf("Restart at level %d checkpoint %d cutscenes 0x%x\n", level, checkpoint, _paf->_playedMask);
 		_paf->_playedMask = _setupConfig.players[num].cutscenesMask;
 		_snd_masterVolume = _setupConfig.players[num].volume;
 		_paf->setVolume(_snd_masterVolume);
@@ -2027,7 +2042,12 @@ emu_printf("game mainloop\n");
 //	level = 2;
 	_currentLevel = level;
 //emu_printf("createLevel %d\n", _currentLevel);
+
+#ifdef DEBUG
+	g_system->initTimeStamp();
+#endif
 	createLevel();
+
 	assert(checkpoint < _res->_datHdr.levelCheckpointsCount[level]);
 	_currentLevelCheckpoint = _level->_checkpoint = checkpoint;
 #ifdef SOUND
@@ -2039,7 +2059,7 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-//_mstDisabled = true; // vbt : ajout pour test
+_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2645,8 +2665,20 @@ void Game::levelMainLoop() {
 	_video->clearBackBuffer();
 	if (_andyObject->screenNum != _res->_currentScreenResourceNum) {
 //emu_printf("preloadLevelScreenData3\n");
+#ifdef DEBUG
+//	g_system->initTimeStamp();
+	unsigned int s1 = g_system->getTimeStamp();
+#endif
 		preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
+#ifdef DEBUG
+	unsigned int e1 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","preloadLevel", e1-s1);
+#endif
 		setupScreen(_andyObject->screenNum);
+#ifdef DEBUG
+	unsigned int e2 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","setupScreen", e2-e1);
+#endif
 	} else if (_fadePalette && _levelRestartCounter == 0) {
 		restartLevel();
 	} else {
@@ -2666,14 +2698,29 @@ void Game::levelMainLoop() {
 		callLevel_tick();
 		return;
 	}
+#ifdef DEBUG
+	unsigned int e2b = g_system->getTimeStamp();
+#endif	
 //emu_printf("executeMstCode\n");
 	executeMstCode();
+#ifdef DEBUG
+	unsigned int e3 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","executeMst", e3-e2b);
+#endif
 //emu_printf("updateLvlObjectLists\n");
 	updateLvlObjectLists();
+#ifdef DEBUG
+	unsigned int e4 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","executeMst", e4-e3);
+#endif
 //emu_printf("callLevel_tick\n");
 	callLevel_tick();
 //emu_printf("updateAndyMonsterObjects\n");
 	updateAndyMonsterObjects();
+#ifdef DEBUG
+	unsigned int e5 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","updateAndyMonster", e5-e4);
+#endif
 	if (!_hideAndyObjectFlag) {
 //emu_printf("addToSpriteList\n");
 		addToSpriteList(_andyObject);
@@ -2682,6 +2729,10 @@ void Game::levelMainLoop() {
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dyPos = 0;
 //emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
 	updateAnimatedLvlObjectsLeftRightCurrentScreens();
+#ifdef DEBUG
+	unsigned int e6 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","updateAnimatedLvl", e6-e5);
+#endif
 	if (_currentLevel == kLvl_rock || _currentLevel == kLvl_lar2 || _currentLevel == kLvl_test) {
 		if (_andyObject->spriteNum == 0 && _plasmaExplosionObject && _plasmaExplosionObject->nextPtr != 0) {
 //emu_printf("updatePlasmaCannonExplosionLvlObject\n");
@@ -2704,6 +2755,10 @@ uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
 		_video->drawString(buffer, (Video::W - (strlen(buffer)+1) * 8), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
 
 	drawScreen();
+#ifdef DEBUG
+	unsigned int e7 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","drawScreen", e7-e6);
+#endif
 #if 0
 	if (g_system->inp.screenshot) {
 		g_system->inp.screenshot = false;
@@ -2811,6 +2866,7 @@ void Game::displayLoadingScreen() {
 		}
 #endif
 	} else {
+//			slScrAutoDisp(NBG0ON|NBG1ON); 
 			slScrAutoDisp(NBG1ON); 
 		if (_res->loadDatLoadingImage(_video->_frontLayer, _video->_palette)) {
 			g_system->setPalette(_video->_palette, 256, 6);
@@ -4708,9 +4764,7 @@ void Game::saveSetupCfg() {
 	if (_currentLevel > _setupConfig.players[num].lastLevelNum) {
 		_setupConfig.players[num].lastLevelNum = _currentLevel;
 	}
-#if 0
 	_res->writeSetupCfg(&_setupConfig);
-#endif
 }
 
 void Game::captureScreenshot() {

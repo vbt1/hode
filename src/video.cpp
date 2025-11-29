@@ -29,6 +29,7 @@ Video::Video() {
 	_shadowLayer = (uint8_t *)malloc(W * H + 1); // projectionData offset can be equal to W * H
 	_frontLayer = (uint8_t *)malloc(W * H);
 	_backgroundLayer = (uint8_t *)malloc(W * H);
+//	_backgroundLayer = (uint8_t *)VDP2_VRAM_B0;
 	if (kUseShadowColorLut) {
 		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256); // shadowLayer, frontLayer
 	} else {

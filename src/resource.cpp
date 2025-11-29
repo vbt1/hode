@@ -1464,8 +1464,8 @@ emu_printf("monsterActionIndexDataCount %d\n", _mstHdr.monsterActionIndexDataCou
 	_mstHdr.op204DataCount = fp->readUint32();
 	_mstHdr.codeSize = fp->readUint32();
 	_mstHdr.screensCount = fp->readUint32();
-emu_printf("screensCount %d\n", _mstHdr.screensCount);
-	emu_printf("_mstHdr.version %d _mstHdr.codeSize %d\n", _mstHdr.version, _mstHdr.codeSize);
+//emu_printf("screensCount %d\n", _mstHdr.screensCount);
+//	emu_printf("_mstHdr.version %d _mstHdr.codeSize %d\n", _mstHdr.version, _mstHdr.codeSize);
 
 	fp->seek(2048, SEEK_SET); // align to the next sector
 
@@ -1475,10 +1475,10 @@ emu_printf("screensCount %d\n", _mstHdr.screensCount);
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstPointOffsets[i].xOffset = fp->readUint32();
 		_mstPointOffsets[i].yOffset = fp->readUint32();
-emu_printf("vbt0 screensCount %d x %d y %d\n",i, _mstPointOffsets[i].xOffset, _mstPointOffsets[i].yOffset);
+//emu_printf("vbt0 screensCount %d x %d y %d\n",i, _mstPointOffsets[i].xOffset, _mstPointOffsets[i].yOffset);
 		bytesRead += 8;
 	}
-emu_printf("_mstHdr.walkBoxDataCount\n");
+//emu_printf("_mstHdr.walkBoxDataCount\n");
 	_mstWalkBoxData.allocate(_mstHdr.walkBoxDataCount);
 	for (int i = 0; i < _mstHdr.walkBoxDataCount; ++i) {
 		_mstWalkBoxData[i].right  = fp->readUint32();
@@ -1489,24 +1489,24 @@ emu_printf("_mstHdr.walkBoxDataCount\n");
 		_mstWalkBoxData[i].flags[1] = fp->readByte();
 		_mstWalkBoxData[i].flags[2] = fp->readByte();
 		_mstWalkBoxData[i].flags[3] = fp->readByte();
-emu_printf("vbt0 %d walkBoxDataCount r%d l %d b %d t %d\n", i, _mstWalkBoxData[i].right, _mstWalkBoxData[i].left, _mstWalkBoxData[i].bottom, _mstWalkBoxData[i].top);
+//emu_printf("vbt0 %d walkBoxDataCount r%d l %d b %d t %d\n", i, _mstWalkBoxData[i].right, _mstWalkBoxData[i].left, _mstWalkBoxData[i].bottom, _mstWalkBoxData[i].top);
 
 		bytesRead += 20;
 	}
-emu_printf("_mstHdr.walkCodeDataCount\n");
+//emu_printf("_mstHdr.walkCodeDataCount\n");
 
 	_mstWalkCodeData.allocate(_mstHdr.walkCodeDataCount);
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		fp->skipUint32();
 		_mstWalkCodeData[i].codeDataCount = fp->readUint32();
-emu_printf("vbt0 %d codeDataCount %d\n", i, _mstWalkCodeData[i].codeDataCount);
+//emu_printf("vbt0 %d codeDataCount %d\n", i, _mstWalkCodeData[i].codeDataCount);
 //emu_printf("malloc1 %d\n",_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
 //		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
 		_mstWalkCodeData[i].codeData = (uint32_t *)cs1ram;
 		cs1ram+=SAT_ALIGN(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
 		fp->skipUint32();
 		_mstWalkCodeData[i].indexDataCount = fp->readUint32();
-emu_printf("_mstWalkCodeData[%d].indexDataCount %d\n",i,_mstWalkCodeData[i].indexDataCount);
+//emu_printf("_mstWalkCodeData[%d].indexDataCount %d\n",i,_mstWalkCodeData[i].indexDataCount);
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
 //emu_printf("malloc2 %d\n",_mstWalkCodeData[i].indexDataCount);
 //			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
@@ -1521,71 +1521,71 @@ emu_printf("_mstWalkCodeData[%d].indexDataCount %d\n",i,_mstWalkCodeData[i].inde
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		for (uint32_t j = 0; j < _mstWalkCodeData[i].codeDataCount; ++j) {
 			_mstWalkCodeData[i].codeData[j] = fp->readUint32();
-emu_printf("_mstWalkCodeData[%d].codeData[%d] %d\n",i,j,_mstWalkCodeData[i].codeData[j]);
+//emu_printf("_mstWalkCodeData[%d].codeData[%d] %d\n",i,j,_mstWalkCodeData[i].codeData[j]);
 			bytesRead += 4;
 		}
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
 			int xx = readBytesAlign(fp, _mstWalkCodeData[i].indexData, _mstWalkCodeData[i].indexDataCount);
-			emu_printf("xx %d %d\n",i,xx);
+//			emu_printf("xx %d %d\n",i,xx);
 			bytesRead += xx;
 		}
 	}
 
-emu_printf("_mstHdr.movingBoundsIndexDataCount %d\n",_mstHdr.movingBoundsIndexDataCount);
+//emu_printf("_mstHdr.movingBoundsIndexDataCount %d\n",_mstHdr.movingBoundsIndexDataCount);
 	_mstMovingBoundsIndexData.allocate(_mstHdr.movingBoundsIndexDataCount);
 	for (int i = 0; i < _mstHdr.movingBoundsIndexDataCount; ++i) {
 		_mstMovingBoundsIndexData[i].indexUnk49 = fp->readUint32();
-emu_printf("_mstMovingBoundsIndexData[i].indexUnk49 %d\n",_mstMovingBoundsIndexData[i].indexUnk49);
+//emu_printf("_mstMovingBoundsIndexData[i].indexUnk49 %d\n",_mstMovingBoundsIndexData[i].indexUnk49);
 		_mstMovingBoundsIndexData[i].unk4 = fp->readUint32();
-emu_printf("_mstMovingBoundsIndexData[i].unk4 %d\n",_mstMovingBoundsIndexData[i].unk4);
+//emu_printf("_mstMovingBoundsIndexData[i].unk4 %d\n",_mstMovingBoundsIndexData[i].unk4);
 		_mstMovingBoundsIndexData[i].unk8 = fp->readUint32();
-emu_printf("_mstMovingBoundsIndexData[i].unk8 %d\n",_mstMovingBoundsIndexData[i].unk8);
+//emu_printf("_mstMovingBoundsIndexData[i].unk8 %d\n",_mstMovingBoundsIndexData[i].unk8);
 		bytesRead += 12;
 	}
 
 	_mstTickDelay    = fp->readUint32();
-emu_printf("_mstTickDelay %d\n", _mstTickDelay);
+//emu_printf("_mstTickDelay %d\n", _mstTickDelay);
 	_mstTickCodeData = fp->readUint32();
-emu_printf("_mstTickCodeData %d\n", _mstTickCodeData);
+//emu_printf("_mstTickCodeData %d\n", _mstTickCodeData);
 	bytesRead += 8;
-emu_printf("_mstHdr.levelCheckpointCodeDataCount %d\n", _mstHdr.levelCheckpointCodeDataCount);
+//emu_printf("_mstHdr.levelCheckpointCodeDataCount %d\n", _mstHdr.levelCheckpointCodeDataCount);
 	_mstLevelCheckpointCodeData.allocate(_mstHdr.levelCheckpointCodeDataCount);
 	for (int i = 0; i < _mstHdr.levelCheckpointCodeDataCount; ++i) {
 		_mstLevelCheckpointCodeData[i] = fp->readUint32();
-emu_printf("_mstLevelCheckpointCodeData[%d] %d\n", i, _mstLevelCheckpointCodeData[i]);
+//emu_printf("_mstLevelCheckpointCodeData[%d] %d\n", i, _mstLevelCheckpointCodeData[i]);
 		bytesRead += 4;
 	}
 
 	_mstScreenAreaData.allocate(_mstHdr.screenAreaDataCount);
-emu_printf("_mstHdr.screenAreaDataCount %d\n", _mstHdr.screenAreaDataCount);
+//emu_printf("_mstHdr.screenAreaDataCount %d\n", _mstHdr.screenAreaDataCount);
 
 	for (int i = 0; i < _mstHdr.screenAreaDataCount; ++i) {
 		MstScreenArea *msac = &_mstScreenAreaData[i];
 		msac->x1 = fp->readUint32();
-emu_printf("msac->x1 %d\n", msac->x1);
+//emu_printf("msac->x1 %d\n", msac->x1);
 		msac->x2 = fp->readUint32();
-emu_printf("msac->x2 %d\n", msac->x2);
+//emu_printf("msac->x2 %d\n", msac->x2);
 		msac->y1 = fp->readUint32();
-emu_printf("msac->y1 %d\n", msac->y1);
+//emu_printf("msac->y1 %d\n", msac->y1);
 		msac->y2 = fp->readUint32();
-emu_printf("msac->y2 %d\n", msac->y2);
+//emu_printf("msac->y2 %d\n", msac->y2);
 		msac->nextByPos = fp->readUint32();
-emu_printf("msac->nextByPos %d\n", msac->nextByPos);
+//emu_printf("msac->nextByPos %d\n", msac->nextByPos);
 		msac->prev = fp->readUint32();
-emu_printf("msac->prev %d\n", msac->prev);
+//emu_printf("msac->prev %d\n", msac->prev);
 		msac->nextByValue = fp->readUint32();
 		msac->unk0x1C = fp->readByte();
 		msac->unk0x1D = fp->readByte();
 		msac->unk0x1E = fp->readUint16();
 		msac->codeData = fp->readUint32();
-emu_printf("msac->codeData %d\n", msac->codeData);
+//emu_printf("msac->codeData %d\n", msac->codeData);
 		bytesRead += 36;
 	}
-emu_printf("_mstHdr.screenAreaIndexDataCount %d\n", _mstHdr.screenAreaIndexDataCount);
+//emu_printf("_mstHdr.screenAreaIndexDataCount %d\n", _mstHdr.screenAreaIndexDataCount);
 	_mstScreenAreaByValueIndexData.allocate(_mstHdr.screenAreaIndexDataCount);
 	for (int i = 0; i < _mstHdr.screenAreaIndexDataCount; ++i) {
 		_mstScreenAreaByValueIndexData[i] = fp->readUint32();
-emu_printf("_mstHdr._mstScreenAreaByValueIndexData[%d] %d\n", i, _mstScreenAreaByValueIndexData[i]);
+//emu_printf("_mstHdr._mstScreenAreaByValueIndexData[%d] %d\n", i, _mstScreenAreaByValueIndexData[i]);
 
 		bytesRead += 4;
 	}
@@ -1832,7 +1832,7 @@ emu_printf("x4\n");
 			fp->skipByte();
 			m12[j].data  = 0; fp->skipUint32();
 			m12[j].count = fp->readUint32();
-//emu_printf("m12[%d].count %d\n", j, m12[j].count);
+////emu_printf("m12[%d].count %d\n", j, m12[j].count);
 			bytesRead += 12;
 		}
 //emu_printf("x15 %d\n", m->areaCount);
@@ -1844,28 +1844,28 @@ emu_printf("x4\n");
 			cs1ram+=SAT_ALIGN(m12[j].count * sizeof(MstMonsterAreaAction));
 			for (uint32_t k = 0; k < m12[j].count; ++k) {
 				uint8_t data[28];
-emu_printf("before fp->read(data, sizeof(data)\n");
+//emu_printf("before fp->read(data, sizeof(data)\n");
 				fp->read(data, sizeof(data));
 				m12[j].data[k].indexMonsterInfo = READ_LE_UINT32(data);
-emu_printf("m12[%d].data[%d].indexMonsterInfo %d\n", j,k,m12[j].data[k].indexMonsterInfo);
+//emu_printf("m12[%d].data[%d].indexMonsterInfo %d\n", j,k,m12[j].data[k].indexMonsterInfo);
 				m12[j].data[k].indexUnk51 = READ_LE_UINT32(data + 0x4);
-emu_printf("m12[%d].data[%d].indexUnk51 %d\n", j,k,m12[j].data[k].indexUnk51);
+//emu_printf("m12[%d].data[%d].indexUnk51 %d\n", j,k,m12[j].data[k].indexUnk51);
 				m12[j].data[k].xPos = READ_LE_UINT32(data + 0x8);
-emu_printf("m12[%d].data[%d].xPos %d\n", j,k,m12[j].data[k].xPos);
+//emu_printf("m12[%d].data[%d].xPos %d\n", j,k,m12[j].data[k].xPos);
 				m12[j].data[k].yPos = READ_LE_UINT32(data + 0xC);
-emu_printf("m12[%d].data[%d].yPos %d\n", j,k,m12[j].data[k].yPos);
+//emu_printf("m12[%d].data[%d].yPos %d\n", j,k,m12[j].data[k].yPos);
 				m12[j].data[k].codeData = READ_LE_UINT32(data + 0x10);
-emu_printf("m12[%d].data[%d].codeData %d\n", j,k,m12[j].data[k].codeData);
+//emu_printf("m12[%d].data[%d].codeData %d\n", j,k,m12[j].data[k].codeData);
 				m12[j].data[k].codeData2 = READ_LE_UINT32(data + 0x14);
-emu_printf("m12[%d].data[%d].codeData2 %d\n", j,k,m12[j].data[k].codeData2);
+//emu_printf("m12[%d].data[%d].codeData2 %d\n", j,k,m12[j].data[k].codeData2);
 				m12[j].data[k].unk18 = data[0x18];
-emu_printf("m12[%d].data[%d].unk18 %d\n", j,k,m12[j].data[k].unk18);
+//emu_printf("m12[%d].data[%d].unk18 %d\n", j,k,m12[j].data[k].unk18);
 				m12[j].data[k].direction = data[0x19];
-emu_printf("m12[%d].data[%d].direction %d\n", j,k,m12[j].data[k].direction);
+//emu_printf("m12[%d].data[%d].direction %d\n", j,k,m12[j].data[k].direction);
 				m12[j].data[k].screenNum = data[0x1A];
-emu_printf("m12[%d].data[%d].screenNum %d\n", j,k,m12[j].data[k].screenNum);
+//emu_printf("m12[%d].data[%d].screenNum %d\n", j,k,m12[j].data[k].screenNum);
 				m12[j].data[k].monster1Index = data[0x1B];
-emu_printf("m12[%d].data[%d].monster1Index %d\n", j,k,m12[j].data[k].monster1Index);
+//emu_printf("m12[%d].data[%d].monster1Index %d\n", j,k,m12[j].data[k].monster1Index);
 				bytesRead += 28;
 			}
 		}
