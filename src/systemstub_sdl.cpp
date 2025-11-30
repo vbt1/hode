@@ -6,6 +6,8 @@
 //#define SOUND 1
 #define FONT_ADDR 0x25c01000
 #define FRAME 1
+#define LINEAR_BITMAP 1
+
 extern "C" {
 #include <sl_def.h>
 #include <string.h>	
@@ -308,25 +310,11 @@ void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
 */
 void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) 
 {
+#ifndef LINEAR_BITMAP
 	int pitch = 256;
 	int x = 0;
 	int y = 0;
 //	emu_printf("copyRect %d %d\n",w,h);
-		uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
-		uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
-
-		for (uint16 idx = 0; idx < h; ++idx) {
-			DMA_ScuMemCopy(dstPtr, srcPtr, w);
-			srcPtr += pitch;
-			dstPtr += (pitch*2);
-			SCU_DMAWait();
-		}
-	//emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
-}
-
-void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
-	// Calculate initial source and destination pointers
-//emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
@@ -336,6 +324,30 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 		dstPtr += (pitch*2);
 		SCU_DMAWait();
 	}
+#else
+	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
+	SCU_DMAWait();
+#endif
+	//emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
+}
+
+void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
+#ifndef LINEAR_BITMAP
+	// Calculate initial source and destination pointers
+//emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
+	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
+	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*1)) + x);
+
+	for (uint16 idx = 0; idx < h; ++idx) {
+		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+		srcPtr += pitch;
+		dstPtr += (pitch*1);
+		SCU_DMAWait();
+	}
+#else
+	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
+	SCU_DMAWait();
+#endif
 //emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
 }
 
@@ -539,7 +551,7 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	{
 //emu_printf("shake %d %d\n", dx, dy);
 //		slScrPosNbg0(toFIXED(dx), toFIXED(dy-16));
-		slScrPosNbg1(toFIXED(dx), toFIXED(dy-16));
+		slScrPosNbg1(toFIXED(dx), toFIXED(dy-8));
 	}
 
 	void SystemStub_SDL::clearPalette() 

@@ -1,4 +1,4 @@
-//#define LINEAR_BITMAP 1
+#define LINEAR_BITMAP 1
 extern "C" {
 #include 	<sl_def.h>
 #include	<sega_sys.h>
@@ -97,7 +97,7 @@ int	main( void )
 	slZoomNbg1(26350, toFIXED(1.0));
 //	slZoomNbg0(26350, toFIXED(1.0));
 //	slScrPosNbg0(0, toFIXED(-16));
-	slScrPosNbg1(0, toFIXED(-16));
+	slScrPosNbg1(0, toFIXED(-8));
 //	slPriorityNbg0(5);
 //	slPriorityNbg1(6);
 //	slPrioritySpr0(7);
@@ -105,15 +105,23 @@ int	main( void )
 
 #ifdef LINEAR_BITMAP
 
-Uint32			lineScrTbl[640*3];
-Uint32			cellScrTbl[224/8];
+#define LINE_SCROLL_TBL_ADDR (VDP2_VRAM_A0+0x1f000)
+#define CELL_SCROLL_TBL_ADDR (VDP2_VRAM_B1+0x1ff00)
+#define HRES 192
+#define VRES 256
+static Uint32	lineScrTbl[VRES*3];
+static Uint32	cellScrTbl[HRES/8];
 
-//VDP2LineScroll(NBG1, LINE_SCROLL_TBL_ADDR, VDP2_LINE_SCROLL_HV_SCROLL);
-BitmapLineScrTbl(lineScrTbl, 640, 224, 0, 0);
-BitmapCellScrTbl(cellScrTbl, 224);
+BitmapLineScrTbl(lineScrTbl, VRES, HRES, 0, 0);
+BitmapCellScrTbl(cellScrTbl, HRES);
 slLineScrollModeNbg1(lineHScroll|lineVScroll|VCellScroll);
-slLineScrollTable1(lineScrTbl);
-slVCellTable(cellScrTbl);
+
+memcpy((void *) LINE_SCROLL_TBL_ADDR, lineScrTbl, VRES*3*4);
+slLineScrollTable1((void *)LINE_SCROLL_TBL_ADDR);
+
+memcpy((void *) CELL_SCROLL_TBL_ADDR, cellScrTbl, HRES/8*4);
+slVCellTable((void *)CELL_SCROLL_TBL_ADDR);
+
 #endif
 	slSynch();
 //	DMA_ScuInit(); // Init for SCU DMA

@@ -641,7 +641,7 @@ uint8_t Video::findStringCharacterFontIndex(uint8_t chr) const {
 
 void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_t *dst) {
 	const uint8_t *p = _font + ((chr & 15) + (chr >> 4) * 256) * 16;
-	dst += y * 512 + x;
+	dst += y * W + x;
 	for (int j = 0; j < 16; ++j) {
 		for (int i = 0; i < 16; ++i) {
 			if (p[i] != 0) {
@@ -649,7 +649,7 @@ void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_
 			}
 		}
 		p += 16 * 16;
-		dst += 512;
+		dst += W;
 	}
 }
 #if 1
