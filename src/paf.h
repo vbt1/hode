@@ -116,7 +116,7 @@ struct PafPlayer {
 	uint32_t *readPafHeaderTable(int count);
 
 	void decodeVideoFrame(const uint8_t *src);
-	uint8_t *getVideoPageOffset(uint16_t val);
+	inline uint8_t *getVideoPageOffset(uint16_t val);
 	void decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code);
 	void decodeVideoFrameOp1(const uint8_t *src);
 	void decodeVideoFrameOp2(const uint8_t *src);

@@ -235,7 +235,7 @@ int ss_main() {
 	g_debugMask = 0; //kDebug_GAME | kDebug_RESOURCE | kDebug_SOUND | kDebug_MONSTER;
 	int cheats = 0;
 
-emu_printf("ss_main\n");
+//emu_printf("ss_main\n");
 
 #ifdef WII
 	System_earlyInit();
@@ -326,6 +326,7 @@ emu_printf("ss_main\n");
 	}
 #endif
 	// load setup.dat (PC) or setup.dax (PSX)
+	slTVOff();
 	g->_res->loadSetupDat();
 //	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;
@@ -342,15 +343,12 @@ emu_printf("ss_main\n");
 	if (_displayLoadingScreen) {
 		g->displayLoadingScreen();
 	}
-
+	slTVOn();
 	do {
-emu_printf("loadSetupCfg\n");
 		g->loadSetupCfg(resume);
 
 		if (_runMenu && resume) {
-emu_printf("new Menu\n");
 			Menu *m = new Menu(g, g->_paf, g->_res, g->_video);
-emu_printf("mainloop\n");
 			const bool runGame = m->mainLoop();
 			delete m;
 			if (!runGame) {

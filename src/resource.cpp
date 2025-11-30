@@ -54,9 +54,9 @@ static void stringUpperCase(char *p) {
 static bool openDat(FileSystem *fs, const char *name, File *f) {
 	GFS_FILE *fp = fs->openAssetFile(name);
 	if (fp) {
-		emu_printf("openDat %s found\n", name);
+//		emu_printf("openDat %s found\n", name);
 		f->setFp(fp);
-		emu_printf("seek %s f %p %d\n", name, f, fp->f_size);
+//		emu_printf("seek %s f %p %d\n", name, f, fp->f_size);
 		f->seek(0, SEEK_SET);
 //		emu_printf("seek %s done\n", name);
 		return true;
@@ -115,7 +115,7 @@ Resource::Resource(FileSystem *fs)
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
 
 	if (sectorAlignedGameData()) {
-emu_printf("_version = V1_2\n");
+//emu_printf("_version = V1_2\n");
 		_datFile = new SectorFile;
 		_lvlFile = new SectorFile;
 		_mstFile = new SectorFile;
@@ -123,7 +123,7 @@ emu_printf("_version = V1_2\n");
 		// from v1.2, game data files are 'sector aligned'
 		_version = V1_2;
 	} else {
-emu_printf("_version NOT V1_2\n");
+//emu_printf("_version NOT V1_2\n");
 		_datFile = new File;
 		_lvlFile = new File;
 		_mstFile = new File;
@@ -185,7 +185,7 @@ Resource::~Resource() {
 }
 
 bool Resource::sectorAlignedGameData() {
-emu_printf("sectorAlignedGameData %s\n", _setupDat);
+//emu_printf("sectorAlignedGameData %s\n", _setupDat);
 	GFS_FILE *fp = _fs->openAssetFile(_setupDat);
 	/*
 	if (!fp) {
@@ -199,18 +199,18 @@ emu_printf("sectorAlignedGameData %s\n", _setupDat);
 	uint8_t buf[2048];
 	int sz = sat_fread(buf, 1, sizeof(buf), fp);
 	
-	emu_printf("aligned sz %d buf sz %d\n", sz, sizeof(buf));
+//	emu_printf("aligned sz %d buf sz %d\n", sz, sizeof(buf));
 	
 	if (sz == sizeof(buf)) {
 		ret = fioUpdateCRC(0, buf, sizeof(buf)) == 0;
 	}
 	_fs->closeFile(fp);
-emu_printf("sectorAlignedGameData true ? %d\n", ret);
+//emu_printf("sectorAlignedGameData true ? %d\n", ret);
 	return ret;
 }
 
 void Resource::loadSetupDat() {
-emu_printf("loadSetupDat\n");
+//emu_printf("loadSetupDat\n");
 #if 0
 	if (!openDat(_fs, _setupDat, _datFile)) {
 		_isPsx = openDat(_fs, _setupDax, _datFile);
@@ -223,7 +223,7 @@ emu_printf("loadSetupDat\n");
 		emu_printf("Unhandled .dat version %d\n", _datHdr.version);
 		return;
 	}
-emu_printf("version found %d\n", _datHdr.version);
+//emu_printf("version found %d\n", _datHdr.version);
 	_datHdr.bufferSize0    = _datFile->readUint32();
 	_datHdr.bufferSize1    = _datFile->readUint32();
 	_datHdr.sssOffset      = _datFile->readUint32();
@@ -248,10 +248,8 @@ emu_printf("version found %d\n", _datHdr.version);
 	emu_printf("malloc(loadingImageSize) %d\n", _datHdr.loadingImageSize);
 //	_loadingImageBuffer = (uint8_t *)malloc(_datHdr.loadingImageSize);
 
-
-
-	_loadingImageBuffer = (uint8_t *)current_lwram;
-	current_lwram += SAT_ALIGN(_datHdr.loadingImageSize);
+	_loadingImageBuffer = (uint8_t *)VDP2_VRAM_B1;
+//	current_lwram += SAT_ALIGN(_datHdr.loadingImageSize); // vbt pas besoin d'allouer de la ram
 
 	if (_loadingImageBuffer) {
 		_datFile->read(_loadingImageBuffer, _datHdr.loadingImageSize);
@@ -325,7 +323,7 @@ bool Resource::loadDatHintImage(int num, uint8_t *dst, uint8_t *pal) {
 }
 
 bool Resource::loadDatLoadingImage(uint8_t *dst, uint8_t *pal) {
-emu_printf("loadDatLoadingImage\n");
+//emu_printf("loadDatLoadingImage\n");
 //	assert(!_isPsx);
 	if (_loadingImageBuffer) {
 		const uint32_t bufferSize = READ_LE_UINT32(_loadingImageBuffer);
@@ -340,7 +338,7 @@ emu_printf("_loadingImageBuffer %d\n", bufferSize);
 }
 
 void Resource::loadDatMenuBuffers() {
-emu_printf("loadDatMenuBuffers\n");
+//emu_printf("loadDatMenuBuffers\n");
 	assert((_datHdr.sssOffset & 0x7FF) == 0);
 	_datFile->seek(_datHdr.sssOffset, SEEK_SET);
 #ifdef SOUND

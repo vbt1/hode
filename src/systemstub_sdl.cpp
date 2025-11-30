@@ -216,16 +216,16 @@ SystemStub_SDL::~SystemStub_SDL() {
 }
 
 void SystemStub_SDL::init(const char *title, int w, int h) {
-emu_printf("init system\n");
+//emu_printf("init system\n");
 #if 1
 	memset(&inp, 0, sizeof(inp)); // Clean inout
-emu_printf("load_audio_driver\n");
+//emu_printf("load_audio_driver\n");
 	load_audio_driver(); // Load M68K audio driver
 	init_cdda();
 	sound_external_audio_enable(7, 7);
-emu_printf("prepareGfxMode\n");
+//emu_printf("prepareGfxMode\n");
 //	prepareGfxMode(); // Prepare graphic output
-emu_printf("setup_input\n");
+//emu_printf("setup_input\n");
 	setup_input(); // Setup controller inputs
 
 //	memset(_pal, 0, sizeof(_pal));
@@ -264,6 +264,35 @@ void SystemStub_SDL::setGamma(float gamma) {
 }
 
 void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
+    uint16_t *dst = _clut;
+
+    if (depth == 8) {
+        for (int i = 0; i < n; i++) {
+            int r = pal[0];
+            int g = pal[1];
+            int b = pal[2];
+            pal += 3;
+
+            // Saturn uses BGR555
+            *dst++ = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag;
+        }
+    } else {  // depth == 6
+        for (int i = 0; i < n; i++) {
+            // Expand 6→8 bits: x * (255/63) ≈ (x<<2)|(x>>4)
+            int r = (pal[0] << 2) | (pal[0] >> 4);
+            int g = (pal[1] << 2) | (pal[1] >> 4);
+            int b = (pal[2] << 2) | (pal[2] >> 4);
+            pal += 3;
+
+            *dst++ = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag;
+        }
+    }
+
+    slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
+}
+
+/*
+void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
 	const int shift = 8 - depth;
 	for (int i = 0; i < n; ++i) {
 
@@ -281,7 +310,7 @@ void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
 	slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
 //	sceKernelDcacheWritebackRange(_clut, sizeof(_clut));
 }
-
+*/
 /*
 void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
 	assert(colors <= 256);

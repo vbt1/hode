@@ -97,6 +97,11 @@ void PafPlayer::preload(int num) {
 		unload();
 		return;
 	}
+	/*
+    if (((uintptr_t)cs1ram & 3) != 0) {
+        cs1ram += 4 - ((uintptr_t)cs1ram & 3);
+    }	
+	*/
 	uint8_t *buffer = (uint8_t *)cs1ram;//calloc(kPageBufferSize * 4 + 256 * 4, 1);
 	if (!buffer) {
 		//emu_printf("preloadPaf() Unable to allocate page buffers\n");
@@ -230,7 +235,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		_paletteChanged = true;
 		src += count;
 	}
-emu_printf("decode %d\n", code & 0xF);	
+//emu_printf("decode %d\n", code & 0xF);	
 	
 	switch (code & 0xF) {
 	case 0:
@@ -326,7 +331,7 @@ static const char *updateSequences[] = {
 	"\x02\x04\x05\x07\x05\x07"
 };
 
-uint8_t *PafPlayer::getVideoPageOffset(uint16_t val) {
+inline uint8_t *PafPlayer::getVideoPageOffset(uint16_t val) {
 	const int x = val & 0x7F; val >>= 7;
 	const int y = val & 0x7F; val >>= 7;
 	return _pageBuffers[val] + (y * kVideoWidth + x) * 2;
@@ -430,20 +435,24 @@ void PafPlayer::decodeVideoFrameOp2(const uint8_t *src) {
 void PafPlayer::decodeVideoFrameOp4(const uint8_t *src) {
 	uint8_t *dst = _pageBuffers[_currentPageBuffer];
 	src += 2; // compressed size
-	const uint8_t *end = dst + kVideoWidth * kVideoHeight;
+	const uint8_t *end = dst + (kVideoWidth * kVideoHeight);
+	
 	while (dst < end) {
 		const int8_t code = *src++;
-		int count;
 		if (code < 0) {
-			count = 1 - code;
+			// RLE: repeat color
+			int count = 1 - code;
 			const uint8_t color = *src++;
-			memset(dst, color, count);
+			do {
+				*dst++ = color;
+			} while (--count);
 		} else {
-			count = code + 1;
-			memcpy(dst, src, count);
-			src += count;
+			// Literal copy
+			int count = code + 1;
+			do {
+				*dst++ = *src++;
+			} while (--count);
 		}
-		dst += count;
 	}
 }
 
@@ -558,6 +567,10 @@ void PafPlayer::mainLoop() {
 	uint32_t frameTime = g_system->getTimeStamp() + frameMs;
 
 	uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
+	_video->_font = (uint8_t *)0x20fb84;	
+	static uint8_t last_frame_z = 0xFF;
+	static char buffer[8];
+
 //emu_printf("framesCount %d\n", _pafHdr.framesCount);
 	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
 		// read buffering blocks
@@ -574,6 +587,14 @@ void PafPlayer::mainLoop() {
 			} else {
 				assert(dstOffset + _pafHdr.readBufferSize <= _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
 				memcpy(_demuxVideoFrameBlocks + dstOffset, _bufferBlock, _pafHdr.readBufferSize);
+/*
+				uint32_t *dst32 = (uint32_t *)(_demuxVideoFrameBlocks + dstOffset);
+				const uint32_t *src32 = (const uint32_t *)_bufferBlock;
+				for (int j = 0; j < (_pafHdr.readBufferSize / 4); ++j) {
+					*dst32++ = *src32++;
+				}
+*/
+
 			}
 			++currentFrameBlock;
 			--blocksCountForFrame;
@@ -593,6 +614,7 @@ void PafPlayer::mainLoop() {
 //emu_printf("setPalette paf\n");
 			g_system->setPalette(_paletteBuffer, 256, 6);
 		}
+/*
 //emu_printf("updateScreen paf\n");
  #define TVSTAT	(*(Uint16 *)0x25F80004)
 uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
@@ -601,6 +623,17 @@ uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
 //		_video->drawString(buffer, 8, 8, _video->findWhiteColor(), _video->_frontLayer);
 		_video->_font = (uint8_t *)0x20fb84;
 		_video->drawString(buffer, (Video::W - (strlen(buffer)+1) * 8), 0, 2, (uint8 *)VDP2_VRAM_A0);
+*/
+
+	if (frame_z != last_frame_z) {
+		last_frame_z = frame_z;
+
+		buffer[0] = '0' + (frame_z / 10);
+		buffer[1] = '0' + (frame_z % 10);
+		buffer[2] = 0;
+	}
+    _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
+
 
 		g_system->updateScreen(false);
 		g_system->processEvents();
