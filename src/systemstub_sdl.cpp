@@ -559,12 +559,12 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	
 	void SystemStub_SDL::sleep(int duration) 
 	{
-	/*	static Uint8 counter = 0;
+//		static Uint8 counter = 0;
 
 		uint32 wait_tick = ticker + duration;
-		counter++;
+//		counter++;
 
-		while(wait_tick >= ticker);*/
+		while(wait_tick >= ticker);
 	}
 
 	void SystemStub_SDL::startAudio(AudioCallback callback) {}

@@ -1,3 +1,4 @@
+//#define LINEAR_BITMAP 1
 extern "C" {
 #include 	<sl_def.h>
 #include	<sega_sys.h>
@@ -11,14 +12,62 @@ void *memset4_fast(void *, long, size_t);
 #include 	"systemstub.h"
 #include "sat_mem_checker.h"
 
-#define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
-
+extern Uint32 _bstart, _bend;
 #define		SystemWork		0x060ffc00		/* System Variable Address */
 #define		SystemSize		(0x06100000-0x060ffc00)		/* System Variable Size */
 
-extern Uint32 _bstart, _bend;
-
 extern void ss_main( void );
+
+#ifdef LINEAR_BITMAP
+typedef Sint32           Fixed32;
+
+#define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
+#define		IntToFixed(x)	(((Fixed32)(x)) << 16)
+
+void BitmapCellScrTbl(Uint32 *tbl, Uint16 hRes)
+{
+	Sint32	i;
+
+	for (i = 0; i < hRes/8; ++i)
+		tbl[i] = i * 0x400;
+}
+
+void BitmapLineScrTbl(Uint32 *tbl, Uint16 hRes, Uint16 vRes, Sint16 hOff, Sint16 vOff)
+{
+	Sint32	i, hscroll, vscroll;
+
+	for (i = 0; i < vOff*2; ++i)
+		tbl[i] = 0;
+
+	for (i = vOff*2, hscroll = -hOff, vscroll = 0; i < (vOff+vRes)*2; i += 2)
+	{
+		/*
+		 *  Shift and mask the horizontal scroll value and stick it in the
+		 *  line scroll table.  Give the vertical scroll value a fractional
+		 *  component which will combine with the values in the vertical
+		 *  cell scroll table so that the screen will scroll by one line
+		 *  just as the VDP2 hits a 512-pixel boundary.
+		 */
+		tbl[i] = (hscroll << 16) & 0x7ffff00;
+		tbl[i+1] = vscroll + hscroll/8 * 0x400;
+
+		hscroll += hRes;
+
+		if (hscroll >= 512)
+		{
+			hscroll -= 512;
+			vscroll += IntToFixed(1);
+		}
+	}
+
+	/*
+	 *  Set up a transparency window to mask off the portion of the screen
+	 *  that's outside the bitmap.
+	 */
+//	VDP2Window(VDP2_WINDOW_1, hOff*2, vOff, (hOff+hRes)*2 - 1, vOff+vRes-1);
+//	VDP2WindowMode(VDP2_WINDOW_1, NBG0, VDP2_WINDOW_TRANS, VDP2_WINDOW_OUTSIDE);
+}
+#endif
 
 int	main( void )
 {
@@ -53,8 +102,20 @@ int	main( void )
 //	slPriorityNbg1(6);
 //	slPrioritySpr0(7);
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
-	slSynch();
 
+#ifdef LINEAR_BITMAP
+
+Uint32			lineScrTbl[640*3];
+Uint32			cellScrTbl[224/8];
+
+//VDP2LineScroll(NBG1, LINE_SCROLL_TBL_ADDR, VDP2_LINE_SCROLL_HV_SCROLL);
+BitmapLineScrTbl(lineScrTbl, 640, 224, 0, 0);
+BitmapCellScrTbl(cellScrTbl, 224);
+slLineScrollModeNbg1(lineHScroll|lineVScroll|VCellScroll);
+slLineScrollTable1(lineScrTbl);
+slVCellTable(cellScrTbl);
+#endif
+	slSynch();
 //	DMA_ScuInit(); // Init for SCU DMA
 	ss_main();
 	return 0;
