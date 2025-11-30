@@ -245,7 +245,7 @@ void SystemStub_SDL::init(const char *title, int w, int h) {
 		tickPerVblank = 17;
 	else
 		tickPerVblank = 20;
-emu_printf("slIntFunction\n");
+//emu_printf("slIntFunction\n");
 	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
 #endif
 	return;

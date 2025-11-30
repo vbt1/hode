@@ -268,7 +268,7 @@ void Resource::loadSetupDat() {
 
 		// font
 		static const int kFontSize = 16 * 16 * 64;
-		emu_printf("malloc(kFontSize) %d\n", kFontSize);		
+//		emu_printf("malloc(kFontSize) %d\n", kFontSize);		
 //		_fontBuffer = (uint8_t *)malloc(kFontSize);
 		_fontBuffer = (uint8_t *)_loadingImageBuffer+SAT_ALIGN(_datHdr.loadingImageSize);
 //		current_lwram += SAT_ALIGN(kFontSize);
@@ -327,7 +327,7 @@ bool Resource::loadDatLoadingImage(uint8_t *dst, uint8_t *pal) {
 //	assert(!_isPsx);
 	if (_loadingImageBuffer) {
 		const uint32_t bufferSize = READ_LE_UINT32(_loadingImageBuffer);
-emu_printf("_loadingImageBuffer %d\n", bufferSize);
+//emu_printf("_loadingImageBuffer %d\n", bufferSize);
 		const int size = decodeLZW(_loadingImageBuffer + 8, dst);
 		assert(size == 256 * 192);
 		// palette follows compressed bitmap
@@ -346,21 +346,21 @@ void Resource::loadDatMenuBuffers() {
 #endif
 	const uint32_t baseOffset = _menuBuffersOffset;
 	_datFile->seek(baseOffset, SEEK_SET);
-emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
+//emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
 //	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
-emu_printf("current_lwram %x next %x\n", current_lwram+_datHdr.bufferSize1);
+//emu_printf("current_lwram %x next %x\n", current_lwram+_datHdr.bufferSize1);
 
-	_menuBuffer1 = (uint8_t *)0x22600000;
-//	_menuBuffer1 = (uint8_t *)current_lwram; // vbt size : 30593
+//	_menuBuffer1 = (uint8_t *)0x22600000;
+	_menuBuffer1 = (uint8_t *)current_lwram; // vbt size : 30593
 	if (_menuBuffer1) {
 		_datFile->read(_menuBuffer1, _datHdr.bufferSize1);
 	}
 	if (_datHdr.version == 11) {
 		_datFile->seek(baseOffset + fioAlignSizeTo2048(_datHdr.bufferSize1), SEEK_SET); // align to next sector
-emu_printf("malloc(_datHdr.bufferSize0) %d\n", _datHdr.bufferSize0);
-	_menuBuffer1 = (uint8_t *)0x22700000;
+//emu_printf("malloc(_datHdr.bufferSize0) %d\n", _datHdr.bufferSize0);
+//	_menuBuffer1 = (uint8_t *)0x22700000;
 //	_menuBuffer0 = (uint8_t *)malloc(_datHdr.bufferSize0);
-//	_menuBuffer0 = (uint8_t *)current_lwram;
+	_menuBuffer0 = (uint8_t *)current_lwram;
 		if (_menuBuffer0) {
 			_datFile->read(_menuBuffer0, _datHdr.bufferSize0);
 		}
