@@ -21,7 +21,7 @@ static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
-	emu_printf("video init\n");
+//	emu_printf("video init\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;
@@ -641,7 +641,7 @@ uint8_t Video::findStringCharacterFontIndex(uint8_t chr) const {
 
 void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_t *dst) {
 	const uint8_t *p = _font + ((chr & 15) + (chr >> 4) * 256) * 16;
-	dst += y * W + x;
+	dst += y * 512 + x;
 	for (int j = 0; j < 16; ++j) {
 		for (int i = 0; i < 16; ++i) {
 			if (p[i] != 0) {
@@ -649,7 +649,7 @@ void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_
 			}
 		}
 		p += 16 * 16;
-		dst += W;
+		dst += 512;
 	}
 }
 #if 1

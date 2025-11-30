@@ -6,7 +6,7 @@
 //#define SOUND 1
 #define FONT_ADDR 0x25c01000
 #define FRAME 1
-#define LINEAR_BITMAP 1
+//#define LINEAR_BITMAP 1
 
 extern "C" {
 #include <sl_def.h>
@@ -336,12 +336,12 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 	// Calculate initial source and destination pointers
 //emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
-	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*1)) + x);
+	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
 	for (uint16 idx = 0; idx < h; ++idx) {
 		DMA_ScuMemCopy(dstPtr, srcPtr, w);
 		srcPtr += pitch;
-		dstPtr += (pitch*1);
+		dstPtr += (pitch*2);
 		SCU_DMAWait();
 	}
 #else
@@ -405,29 +405,29 @@ void SystemStub_SDL::processEvents() {
 			}
 
 			if (PAD_PUSH_A)
-				inp.mask |= SYS_INP_JUMP;
-			else
-			{
-				if (PAD_PULL_A)
-					inp.mask &= ~SYS_INP_JUMP;
-			}
-
-			if (PAD_PUSH_B)
-				inp.mask |= SYS_INP_SHOOT;
-			else
-			{
-				if (PAD_PULL_B)
-					inp.mask &= ~SYS_INP_SHOOT;
-			}
-
-			if (PAD_PUSH_C)
 				inp.mask |= SYS_INP_RUN;
 			else
 			{
-				if (PAD_PULL_C)
+				if (PAD_PULL_A)
 					inp.mask &= ~SYS_INP_RUN;
 			}
-			
+
+			if (PAD_PUSH_B)
+				inp.mask |= SYS_INP_JUMP;
+			else
+			{
+				if (PAD_PULL_B)
+					inp.mask &= ~SYS_INP_JUMP;
+			}
+
+			if (PAD_PUSH_RTRIG)
+				inp.mask |= SYS_INP_SHOOT;
+			else
+			{
+				if (PAD_PULL_RTRIG)
+					inp.mask &= ~SYS_INP_SHOOT;
+			}
+
 			if (PAD_PUSH_START)
 				inp.mask |= SYS_INP_ESC;
 			break;
@@ -550,8 +550,7 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	void SystemStub_SDL::shakeScreen(int dx, int dy) 
 	{
 //emu_printf("shake %d %d\n", dx, dy);
-//		slScrPosNbg0(toFIXED(dx), toFIXED(dy-16));
-		slScrPosNbg1(toFIXED(dx), toFIXED(dy-8));
+		slScrPosNbg1(toFIXED(dx), toFIXED(dy-16));
 	}
 
 	void SystemStub_SDL::clearPalette() 

@@ -33,7 +33,7 @@ static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
 Game::Game(const char *dataPath, const char *savePath, uint32_t cheats)
 	: _fs(dataPath, savePath) {
 
-emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
+//emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 
 	_level = 0;
 	_res = new Resource(&_fs);
@@ -2103,7 +2103,8 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 //	assert(level < kLvl_test);
 
 //	level = kLvl_fort;
-//	level = 2;
+//	level = 0;
+	_cheats = 255;
 	_currentLevel = level;
 //emu_printf("createLevel %d\n", _currentLevel);
 

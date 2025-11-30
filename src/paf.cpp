@@ -1,17 +1,23 @@
+#pragma GCC optimize ("O2")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-
+extern "C" {
+#include <sl_def.h>
+}
 #include "fs.h"
 #include "paf.h"
 #include "systemstub.h"
 #include "util.h"
+#include "video.h"
 
 extern "C" {
 void 	free(void *ptr);
 void	*malloc(size_t);
 void *calloc(size_t nmemb, size_t size);
+extern unsigned char frame_x;
+extern unsigned char frame_z;
 }
 /*
 static const char *_filenames[] = {
@@ -63,6 +69,7 @@ PafPlayer::PafPlayer(FileSystem *fs)
 	memset(&_pafCb, 0, sizeof(_pafCb));
 	_volume = 128;
 	_frameMs = kFrameDuration;
+	_video = new Video();
 }
 
 PafPlayer::~PafPlayer() {
@@ -223,6 +230,8 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		_paletteChanged = true;
 		src += count;
 	}
+emu_printf("decode %d\n", code & 0xF);	
+	
 	switch (code & 0xF) {
 	case 0:
 		decodeVideoFrameOp0(base, src, code);
@@ -238,7 +247,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		break;
 	}
 }
-
+/*
 static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
 	for (int i = 0; i < 4; ++i) {
 		memcpy(dst, src, 4);
@@ -246,7 +255,28 @@ static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
 		dst += 256;
 	}
 }
-
+*/
+/*
+static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
+	for (int i = 0; i < 4; ++i) {
+		*(uint32_t*)dst = *(const uint32_t*)src;
+		src += 4;
+		dst += 256;
+	}
+}
+*/
+static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
+	uint32_t t0, t1, t2, t3;
+	t0 = *(const uint32_t*)src;
+	t1 = *(const uint32_t*)(src + 4);
+	t2 = *(const uint32_t*)(src + 8);
+	t3 = *(const uint32_t*)(src + 12);
+	*(uint32_t*)dst = t0;
+	*(uint32_t*)(dst + 256) = t1;
+	*(uint32_t*)(dst + 512) = t2;
+	*(uint32_t*)(dst + 768) = t3;
+}
+/*
 static void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
 	for (int i = 0; i < 4; ++i) {
 		memcpy(dst, src, 4);
@@ -254,21 +284,27 @@ static void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
 		dst += 256;
 	}
 }
+*/
+
+static void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
+	*(uint32_t*)dst = *(const uint32_t*)src;
+	*(uint32_t*)(dst + 256) = *(const uint32_t*)(src + 256);
+	*(uint32_t*)(dst + 512) = *(const uint32_t*)(src + 512);
+	*(uint32_t*)(dst + 768) = *(const uint32_t*)(src + 768);
+}
 
 static void pafCopySrcMask(uint8_t mask, uint8_t *dst, const uint8_t *src) {
-	for (int i = 0; i < 4; ++i) {
-		if (mask & (1 << (3 - i))) {
-			dst[i] = src[i];
-		}
-	}
+	if (mask & 0x8) dst[0] = src[0];
+	if (mask & 0x4) dst[1] = src[1];
+	if (mask & 0x2) dst[2] = src[2];
+	if (mask & 0x1) dst[3] = src[3];
 }
 
 static void pafCopyColorMask(uint8_t mask, uint8_t *dst, uint8_t color) {
-	for (int i = 0; i < 4; ++i) {
-		if (mask & (1 << (3 - i))) {
-			dst[i] = color;
-		}
-	}
+	if (mask & 0x8) dst[0] = color;
+	if (mask & 0x4) dst[1] = color;
+	if (mask & 0x2) dst[2] = color;
+	if (mask & 0x1) dst[3] = color;
 }
 
 static const char *updateSequences[] = {
@@ -558,6 +594,14 @@ void PafPlayer::mainLoop() {
 			g_system->setPalette(_paletteBuffer, 256, 6);
 		}
 //emu_printf("updateScreen paf\n");
+ #define TVSTAT	(*(Uint16 *)0x25F80004)
+uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
+		char buffer[256];
+		snprintf(buffer, sizeof(buffer), "%02d", frame_z);
+//		_video->drawString(buffer, 8, 8, _video->findWhiteColor(), _video->_frontLayer);
+		_video->_font = (uint8_t *)0x20fb84;
+		_video->drawString(buffer, (Video::W - (strlen(buffer)+1) * 8), 0, 2, (uint8 *)VDP2_VRAM_A0);
+
 		g_system->updateScreen(false);
 		g_system->processEvents();
 		if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC)) {
@@ -567,7 +611,7 @@ void PafPlayer::mainLoop() {
 		const int delay = MAX<int>(10, frameTime - g_system->getTimeStamp());
 		g_system->sleep(delay);
 		frameTime = g_system->getTimeStamp() + frameMs;
-
+		frame_x++;
 		// set next decoding video page
 		++_currentPageBuffer;
 		_currentPageBuffer &= 3;

@@ -1837,7 +1837,7 @@ emu_printf("x4\n");
 		}
 //emu_printf("x15 %d\n", m->areaCount);
 		for (int j = 0; j < m->areaCount; ++j) {
-			slSynch();
+//			slSynch();
 //			m12[j].data = (MstMonsterAreaAction *)malloc(m12[j].count * sizeof(MstMonsterAreaAction));
 			m12[j].data = (MstMonsterAreaAction *)cs1ram;
 //emu_printf("j%d %d count %d\n", j, m12[j].count * sizeof(MstMonsterAreaAction),m->areaCount);
@@ -1884,7 +1884,7 @@ emu_printf("x4\n");
 	_mstMovingBoundsData.allocate(_mstHdr.movingBoundsDataCount);
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 		_mstMovingBoundsData[i].indexMonsterInfo = fp->readUint32();
-emu_printf("_mstMovingBoundsData[%d].indexMonsterInfo %d\n", i, _mstMovingBoundsData[i].indexMonsterInfo);
+//emu_printf("_mstMovingBoundsData[%d].indexMonsterInfo %d\n", i, _mstMovingBoundsData[i].indexMonsterInfo);
 		fp->skipUint32();
 		_mstMovingBoundsData[i].count1  = fp->readUint32();
 		fp->skipUint32();

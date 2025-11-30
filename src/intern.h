@@ -43,13 +43,15 @@ static const bool kByteSwapData = true; //(__BYTE_ORDER == __BIG_ENDIAN);
 #define PACKED __attribute__((packed))
 
 inline uint16_t READ_LE_UINT16(const void *ptr) {
-	if (1 && (((uintptr_t)ptr) & 1) != 0) {
+	/*if (1 && (((uintptr_t)ptr) & 1) != 0) {
 		uint16_t value;
 		memcpy(&value, ptr, sizeof(uint16_t));
 		return le16toh(value);
 	} else {
 		return le16toh(*(const uint16_t *)ptr);
-	}
+	}*/
+	const uint8_t *p = (const uint8_t *)ptr;
+	return p[0] | (p[1] << 8);
 }
 
 inline uint32_t READ_LE_UINT32(const void *ptr) {

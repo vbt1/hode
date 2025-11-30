@@ -9,6 +9,7 @@
 #include "intern.h"
 #include "defs.h"
 #include "fileio.h"
+#include "video.h"
 
 struct PafHeader {
 	uint32_t preloadFrameBlocksCount;
@@ -81,6 +82,7 @@ struct PafPlayer {
 
 	bool _skipCutscenes;
 	FileSystem *_fs;
+	Video *_video;
 	File _file;
 	int _videoNum;
 	uint32_t _videoOffset;

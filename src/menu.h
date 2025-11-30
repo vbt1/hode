@@ -5,7 +5,7 @@
 #include "intern.h"
 
 struct Game;
-//struct PafPlayer;
+struct PafPlayer;
 struct Resource;
 struct Video;
 
