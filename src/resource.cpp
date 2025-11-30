@@ -245,7 +245,7 @@ void Resource::loadSetupDat() {
 		_datHdr.hintsImageSizeTable[i] = _datFile->readUint32();
 	}
 	_datFile->seek(2048, SEEK_SET); // align to next sector
-	emu_printf("malloc(loadingImageSize) %d\n", _datHdr.loadingImageSize);
+//	emu_printf("malloc(loadingImageSize) %d\n", _datHdr.loadingImageSize);
 //	_loadingImageBuffer = (uint8_t *)malloc(_datHdr.loadingImageSize);
 
 	_loadingImageBuffer = (uint8_t *)VDP2_VRAM_B1;
@@ -270,8 +270,8 @@ void Resource::loadSetupDat() {
 		static const int kFontSize = 16 * 16 * 64;
 		emu_printf("malloc(kFontSize) %d\n", kFontSize);		
 //		_fontBuffer = (uint8_t *)malloc(kFontSize);
-		_fontBuffer = (uint8_t *)current_lwram;
-		current_lwram += SAT_ALIGN(kFontSize);
+		_fontBuffer = (uint8_t *)_loadingImageBuffer+SAT_ALIGN(_datHdr.loadingImageSize);
+//		current_lwram += SAT_ALIGN(kFontSize);
 	
 		if (_fontBuffer) {
 			/* size = READ_LE_UINT32(_loadingImageBuffer + offset); */ offset += 4;
