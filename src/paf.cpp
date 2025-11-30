@@ -252,16 +252,21 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		break;
 	}
 }
-/*
+
 static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
-	for (int i = 0; i < 4; ++i) {
+/*	for (int i = 0; i < 4; ++i) {
 		memcpy(dst, src, 4);
 		src += 4;
 		dst += 256;
 	}
-}
 */
-/*
+	memcpy(dst, src, 4);
+	memcpy(dst + 256, src + 4, 4);
+	memcpy(dst + 512, src + 8, 4);
+	memcpy(dst + 768, src + 12, 4);
+}
+
+/* // vbt : incorrect
 static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
 	for (int i = 0; i < 4; ++i) {
 		*(uint32_t*)dst = *(const uint32_t*)src;
@@ -270,6 +275,7 @@ static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
 	}
 }
 */
+/*
 static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
 	uint32_t t0, t1, t2, t3;
 	t0 = *(const uint32_t*)src;
@@ -281,23 +287,28 @@ static void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
 	*(uint32_t*)(dst + 512) = t2;
 	*(uint32_t*)(dst + 768) = t3;
 }
-/*
+*/
 static void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
-	for (int i = 0; i < 4; ++i) {
+/*	for (int i = 0; i < 4; ++i) {
 		memcpy(dst, src, 4);
 		src += 256;
 		dst += 256;
 	}
-}
 */
+	memcpy(dst, src, 4);
+	memcpy(dst + 256, src + 256, 4);
+	memcpy(dst + 512, src + 512, 4);
+	memcpy(dst + 768, src + 768, 4);
+}
 
+/*
 static void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
 	*(uint32_t*)dst = *(const uint32_t*)src;
 	*(uint32_t*)(dst + 256) = *(const uint32_t*)(src + 256);
 	*(uint32_t*)(dst + 512) = *(const uint32_t*)(src + 512);
 	*(uint32_t*)(dst + 768) = *(const uint32_t*)(src + 768);
 }
-
+*/
 static void pafCopySrcMask(uint8_t mask, uint8_t *dst, const uint8_t *src) {
 	if (mask & 0x8) dst[0] = src[0];
 	if (mask & 0x4) dst[1] = src[1];
@@ -567,7 +578,7 @@ void PafPlayer::mainLoop() {
 	uint32_t frameTime = g_system->getTimeStamp() + frameMs;
 
 	uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
-	_video->_font = (uint8_t *)0x20fb84;	
+	_video->_font = (uint8_t *)0x25e6df94;	// vbt : hardcoded font buffer address vram vdp2
 	static uint8_t last_frame_z = 0xFF;
 	static char buffer[8];
 
@@ -587,31 +598,20 @@ void PafPlayer::mainLoop() {
 			} else {
 				assert(dstOffset + _pafHdr.readBufferSize <= _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
 				memcpy(_demuxVideoFrameBlocks + dstOffset, _bufferBlock, _pafHdr.readBufferSize);
-/*
-				uint32_t *dst32 = (uint32_t *)(_demuxVideoFrameBlocks + dstOffset);
-				const uint32_t *src32 = (const uint32_t *)_bufferBlock;
-				for (int j = 0; j < (_pafHdr.readBufferSize / 4); ++j) {
-					*dst32++ = *src32++;
-				}
-*/
-
 			}
 			++currentFrameBlock;
 			--blocksCountForFrame;
 		}
 		// decode video data
-//emu_printf("decodeVideoFrame paf %d\n", i);
 		decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
 
 		if (_pafCb.frameProc) {
 			_pafCb.frameProc(_pafCb.userdata, i, _pageBuffers[_currentPageBuffer]);
 		} else {
-//emu_printf("copyRect paf\n");
 			g_system->copyRect((int)0, (int)0, (int)kVideoWidth, (int)kVideoHeight, _pageBuffers[_currentPageBuffer], (int)kVideoWidth);
 		}
 		if (_paletteChanged) {
 			_paletteChanged = false;
-//emu_printf("setPalette paf\n");
 			g_system->setPalette(_paletteBuffer, 256, 6);
 		}
 /*
