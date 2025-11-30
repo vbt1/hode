@@ -1895,6 +1895,7 @@ void Game::updateBackgroundPsx(int num) {
 void Game::drawScreen() {
 
 #ifdef DEBUG
+	emu_printf("------drawScreen\n");
 	unsigned int s1 = g_system->getTimeStamp();
 #endif
 
@@ -1902,13 +1903,16 @@ void Game::drawScreen() {
 //	memset4_fast(_video->_frontLayer, 0x00, Video::W * Video::H);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","memcpyl", e1-s1);
+	int result = e1-s1;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","memcpyl", result);
 #endif
-
 	_video->copyYuvBackBuffer();
 #ifdef DEBUG
 	unsigned int e2 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","copyYuvBackBuffer", e2-e1);
+	result = e2-e1;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","copyYuvBackBuffer", result);
 #endif
 	// redraw background animation sprites
 	LvlBackgroundData *dat = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
@@ -1927,6 +1931,12 @@ void Game::drawScreen() {
 			}
 		}
 	}
+#ifdef DEBUG
+	unsigned int e3 = g_system->getTimeStamp();
+	result = e3-e2;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","decodeSPR1", result);
+#endif
 	memset(_video->_shadowLayer, 0, Video::W * Video::H + 1);
 	for (int i = 1; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
@@ -1935,6 +1945,12 @@ void Game::drawScreen() {
 			}
 		}
 	}
+#ifdef DEBUG
+	unsigned int e4 = g_system->getTimeStamp();
+	result = e4-e3;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","decodeSPR2", result);
+#endif
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
@@ -1942,11 +1958,23 @@ void Game::drawScreen() {
 			}
 		}
 	}
+#ifdef DEBUG
+	unsigned int e5 = g_system->getTimeStamp();
+	result = e5-e4;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","decodeSPR3", result);
+#endif
 	if (_andyObject->spriteNum == 0 && (_andyObject->flags2 & 0x1F) == 4) {
 		if (_plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
 			drawPlasmaCannon();
 		}
 	}
+#ifdef DEBUG
+	unsigned int e6 = g_system->getTimeStamp();
+	result = e6-e5;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","drawPlasmaCannon", result);
+#endif
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
@@ -1954,6 +1982,12 @@ void Game::drawScreen() {
 			}
 		}
 	}
+#ifdef DEBUG
+	unsigned int e7 = g_system->getTimeStamp();
+	result = e7-e6;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","decodeSPR4", result);
+#endif
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
@@ -1961,6 +1995,12 @@ void Game::drawScreen() {
 			}
 		}
 	}
+#ifdef DEBUG
+	unsigned int e8 = g_system->getTimeStamp();
+	result = e8-e7;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","decodeSPR5", result);
+#endif
 	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
@@ -1973,6 +2013,12 @@ void Game::drawScreen() {
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
+#ifdef DEBUG
+	unsigned int e9 = g_system->getTimeStamp();
+	result = e9-e8;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","applyShadowColors", result);
+#endif
 	for (int i = 1; i < 12; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
@@ -1980,11 +2026,23 @@ void Game::drawScreen() {
 			}
 		}
 	}
+#ifdef DEBUG
+	unsigned int e10 = g_system->getTimeStamp();
+	result = e10-e9;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","decodeSPR6", result);
+#endif
 	if (_andyObject->spriteNum == 0 && (_andyObject->flags2 & 0x1F) == 0xC) {
 		if (_plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
 			drawPlasmaCannon();
 		}
 	}
+#ifdef DEBUG
+	unsigned int e11 = g_system->getTimeStamp();
+	result = e11-e10;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","drawPlasmaCannon2", result);
+#endif
 	for (int i = 12; i <= 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
@@ -1992,6 +2050,12 @@ void Game::drawScreen() {
 			}
 		}
 	}
+#ifdef DEBUG
+	unsigned int e12 = g_system->getTimeStamp();
+	result = e12-e11;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","decodeSPR7", result);
+#endif
 }
 
 static void gamePafCallback(void *userdata) {
@@ -2059,7 +2123,7 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-_mstDisabled = true; // vbt : ajout pour test
+//_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2698,26 +2762,26 @@ void Game::levelMainLoop() {
 		callLevel_tick();
 		return;
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e2b = g_system->getTimeStamp();
 #endif	
 //emu_printf("executeMstCode\n");
 	executeMstCode();
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e3 = g_system->getTimeStamp();
 	emu_printf("--duration %s : %d\n","executeMst", e3-e2b);
 #endif
 //emu_printf("updateLvlObjectLists\n");
 	updateLvlObjectLists();
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e4 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","executeMst", e4-e3);
+	emu_printf("--duration %s : %d\n","updateLvlObject", e4-e3);
 #endif
 //emu_printf("callLevel_tick\n");
 	callLevel_tick();
 //emu_printf("updateAndyMonsterObjects\n");
 	updateAndyMonsterObjects();
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e5 = g_system->getTimeStamp();
 	emu_printf("--duration %s : %d\n","updateAndyMonster", e5-e4);
 #endif
@@ -2729,7 +2793,7 @@ void Game::levelMainLoop() {
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dyPos = 0;
 //emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
 	updateAnimatedLvlObjectsLeftRightCurrentScreens();
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e6 = g_system->getTimeStamp();
 	emu_printf("--duration %s : %d\n","updateAnimatedLvl", e6-e5);
 #endif
@@ -2744,8 +2808,19 @@ void Game::levelMainLoop() {
 //emu_printf("updateGamePalette\n");
 		_video->updateGamePalette(_video->_displayPaletteBuffer);
 //emu_printf("copyRectWidescreen\n");
+#ifdef DEBUG2
+	unsigned int e7 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","updateGamePalette", e7-e6);
+#endif
 		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+#ifdef DEBUG2
+	unsigned int e8 = g_system->getTimeStamp();
+	emu_printf("--duration %s : %d\n","copyRectWidescreen", e8-e7);
+#endif
 	}
+#ifdef DEBUG
+	unsigned int e6 = g_system->getTimeStamp();
+#endif
 //emu_printf("drawScreen\n");
  #define TVSTAT	(*(Uint16 *)0x25F80004)
 uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
@@ -2757,7 +2832,7 @@ uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
 	drawScreen();
 #ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","drawScreen", e7-e6);
+	emu_printf("------duration %s : %d\n","drawScreen", e7-e6);
 #endif
 #if 0
 	if (g_system->inp.screenshot) {

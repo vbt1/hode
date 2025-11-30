@@ -1,3 +1,4 @@
+#pragma GCC optimize ("O2")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -17,6 +18,7 @@ extern "C" {
 extern Uint32 position_vram;
 extern SAT_sprite _sprData[10];
 static const bool kUseShadowColorLut = false;
+//static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
 	emu_printf("video init\n");
@@ -514,6 +516,7 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 	}
 }
 
+#if 0
 static uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 	return (a >= 144 && b < 144) ? lut[b] : b;
 }
@@ -546,6 +549,43 @@ void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch,
 		dst2 += dst_pitch;
 	}
 }
+#else
+static inline uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
+	return (a >= 144 && b < 144) ? lut[b] : b;
+}
+
+void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
+	assert(dst1 == _shadowLayer);
+	assert(dst2 == _frontLayer);
+	
+	dst2 += y * dst_pitch + x;
+	
+	for (int j = 0; j < src_h; ++j) {
+		// Simple 2x unroll - reduces loop overhead without complexity
+		int i = 0;
+		for (; i < (src_w & ~1); i += 2) {
+			uint16_t offset0 = READ_LE_UINT16(src1); src1 += 2;
+			uint16_t offset1 = READ_LE_UINT16(src1); src1 += 2;
+			
+			uint8_t a0 = dst1[offset0];
+			uint8_t b0 = dst2[i];
+			uint8_t a1 = dst1[offset1];
+			uint8_t b1 = dst2[i + 1];
+			
+			dst2[i] = (a0 >= 144 && b0 < 144) ? _shadowColorLut[b0] : b0;
+			dst2[i + 1] = (a1 >= 144 && b1 < 144) ? _shadowColorLut[b1] : b1;
+		}
+		
+		// Handle odd pixel
+		if (i < src_w) {
+			uint16_t offset = READ_LE_UINT16(src1); src1 += 2;
+			dst2[i] = lookupColor(dst1[offset], dst2[i], _shadowColorLut);
+		}
+		
+		dst2 += dst_pitch;
+	}
+}
+#endif
 
 void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 	if (kUseShadowColorLut) {
