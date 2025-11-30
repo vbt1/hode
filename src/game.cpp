@@ -2178,6 +2178,10 @@ emu_printf("resetPlasmaCannonState\n");
 //emu_printf("restartLevel\n");
 	restartLevel();
 	frame_y = frame_x = 0;
+
+	uint8_t last_frame_z = 0xFF;
+	char buffer[8];
+
 	while (true) {
 		const int frameTimeStamp = g_system->getTimeStamp() + _frameMs;
 //emu_printf("levelMainLoop\n");
@@ -2187,6 +2191,16 @@ emu_printf("resetPlasmaCannonState\n");
 			break;
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
+
+		if (frame_z != last_frame_z) {
+			last_frame_z = frame_z;
+
+			buffer[0] = '0' + (frame_z / 10);
+			buffer[1] = '0' + (frame_z % 10);
+			buffer[2] = 0;
+		}
+		_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
+
 		g_system->sleep(delay);
 		frame_x++;
 	}
@@ -2823,13 +2837,14 @@ void Game::levelMainLoop() {
 	unsigned int e6 = g_system->getTimeStamp();
 #endif
 //emu_printf("drawScreen\n");
+/*
  #define TVSTAT	(*(Uint16 *)0x25F80004)
 uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
 		char buffer[256];
 		snprintf(buffer, sizeof(buffer), "%02d", frame_z);
 //		_video->drawString(buffer, 8, 8, _video->findWhiteColor(), _video->_frontLayer);
 		_video->drawString(buffer, (Video::W - (strlen(buffer)+1) * 8), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
-
+*/
 	drawScreen();
 #ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();

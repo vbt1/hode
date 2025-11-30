@@ -614,26 +614,15 @@ void PafPlayer::mainLoop() {
 			_paletteChanged = false;
 			g_system->setPalette(_paletteBuffer, 256, 6);
 		}
-/*
-//emu_printf("updateScreen paf\n");
- #define TVSTAT	(*(Uint16 *)0x25F80004)
-uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
-		char buffer[256];
-		snprintf(buffer, sizeof(buffer), "%02d", frame_z);
-//		_video->drawString(buffer, 8, 8, _video->findWhiteColor(), _video->_frontLayer);
-		_video->_font = (uint8_t *)0x20fb84;
-		_video->drawString(buffer, (Video::W - (strlen(buffer)+1) * 8), 0, 2, (uint8 *)VDP2_VRAM_A0);
-*/
 
-	if (frame_z != last_frame_z) {
-		last_frame_z = frame_z;
+		if (frame_z != last_frame_z) {
+			last_frame_z = frame_z;
 
-		buffer[0] = '0' + (frame_z / 10);
-		buffer[1] = '0' + (frame_z % 10);
-		buffer[2] = 0;
-	}
-    _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
-
+			buffer[0] = '0' + (frame_z / 10);
+			buffer[1] = '0' + (frame_z % 10);
+			buffer[2] = 0;
+		}
+		_video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 
 		g_system->updateScreen(false);
 		g_system->processEvents();
