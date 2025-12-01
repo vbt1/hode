@@ -69,7 +69,9 @@ PafPlayer::PafPlayer(FileSystem *fs)
 	memset(&_pafCb, 0, sizeof(_pafCb));
 	_volume = 128;
 	_frameMs = kFrameDuration;
+#ifdef DEBUG	
 	_video = new Video();
+#endif
 }
 
 PafPlayer::~PafPlayer() {
@@ -578,10 +580,11 @@ void PafPlayer::mainLoop() {
 	uint32_t frameTime = g_system->getTimeStamp() + frameMs;
 
 	uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
+#ifdef DEBUG
 	_video->_font = (uint8_t *)0x25e6df94;	// vbt : hardcoded font buffer address vram vdp2
 	static uint8_t last_frame_z = 0xFF;
 	static char buffer[8];
-
+#endif
 //emu_printf("framesCount %d\n", _pafHdr.framesCount);
 	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
 		// read buffering blocks
@@ -614,7 +617,7 @@ void PafPlayer::mainLoop() {
 			_paletteChanged = false;
 			g_system->setPalette(_paletteBuffer, 256, 6);
 		}
-
+#ifdef DEBUG
 		if (frame_z != last_frame_z) {
 			last_frame_z = frame_z;
 
@@ -623,7 +626,7 @@ void PafPlayer::mainLoop() {
 			buffer[2] = 0;
 		}
 		_video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
-
+#endif
 		g_system->updateScreen(false);
 		g_system->processEvents();
 		if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC)) {

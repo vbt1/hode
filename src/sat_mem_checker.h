@@ -4,6 +4,9 @@
 //#include <sega_mem.h>
 #include <stdlib.h>
 
+uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize);
+
+/*
 void *sat_calloc(size_t nmemb, size_t size);
 void *sat_malloc(size_t size);
 void sat_free(void *ptr);
@@ -12,6 +15,7 @@ void *std_malloc(size_t size);
 
 void *sat_realloc(void *ptr, size_t size);
 char *sat_strdup(const char *s);
+*/
 
 void memcpyl(void *, void *, int);
 void memcpyw(void *, void *, int);
@@ -25,8 +29,8 @@ void *memset4_fast(void *, long, size_t);
 
 #define SAV0    		0x200000
 #define SAV0_SIZE		7152
-#define VBT_L_START    ((volatile void *)(SAV0+SAV0_SIZE))
-//#define VBT_L_START    ((volatile void *)(0x200000))
+//#define VBT_L_START    ((volatile void *)(SAV0+SAV0_SIZE))
+#define VBT_L_START    ((volatile void *)(0x200000))
 #define ADR_WORKRAM_L_END      ((volatile void *)0x300000)
 #define HWRAM_SCREEN_SIZE 50000//(128*240*2)+(64*240)
 // si on modifie scratch et front, la sequence de fin a des glitchs ...
@@ -56,9 +60,22 @@ void *memset4_fast(void *, long, size_t);
 #define CLEAN_H 224
 #define CLEAN_H_MORE 304
 
-#define VRAM_MAX 0x67000 // ne pas toucher
+	enum ResType {
+		TYPE_GFSFILE = 0,
+		TYPE_LAYER,
+		TYPE_LDIMG,
+		TYPE_FONT,
+		TYPE_MENU1,
+		TYPE_MENU0,
+		TYPE_SPRITE,
+		TYPE_SCRMASK,
+		TYPE_SCRMASKBUF,
+		TYPE_BGLVL,
+		TYPE_BGLVLOBJ,
+		TYPE_SHADWBUF,
+		TYPE_SHADWLUT,
+		TYPE_MONSTER
+	};
 
 
-#define SPR_ELEVATOR 273 //1560
-#define SPR_METRO    616 //1903
 #endif

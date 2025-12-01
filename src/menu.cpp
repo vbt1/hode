@@ -140,19 +140,19 @@ emu_printf("version == 10\n");
 // vbt : textes du menu principal
 		_titleSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_titleSprites->size = le32toh(_titleSprites->size);
-emu_printf("_titleSprites->size %d\n", _titleSprites->size);
+//emu_printf("_titleSprites->size %d\n", _titleSprites->size);
 		_titleSprites->count = le16toh(_titleSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _titleSprites->size;
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_titleSprites->firstFrameOffset = 0;
-emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
+//emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
 		_video->SAT_loadTitleSprites(_titleSprites, (const uint8_t *)&_titleSprites[1]);
 // vbt : boutons du menu assign player
 		_playerSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_playerSprites->size = le32toh(_playerSprites->size);
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_playerSprites->count = le16toh(_playerSprites->count);
-emu_printf("_playerSprites->count %d\n", _playerSprites->count);
+//emu_printf("_playerSprites->count %d\n", _playerSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _playerSprites->size;
 		_playerSprites->firstFrameOffset = 0;
 		xx += sizeof(DatSpritesGroup) + _playerSprites->size;
@@ -162,7 +162,7 @@ emu_printf("_playerSprites->count %d\n", _playerSprites->count);
 		_titleBitmapData = ptr + ptrOffset + sizeof(DatBitmap);
 		ptrOffset += sizeof(DatBitmap) + _titleBitmapSize + paletteSize;
 		xx += sizeof(DatBitmap) + _titleBitmapSize + paletteSize;
-emu_printf("needed ram1 %d %p\n", xx, ptr+ptrOffset);
+//emu_printf("needed ram1 %d %p\n", xx, ptr+ptrOffset);
 		_res->_menuBuffer0 = _res->_menuBuffer1+ptrOffset;
 
 #ifdef SOUND
@@ -173,7 +173,7 @@ emu_printf("needed ram1 %d %p\n", xx, ptr+ptrOffset);
 		ptrOffset += sizeof(DatBitmap) + _playerBitmapSize + paletteSize;
 		xx += sizeof(DatBitmap) + _playerBitmapSize + paletteSize;
 
-emu_printf("needed ram1 %d\n", xx);
+//emu_printf("needed ram1 %d\n", xx);
 		const int size = READ_LE_UINT32(ptr + ptrOffset); ptrOffset += 4;
 		assert((size % (16 * 10)) == 0);
 //emu_printf("_digitsData %d\n", size);

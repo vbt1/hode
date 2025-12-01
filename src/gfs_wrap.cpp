@@ -152,7 +152,9 @@ emu_printf("name %s\n",path_token);
 		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
 
 		// Encapsulate the file data
-		fp = (GFS_FILE*)malloc(sizeof(GFS_FILE));
+//		fp = (GFS_FILE*)malloc(sizeof(GFS_FILE));
+		fp = (GFS_FILE*)allocate_memory (TYPE_GFSFILE, sizeof(GFS_FILE));
+
 		if (fp == NULL) {return NULL;}
 		fp->fid = fid;
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
@@ -301,12 +303,12 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-emu_printf("skip bytes %d %d\n", tot_bytes,skip_bytes);
-		read_buffer = (Uint8*)0x26000000;//current_lwram;
+//emu_printf("skip bytes %d %d\n", tot_bytes,skip_bytes);
+		read_buffer = (Uint8*)0x26000000;
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 	} else {
-emu_printf("no skip bytes %d %p\n", tot_bytes, ptr);
+//emu_printf("no skip bytes %d %p\n", tot_bytes, ptr);
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
 	}
 	stream->f_seek_pos += (readBytes - skip_bytes); // Update the seek cursor 

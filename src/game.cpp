@@ -275,7 +275,8 @@ void Game::transformShadowLayer(int delta) {
 
 void Game::loadTransformLayerData(const uint8_t *data) {
 	assert(!_video->_transformShadowBuffer);
-	_video->_transformShadowBuffer = (uint8_t *)malloc(256 * 192 + 256);
+//	_video->_transformShadowBuffer = (uint8_t *)malloc(256 * 192 + 256);
+	_video->_transformShadowBuffer = allocate_memory (TYPE_SHADWBUF, 256 * 192 + 256);
 	const int size = decodeLZW(data, _video->_transformShadowBuffer);
 	assert(size == 256 * 192);
 	memcpy(_video->_transformShadowBuffer + 256 * 192, _video->_transformShadowBuffer, 256);
@@ -1895,20 +1896,20 @@ void Game::updateBackgroundPsx(int num) {
 void Game::drawScreen() {
 
 #ifdef DEBUG
-	emu_printf("------drawScreen\n");
+//	emu_printf("------drawScreen\n");
 	unsigned int s1 = g_system->getTimeStamp();
 #endif
 
 	memcpyl(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
 //	memset4_fast(_video->_frontLayer, 0x00, Video::W * Video::H);
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","memcpyl", result);
 #endif
 	_video->copyYuvBackBuffer();
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e2 = g_system->getTimeStamp();
 	result = e2-e1;
 	if(result>0)
@@ -1931,7 +1932,7 @@ void Game::drawScreen() {
 			}
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e3 = g_system->getTimeStamp();
 	result = e3-e2;
 	if(result>0)
@@ -1945,7 +1946,7 @@ void Game::drawScreen() {
 			}
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e4 = g_system->getTimeStamp();
 	result = e4-e3;
 	if(result>0)
@@ -1958,7 +1959,7 @@ void Game::drawScreen() {
 			}
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e5 = g_system->getTimeStamp();
 	result = e5-e4;
 	if(result>0)
@@ -1969,7 +1970,7 @@ void Game::drawScreen() {
 			drawPlasmaCannon();
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e6 = g_system->getTimeStamp();
 	result = e6-e5;
 	if(result>0)
@@ -1982,7 +1983,7 @@ void Game::drawScreen() {
 			}
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e7 = g_system->getTimeStamp();
 	result = e7-e6;
 	if(result>0)
@@ -1995,7 +1996,7 @@ void Game::drawScreen() {
 			}
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e8 = g_system->getTimeStamp();
 	result = e8-e7;
 	if(result>0)
@@ -2013,7 +2014,7 @@ void Game::drawScreen() {
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
 	if(result>0)
@@ -2026,7 +2027,7 @@ void Game::drawScreen() {
 			}
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e10 = g_system->getTimeStamp();
 	result = e10-e9;
 	if(result>0)
@@ -2037,7 +2038,7 @@ void Game::drawScreen() {
 			drawPlasmaCannon();
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e11 = g_system->getTimeStamp();
 	result = e11-e10;
 	if(result>0)
@@ -2050,7 +2051,7 @@ void Game::drawScreen() {
 			}
 		}
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e12 = g_system->getTimeStamp();
 	result = e12-e11;
 	if(result>0)
@@ -2118,7 +2119,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #ifdef SOUND
 	_mix._lock(1);
 #endif
-emu_printf("loadLevelData %d\n", _currentLevel);
+//emu_printf("loadLevelData %d\n", _currentLevel);
 	_res->loadLevelData(_currentLevel);
 #ifdef SOUND
 	clearSoundObjects();
@@ -2142,11 +2143,11 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 		initMstCode();
 	}
 	memset(_level->_screenCounterTable, 0, sizeof(_level->_screenCounterTable));
-emu_printf("clearDeclaredLvlObjectsList\n");
+//emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
-emu_printf("initLvlObjects\n");
+//emu_printf("initLvlObjects\n");
 	initLvlObjects();
-emu_printf("resetPlasmaCannonState\n");
+//emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_res->_screensState[i].s2 = 0;
@@ -2833,20 +2834,11 @@ void Game::levelMainLoop() {
 	emu_printf("--duration %s : %d\n","copyRectWidescreen", e8-e7);
 #endif
 	}
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e6 = g_system->getTimeStamp();
 #endif
-//emu_printf("drawScreen\n");
-/*
- #define TVSTAT	(*(Uint16 *)0x25F80004)
-uint8_t hz = ((TVSTAT & 1) == 0)?60:50;
-		char buffer[256];
-		snprintf(buffer, sizeof(buffer), "%02d", frame_z);
-//		_video->drawString(buffer, 8, 8, _video->findWhiteColor(), _video->_frontLayer);
-		_video->drawString(buffer, (Video::W - (strlen(buffer)+1) * 8), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
-*/
 	drawScreen();
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e7 = g_system->getTimeStamp();
 	emu_printf("------duration %s : %d\n","drawScreen", e7-e6);
 #endif
