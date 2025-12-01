@@ -20,6 +20,7 @@ char *sat_strdup(const char *s);
 void memcpyl(void *, void *, int);
 void memcpyw(void *, void *, int);
 void *memset4_fast(void *, long, size_t);
+void *malloc(size_t);
 #define SAT_ALIGN(a) ((a+3)&~3)
 #define SAT_ALIGN8(a) ((a+15)&~15)
 
@@ -74,7 +75,12 @@ void *memset4_fast(void *, long, size_t);
 		TYPE_BGLVLOBJ,
 		TYPE_SHADWBUF,
 		TYPE_SHADWLUT,
-		TYPE_MONSTER
+		TYPE_MONSTER,
+		TYPE_MSTAREA,
+		TYPE_MAP,
+		TYPE_MOVBOUND,
+		TYPE_SHOOT,
+		TYPE_MSTCODE
 	};
 
 

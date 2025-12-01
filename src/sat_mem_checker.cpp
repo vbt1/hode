@@ -53,7 +53,8 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 		cs1ram += SAT_ALIGN(alignedSize);
 	}
 
-	if(type == TYPE_SPRITE || type == TYPE_MONSTER)
+	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
+	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE)
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
