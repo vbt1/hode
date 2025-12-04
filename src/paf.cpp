@@ -139,8 +139,8 @@ emu_printf("preload %d\n", num);
 
 void PafPlayer::play(int num) {
 	emu_printf("play %d %d\n", num, _videoNum);
-	if(num==2)
-	while(1);
+//	if(num==2)
+//	while(1);
 	if (_videoNum != num) {
 		emu_printf("preload play\n");
 		preload(num);
