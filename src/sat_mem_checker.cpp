@@ -18,7 +18,7 @@ Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B1;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-	emu_printf("allocate_memory type %d size %d\n", type, alignedSize);
+	emu_printf("allocate_memory type %d size %d - ", type, alignedSize);
     uint8_t* dst;
 	
 	if( type == TYPE_LDIMG || type == TYPE_FONT)
@@ -28,22 +28,16 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	}
 	
 // vbt pas besoin d'allouer de la ram
-	if( type == TYPE_MENU1 || type == TYPE_MENU0)
+	if( type == TYPE_MENU)
 	{
 		dst = current_lwram;
 	}
 
 	if(type == TYPE_LAYER || type == TYPE_BGLVLOBJ 
 	|| type == TYPE_SHADWBUF || type == TYPE_SHADWLUT
-	|| type == TYPE_SCRMASKBUF || type == TYPE_GFSFILE)
+	|| type == TYPE_SCRMASKBUF || type == TYPE_SCRMASK) // jamais libéré 6762
 	{
 		dst = (Uint8 *)malloc(alignedSize);
-	}
-	
-	if( type == TYPE_SCRMASK)
-	{
-		dst = current_lwram;
-		current_lwram += SAT_ALIGN(alignedSize);
 	}
 	
 	if(type == TYPE_BGLVL) // toujours moins de 500ko?
@@ -54,7 +48,8 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	}
 
 	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
-	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE)
+	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE 	|| type == TYPE_PAF
+	|| type == TYPE_PAFHEAD || type == TYPE_GFSFILE)
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{

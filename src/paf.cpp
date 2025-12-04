@@ -83,8 +83,14 @@ void PafPlayer::setVolume(int volume) {
 	_volume = volume;
 }
 
+uint8_t *cs1ram_cut;
+uint8_t *lwram_cut;
+
 void PafPlayer::preload(int num) {
-	//emu_printf("preload %d\n", num);
+emu_printf("preload %d\n", num);
+	cs1ram_cut = cs1ram;
+	lwram_cut = current_lwram;
+	
 	assert(num >= 0 && num < kMaxVideosCount);
 	if (_videoNum != num) {
 		unload(_videoNum);
@@ -99,26 +105,25 @@ void PafPlayer::preload(int num) {
 		unload();
 		return;
 	}
-	/*
-    if (((uintptr_t)cs1ram & 3) != 0) {
-        cs1ram += 4 - ((uintptr_t)cs1ram & 3);
-    }	
-	*/
-	uint8_t *buffer = (uint8_t *)cs1ram;//calloc(kPageBufferSize * 4 + 256 * 4, 1);
+//	uint8_t *buffer = (uint8_t *)cs1ram;//calloc(kPageBufferSize * 4 + 256 * 4, 1);
+	uint8_t *buffer = (uint8_t *)allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
 	if (!buffer) {
 		//emu_printf("preloadPaf() Unable to allocate page buffers\n");
 		unload();
 		return;
 	}
-	cs1ram+=(kPageBufferSize * 4 + 256 * 4);
+//	cs1ram+=(kPageBufferSize * 4 + 256 * 4);
 	
 	for (int i = 0; i < 4; ++i) {
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 	}
-	_demuxVideoFrameBlocks = (uint8_t *)cs1ram;//calloc(_pafHdr.maxVideoFrameBlocksCount, _pafHdr.readBufferSize);
-	cs1ram+=(_pafHdr.maxVideoFrameBlocksCount* _pafHdr.readBufferSize);
+//emu_printf("preload2 %d\n", num);
+//	_demuxVideoFrameBlocks = (uint8_t *)cs1ram;//calloc(_pafHdr.maxVideoFrameBlocksCount, _pafHdr.readBufferSize);
+//	cs1ram+=(_pafHdr.maxVideoFrameBlocksCount* _pafHdr.readBufferSize);
+	_demuxVideoFrameBlocks = (uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
 	
 	_pafHdr.maxAudioFrameBlocksCount = 0; // vbt : on enleve le son
+#if 0
 	if (_pafHdr.maxAudioFrameBlocksCount != 0) {
 		_demuxAudioFrameBlocks = (uint8_t *)calloc(_pafHdr.maxAudioFrameBlocksCount, _pafHdr.readBufferSize);
 		_flushAudioSize = (_pafHdr.maxAudioFrameBlocksCount - 1) * _pafHdr.readBufferSize;
@@ -129,11 +134,15 @@ void PafPlayer::preload(int num) {
 	_audioBufferOffsetRd = 0;
 	_audioBufferOffsetWr = 0;
 	_audioQueue = _audioQueueTail = 0;
+#endif
 }
 
 void PafPlayer::play(int num) {
-	//emu_printf("play %d\n", num);
+	emu_printf("play %d %d\n", num, _videoNum);
+	if(num==2)
+	while(1);
 	if (_videoNum != num) {
+		emu_printf("preload play\n");
 		preload(num);
 	}
 	if (_videoNum == num) {
@@ -143,9 +152,12 @@ void PafPlayer::play(int num) {
 }
 
 void PafPlayer::unload(int num) {
+	cs1ram = cs1ram_cut;
+	current_lwram = lwram_cut;	
 	if (_videoNum < 0) {
 		return;
 	}
+emu_printf("vbt unload paf %p\n", cs1ram);
 //	free(_pageBuffers[0]);
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
 //	free(_demuxVideoFrameBlocks);
@@ -201,8 +213,10 @@ bool PafPlayer::readPafHeader() {
 
 uint32_t *PafPlayer::readPafHeaderTable(int count) {
 //	uint32_t *dst = (uint32_t *)malloc(count * sizeof(uint32_t));
-	uint32_t *dst = (uint32_t *)cs1ram;
-	cs1ram+=(count * sizeof(uint32_t));
+emu_printf("readPafHeaderTable %d\n", count);
+	uint32_t *dst = (uint32_t *)allocate_memory (TYPE_PAFHEAD, count * sizeof(uint32_t));
+//	uint32_t *dst = (uint32_t *)cs1ram;
+//	cs1ram+=(count * sizeof(uint32_t));
 	if (!dst) {
 		//emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		return 0;
@@ -628,8 +642,8 @@ void PafPlayer::mainLoop() {
 		_video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #endif
 		g_system->updateScreen(false);
-		g_system->processEvents();
-		if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC)) {
+//		g_system->processEvents();
+		if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) || g_system->inp.keyPressed(SYS_INP_RUN)) {
 			break;
 		}
 

@@ -283,6 +283,7 @@ void Game::loadTransformLayerData(const uint8_t *data) {
 }
 
 void Game::unloadTransformLayerData() {
+emu_printf("vbt unloadTransformLayerData\n");	
 	free(_video->_transformShadowBuffer);
 	_video->_transformShadowBuffer = 0;
 }
@@ -2104,8 +2105,9 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 //	assert(level < kLvl_test);
 
 //	level = kLvl_fort;
-//	level = 0;
-	_cheats = 255;
+//	level = 1;
+	_cheats = 	kCheatSpectreFireballNoHit | kCheatOneHitPlasmaCannon |	kCheatOneHitSpecialPowers |	kCheatWalkOnLava | kCheatGateNoCrush |
+	kCheatLavaNoHit | kCheatRockShadowNoHit;
 	_currentLevel = level;
 //emu_printf("createLevel %d\n", _currentLevel);
 
@@ -2125,7 +2127,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-//_mstDisabled = true; // vbt : ajout pour test
+_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2159,13 +2161,15 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		startMstCode();
 	}
 #if PAF
-	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 && !levelChanged) {
+emu_printf("_paf->_skipCutscenes %d _level->_checkpoint %d && !levelChanged %d\n", _paf->_skipCutscenes, _level->_checkpoint, levelChanged);
+//	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 && !levelChanged) {
+// vbt: ne joue pas la video de fin du premier niveau
+	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 /*&& !levelChanged*/) {
 		const uint8_t num = _cutscenes[_currentLevel];
-		uint8_t *cs1ram_cut = cs1ram;
+		emu_printf("vbt play cutscene\n");
 		_paf->preload(num);
 		_paf->play(num);
 		_paf->unload(num);
-		cs1ram = cs1ram_cut;
 		if (g_system->inp.quit) {
 			return;
 		}

@@ -328,7 +328,7 @@ emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
 		yy += _iconsSprites[i].size;
 	}
 
-emu_printf("needed ram2 %d\n", yy);
+//emu_printf("needed ram2 %d\n", yy);
 
 	_optionsButtonSpritesCount = READ_LE_UINT32(ptr + ptrOffset); ptrOffset += 4;
 	if (_optionsButtonSpritesCount != 0) {

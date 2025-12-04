@@ -44,7 +44,7 @@ uint32_t LzwDecoder::nextCode(int codeSize) { // 9 to 12bits
 }
 
 int LzwDecoder::decode(uint8_t *dst) {
-emu_printf("decode %p\n", dst);
+//emu_printf("decode %p\n", dst);
 	uint8_t *p = dst;
 	uint8_t *stackPtr = &_stack[kStackSize - 1];
 	uint32_t previousCode = 0;

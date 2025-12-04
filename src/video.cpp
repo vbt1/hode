@@ -137,7 +137,7 @@ void Video::SAT_loadTitleSprites(const DatSpritesGroup *spriteGroup, const uint8
 		const uint16_t w_raw = READ_LE_UINT16(ptr + 4);
 		const uint16_t w = (w_raw + 7) & ~7;
 		const uint16_t h = READ_LE_UINT16(ptr + 6);
-emu_printf("num %d w%d h%d\n", i,w,h);
+//emu_printf("num %d w%d h%d\n", i,w,h);
 		TEXTURE tx = TEXDEF(w, h, position_vram);
 		uint8_t *src = (uint8_t *)ptr+8;
 		uint8_t dst[104*19]; //104 pour demo fr

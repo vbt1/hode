@@ -22,10 +22,10 @@ static const bool kPreloadLvlBackgroundData = false;
 static const bool kCheckSssBytecode = false;
 
 // menu settings and player progress
-static const char *_setupCfg = "setup.cfg";
+//static const char *_setupCfg = "setup.cfg";
 
 static const char *_setupDat = "SETUP.DAT";
-static const char *_setupDax = "SETUP.DAX";
+//static const char *_setupDax = "SETUP.DAX";
 
 static const char *_hodDem = "HOD.DEM";
 
@@ -54,11 +54,8 @@ static void stringUpperCase(char *p) {
 static bool openDat(FileSystem *fs, const char *name, File *f) {
 	GFS_FILE *fp = fs->openAssetFile(name);
 	if (fp) {
-//		emu_printf("openDat %s found\n", name);
 		f->setFp(fp);
-//		emu_printf("seek %s f %p %d\n", name, f, fp->f_size);
 		f->seek(0, SEEK_SET);
-//		emu_printf("seek %s done\n", name);
 		return true;
 	}
 	return false;
@@ -347,7 +344,7 @@ void Resource::loadDatMenuBuffers() {
 	_datFile->seek(baseOffset, SEEK_SET);
 //emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
 //	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
-	_menuBuffer1 = allocate_memory (TYPE_MENU1, _datHdr.bufferSize1);
+	_menuBuffer1 = allocate_memory (TYPE_MENU, _datHdr.bufferSize1);
 	
 	if (_menuBuffer1) {
 		_datFile->read(_menuBuffer1, _datHdr.bufferSize1);
@@ -356,7 +353,7 @@ void Resource::loadDatMenuBuffers() {
 		_datFile->seek(baseOffset + fioAlignSizeTo2048(_datHdr.bufferSize1), SEEK_SET); // align to next sector
 //emu_printf("malloc(_datHdr.bufferSize0) %d\n", _datHdr.bufferSize0);
 //	_menuBuffer0 = (uint8_t *)malloc(_datHdr.bufferSize0);
-	_menuBuffer0 = allocate_memory (TYPE_MENU0, _datHdr.bufferSize0);
+	_menuBuffer0 = allocate_memory (TYPE_MENU, _datHdr.bufferSize0);
 		if (_menuBuffer0) {
 			_datFile->read(_menuBuffer0, _datHdr.bufferSize0);
 		}
@@ -364,6 +361,8 @@ void Resource::loadDatMenuBuffers() {
 }
 
 void Resource::unloadDatMenuBuffers() {
+emu_printf("unloadDatMenuBuffers\n");
+// vbt ; rien à faire adresse pas incrémentée
 //	free(_menuBuffer1);
 	_menuBuffer1 = 0;
 //	free(_menuBuffer0);
@@ -629,9 +628,17 @@ void Resource::loadLvlScreenMaskData() {
 
 static const uint32_t _lvlTag = 0x484F4400; // 'HOD\x00'
 
+uint8_t *cs1ram_res = NULL;
+uint8_t *lwram_res  = NULL;
+
 void Resource::loadLvlData(File *fp) {
 emu_printf("loadLvlData\n");
 //	assert(fp == _lvlFile);
+	if(lwram_res==NULL)
+	{
+		cs1ram_res = cs1ram;
+		lwram_res = current_lwram;
+	}
 	unloadLvlData();
 	const uint32_t tag = _lvlFile->readUint32();
 	if (tag != _lvlTag) {
@@ -703,7 +710,11 @@ emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes
 }
 
 void Resource::unloadLvlData() {
+emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
+	cs1ram = cs1ram_res;
+	current_lwram = lwram_res;
+
 	_resLevelData0x470CTable = 0;
 	if (kPreloadLvlBackgroundData) {
 		for (unsigned int i = 0; i < kMaxScreens; ++i) {
@@ -780,12 +791,12 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	assert((src - start) == 160);
 	return offsetsSize;
 }
-uint8_t *cs1ram_bg;
+//uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert((unsigned int)num < kMaxScreens);
-	cs1ram_bg = cs1ram;
+//	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
 
@@ -833,10 +844,11 @@ emu_printf("unloadLvlScreenBackgroundData %d\n");
 		_resLevelData0x2B88SizeTable[num] = 0;
 
 		LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
-		/*for (int i = 0; i < 4; ++i) {
-			free(dat->backgroundLvlObjectDataTable[i]);
-		}*/
-		cs1ram = cs1ram_bg;
+		for (int i = 0; i < 4; ++i) {
+//			free(dat->backgroundLvlObjectDataTable[i]);
+			dat->backgroundLvlObjectDataTable[i] = 0;
+		}
+//		cs1ram = cs1ram_bg;
 		memset(dat, 0, sizeof(LvlBackgroundData));
 	}
 }
@@ -2061,6 +2073,7 @@ emu_printf("loadMstData\n");
 }
 
 void Resource::unloadMstData() {
+emu_printf("unloadMstData\n");
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		free(_mstWalkCodeData[i].codeData);
 		_mstWalkCodeData[i].codeData = 0;

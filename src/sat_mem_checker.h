@@ -66,8 +66,7 @@ void *malloc(size_t);
 		TYPE_LAYER,
 		TYPE_LDIMG,
 		TYPE_FONT,
-		TYPE_MENU1,
-		TYPE_MENU0,
+		TYPE_MENU,
 		TYPE_SPRITE,
 		TYPE_SCRMASK,
 		TYPE_SCRMASKBUF,
@@ -80,7 +79,9 @@ void *malloc(size_t);
 		TYPE_MAP,
 		TYPE_MOVBOUND,
 		TYPE_SHOOT,
-		TYPE_MSTCODE
+		TYPE_MSTCODE,
+		TYPE_PAFHEAD,
+		TYPE_PAF
 	};
 
 
