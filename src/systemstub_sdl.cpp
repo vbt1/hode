@@ -34,7 +34,7 @@ extern unsigned char frame_z;
 #endif
 }
 extern void snd_init();
-//extern void emu_printf(const char *format, ...);
+//extern void //emu_printf(const char *format, ...);
 
 #include "sys.h"
 //#include "mixer.h"
@@ -44,7 +44,7 @@ extern void snd_init();
  //#include "saturn_print.h"
 
 #undef assert
-//#define assert(x) if(!(x)){emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
+//#define assert(x) if(!(x)){//emu_printf("assert %s %d %s\n", __FILE__,__LINE__,__func__);}
 #define assert(x) if(!(x)){}
 /*
 #undef VDP2_VRAM_A0
@@ -216,16 +216,16 @@ SystemStub_SDL::~SystemStub_SDL() {
 }
 
 void SystemStub_SDL::init(const char *title, int w, int h) {
-//emu_printf("init system\n");
+////emu_printf("init system\n");
 #if 1
 	memset(&inp, 0, sizeof(inp)); // Clean inout
-//emu_printf("load_audio_driver\n");
+////emu_printf("load_audio_driver\n");
 	load_audio_driver(); // Load M68K audio driver
 	init_cdda();
 	sound_external_audio_enable(7, 7);
-//emu_printf("prepareGfxMode\n");
+////emu_printf("prepareGfxMode\n");
 //	prepareGfxMode(); // Prepare graphic output
-//emu_printf("setup_input\n");
+////emu_printf("setup_input\n");
 	setup_input(); // Setup controller inputs
 
 //	memset(_pal, 0, sizeof(_pal));
@@ -233,7 +233,7 @@ void SystemStub_SDL::init(const char *title, int w, int h) {
 //	audioEnabled = 0;
 //	curBuf = 0;
 //	curSlot = 0;
-//emu_printf("SystemStub_SDL::init\n");	
+////emu_printf("SystemStub_SDL::init\n");	
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[0]) = 0;
 	*(Uint8*)OPEN_CSH_VAR(buffer_filled[1]) = 0;
@@ -245,7 +245,7 @@ void SystemStub_SDL::init(const char *title, int w, int h) {
 		tickPerVblank = 17;
 	else
 		tickPerVblank = 20;
-//emu_printf("slIntFunction\n");
+////emu_printf("slIntFunction\n");
 	slIntFunction(vblIn); // Function to call at each vblank-in // vbt à remettre
 #endif
 	return;
@@ -304,7 +304,7 @@ void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
 			g = (g << shift) | (g >> (depth - shift));
 			b = (b << shift) | (b >> (depth - shift));
 		}
-//		emu_printf("r%d g%d b%d\n",r,g,b);
+//		//emu_printf("r%d g%d b%d\n",r,g,b);
 		_clut[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag; // BGR for saturn		
 	}
 	slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
@@ -343,7 +343,7 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 	int pitch = 256;
 	int x = 0;
 	int y = 0;
-//	emu_printf("copyRect %d %d\n",w,h);
+//	//emu_printf("copyRect %d %d\n",w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
@@ -357,13 +357,13 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();
 #endif
-	//emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
+	////emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
 }
 
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
 #ifndef LINEAR_BITMAP
 	// Calculate initial source and destination pointers
-//emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
+////emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
@@ -377,7 +377,7 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();
 #endif
-//emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
+////emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
 }
 
 void SystemStub_SDL::updateScreen(bool drawWidescreen) {
@@ -386,7 +386,7 @@ void SystemStub_SDL::updateScreen(bool drawWidescreen) {
 }
 
 void SystemStub_SDL::processEvents() {
-//emu_printf("processEvents\n");
+////emu_printf("processEvents\n");
 	inp.prevMask = inp.mask;
 //	pad.prevMask = pad.mask;
 //	pad.mask &= ~(SYS_INP_UP | SYS_INP_DOWN | SYS_INP_LEFT | SYS_INP_RIGHT);
@@ -526,7 +526,7 @@ uint32 SystemStub_SDL::getOutputSampleRate() {
 }
 /*
 void *SystemStub_SDL::createMutex() {
-//emu_printf("SystemStub_SDL::createMutex\n");	
+////emu_printf("SystemStub_SDL::createMutex\n");	
 	SatMutex *mtx = (SatMutex*)malloc(sizeof(SatMutex));
 #ifdef SLAVE_SOUND
 	*(Uint8*)OPEN_CSH_VAR(mtx->access) = 0;
@@ -554,7 +554,7 @@ void SystemStub_SDL::lockMutex(void *mutex) {
 }
 
 void SystemStub_SDL::unlockMutex(void *mutex) {
-//emu_printf("SystemStub_SDL::unlockMutex\n");	
+////emu_printf("SystemStub_SDL::unlockMutex\n");	
 	SatMutex *mtx = (SatMutex*)mutex;
 #ifdef SLAVE_SOUND
 	(*(Uint8*)OPEN_CSH_VAR(mtx->access))--;
@@ -578,7 +578,7 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 }*/
 	void SystemStub_SDL::shakeScreen(int dx, int dy) 
 	{
-//emu_printf("shake %d %d\n", dx, dy);
+////emu_printf("shake %d %d\n", dx, dy);
 		slScrPosNbg1(toFIXED(dx), toFIXED(dy-16));
 	}
 
@@ -641,7 +641,7 @@ void SystemStub_SDL::setup_input (void) {
 }
 
 void SystemStub_SDL::load_audio_driver(void) {
-	snd_init();
+//	snd_init();
 	return;
 }
 
@@ -731,7 +731,7 @@ inline void timeTick() {
 }
 
 void vblIn (void) {
-//emu_printf("vblIn\n");
+////emu_printf("vblIn\n");
 	// Process input
 
 //	if(!loadingMap)
@@ -745,7 +745,7 @@ void vblIn (void) {
 			frame_z = frame_x;
 			frame_x = 0;
 			frame_y = 0;
-//			emu_printf("fps %d/%d \n", frame_z, hz);
+//			//emu_printf("fps %d/%d \n", frame_z, hz);
 		}
 #endif
 //		system_saturn.updateScreen(0);
@@ -767,6 +767,6 @@ void SCU_DMAWait(void) {
 	while((DMA_ScuResult()) == 2);
 /*	
 	if(res == 1) {
-		//emu_printf("SCU DMA COPY FAILED!\n");
+		////emu_printf("SCU DMA COPY FAILED!\n");
 	}*/
 }

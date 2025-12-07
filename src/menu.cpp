@@ -118,7 +118,7 @@ static uint32_t readSoundData(uint8_t *soundData, uint32_t soundDataSize) {
 }
 #endif
 void Menu::loadData() {
-emu_printf("loadData\n");
+//emu_printf("loadData\n");
 #ifdef SOUND
 	_g->_mix._lock(1);
 #endif
@@ -136,23 +136,23 @@ emu_printf("loadData\n");
 int xx = 0;
 
 	if (version == 10) {
-emu_printf("version == 10\n");
+//emu_printf("version == 10\n");
 // vbt : textes du menu principal
 		_titleSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_titleSprites->size = le32toh(_titleSprites->size);
-//emu_printf("_titleSprites->size %d\n", _titleSprites->size);
+////emu_printf("_titleSprites->size %d\n", _titleSprites->size);
 		_titleSprites->count = le16toh(_titleSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _titleSprites->size;
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_titleSprites->firstFrameOffset = 0;
-//emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
+////emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
 		_video->SAT_loadTitleSprites(_titleSprites, (const uint8_t *)&_titleSprites[1]);
 // vbt : boutons du menu assign player
 		_playerSprites = (DatSpritesGroup *)(ptr + ptrOffset);
 		_playerSprites->size = le32toh(_playerSprites->size);
 		xx += sizeof(DatSpritesGroup) + _titleSprites->size;
 		_playerSprites->count = le16toh(_playerSprites->count);
-//emu_printf("_playerSprites->count %d\n", _playerSprites->count);
+////emu_printf("_playerSprites->count %d\n", _playerSprites->count);
 		ptrOffset += sizeof(DatSpritesGroup) + _playerSprites->size;
 		_playerSprites->firstFrameOffset = 0;
 		xx += sizeof(DatSpritesGroup) + _playerSprites->size;
@@ -162,21 +162,21 @@ emu_printf("version == 10\n");
 		_titleBitmapData = ptr + ptrOffset + sizeof(DatBitmap);
 		ptrOffset += sizeof(DatBitmap) + _titleBitmapSize + paletteSize;
 		xx += sizeof(DatBitmap) + _titleBitmapSize + paletteSize;
-//emu_printf("needed ram1 %d %p\n", xx, ptr+ptrOffset);
+////emu_printf("needed ram1 %d %p\n", xx, ptr+ptrOffset);
 		_res->_menuBuffer0 = _res->_menuBuffer1+ptrOffset;
 
 #ifdef SOUND
 // vbt : ecrans du menu assign player
 		_playerBitmapSize = READ_LE_UINT32(ptr + ptrOffset);
-//emu_printf("_playerBitmapSize %d\n", _playerBitmapSize);
+////emu_printf("_playerBitmapSize %d\n", _playerBitmapSize);
 		_playerBitmapData = ptr + ptrOffset + sizeof(DatBitmap);
 		ptrOffset += sizeof(DatBitmap) + _playerBitmapSize + paletteSize;
 		xx += sizeof(DatBitmap) + _playerBitmapSize + paletteSize;
 
-//emu_printf("needed ram1 %d\n", xx);
+////emu_printf("needed ram1 %d\n", xx);
 		const int size = READ_LE_UINT32(ptr + ptrOffset); ptrOffset += 4;
 		assert((size % (16 * 10)) == 0);
-//emu_printf("_digitsData %d\n", size);
+////emu_printf("_digitsData %d\n", size);
 		_digitsData = ptr + ptrOffset;
 		ptrOffset += size;
 		xx += size;
@@ -204,14 +204,14 @@ emu_printf("version == 10\n");
 			xx += size;
 		}
 
-emu_printf("needed ram %d\n", xx);
+//emu_printf("needed ram %d\n", xx);
 //while(1);
 
 		_soundData = ptr + ptrOffset;
 		readSoundData(_res->_menuBuffer1 + ptrOffset, _res->_datHdr.soundDataSize);
 #endif
 	} else if (version == 11) {
-emu_printf("version == 11\n");
+//emu_printf("version == 11\n");
 		hdrOffset = 4;
 
 		ptrOffset = 4 + (2 + kOptionsCount) * sizeof(DatBitmap);
@@ -274,7 +274,7 @@ emu_printf("version == 11\n");
 		_titleSprites->count = le16toh(_titleSprites->count);
 		_titleSprites->firstFrameOffset = 0;
 
-emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
+//emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
 		_video->SAT_loadTitleSprites(_titleSprites, (const uint8_t *)&_titleSprites[1]);
 #ifdef SOUND
 		_playerSprites = (DatSpritesGroup *)(ptr + ptrOffset);
@@ -328,7 +328,7 @@ emu_printf("SAT_loadTitleSprites %d\n", _titleSprites->size);
 		yy += _iconsSprites[i].size;
 	}
 
-//emu_printf("needed ram2 %d\n", yy);
+////emu_printf("needed ram2 %d\n", yy);
 
 	_optionsButtonSpritesCount = READ_LE_UINT32(ptr + ptrOffset); ptrOffset += 4;
 	if (_optionsButtonSpritesCount != 0) {
@@ -400,7 +400,7 @@ SssObject *Menu::playSound(int num) {
 }
 #endif
 void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
-	emu_printf("drawBitmap\n");
+	//emu_printf("drawBitmap\n");
 #ifdef PSX
 	if (_res->_isPsx) {
 		memset(_video->_frontLayer, 0, Video::W * Video::H);
@@ -408,9 +408,9 @@ void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
 	} else 
 #endif
 	{
-	emu_printf("decodeLZW\n");
+	//emu_printf("decodeLZW\n");
 		decodeLZW(data, _video->_frontLayer);
-	emu_printf("decodeLZW done\n");
+	//emu_printf("decodeLZW done\n");
 		if (setPalette) {
 			g_system->setPalette(data + size, 256, 6);
 		}
@@ -419,7 +419,7 @@ void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
 
 void Menu::drawSprite(const DatSpritesGroup *spriteGroup, const uint8_t *ptr, uint32_t num, int x, int y) {
 	ptr += spriteGroup->firstFrameOffset;
-	emu_printf("drawSprite %p %p num %p %d %d\n",spriteGroup,ptr+8,num, x,y);
+	//emu_printf("drawSprite %p %p num %p %d %d\n",spriteGroup,ptr+8,num, x,y);
 
 	for (uint32_t i = 0; i < spriteGroup->count; ++i) {
 		const uint16_t size = READ_LE_UINT16(ptr + 2);
@@ -439,7 +439,7 @@ void Menu::drawSprite(const DatSpritesGroup *spriteGroup, const uint8_t *ptr, ui
 					y = ptr[1];
 				}
 				_video->decodeSPR(ptr + 8, _video->_frontLayer, x, y, 0, READ_LE_UINT16(ptr + 4), READ_LE_UINT16(ptr + 6));
-emu_printf("num%d x%d y%d w%d h%d\n",num, x,y,READ_LE_UINT16(ptr + 4),READ_LE_UINT16(ptr + 6));
+//emu_printf("num%d x%d y%d w%d h%d\n",num, x,y,READ_LE_UINT16(ptr + 4),READ_LE_UINT16(ptr + 6));
 			}
 			break;
 		}
@@ -504,7 +504,7 @@ bool Menu::mainLoop() {
 		const int option = handleTitleScreen();
 		if (option == kTitleScreen_AssignPlayer) {
 			handleAssignPlayer();
-			emu_printf("currentPlayer %d\n", _config->currentPlayer);
+			//emu_printf("currentPlayer %d\n", _config->currentPlayer);
 			continue;
 		} else if (option == kTitleScreen_Play) {
 			ret = true;
@@ -565,7 +565,7 @@ void Menu::drawTitleScreen(int option) {
 }
 
 int Menu::handleTitleScreen() {
-emu_printf("handleTitleScreen\n");
+//emu_printf("handleTitleScreen\n");
 	const int firstOption = _res->_isPsx ? kTitleScreen_Play : kTitleScreen_AssignPlayer;
 	const int lastOption = _res->_isPsx ? kTitleScreen_Options : kTitleScreen_Quit;
 	int currentOption = kTitleScreen_Play;

@@ -44,7 +44,7 @@ uint32_t LzwDecoder::nextCode(int codeSize) { // 9 to 12bits
 }
 
 int LzwDecoder::decode(uint8_t *dst) {
-//emu_printf("decode %p\n", dst);
+////emu_printf("decode %p\n", dst);
 	uint8_t *p = dst;
 	uint8_t *stackPtr = &_stack[kStackSize - 1];
 	uint32_t previousCode = 0;
@@ -106,7 +106,7 @@ int LzwDecoder::decode(uint8_t *dst) {
 }
 
 int decodeLZW(const uint8_t *src, uint8_t *dst) {
-emu_printf("decodeLZW %p %p\n", src, dst);
+//emu_printf("decodeLZW %p %p\n", src, dst);
 	memset(&_lzw, 0, sizeof(_lzw));
 	_lzw._buf = src;
 	return _lzw.decode(dst);

@@ -80,7 +80,7 @@ Level *Level_rock_create() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen0() {
-//emu_printf("postScreenUpdate_rock_screen0\n");
+////emu_printf("postScreenUpdate_rock_screen0\n");
 	switch (_res->_screensState[0].s0) {
 	case 0:
 		if ((_andyObject->flags0 & 0x1F) == 0 && ((_andyObject->flags0 >> 5) & 7) == 6) {
@@ -103,7 +103,7 @@ void Level_rock::postScreenUpdate_rock_screen0() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen4() {
-//emu_printf("postScreenUpdate_rock_screen4\n");
+////emu_printf("postScreenUpdate_rock_screen4\n");
 	switch (_res->_screensState[4].s0) {
 	case 0:
 		if (_g->_plasmaCannonDirection != 0 && _res->_currentScreenResourceNum == 4) {
@@ -148,7 +148,7 @@ void Level_rock::postScreenUpdate_rock_screen4() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen8() {
-//emu_printf("postScreenUpdate_rock_screen8\n");
+////emu_printf("postScreenUpdate_rock_screen8\n");
 	if (_res->_currentScreenResourceNum == 8) {
 		if ((_andyObject->flags0 & 0x1F) == 3) {
 			_andyObject->flags2 = 0x3008;
@@ -161,7 +161,7 @@ void Level_rock::postScreenUpdate_rock_screen8() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen9() {
-//emu_printf("postScreenUpdate_rock_screen9\n");
+////emu_printf("postScreenUpdate_rock_screen9\n");
 	int xPos;
 	if (_res->_currentScreenResourceNum == 9) {
 		switch (_res->_screensState[9].s0) {
@@ -202,7 +202,7 @@ void Level_rock::postScreenUpdate_rock_screen9() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen10() {
-//emu_printf("postScreenUpdate_rock_screen10\n");
+////emu_printf("postScreenUpdate_rock_screen10\n");
 	if (_res->_currentScreenResourceNum == 10) {
 		BoundingBox box = { 64, 0, 267, 191 };
 		_g->setAndyAnimationForArea(&box, 12);
@@ -210,7 +210,7 @@ void Level_rock::postScreenUpdate_rock_screen10() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen11() {
-//emu_printf("postScreenUpdate_rock_screen11\n");
+////emu_printf("postScreenUpdate_rock_screen11\n");
 	if (_res->_currentScreenResourceNum == 11) {
 		BoundingBox box = { -12, 0, 162, 191 };
 		_g->setAndyAnimationForArea(&box, 12);

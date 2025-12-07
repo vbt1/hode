@@ -54,7 +54,7 @@ static const int logtbl[] = {
 
 void snd_init()
 {
-//	emu_printf("snd_init\n");
+//	//emu_printf("snd_init\n");
    *(volatile uint8_t *)(0x25B00400) = 0x02;
    // Turn off Sound CPU
    smpc_smc_sndoff_call();
@@ -76,7 +76,7 @@ void snd_init()
    
     volatile uint16_t *control = (uint16_t *)0x25b00400;
     control[0] = 0x20f; // master vol  vbt : pour volume et 4mb   
-//	emu_printf("snd_init done\n");   
+//	//emu_printf("snd_init done\n");   
 }
 
 void pcm_prepare_sample(pcm_sample_t *s, uint8_t chan, size_t sz)
@@ -92,7 +92,7 @@ void pcm_prepare_sample(pcm_sample_t *s, uint8_t chan, size_t sz)
     slot->lsa = 0;
     slot->lea = (sz / s->bit) - 1;
 
-//	emu_printf("s->addr-SCSP_RAM %06x slot->pcm8b %d sz %d slot->lea %x\n",s->addr-SCSP_RAM,slot->pcm8b,sz,slot->lea);
+//	//emu_printf("s->addr-SCSP_RAM %06x slot->pcm8b %d sz %d slot->lea %x\n",s->addr-SCSP_RAM,slot->pcm8b,sz,slot->lea);
 
     // why 31 ?
     slot->attack_rate = 31;
@@ -135,7 +135,7 @@ void pcm_sample_start(uint8_t chan)
     slot->kyonb = 1;
     slot->kyonex = 1;
 	asm("nop");
-//	emu_printf("slot %d addr %x len %x vol %d\n",chan,slot->sa, slot->lea+1,slot->disdl);
+//	//emu_printf("slot %d addr %x len %x vol %d\n",chan,slot->sa, slot->lea+1,slot->disdl);
 }
 
 void pcm_sample_stop(uint8_t chan)

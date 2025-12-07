@@ -235,7 +235,7 @@ int ss_main() {
 	g_debugMask = 0; //kDebug_GAME | kDebug_RESOURCE | kDebug_SOUND | kDebug_MONSTER;
 	int cheats = 0;
 
-//emu_printf("ss_main\n");
+////emu_printf("ss_main\n");
 
 #ifdef WII
 	System_earlyInit();
@@ -360,7 +360,7 @@ int ss_main() {
 		save_cs1ram = (uint8_t *)cs1ram;
 		while (!g_system->inp.quit && level < kLvl_test) {
 			if (_displayLoadingScreen) {
-//emu_printf("displayLoadingScreen 2\n");
+////emu_printf("displayLoadingScreen 2\n");
 				g->displayLoadingScreen();
 			}
 			g->mainLoop(level, checkpoint, levelChanged);
@@ -376,8 +376,9 @@ int ss_main() {
 			level = g->_currentLevel + 1;
 			checkpoint = 0;
 			levelChanged = true;
-emu_printf("lwram used %d cs1 used %d\n", 0x300000-((int)current_lwram), ((int)cs1ram)-0x22400000);
+//emu_printf("lwram used %d cs1 used %d\n", 0x300000-((int)current_lwram), ((int)cs1ram)-0x22400000);
 			current_lwram = (uint8_t *)save_current_lwram;
+//emu_printf("main reset cs1ram\n");
 			cs1ram = (uint8_t *)save_cs1ram;
 		}
 	} while (!g_system->inp.quit && resume && !isPsx); // do not return to menu when starting from a specific level checkpoint

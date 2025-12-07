@@ -19,7 +19,6 @@ SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/video.cpp \
 		$(SRCDIR)/sat_mem_checker.cpp \
 		$(SRCDIR)/cinit.cpp \
-		$(SRCDIR)/pcm.cpp \
 		$(SRCDIR)/c++-support.cpp
 
 SYSOBJS = $(SRCDIR)/workarea.o $(SRCDIR)/low.o

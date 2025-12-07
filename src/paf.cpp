@@ -29,7 +29,7 @@ static const char *_filenames[] = {
 };
 */
 static bool openPaf(FileSystem *fs, File *f) {
-//emu_printf("openPaf\n");	
+////emu_printf("openPaf\n");	
 /*	
 	for (int i = 0; _filenames[i]; ++i) {
 		GFS_FILE *fp = fs->openAssetFile(_filenames[i]);
@@ -57,7 +57,7 @@ static void closePaf(FileSystem *fs, File *f) {
 
 PafPlayer::PafPlayer(FileSystem *fs)
 	: _fs(fs) {
-//emu_printf("PafPlayer\n");
+////emu_printf("PafPlayer\n");
 	_skipCutscenes = !openPaf(_fs, &_file);
 	_videoNum = -1;
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
@@ -87,7 +87,7 @@ uint8_t *cs1ram_cut;
 uint8_t *lwram_cut;
 
 void PafPlayer::preload(int num) {
-emu_printf("preload %d\n", num);
+//emu_printf("preload %d\n", num);
 	cs1ram_cut = cs1ram;
 	lwram_cut = current_lwram;
 	
@@ -101,14 +101,14 @@ emu_printf("preload %d\n", num);
 	_file.seek(_videoOffset, SEEK_SET);
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
 	if (!readPafHeader()) {
-		//emu_printf("unload paf\n");
+		////emu_printf("unload paf\n");
 		unload();
 		return;
 	}
 //	uint8_t *buffer = (uint8_t *)cs1ram;//calloc(kPageBufferSize * 4 + 256 * 4, 1);
 	uint8_t *buffer = (uint8_t *)allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
 	if (!buffer) {
-		//emu_printf("preloadPaf() Unable to allocate page buffers\n");
+		////emu_printf("preloadPaf() Unable to allocate page buffers\n");
 		unload();
 		return;
 	}
@@ -117,7 +117,7 @@ emu_printf("preload %d\n", num);
 	for (int i = 0; i < 4; ++i) {
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 	}
-//emu_printf("preload2 %d\n", num);
+////emu_printf("preload2 %d\n", num);
 //	_demuxVideoFrameBlocks = (uint8_t *)cs1ram;//calloc(_pafHdr.maxVideoFrameBlocksCount, _pafHdr.readBufferSize);
 //	cs1ram+=(_pafHdr.maxVideoFrameBlocksCount* _pafHdr.readBufferSize);
 	_demuxVideoFrameBlocks = (uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
@@ -138,11 +138,11 @@ emu_printf("preload %d\n", num);
 }
 
 void PafPlayer::play(int num) {
-	emu_printf("play %d %d\n", num, _videoNum);
+	//emu_printf("play %d %d\n", num, _videoNum);
 //	if(num==2)
 //	while(1);
 	if (_videoNum != num) {
-		emu_printf("preload play\n");
+		//emu_printf("preload play\n");
 		preload(num);
 	}
 	if (_videoNum == num) {
@@ -152,12 +152,13 @@ void PafPlayer::play(int num) {
 }
 
 void PafPlayer::unload(int num) {
+//emu_printf("unload reset cs1ram\n");
 	cs1ram = cs1ram_cut;
 	current_lwram = lwram_cut;	
 	if (_videoNum < 0) {
 		return;
 	}
-emu_printf("vbt unload paf %p\n", cs1ram);
+//emu_printf("vbt unload paf %p\n", cs1ram);
 //	free(_pageBuffers[0]);
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
 //	free(_demuxVideoFrameBlocks);
@@ -181,11 +182,11 @@ emu_printf("vbt unload paf %p\n", cs1ram);
 }
 
 bool PafPlayer::readPafHeader() {
-	//emu_printf("readPafHeader\n");
+	////emu_printf("readPafHeader\n");
 	static const char *kSignature = "Packed Animation File V1.0\n(c) 1992-96 Amazing Studio\n";
 	_file.read(_bufferBlock, kBufferBlockSize);
 	if (memcmp(_bufferBlock, kSignature, strlen(kSignature)) != 0) {
-		//emu_printf("readPafHeader() Unexpected signature\n");
+		////emu_printf("readPafHeader() Unexpected signature\n");
 		return false;
 	}
 	_pafHdr.frameDuration = READ_LE_UINT32(_bufferBlock + 0x88);
@@ -195,14 +196,14 @@ bool PafPlayer::readPafHeader() {
 	assert(_pafHdr.readBufferSize == kBufferBlockSize);
 	_pafHdr.framesCount = READ_LE_UINT32(_bufferBlock + 0x84);
 	if (_pafHdr.framesCount <= 0) {
-		//emu_printf("readPafHeader() Invalid number of frames %d\n", _pafHdr.framesCount);
+		////emu_printf("readPafHeader() Invalid number of frames %d\n", _pafHdr.framesCount);
 		return false;
 	}
 	_pafHdr.maxVideoFrameBlocksCount = READ_LE_UINT32(_bufferBlock + 0xA8);
 	_pafHdr.maxAudioFrameBlocksCount = READ_LE_UINT32(_bufferBlock + 0xAC);
 	_pafHdr.frameBlocksCount = READ_LE_UINT32(_bufferBlock + 0xA0);
 	if (_pafHdr.frameBlocksCount <= 0) {
-		//emu_printf("readPafHeader() Invalid number of blocks %d\n", _pafHdr.frameBlocksCount);
+		////emu_printf("readPafHeader() Invalid number of blocks %d\n", _pafHdr.frameBlocksCount);
 		return false;
 	}
 	_pafHdr.frameBlocksCountTable = readPafHeaderTable(_pafHdr.framesCount);
@@ -213,12 +214,12 @@ bool PafPlayer::readPafHeader() {
 
 uint32_t *PafPlayer::readPafHeaderTable(int count) {
 //	uint32_t *dst = (uint32_t *)malloc(count * sizeof(uint32_t));
-emu_printf("readPafHeaderTable %d\n", count);
+//emu_printf("readPafHeaderTable %d\n", count);
 	uint32_t *dst = (uint32_t *)allocate_memory (TYPE_PAFHEAD, count * sizeof(uint32_t));
 //	uint32_t *dst = (uint32_t *)cs1ram;
 //	cs1ram+=(count * sizeof(uint32_t));
 	if (!dst) {
-		//emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
+		////emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		return 0;
 	}
 	for (int i = 0; i < count; ++i) {
@@ -251,7 +252,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		_paletteChanged = true;
 		src += count;
 	}
-//emu_printf("decode %d\n", code & 0xF);	
+////emu_printf("decode %d\n", code & 0xF);	
 	
 	switch (code & 0xF) {
 	case 0:
@@ -496,7 +497,7 @@ void PafPlayer::decodeAudioFrame(const uint8_t *src, uint32_t offset, uint32_t s
 
 	// copy should be sequential
 	if (offset != _audioBufferOffsetWr) {
-		//emu_printf("Unexpected offset 0x%x wr 0x%x rd 0x%x num %d\n", offset, _audioBufferOffsetWr, _audioBufferOffsetRd, _videoNum);
+		////emu_printf("Unexpected offset 0x%x wr 0x%x rd 0x%x num %d\n", offset, _audioBufferOffsetWr, _audioBufferOffsetRd, _videoNum);
 		assert(offset == 0);
 		// this happens in paf #3 of Italian release, there is a flush at 0x16800 instead of 0x1f000
 		_audioBufferOffsetWr = 0;
@@ -531,7 +532,7 @@ void PafPlayer::decodeAudioFrame(const uint8_t *src, uint32_t offset, uint32_t s
 		}
 		else
 		{
-			//emu_printf("PafAudioQueue() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
+			////emu_printf("PafAudioQueue() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		}
 
 		_audioBufferOffsetRd += count * kAudioStrideSize;
@@ -571,7 +572,7 @@ static void mixAudio(void *userdata, int16_t *buf, int len) {
 }
 
 void PafPlayer::mainLoop() {
-//emu_printf("mainLoop paf\n");
+////emu_printf("mainLoop paf\n");
 	_file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
 	for (int i = 0; i < 4; ++i) {
 		memset(_pageBuffers[i], 0, kPageBufferSize);
@@ -599,7 +600,7 @@ void PafPlayer::mainLoop() {
 	static uint8_t last_frame_z = 0xFF;
 	static char buffer[8];
 #endif
-//emu_printf("framesCount %d\n", _pafHdr.framesCount);
+////emu_printf("framesCount %d\n", _pafHdr.framesCount);
 	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
 		// read buffering blocks
 		blocksCountForFrame += _pafHdr.frameBlocksCountTable[i];

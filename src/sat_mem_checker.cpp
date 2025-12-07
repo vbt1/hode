@@ -16,17 +16,17 @@ extern Uint8 *cs1ram;
 Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B1;
 Uint8 *vdp1ram = (Uint8 *)SpriteVRAM+0x20;
 }
-
-//int vbt=0;
+Uint8 *hwram;
+int vbt=0;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-//	emu_printf("allocate_memory type %d size %d - ", type, alignedSize);
+//	//emu_printf("allocate_memory type %d size %d - ", type, alignedSize);
     uint8_t* dst;
 	
 	if( type == TYPE_LDIMG || type == TYPE_FONT)
 	{
-emu_printf("TYPE_LDIMG or font %p\n", dst);
+////emu_printf("TYPE_LDIMG or font %p\n", dst);
 		dst = vdp2ram;
 		vdp2ram += SAT_ALIGN(alignedSize);
 	}
@@ -41,19 +41,32 @@ emu_printf("TYPE_LDIMG or font %p\n", dst);
 	|| type == TYPE_SHADWBUF || type == TYPE_SHADWLUT
 	|| type == TYPE_SCRMASKBUF || type == TYPE_SCRMASK) // jamais libéré 6762
 	{
-//emu_printf("malloc %d type %d\n", alignedSize, type);
+////emu_printf("malloc %d type %d\n", alignedSize, type);
 		dst = (Uint8 *)malloc(alignedSize);
+		hwram = dst+alignedSize;
 	}
 	
 	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
-//		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
-		dst = vdp1ram; // vbt : on dirait qu'il ne faut pas incrémenter
+//		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
+		{
+//		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
+		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
+//		dst = vdp1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 //		memset(dst,0x00, SAT_ALIGN(alignedSize));
 // vbt à recommenter lorsque  pb au moment de mourir est résolu		
+//		current_lwram += SAT_ALIGN(alignedSize);
 //		cs1ram += SAT_ALIGN(alignedSize);
 //		vdp1ram += SAT_ALIGN(alignedSize);
-emu_printf("TYPE_BGLVL %p\n", dst);
+		}
+//		else
+		{
+//		dst = vdp1ram;
+//		vdp1ram += SAT_ALIGN(alignedSize);
+		}
+vbt++;
+//emu_printf("TYPE_BGLVL %p nb calls %d\n", dst, vbt);
+emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 	}
 
 	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
@@ -67,12 +80,13 @@ emu_printf("TYPE_BGLVL %p\n", dst);
 		}
 		else
 		{
-			dst = cs1ram;
-			cs1ram += SAT_ALIGN(alignedSize);
+// //emu_printf("no more ram\n");
+//			dst = cs1ram;
+//			cs1ram += SAT_ALIGN(alignedSize);
 		}		
 	}
 
-//	emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
+//	//emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
 	
 	return dst;
 }
@@ -83,7 +97,7 @@ void sat_free(void *ptr) {
 	if(ptr == NULL || ptr == hwram)
 		return;
 
-//	emu_printf("FREE to NULL: addr: %p\n", ptr);
+//	//emu_printf("FREE to NULL: addr: %p\n", ptr);
 	ptr = NULL;
 
 	return;

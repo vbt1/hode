@@ -26,52 +26,52 @@ File::~File() {
 }
 
 void File::setFp(GFS_FILE *fp) {
-//emu_printf("setFp\n");
+////emu_printf("setFp\n");
 	_fp = fp;
-//emu_printf("setFp %p\n", _fp);
+////emu_printf("setFp %p\n", _fp);
 }
 
 void File::seekAlign(uint32_t pos) {
-//emu_printf("File::seekAlign %d\n", pos);
+////emu_printf("File::seekAlign %d\n", pos);
 	sat_fseek(_fp, pos, SEEK_SET);
 }
 
 void File::seek(int pos, int whence) {
-//emu_printf("File::seek %d %d\n");
+////emu_printf("File::seek %d %d\n");
 	if(_fp)
 	{
 		if (kSeekAbsolutePosition && whence == SEEK_CUR) {
-//	emu_printf("here\n");
+//	//emu_printf("here\n");
 //	while(1);
 			pos += sat_ftell(_fp);
 			whence = SEEK_SET;
 		}
-//	emu_printf("sat_fseek\n");
+//	//emu_printf("sat_fseek\n");
 		sat_fseek(_fp, pos, whence);
 	}
 }
 
 int File::read(uint8_t *ptr, int size) {
-//emu_printf("sat_fread %d\n", size);
+////emu_printf("sat_fread %d\n", size);
 	return sat_fread(ptr, 1, size, _fp);
 }
 
 uint8_t File::readByte() {
-//emu_printf("readByte\n");
+////emu_printf("readByte\n");
 	uint8_t buf;
 	read(&buf, 1);
 	return buf;
 }
 
 uint16_t File::readUint16() {
-//emu_printf("readUint16\n");
+////emu_printf("readUint16\n");
 	uint8_t buf[2];
 	read(buf, 2);
 	return READ_LE_UINT16(buf);
 }
 
 uint32_t File::readUint32() {
-//emu_printf("readUint32\n");
+////emu_printf("readUint32\n");
 	uint8_t buf[4];
 	read(buf, 4);
 	return READ_LE_UINT32(buf);
@@ -95,7 +95,7 @@ uint32_t fioUpdateCRC(uint32_t sum, const uint8_t *buf, uint32_t size) {
 }
 
 void SectorFile::refillBuffer(uint8_t *ptr) {
-//emu_printf("SectorFile::refillBuffer %p\n", ptr);
+////emu_printf("SectorFile::refillBuffer %p\n", ptr);
 	if (ptr) {
 		static const int kPayloadSize = kFioBufferSize - 4;
 		const int size = sat_fread(ptr, 1, kPayloadSize, _fp);
@@ -104,7 +104,7 @@ void SectorFile::refillBuffer(uint8_t *ptr) {
 		const int count = sat_fread(buf, 1, 4, _fp);
 		if(count != 4)
 		{
-//			emu_printf("mayday 1\n");
+//			//emu_printf("mayday 1\n");
 			return;
 		}
 		/*
@@ -114,13 +114,13 @@ void SectorFile::refillBuffer(uint8_t *ptr) {
 			assert(crc == READ_LE_UINT32(buf));
 		}*/
 	} else {
-//emu_printf("SectorFile no pointer %p buf %p\n", ptr, _buf);
+////emu_printf("SectorFile no pointer %p buf %p\n", ptr, _buf);
 		const int size = sat_fread(_buf, 1, kFioBufferSize, _fp);
 //		const int size = batchRead (_buf, kFioBufferSize);
 		
 		if(size != kFioBufferSize)
 		{
-//			emu_printf("mayday 2\n");
+//			//emu_printf("mayday 2\n");
 			return;
 		}		
 		
@@ -138,14 +138,14 @@ void SectorFile::seekAlign(uint32_t pos) {
 	const long alignPos = pos & ~2047;
 	if (alignPos != (sat_ftell(_fp) - 2048)) {
 		sat_fseek(_fp, alignPos, SEEK_SET);
-//emu_printf("refillBuffer seekalign\n");
+////emu_printf("refillBuffer seekalign\n");
 		refillBuffer();
 	}
 	_bufPos = pos - alignPos;
 }
 
 void SectorFile::seek(int pos, int whence) {
-//emu_printf("SectorFile::seek\n");
+////emu_printf("SectorFile::seek\n");
 	if (whence == SEEK_SET) {
 //		assert((pos & 2047) == 0);
 		if((pos & 2047) != 0)
@@ -166,7 +166,7 @@ void SectorFile::seek(int pos, int whence) {
 				const int alignPos = count * 2048;
 				sat_fseek(_fp, alignPos, SEEK_CUR);
 			}
-//emu_printf("refillBuffer du seek\n");
+////emu_printf("refillBuffer du seek\n");
 			refillBuffer();
 			_bufPos = pos % 2044;
 		}
@@ -174,7 +174,7 @@ void SectorFile::seek(int pos, int whence) {
 }
 
 int SectorFile::read(uint8_t *ptr, int size) {
-//emu_printf("SectorFile::read %p\n", ptr);
+////emu_printf("SectorFile::read %p\n", ptr);
 	const int bufLen = 2044 - _bufPos;
 	if (size >= bufLen) {
 		if (bufLen) {
@@ -185,19 +185,19 @@ int SectorFile::read(uint8_t *ptr, int size) {
 		const int count = (fioAlignSizeTo2048(size) / 2048) - 1;
 		
 		for (int i = 0; i < count; ++i) {
-//emu_printf("refillBuffer %p count %d\n", ptr, count);
+////emu_printf("refillBuffer %p count %d\n", ptr, count);
 			refillBuffer(ptr);
 			ptr += 2044;
 			size -= 2044;
 		}
-//emu_printf("refillBuffer read sz %d\n", size);
+////emu_printf("refillBuffer read sz %d\n", size);
 		refillBuffer();
 	}
 	if (size != 0) {
 //		assert(size <= 2044 - _bufPos);
 		if(size > 2044 - _bufPos)
 		{
-//			emu_printf("mayday 3\n");
+//			//emu_printf("mayday 3\n");
 			return -1;
 		}	
 
