@@ -969,20 +969,22 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	assert(num != kNoScreen);
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
-emu_printf("free unloadLvlData\n");
-//		_res->unloadLvlData();
+emu_printf("free unloadLvlData %d %d\n", num, prev);
+		LvlObjectData *dat = &_res->_resLevelData0x2988Table[prev];
+		_res->_resLvlSpriteDataPtrTable[prev] = 0;
 		_res->_resLvlScreenBackgroundDataPtrTable[prev] = 0;
 		_res->_resLevelData0x2B88SizeTable[prev] = 0;
+		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
 	}
 
 	if (!_res->isLvlBackgroundDataLoaded(num)) {
-//		//emu_printf("to be loaded\n");
+		emu_printf("to be loaded\n");
 		_res->loadLvlScreenBackgroundData(num);
 	}
-//	else
-//	{
-//			//emu_printf("already there\n");
-//	}
+	else
+	{
+		emu_printf("already there\n");
+	}
 #ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {
 		const SssPreloadInfo *preloadInfo = &_res->_sssPreloadInfosData[num];

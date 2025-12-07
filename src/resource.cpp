@@ -712,7 +712,7 @@ void Resource::loadLvlData(File *fp) {
 void Resource::unloadLvlData() {
 //emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
-//emu_printf("unloadLvlData reset cs1ram\n");
+emu_printf("unloadLvlData reset cs1ram\n");
 	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
 
@@ -724,10 +724,12 @@ void Resource::unloadLvlData() {
 	}
 	for (unsigned int i = 0; i < kMaxSpriteTypes; ++i) {
 		LvlObjectData *dat = &_resLevelData0x2988Table[i];
+#ifdef PS1
 		if (dat->unk0 == 1) {
 //			free(dat->framesOffsetsTable);
 			dat->framesOffsetsTable = 0;
 		}
+#endif
 //		free(_resLvlSpriteDataPtrTable[i]);
 		_resLvlSpriteDataPtrTable[i] = 0;
 	}
