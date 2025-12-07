@@ -977,13 +977,19 @@ emu_printf("free unloadLvlData %d %d\n", num, prev);
 		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
 	}
 
-	if (!_res->isLvlBackgroundDataLoaded(num)) {
-		emu_printf("to be loaded\n");
-		_res->loadLvlScreenBackgroundData(num);
-	}
-	else
+	if(_res->isLvlBackgroundDataLoaded(num))
 	{
-		emu_printf("already there\n");
+		LvlObjectData *dat = &_res->_resLevelData0x2988Table[num];
+		_res->_resLvlSpriteDataPtrTable[num] = 0;
+		_res->_resLvlScreenBackgroundDataPtrTable[num] = 0;
+		_res->_resLevelData0x2B88SizeTable[num] = 0;
+		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
+	}
+
+//	if (!_res->isLvlBackgroundDataLoaded(num)) 
+	{
+//		emu_printf("to be loaded\n");
+		_res->loadLvlScreenBackgroundData(num);
 	}
 #ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {
