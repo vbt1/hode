@@ -733,6 +733,7 @@ emu_printf("unloadLvlData\n");
 }
 
 static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat, bool isPsx) {
+emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
 	const uint8_t *start = src;
 
 	dat->backgroundCount = *src++;
@@ -764,7 +765,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		dat->backgroundMaskTable[i] = (offs != 0) ? ptr + offs : 0;
-//		emu_printf("dat->backgroundMaskTable[%d] %d\n", i, dat->backgroundMaskTable[i]);
+		emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
 		
 	}
 	for (int i = 0; i < 4; ++i) {
@@ -787,7 +788,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
 	}
-//	emu_printf("%d == 160\n", src- start);
+	emu_printf("%d == 160\n", src- start);
 	assert((src - start) == 160);
 	return offsetsSize;
 }
@@ -799,7 +800,7 @@ emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 //	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
-
+emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
 		_lvlFile->seekAlign(baseOffset + num * 16);
@@ -815,9 +816,11 @@ emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert(readSize <= size);
 //emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
+//	_resLvlScreenBackgroundDataPtrTable[num] = 0;
+//	_resLevelData0x2B88SizeTable[num] = 0;
 	uint8_t *ptr = allocate_memory (TYPE_BGLVL, size);
 	
-	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
+	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
 	_lvlFile->seekAlign(baseOffset + kMaxScreens * 16 + num * 160);
@@ -827,7 +830,7 @@ emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2B88(hdr, ptr, ptr + readSize, dat, _isPsx);
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	
-//emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
+emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
 //	assert(allocatedOffsetsSize == readOffsetsSize);
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;

@@ -123,7 +123,7 @@ void init_GFS() { //Initialize GFS system
 }
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
-//emu_printf("sat_fopen %s\n", path);	
+emu_printf("sat_fopen %s\n", path);	
 	memset(satpath, 0, 25);
 
 	if (path == NULL) 
@@ -303,12 +303,13 @@ partial_cache:
 	}
 
 	if(skip_bytes) {
-//emu_printf("skip bytes %d %d\n", tot_bytes,skip_bytes);
-		read_buffer = (Uint8*)0x26000000;
+emu_printf("skip bytes %d %d\n", tot_bytes,skip_bytes);
+//		read_buffer = (Uint8*)0x26000000;
+		read_buffer = (Uint8*)cache;
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);
 	} else {
-//emu_printf("no skip bytes %d %p\n", tot_bytes, ptr);
+emu_printf("no skip bytes %d %p\n", tot_bytes, ptr);
 		readBytes = GFS_Fread(stream->fid, tot_sectors, ptr, tot_bytes);
 	}
 	stream->f_seek_pos += (readBytes - skip_bytes); // Update the seek cursor 

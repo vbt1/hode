@@ -48,22 +48,27 @@ Video::Video() {
 	}
 	_transformShadowBuffer = 0;
 	_transformShadowLayerDelta = 0;
+#ifdef PSX
 	memset(&_mdec, 0, sizeof(_mdec));
 	_backgroundPsx = 0;
+#endif
 #endif
 }
 
 Video::~Video() {
+	emu_printf("free video\n");
 	free(_shadowLayer);
 	free(_frontLayer);
 	free(_backgroundLayer);
 	free(_shadowColorLookupTable);
 	free(_shadowScreenMaskBuffer);
+#ifdef PSX
 	free(_mdec.planes[kOutputPlaneY].ptr);
 	free(_mdec.planes[kOutputPlaneCb].ptr);
 	free(_mdec.planes[kOutputPlaneCr].ptr);
+#endif
 }
-
+#ifdef PSX
 void Video::initPsx() {
 	static const int w = (W + 15) & ~15;
 	static const int h = (H + 15) & ~15;
@@ -76,7 +81,7 @@ void Video::initPsx() {
 	_mdec.planes[kOutputPlaneCr].ptr = (uint8_t *)malloc(w2 * h2);
 	_mdec.planes[kOutputPlaneCr].pitch = w2;
 }
-
+#endif
 static int colorBrightness(int r, int g, int b) {
 	return (r + g * 2) * 19 + b * 7;
 }
@@ -90,17 +95,18 @@ void Video::updateGamePalette(const uint16_t *pal) {
 
 void Video::updateGameDisplay(uint8_t *buf) {
 	g_system->copyRect(0, 0, W, H, buf, 256);
+#ifdef PSX
 	if (_mdec.planes[kOutputPlaneY].ptr) {
 		updateYuvDisplay();
 	}
+#endif
 }
-
+#ifdef PSX
 void Video::updateYuvDisplay() {
 	g_system->copyYuv(Video::W, Video::H, _mdec.planes[0].ptr, _mdec.planes[0].pitch, _mdec.planes[1].ptr, _mdec.planes[1].pitch, _mdec.planes[2].ptr, _mdec.planes[2].pitch);
 }
 
 void Video::copyYuvBackBuffer() {
-#if 0
 	if (_backgroundPsx) {
 		_mdec.x = 0;
 		_mdec.y = 0;
@@ -108,13 +114,12 @@ void Video::copyYuvBackBuffer() {
 		_mdec.h = H;
 		decodeMDEC(_backgroundPsx, W * H * sizeof(uint16_t), 0, 0, W, H, &_mdec);
 	}
-#endif
 }
 
 void Video::clearYuvBackBuffer() {
 	_backgroundPsx = 0;
 }
-
+#endif
 void Video::updateScreen() {
 	g_system->updateScreen(true);
 }

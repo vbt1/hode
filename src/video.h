@@ -47,15 +47,15 @@ struct Video {
 		int x1, y1;
 		int x2, y2;
 	} _drawLine;
-
+#ifdef PSX
 	MdecOutput _mdec;
 	const uint8_t *_backgroundPsx;
-
+#endif
 	Video();
 	~Video();
-
+#ifdef PSX
 	void initPsx();
-
+#endif
 	void updateGamePalette(const uint16_t *pal);
 	void updateGameDisplay(uint8_t *buf);
 	void updateYuvDisplay();

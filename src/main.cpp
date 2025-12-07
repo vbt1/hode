@@ -385,7 +385,7 @@ emu_printf("lwram used %d cs1 used %d\n", 0x300000-((int)current_lwram), ((int)c
 	g_system->stopAudio();
 	g_system->destroy();
 	delete g;
-	free(dataPath);
-	free(savePath);
+//	free(dataPath);
+//	free(savePath);
 	return 0;
 }
