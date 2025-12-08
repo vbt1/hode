@@ -49,21 +49,21 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
 //		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
-		{
+//		{
 //		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
 		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 //		dst = vdp1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 //		memset(dst,0x00, SAT_ALIGN(alignedSize));
 // vbt à recommenter lorsque  pb au moment de mourir est résolu		
 //		current_lwram += SAT_ALIGN(alignedSize);
-//		cs1ram += SAT_ALIGN(alignedSize);
+		cs1ram += SAT_ALIGN(alignedSize);
 //		vdp1ram += SAT_ALIGN(alignedSize);
-		}
+//		}
 //		else
-		{
+//		{
 //		dst = vdp1ram;
 //		vdp1ram += SAT_ALIGN(alignedSize);
-		}
+//		}
 vbt++;
 //emu_printf("TYPE_BGLVL %p nb calls %d\n", dst, vbt);
 emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);

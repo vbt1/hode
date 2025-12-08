@@ -607,7 +607,7 @@ struct Resource {
 
 	LvlObject _resLvlScreenObjectDataTable[104];
 	LvlObject _dummyObject; // (LvlObject *)0xFFFFFFFF
-
+#ifdef SOUND
 	ResStruct<SssInfo> _sssInfosData;
 	ResStruct<SssDefaults> _sssDefaultsData;
 	ResStruct<SssBank> _sssBanksData;
@@ -621,7 +621,7 @@ struct Resource {
 	uint32_t *_sssGroup2[3];
 	uint32_t *_sssGroup3[3];
 	uint8_t *_sssCodeData;
-
+#endif
 	ResStruct<MstPointOffset> _mstPointOffsets;
 	ResStruct<MstWalkBox> _mstWalkBoxData;
 	ResStruct<MstWalkCode> _mstWalkCodeData;

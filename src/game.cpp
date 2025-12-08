@@ -967,26 +967,27 @@ endDir:
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	assert(num != kNoScreen);
+/*
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
 emu_printf("free unloadLvlData %d %d\n", num, prev);
-		LvlObjectData *dat = &_res->_resLevelData0x2988Table[prev];
-		_res->_resLvlSpriteDataPtrTable[prev] = 0;
-		_res->_resLvlScreenBackgroundDataPtrTable[prev] = 0;
+//		LvlObjectData *dat = &_res->_resLevelData0x2988Table[prev];
 		_res->_resLevelData0x2B88SizeTable[prev] = 0;
 		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
+		memset(_res->_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_res->_resLvlScreenBackgroundDataPtrTable));
+		_res->_resLvlScreenBackgroundDataPtrTable[prev] = 0;
 	}
 
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
-		LvlObjectData *dat = &_res->_resLevelData0x2988Table[num];
-		_res->_resLvlSpriteDataPtrTable[num] = 0;
-		_res->_resLvlScreenBackgroundDataPtrTable[num] = 0;
+//		LvlObjectData *dat = &_res->_resLevelData0x2988Table[num];
 		_res->_resLevelData0x2B88SizeTable[num] = 0;
 		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
+		memset(_res->_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_res->_resLvlScreenBackgroundDataPtrTable));
+		_res->_resLvlScreenBackgroundDataPtrTable[num] = 0;
 	}
-
-//	if (!_res->isLvlBackgroundDataLoaded(num)) 
+*/
+	if (!_res->isLvlBackgroundDataLoaded(num)) 
 	{
 //		emu_printf("to be loaded\n");
 		_res->loadLvlScreenBackgroundData(num);
@@ -1959,15 +1960,17 @@ void Game::drawScreen() {
 #endif
 	// redraw background animation sprites
 	LvlBackgroundData *dat = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
-	if (_res->_isPsx) {
 #ifdef PSX
+	if (_res->_isPsx) {
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			assert((spr->num & 0x1F) == 0);
 			assert(spr->w == 0xFFFF && spr->h == 0xFFFF);
 			_video->decodeBackgroundOverlayPsx(spr->bitmapBits);
 		}
+
+	} else 
 #endif
-	} else {
+		{
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1F) == 0) {
 				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, spr->xPos, spr->yPos, 0, spr->w, spr->h);
