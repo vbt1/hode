@@ -40,7 +40,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 
 	if(type == TYPE_LAYER 
 	|| type == TYPE_SHADWBUF || type == TYPE_SHADWLUT
-	|| type == TYPE_SCRMASKBUF || type == TYPE_SCRMASK) // jamais libéré 6762
+	|| type == TYPE_SCRMASKBUF) // jamais libéré 6762
 	{
 emu_printf("malloc %d type %d\n", alignedSize, type);
 		dst = (Uint8 *)malloc(alignedSize);
@@ -72,7 +72,7 @@ emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, 
 
 	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
 	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE 	|| type == TYPE_PAF
-	|| type == TYPE_PAFHEAD || type == TYPE_GFSFILE)
+	|| type == TYPE_PAFHEAD || type == TYPE_GFSFILE || type == TYPE_SCRMASK)
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{

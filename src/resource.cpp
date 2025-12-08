@@ -722,7 +722,7 @@ void Resource::loadLvlData(File *fp) {
 }
 
 void Resource::unloadLvlData() {
-//emu_printf("unloadLvlData\n");
+emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
 emu_printf("unloadLvlData reset cs1ram\n");
 	cs1ram = cs1ram_res;
