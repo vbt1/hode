@@ -809,12 +809,12 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	assert((src - start) == 160);
 	return offsetsSize;
 }
-//uint8_t *cs1ram_bg;
+uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert((unsigned int)num < kMaxScreens);
-//	cs1ram_bg = cs1ram;
+	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
 //emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
@@ -866,7 +866,7 @@ void Resource::unloadLvlScreenBackgroundData(int num) {
 //			free(dat->backgroundLvlObjectDataTable[i]);
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
-//		cs1ram = cs1ram_bg;
+		cs1ram = cs1ram_bg;
 		memset(dat, 0, sizeof(LvlBackgroundData));
 	}
 }

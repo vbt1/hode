@@ -38,16 +38,16 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 		dst = current_lwram;
 	}
 
-	if(type == TYPE_LAYER || type == TYPE_BGLVLOBJ 
+	if(type == TYPE_LAYER 
 	|| type == TYPE_SHADWBUF || type == TYPE_SHADWLUT
 	|| type == TYPE_SCRMASKBUF || type == TYPE_SCRMASK) // jamais libéré 6762
 	{
-////emu_printf("malloc %d type %d\n", alignedSize, type);
+emu_printf("malloc %d type %d\n", alignedSize, type);
 		dst = (Uint8 *)malloc(alignedSize);
 		hwram = dst+alignedSize;
 	}
 	
-	if(type == TYPE_BGLVL) // toujours moins de 500ko?
+	if(type == TYPE_BGLVL || type == TYPE_BGLVLOBJ) // toujours moins de 500ko?
 	{
 //		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 //		{
@@ -57,7 +57,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 //		memset(dst,0x00, SAT_ALIGN(alignedSize));
 // vbt à recommenter lorsque  pb au moment de mourir est résolu		
 //		current_lwram += SAT_ALIGN(alignedSize);
-//		cs1ram += SAT_ALIGN(alignedSize);
+		cs1ram += SAT_ALIGN(alignedSize);
 //		vdp1ram += SAT_ALIGN(alignedSize);
 //		}
 //		else
@@ -81,10 +81,10 @@ emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, 
 		}
 		else
 		{
-emu_printf("no more ram\n");
+emu_printf("no more ram %d\n", alignedSize);
 			dst = cs2ram;
 			cs2ram += SAT_ALIGN(alignedSize);
-		}		
+		}
 	}
 
 //	//emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
