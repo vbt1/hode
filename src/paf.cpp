@@ -18,6 +18,7 @@ void	*malloc(size_t);
 void *calloc(size_t nmemb, size_t size);
 extern unsigned char frame_x;
 extern unsigned char frame_z;
+extern Uint8 *cs2ram;
 }
 /*
 static const char *_filenames[] = {
@@ -88,7 +89,7 @@ uint8_t *lwram_cut;
 
 void PafPlayer::preload(int num) {
 //emu_printf("preload %d\n", num);
-	cs1ram_cut = cs1ram;
+	cs1ram_cut = cs2ram;
 	lwram_cut = current_lwram;
 	
 	assert(num >= 0 && num < kMaxVideosCount);
@@ -153,7 +154,7 @@ void PafPlayer::play(int num) {
 
 void PafPlayer::unload(int num) {
 //emu_printf("unload reset cs1ram\n");
-	cs1ram = cs1ram_cut;
+	cs2ram = cs1ram_cut;
 	current_lwram = lwram_cut;	
 	if (_videoNum < 0) {
 		return;

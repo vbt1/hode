@@ -84,7 +84,7 @@ static int readBytesAlign(File *f, uint8_t *buf, int len) {
 }
 
 Resource::Resource(FileSystem *fs)
-	: _fs(fs), _isPsx(false), _isDemo(false), _version(V1_1) {
+	: _fs(fs), _isPsx(false), /*_isDemo(false),*/ _version(V1_1) {
 
 	memset(_screensGrid, 0, sizeof(_screensGrid));
 	memset(_screensBasePos, 0, sizeof(_screensBasePos));
@@ -94,9 +94,9 @@ Resource::Resource(FileSystem *fs)
 	_resLevelData0x470CTable = 0;
 	_resLevelData0x470CTablePtrHdr = 0;
 	_resLevelData0x470CTablePtrData = 0;
-
+#ifdef SOUND
 	_lvlSssOffset = 0;
-
+#endif
 	// sprites
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
@@ -116,7 +116,9 @@ Resource::Resource(FileSystem *fs)
 		_datFile = new SectorFile;
 		_lvlFile = new SectorFile;
 		_mstFile = new SectorFile;
+#ifdef SOUND
 		_sssFile = new SectorFile;
+#endif
 		// from v1.2, game data files are 'sector aligned'
 		_version = V1_2;
 	} else {
@@ -124,7 +126,9 @@ Resource::Resource(FileSystem *fs)
 		_datFile = new File;
 		_lvlFile = new File;
 		_mstFile = new File;
+#ifdef SOUND
 		_sssFile = new File;
+#endif
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[32];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
@@ -152,14 +156,17 @@ Resource::Resource(FileSystem *fs)
 		closeDat(_fs, _lvlFile);
 	} else {
 ////emu_printf("DEMO\n");
+#ifdef DEMO
 		_isDemo = true;
+#endif
 	}
 	//emu_printf("psx %d demo %d version %d\n", _isPsx, _isDemo, _version);
 	memset(&_datHdr, 0, sizeof(_datHdr));
 	memset(&_lvlHdr, 0, sizeof(_lvlHdr));
 	memset(&_mstHdr, 0, sizeof(_mstHdr));
+#ifdef SOUND
 	memset(&_sssHdr, 0, sizeof(_sssHdr));
-
+#endif
 	_lvlSpritesOffset = 0x288 + 96 * (_version == V1_0 ? 96 : 104);
 	_lvlBackgroundsOffset = _lvlSpritesOffset + 32 * 16;
 	_lvlMasksOffset = _lvlBackgroundsOffset + kMaxScreens * (16 + 160);
@@ -178,7 +185,9 @@ Resource::~Resource() {
 	delete _datFile;
 	delete _lvlFile;
 	delete _mstFile;
+#ifdef SOUND
 	delete _sssFile;
+#endif
 }
 
 bool Resource::sectorAlignedGameData() {
@@ -586,7 +595,7 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = allocate_memory (TYPE_SPRITE, size);
 
-	_lvlFile->seek(_isPsx ? _lvlSssOffset + offset : offset, SEEK_SET);
+	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
 	LvlObjectData *dat = &_resLevelData0x2988Table[num];
@@ -623,7 +632,9 @@ void Resource::loadLvlScreenMaskData() {
 	_resLevelData0x470CTablePtrHdr = _resLevelData0x470CTable;
 	_resLevelData0x470CTablePtrData = _resLevelData0x470CTable + (kMaxScreens * 4) * (2 * sizeof(uint32_t));
 	// .sss is embedded in .lvl on PSX
+#ifdef SOUND
 	_lvlSssOffset = offset + fioAlignSizeTo2048(size);
+#endif
 }
 
 static const uint32_t _lvlTag = 0x484F4400; // 'HOD\x00'
@@ -697,7 +708,7 @@ void Resource::loadLvlData(File *fp) {
 	}
 
 	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
-
+#if 0
 	if (kPreloadLvlBackgroundData) {
 		_lvlFile->seekAlign(_lvlBackgroundsOffset);
 		uint8_t buf[kMaxScreens * 16];
@@ -707,6 +718,7 @@ void Resource::loadLvlData(File *fp) {
 			loadLvlScreenBackgroundData(i, buf + i * 16);
 		}
 	}
+#endif
 }
 
 void Resource::unloadLvlData() {
@@ -717,11 +729,13 @@ emu_printf("unloadLvlData reset cs1ram\n");
 	current_lwram = lwram_res;
 
 	_resLevelData0x470CTable = 0;
+#if 0
 	if (kPreloadLvlBackgroundData) {
 		for (unsigned int i = 0; i < kMaxScreens; ++i) {
 			unloadLvlScreenBackgroundData(i);
 		}
 	}
+#endif
 	for (unsigned int i = 0; i < kMaxSpriteTypes; ++i) {
 		LvlObjectData *dat = &_resLevelData0x2988Table[i];
 #ifdef PS1

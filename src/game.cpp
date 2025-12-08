@@ -967,27 +967,32 @@ endDir:
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	assert(num != kNoScreen);
-/*
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
-emu_printf("free unloadLvlData %d %d\n", num, prev);
+//emu_printf("free unloadLvlData %d %d\n", num, prev);
 //		LvlObjectData *dat = &_res->_resLevelData0x2988Table[prev];
+		_res->unloadLvlScreenBackgroundData(prev);
+/*
 		_res->_resLevelData0x2B88SizeTable[prev] = 0;
 		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
 		memset(_res->_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_res->_resLvlScreenBackgroundDataPtrTable));
 		_res->_resLvlScreenBackgroundDataPtrTable[prev] = 0;
+*/
 	}
 
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
+		_res->unloadLvlScreenBackgroundData(num);
 //		LvlObjectData *dat = &_res->_resLevelData0x2988Table[num];
+/*
 		_res->_resLevelData0x2B88SizeTable[num] = 0;
 		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
 		memset(_res->_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_res->_resLvlScreenBackgroundDataPtrTable));
 		_res->_resLvlScreenBackgroundDataPtrTable[num] = 0;
-	}
 */
-	if (!_res->isLvlBackgroundDataLoaded(num)) 
+	}
+
+//	if (!_res->isLvlBackgroundDataLoaded(num)) 
 	{
 //		emu_printf("to be loaded\n");
 		_res->loadLvlScreenBackgroundData(num);
@@ -1366,11 +1371,12 @@ void Game::restartLevel() {
 	} else {
 		_mstFlags = 0;
 	}
-	if (_res->_sssHdr.infosDataCount != 0) {
 #ifdef SOUND
+	if (_res->_sssHdr.infosDataCount != 0) {
+
 		resetSound();
-#endif
 	}
+#endif
 	const int screenNum = _level->getCheckpointData(_level->_checkpoint)->screenNum;
 //emu_printf("preloadLevelScreenData1\n");
 	preloadLevelScreenData(screenNum, kNoScreen);

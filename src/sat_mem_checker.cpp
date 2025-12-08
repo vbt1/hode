@@ -15,6 +15,7 @@ extern Uint8 *current_lwram;
 extern Uint8 *cs1ram;
 Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B1;
 Uint8 *vdp1ram = (Uint8 *)SpriteVRAM+0x20;
+Uint8 *cs2ram = (uint8_t *)0x22600000;
 }
 Uint8 *hwram;
 int vbt=0;
@@ -56,7 +57,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 //		memset(dst,0x00, SAT_ALIGN(alignedSize));
 // vbt à recommenter lorsque  pb au moment de mourir est résolu		
 //		current_lwram += SAT_ALIGN(alignedSize);
-		cs1ram += SAT_ALIGN(alignedSize);
+//		cs1ram += SAT_ALIGN(alignedSize);
 //		vdp1ram += SAT_ALIGN(alignedSize);
 //		}
 //		else
@@ -80,9 +81,9 @@ emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, 
 		}
 		else
 		{
-// //emu_printf("no more ram\n");
-//			dst = cs1ram;
-//			cs1ram += SAT_ALIGN(alignedSize);
+emu_printf("no more ram\n");
+			dst = cs2ram;
+			cs2ram += SAT_ALIGN(alignedSize);
 		}		
 	}
 

@@ -568,11 +568,14 @@ struct Resource {
 	File *_lvlFile;
 	MstHdr _mstHdr;
 	File *_mstFile;
+#ifdef SOUND
 	SssHdr _sssHdr;
 	File *_sssFile;
-
+#endif
 	bool _isPsx;
+#ifdef DEMO
 	bool _isDemo;
+#endif
 	int _version;
 
 	uint8_t *_loadingImageBuffer;
@@ -596,7 +599,9 @@ struct Resource {
 	uint32_t _lvlSpritesOffset;
 	uint32_t _lvlBackgroundsOffset;
 	uint32_t _lvlMasksOffset;
+#ifdef SOUND
 	uint32_t _lvlSssOffset; // .sss offset (PSX)
+#endif
 	uint32_t _resLevelData0x2988SizeTable[kMaxSpriteTypes]; // sprites
 	LvlObjectData _resLevelData0x2988Table[kMaxSpriteTypes];
 	LvlObjectData *_resLevelData0x2988PtrTable[kMaxSpriteTypes];

@@ -369,10 +369,11 @@ int ss_main() {
 			if (resume) {
 				g->saveSetupCfg();
 			}
-#endif
+
 			if (g->_res->_isDemo) {
 				break;
 			}
+#endif
 			level = g->_currentLevel + 1;
 			checkpoint = 0;
 			levelChanged = true;
