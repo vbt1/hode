@@ -22,7 +22,7 @@ int vbt=0;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-//	//emu_printf("allocate_memory type %d size %d - ", type, alignedSize);
+	emu_printf("allocate_memory type %d size %d - ", type, alignedSize);
     uint8_t* dst;
 	
 	if( type == TYPE_LDIMG || type == TYPE_FONT)

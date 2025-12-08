@@ -829,7 +829,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 	assert(readSize <= size);
-////emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
+//emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = allocate_memory (TYPE_BGLVL, size);
 	
@@ -837,7 +837,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
 	_lvlFile->seekAlign(baseOffset + kMaxScreens * 16 + num * 160);
-////emu_printf("g %d\n", baseOffset + kMaxScreens * 16 + num * 160);
+//emu_printf("g %d\n", baseOffset + kMaxScreens * 16 + num * 160);
 	_lvlFile->read(hdr, 160);
 	LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2B88(hdr, ptr, ptr + readSize, dat, _isPsx);
@@ -846,14 +846,16 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
 //	assert(allocatedOffsetsSize == readOffsetsSize);
 	if(allocatedOffsetsSize != readOffsetsSize)
+	{
 		return;
+	}
 
 	_resLvlScreenBackgroundDataPtrTable[num] = ptr;
 	_resLevelData0x2B88SizeTable[num] = size;
 }
 
 void Resource::unloadLvlScreenBackgroundData(int num) {
-//emu_printf("unloadLvlScreenBackgroundData %d\n");
+emu_printf("unloadLvlScreenBackgroundData %d\n");
 	if (_resLevelData0x2B88SizeTable[num] != 0) {
 //		free(_resLvlScreenBackgroundDataPtrTable[num]);
 		_resLvlScreenBackgroundDataPtrTable[num] = 0;
