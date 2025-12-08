@@ -93,9 +93,12 @@ static uint32_t readBitmapsGroup(int count, DatBitmapsGroup *bitmapsGroup, uint3
 	const uint32_t baseOffset = ptrOffset;
 	for (int i = 0; i < count; ++i) {
 		int size;
+#ifdef PSX		
 		if (paletteSize == 0) { // PSX
 			size = le32toh(bitmapsGroup[i].offset);
-		} else {
+		} else 
+#endif
+		{
 			size = bitmapsGroup[i].w * bitmapsGroup[i].h;
 		}
 		bitmapsGroup[i].offset = ptrOffset - baseOffset;
@@ -452,14 +455,15 @@ void Menu::drawSpriteAnim(DatSpritesGroup *spriteGroup, const uint8_t *ptr, uint
 		spriteGroup[num].currentFrameOffset = spriteGroup[num].firstFrameOffset;
 	}
 	ptr += spriteGroup[num].currentFrameOffset;
-	if (_res->_isPsx) {
 #ifdef PSX
+	if (_res->_isPsx) {
 		const int count = READ_LE_UINT32(ptr + 4);
 		if (count != 0 && (count & 0x100) == 0) {
 			_video->decodeBackgroundOverlayPsx(ptr);
 		}
+	} else
 #endif
-	} else {
+	{
 		_video->decodeSPR(ptr + 8, _video->_frontLayer, ptr[0], ptr[1], 0, READ_LE_UINT16(ptr + 4), READ_LE_UINT16(ptr + 6));
 	}
 	++spriteGroup[num].num;
@@ -748,9 +752,8 @@ void Menu::drawPlayerProgress(int state, int cursor) {
 }
 
 void Menu::handleAssignPlayer() {
-
-	if (_res->_isPsx) {
 #ifdef PSX
+	if (_res->_isPsx) {
 		memset(_paletteBuffer, 0, 256 * 3);
 		static const int16_t indexes[] = { 0, 3, 6, 18, 36, 53, 67, 81, 99, 111, 125, 139, 156, 169, 181, 186, 191, -1 };
 		static const uint8_t colors[] = {
@@ -763,8 +766,9 @@ void Menu::handleAssignPlayer() {
 			memcpy(&_paletteBuffer[indexes[i] * 3], &colors[offset], 3);
 			offset += 3;
 		}
+	} else 
 #endif
-	} else {
+	{
 		memcpy(_paletteBuffer, _playerBitmapData + _playerBitmapSize, 256 * 3);
 	}
 	int state = 1;

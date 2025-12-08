@@ -536,9 +536,8 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 	} else {
 		dat->coordsOffsetsTable = 0;
 	}
-
+#ifdef PSX
 	if (dat->unk0 == 1) { // fixed size offset table
-#if 0
 		assert(isPsx);
 	//emu_printf("here\n");
 	while(1);
@@ -553,10 +552,9 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 			framesOffset += size;
 		}
 		dat->coordsOffsetsTable = ptr;
-#endif
 		return 0;
 	}
-
+#endif
 	uint32_t framesOffset = 0;
 	for (int i = 0; i < dat->framesCount; ++i) {
 		const int size = READ_LE_UINT16(dat->framesData + framesOffset);

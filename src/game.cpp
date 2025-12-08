@@ -2356,11 +2356,14 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 		}
 		Sprite *spr = _spritesNextPtr;
 		if (spr && READ_LE_UINT16(data + 2) > 8) {
+#ifdef PSX			
 			if (isPsx) {
 				assert((ptr->flags2 & 0x1F) == 0);
 				spr->bitmapBits = data;
 				spr->w = spr->h = 0xFFFF;
-			} else {
+			} else 
+#endif
+			{
 				spr->xPos = data[0];
 				spr->yPos = data[1];
 				spr->w = READ_LE_UINT16(data + 4);
@@ -2421,11 +2424,14 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 		if (_res->_currentScreenResourceNum == ptr->screenNum) {
 			Sprite *spr = _spritesNextPtr;
 			if (spr && READ_LE_UINT16(data + 2) > 8) {
+#ifdef PSX
 				if (isPsx) {
 					assert((ptr->flags2 & 0x1F) == 0);
 					spr->bitmapBits = data;
 					spr->w = spr->h = 0xFFFF;
-				} else {
+				} else 
+#endif
+				{
 					spr->w = READ_LE_UINT16(data + 4);
 					spr->h = READ_LE_UINT16(data + 6);
 					spr->bitmapBits = data + 8;
@@ -2994,8 +3000,8 @@ void Game::callLevel_terminate() {
 
 void Game::displayLoadingScreen() {
 ////emu_printf("displayLoadingScreen\n");
-	if (_res->_isPsx) {
 #ifdef PSX
+	if (_res->_isPsx) {
 		static const int kHintPsxLoading = 39;
 		if (_res->loadDatHintImage(kHintPsxLoading, _video->_frontLayer, 0)) {
 			_video->decodeBackgroundPsx(_video->_frontLayer, _res->_datHdr.hintsImageSizeTable[kHintPsxLoading], Video::W, Video::H);
@@ -3003,8 +3009,9 @@ void Game::displayLoadingScreen() {
 			_video->updateYuvDisplay();
 			g_system->updateScreen(false);
 		}
+	} else 
 #endif
-	} else {
+	{
 //			slScrAutoDisp(NBG0ON|NBG1ON); 
 			slScrAutoDisp(NBG1ON); 
 		if (_res->loadDatLoadingImage(_video->_frontLayer, _video->_palette)) {
@@ -3029,22 +3036,27 @@ int Game::displayHintScreen(int num, int pause) {
 	muteSound();
 #endif
 	if (num == -1) {
+#ifdef PSX
 		if (isPsx) {
 			num = 35; // 'Pause' on PSX
-		} else {
+		} else 
+#endif
+		{
 			num = _res->_datHdr.yesNoQuitImage; // 'Yes'
 			_res->loadDatHintImage(num + 1, _video->_shadowLayer, _video->_palette); // 'No'
 			confirmQuit = true;
 		}
 	}
 	if (_res->loadDatHintImage(num, _video->_frontLayer, _video->_palette)) {
-		if (isPsx) {
 #ifdef PSX
+		if (isPsx) {
 			_video->decodeBackgroundPsx(_video->_frontLayer, _res->_datHdr.hintsImageSizeTable[num], Video::W, Video::H);
 			g_system->fillRect(0, 0, Video::W, Video::H, 0);
 			_video->updateYuvDisplay();
+
+		} else 
 #endif
-		} else {
+		{
 			g_system->setPalette(_video->_palette, 256, 6);
 			g_system->copyRect(0, 0, Video::W, Video::H, _video->_frontLayer, 256);
 		}
