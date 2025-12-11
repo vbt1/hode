@@ -1893,7 +1893,7 @@ int Game::updateAndyLvlObject() {
 	return 1;
 }
 
-void Game::drawPlasmaCannon() {
+void Game::drawPlasmaCannon(uint8_t* dst) {
 	int index = _plasmaCannonFirstIndex;
 	int lastIndex = _plasmaCannonLastIndex1;
 	if (lastIndex == 0) {
@@ -1906,13 +1906,13 @@ void Game::drawPlasmaCannon() {
 		int x2 = _plasmaCannonXPointsTable1[index];
 		int y2 = _plasmaCannonYPointsTable1[index];
 		if (_plasmaCannonDirection == 1) {
-			_video->drawLine(x1 - 1, y1, x2 - 1, y2, 0xA9);
-			_video->drawLine(x1 + 1, y1, x2 + 1, y2, 0xA9);
+			_video->drawLine(dst, x1 - 1, y1, x2 - 1, y2, 0xA9);
+			_video->drawLine(dst, x1 + 1, y1, x2 + 1, y2, 0xA9);
 		} else {
-			_video->drawLine(x1, y1 - 1, x2, y2 - 1, 0xA9);
-			_video->drawLine(x1, y1 + 1, x2, y2 + 1, 0xA9);
+			_video->drawLine(dst, x1, y1 - 1, x2, y2 - 1, 0xA9);
+			_video->drawLine(dst, x1, y1 + 1, x2, y2 + 1, 0xA9);
 		}
-		_video->drawLine(x1, y1, x2, y2, 0xA6);
+		_video->drawLine(dst, x1, y1, x2, y2, 0xA6);
 		x1 = x2;
 		y1 = y2;
 		index += 4;
@@ -2043,7 +2043,8 @@ void Game::drawScreen() {
 #endif
 	if (_andyObject->spriteNum == 0 && (_andyObject->flags2 & 0x1F) == 4) {
 		if (_plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
-			drawPlasmaCannon();
+			drawPlasmaCannon(_video->_frontLayer);
+//			drawPlasmaCannon((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)));
 		}
 	}
 
@@ -2124,7 +2125,8 @@ void Game::drawScreen() {
 #endif
 	if (_andyObject->spriteNum == 0 && (_andyObject->flags2 & 0x1F) == 0xC) {
 		if (_plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
-			drawPlasmaCannon();
+			drawPlasmaCannon(_video->_frontLayer);
+//			drawPlasmaCannon((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)));
 		}
 	}
 #ifdef DEBUG2

@@ -457,7 +457,7 @@ bool Video::clipLineCoords(int &x1, int &y1, int &x2, int &y2) {
 	return false;
 }
 
-void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
+void Video::drawLine(uint8_t* dstLayer, int x1, int y1, int x2, int y2, uint8_t color) {
 	if (clipLineCoords(x1, y1, x2, y2)) {
 		return;
 	}
@@ -473,7 +473,7 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 			y1 += dy;
 			dy = -dy;
 		}
-		uint8_t *dst = _frontLayer + y1 * W + x1;
+		uint8_t *dst = dstLayer + y1 * W + x1;
 		for (int i = 0; i <= dy; ++i) {
 			*dst = color;
 			dst += dstPitch;
@@ -485,7 +485,7 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 		dx = -dx;
 		SWAP(y1, y2);
 	}
-	uint8_t *dst = _frontLayer + y1 * W + x1;
+	uint8_t *dst = dstLayer + y1 * W + x1;
 	int dy = y2 - y1;
 	if (dy == 0) {
 		memset(dst, color, dx);
