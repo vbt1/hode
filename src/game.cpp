@@ -17,6 +17,7 @@ unsigned char frame_x = 0;
 unsigned char frame_y = 0;
 unsigned char frame_z = 0;
 #endif
+extern Uint32 position_vram;
 };
 #include "game.h"
 #include "fileio.h"
@@ -1942,8 +1943,9 @@ void Game::drawScreen() {
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","memcpyl", result);
+		emu_printf("--duration %s : %d\n","memcpyl", result);
 #endif
+
 #ifdef PSX
 	_video->copyYuvBackBuffer();
 #endif
@@ -1951,8 +1953,13 @@ void Game::drawScreen() {
 	unsigned int e2 = g_system->getTimeStamp();
 	result = e2-e1;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","copyYuvBackBuffer", result);
+		emu_printf("--duration %s : %d\n","copyYuvBackBuffer", result);
 #endif
+	const uint32_t w = 256;
+	const uint32_t h = 192;
+	const uint32_t size = w*h;
+
+
 	// redraw background animation sprites
 	LvlBackgroundData *dat = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 #ifdef PSX
@@ -1965,19 +1972,44 @@ void Game::drawScreen() {
 
 	} else 
 #endif
+
+
+	TEXTURE tx = TEXDEF(w, h, position_vram);
+	uint8_t *src = (uint8_t *)_video->_frontLayer;
+	position_vram += size;
+
+	if (position_vram>=0x74000)
+		position_vram = 0;
+
+    SPRITE user_sprite;
+    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
+    user_sprite.COLR = 0;
+    user_sprite.SIZE = (w/8)<<8|h;;
+    user_sprite.CTRL = 0;
+    user_sprite.XA = -258;
+    user_sprite.YA = -127;
+    user_sprite.GRDA = 0;
+    user_sprite.SRCA = tx.CGadr;
+
 		{
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1F) == 0) {
 //emu_printf("decodeSPR\n");
+//				_video->decodeSPR(spr->bitmapBits, (uint8_t*)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, 0, spr->w, spr->h);
 				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, spr->xPos, spr->yPos, 0, spr->w, spr->h);
 			}
 		}
 	}
+
+	memcpy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)src, size);
+    slSetSprite(&user_sprite, toFIXED2(240));	
+	tx = TEXDEF(w, h, position_vram);
+	
 #ifdef DEBUG2
 	unsigned int e3 = g_system->getTimeStamp();
 	result = e3-e2;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","decodeSPR1", result);
+		emu_printf("--duration %s : %d\n","decodeSPR1", result);
 #endif
 	memset(_video->_shadowLayer, 0, Video::W * Video::H + 1);
 	for (int i = 1; i < 8; ++i) {
@@ -1991,8 +2023,10 @@ void Game::drawScreen() {
 	unsigned int e4 = g_system->getTimeStamp();
 	result = e4-e3;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","decodeSPR2", result);
+		emu_printf("--duration %s : %d\n","decodeSPR2", result);
 #endif
+
+
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
@@ -2000,48 +2034,56 @@ void Game::drawScreen() {
 			}
 		}
 	}
+	
 #ifdef DEBUG2
 	unsigned int e5 = g_system->getTimeStamp();
 	result = e5-e4;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","decodeSPR3", result);
+		emu_printf("--duration %s : %d\n","decodeSPR3", result);
 #endif
 	if (_andyObject->spriteNum == 0 && (_andyObject->flags2 & 0x1F) == 4) {
 		if (_plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
 			drawPlasmaCannon();
 		}
 	}
+
 #ifdef DEBUG2
 	unsigned int e6 = g_system->getTimeStamp();
 	result = e6-e5;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","drawPlasmaCannon", result);
+		emu_printf("--duration %s : %d\n","drawPlasmaCannon", result);
 #endif
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+//				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 			}
 		}
 	}
+	
 #ifdef DEBUG2
 	unsigned int e7 = g_system->getTimeStamp();
 	result = e7-e6;
 	if(result>0)
 		//emu_printf("--duration %s : %d\n","decodeSPR4", result);
 #endif
+
+// bloc gestion des ombres
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+//				_video->decodeSPR(spr->bitmapBits, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 			}
 		}
 	}
+
 #ifdef DEBUG2
 	unsigned int e8 = g_system->getTimeStamp();
 	result = e8-e7;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","decodeSPR5", result);
+		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
 	for (int i = 0; i < dat->shadowCount; ++i) {
 ////emu_printf("applyShadowColors %d\n",i);
@@ -2056,24 +2098,29 @@ void Game::drawScreen() {
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
+
+
 #ifdef DEBUG2
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","applyShadowColors", result);
+		emu_printf("--duration %s : %d\n","applyShadowColors", result);
 #endif
+
 	for (int i = 1; i < 12; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+//				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 			}
 		}
 	}
+	
 #ifdef DEBUG2
 	unsigned int e10 = g_system->getTimeStamp();
 	result = e10-e9;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","decodeSPR6", result);
+		emu_printf("--duration %s : %d\n","decodeSPR6", result);
 #endif
 	if (_andyObject->spriteNum == 0 && (_andyObject->flags2 & 0x1F) == 0xC) {
 		if (_plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
@@ -2084,21 +2131,48 @@ void Game::drawScreen() {
 	unsigned int e11 = g_system->getTimeStamp();
 	result = e11-e10;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","drawPlasmaCannon2", result);
+		emu_printf("--duration %s : %d\n","drawPlasmaCannon2", result);
 #endif
+
+
+
+	src = _video->_shadowLayer;
+
+	memcpy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)src, size);
+
+
+#if 1 // les vrais sprites
 	for (int i = 12; i <= 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+//				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 			}
 		}
 	}
+#endif
+
+
+
+	position_vram += size;
+
+    user_sprite.XA = -255;
+    user_sprite.YA = -127;
+
+    user_sprite.SRCA = tx.CGadr;
+    slSetSprite(&user_sprite, toFIXED2(240));
+	if (position_vram>=0x74000)
+		position_vram = 0;
+
+slSynch();	
+
 #ifdef DEBUG2
 	unsigned int e12 = g_system->getTimeStamp();
 	result = e12-e11;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","decodeSPR7", result);
+		emu_printf("--duration %s : %d\n","decodeSPR7", result);
 #endif
+
 }
 
 static void gamePafCallback(void *userdata) {
@@ -2898,7 +2972,7 @@ void Game::levelMainLoop() {
 	unsigned int e7 = g_system->getTimeStamp();
 	//emu_printf("--duration %s : %d\n","updateGamePalette", e7-e6);
 #endif
-		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+//		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG2
 	unsigned int e8 = g_system->getTimeStamp();
 	//emu_printf("--duration %s : %d\n","copyRectWidescreen", e8-e7);

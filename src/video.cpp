@@ -532,8 +532,8 @@ static uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 }
 
 void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
-	assert(dst1 == _shadowLayer);
-	assert(dst2 == _frontLayer);
+//	assert(dst1 == _shadowLayer);
+//	assert(dst2 == _frontLayer);
 	// src1 == projectionData
 	// src2 == shadowPalette
 
