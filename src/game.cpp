@@ -2837,13 +2837,17 @@ void Game::levelMainLoop() {
 		preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","preloadLevel", e1-s1);
+	int result = e1-s1;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","preloadLevel", result);
 #endif
 //emu_printf("setupScreen2\n");
 		setupScreen(_andyObject->screenNum);
 #ifdef DEBUG
 	unsigned int e2 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","setupScreen", e2-e1);
+	result = e2-e1;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","setupScreen", result);
 #endif
 	} else if (_fadePalette && _levelRestartCounter == 0) {
 		restartLevel();
@@ -2871,13 +2875,17 @@ void Game::levelMainLoop() {
 	executeMstCode();
 #ifdef DEBUG
 	unsigned int e3 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","executeMst", e3-e2b);
+	int result = e3-e2b;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","executeMst", result);
 #endif
 //emu_printf("updateLvlObjectLists\n");
 	updateLvlObjectLists();
 #ifdef DEBUG
 	unsigned int e4 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","updateLvlObject", e4-e3);
+	result = e4-e3;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","updateLvlObject", result);
 #endif
 //emu_printf("callLevel_tick\n");
 	callLevel_tick();
@@ -2885,7 +2893,9 @@ void Game::levelMainLoop() {
 	updateAndyMonsterObjects();
 #ifdef DEBUG
 	unsigned int e5 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","updateAndyMonster", e5-e4);
+	result = e5-e4;
+	if(result>0)	
+		emu_printf("--duration %s : %d\n","updateAndyMonster", result);
 #endif
 	if (!_hideAndyObjectFlag) {
 		addToSpriteList(_andyObject);
@@ -2896,7 +2906,9 @@ void Game::levelMainLoop() {
 	updateAnimatedLvlObjectsLeftRightCurrentScreens();
 #ifdef DEBUG
 	unsigned int e6 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","updateAnimatedLvl", e6-e5);
+	result = e6-e5;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","updateAnimatedLvl", result);
 #endif
 	if (_currentLevel == kLvl_rock || _currentLevel == kLvl_lar2 || _currentLevel == kLvl_test) {
 		if (_andyObject->spriteNum == 0 && _plasmaExplosionObject && _plasmaExplosionObject->nextPtr != 0) {
@@ -2911,12 +2923,16 @@ void Game::levelMainLoop() {
 //emu_printf("copyRectWidescreen\n");
 #ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","updateGamePalette", e7-e6);
+	result = e7-e6;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","updateGamePalette", result);
 #endif
 		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG
 	unsigned int e8 = g_system->getTimeStamp();
-	emu_printf("--duration %s : %d\n","copyRectWidescreen", e8-e7);
+	result = e8-e7;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","copyRectWidescreen", result);
 #endif
 	}
 #ifdef DEBUG
@@ -2925,7 +2941,9 @@ void Game::levelMainLoop() {
 	drawScreen();
 #ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
-	emu_printf("------duration %s : %d\n","drawScreen", e7-e6c);
+	result = e7-e6c;
+	if(result>0)
+		emu_printf("------duration %s : %d\n","drawScreen", result);
 #endif
 #if 0
 	if (g_system->inp.screenshot) {
