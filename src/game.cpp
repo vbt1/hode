@@ -1950,7 +1950,7 @@ int nbspr=0;
 
 	memcpyl(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
 //	memset4_fast(_video->_frontLayer, 0x00, Video::W * Video::H);
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
 	if(result>0)
@@ -1959,7 +1959,7 @@ int nbspr=0;
 #ifdef PSX
 	_video->copyYuvBackBuffer();
 #endif
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e2 = g_system->getTimeStamp();
 	result = e2-e1;
 	if(result>0)
@@ -1985,7 +1985,7 @@ int nbspr=0;
 			}
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e3 = g_system->getTimeStamp();
 	result = e3-e2;
 	if(result>0)
@@ -2000,7 +2000,7 @@ int nbspr=0;
 			}
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e4 = g_system->getTimeStamp();
 	result = e4-e3;
 	if(result>0)
@@ -2014,7 +2014,7 @@ int nbspr=0;
 			}
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e5 = g_system->getTimeStamp();
 	result = e5-e4;
 	if(result>0)
@@ -2025,7 +2025,7 @@ int nbspr=0;
 			drawPlasmaCannon();
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e6 = g_system->getTimeStamp();
 	result = e6-e5;
 	if(result>0)
@@ -2039,7 +2039,7 @@ int nbspr=0;
 			}
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
 	result = e7-e6;
 	if(result>0)
@@ -2053,7 +2053,7 @@ int nbspr=0;
 			}
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e8 = g_system->getTimeStamp();
 	result = e8-e7;
 	if(result>0)
@@ -2071,7 +2071,7 @@ int nbspr=0;
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
 	if(result>0)
@@ -2085,7 +2085,7 @@ int nbspr=0;
 			}
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e10 = g_system->getTimeStamp();
 	result = e10-e9;
 	if(result>0)
