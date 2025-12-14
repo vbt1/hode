@@ -18,7 +18,7 @@ Uint8 *vdp1ram = (Uint8 *)SpriteVRAM+0x20;
 Uint8 *cs2ram = (uint8_t *)0x22600000;
 }
 Uint8 *hwram;
-int vbt=0;
+//int vbt=0;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
@@ -65,7 +65,7 @@ emu_printf("malloc %d type %d\n", alignedSize, type);
 //		dst = vdp1ram;
 //		vdp1ram += SAT_ALIGN(alignedSize);
 //		}
-vbt++;
+//vbt++;
 //emu_printf("TYPE_BGLVL %p nb calls %d\n", dst, vbt);
 emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 	}

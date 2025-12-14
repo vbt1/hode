@@ -507,9 +507,23 @@ bool Video::clipLineCoords(int &x1, int &y1, int &x2, int &y2) {
 }
 
 void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
+	
 	if (clipLineCoords(x1, y1, x2, y2)) {
 		return;
 	}
+	
+	SPRITE line;
+	line.CTRL = FUNC_Line | _ZmLT;
+	line.PMOD = CL256Bnk | 0x0800;
+	line.COLR = color;
+	line.XA = ((x1 * 5) >> 1) - 320;
+	line.YA = y1 - 112+16;
+	line.XB = ((x2 * 5) >> 1) - 320;
+	line.YB = y2 - 112+16;
+
+	slSetSprite(&line, toFIXED2(240));	
+
+#if 0	
 	assert(x1 >= _drawLine.x1 && x1 <= _drawLine.x2);
 	assert(y1 >= _drawLine.y1 && y1 <= _drawLine.y2);
 	assert(x2 >= _drawLine.x1 && x2 <= _drawLine.x2);
@@ -573,6 +587,7 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 			dst += dstPitch;
 		}
 	}
+#endif
 }
 
 #if 0

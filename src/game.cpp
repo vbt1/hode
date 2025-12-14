@@ -2189,7 +2189,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #endif
 //_mstDisabled = true; // vbt : ajout pour test
 #if PAF
-//_paf->_skipCutscenes = true; // vbt : ajout pour test
+_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
 	_mstAndyCurrentScreenNum = -1;
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
@@ -2609,7 +2609,7 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 }
 
 LvlObject *Game::updateAnimatedLvlObject(LvlObject *o) {
-emu_printf("updateAnimatedLvlObject%d\n", o->type);
+emu_printf("updateAnimatedLvlObject %d\n", o->type);
 	switch (o->type) {
 	case 0: // background animation
 		o = updateAnimatedLvlObjectType0(o);
