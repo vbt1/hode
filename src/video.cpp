@@ -3,6 +3,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
+#define DECODE_TO_DST 0   /* 1 = décodage écran actif, 0 = sprite-only */
 
 extern "C" {
 #include <sl_def.h>
@@ -256,6 +257,7 @@ void Video::SAT_decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_
 
 void Video::SAT_cleanSprites()
 {
+emu_printf("SAT_cleanSprites\n");
 	SPRITE user_sprite;
 	user_sprite.CTRL= FUNC_End;
 	user_sprite.PMOD=0;
@@ -274,120 +276,167 @@ void Video::SAT_cleanSprites()
 	slSynch(); // vbt à remettre
 }
 
-void Video::decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
-	if (y >= H) {
-		return;
-	} else if (y < 0) {
-		flags |= kSprClipTop;
-	}
+void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
+                      int x, int y, uint8_t flags,
+                      uint16_t spr_w, uint16_t spr_h)
+{
+	if (y >= H) return;
+	else if (y < 0) flags |= kSprClipTop;
+
 	const int y2 = y + spr_h - 1;
-	if (y2 < 0) {
-		return;
-	} else if (y2 >= H) {
-		flags |= kSprClipBottom;
-	}
+	if (y2 < 0) return;
+	else if (y2 >= H) flags |= kSprClipBottom;
 
-	if (x >= W) {
-		return;
-	} else if (x < 0) {
-		flags |= kSprClipLeft;
-	}
+	if (x >= W) return;
+	else if (x < 0) flags |= kSprClipLeft;
+
 	const int x2 = x + spr_w - 1;
-	if (x2 < 0) {
-		return;
-	} else if (x2 >= W) {
-		flags |= kSprClipRight;
-	}
+	if (x2 < 0) return;
+	else if (x2 >= W) flags |= kSprClipRight;
 
-	if (flags & kSprHorizFlip) {
-		x = x2;
-	}
-	if (flags & kSprVertFlip) {
-		y = y2;
-	}
-	const int xOrig = x;
+	/* Sauvegarde de l’ancrage écran */
+	const int xAnchor = x;
+	const int yAnchor = y;
+
+	/* Curseurs de décodage écran */
+	if (flags & kSprHorizFlip) x = x2;
+	if (flags & kSprVertFlip)  y = y2;
+
+	const uint16_t w_raw = spr_w;
+	const uint16_t w     = (w_raw + 7) & ~7;
+	const uint16_t h     = spr_h;
+	const uint16_t size  = w * h;
+
+	if (position_vram + size >= 0x79000)
+		position_vram = 0;
+
+	TEXTURE tx = TEXDEF(w, h, position_vram);
+	uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+	position_vram += size;
+
+	SPRITE user_sprite;
+	user_sprite.PMOD = CL256Bnk | ECdis /*| SPdis*/ | 0x0800;
+	user_sprite.COLR = 0;
+	user_sprite.SIZE = (w / 8) << 8 | h;
+	user_sprite.CTRL = (FUNC_Sprite | _ZmLT);
+	user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
+	user_sprite.YA   = yAnchor - 112 + 16;
+//	user_sprite.XB   = (spr_w * 5) >> 1;
+	user_sprite.XB   = (w * 5) >> 1;
+	user_sprite.YB   = spr_h;
+	user_sprite.GRDA = 0;
+	user_sprite.SRCA = tx.CGadr;
+
+	slSetSprite(&user_sprite, toFIXED2(240));
+
+	memset(dst2, 0x00, size);
+
+	/* =============================
+	   Décodeur SPR
+	   ============================= */
+
+	int ix2 = (flags & kSprHorizFlip) ? (w - 1) : 0;
+	int iy2 = (flags & kSprVertFlip)  ? (h - 1) : 0;
+	const int ix2Orig = ix2;
+	const int xOrig   = x;
+
 	while (1) {
+#if DECODE_TO_DST
 		uint8_t *p = dst + y * W + x;
-		int code = *src++;
+#endif
+		uint8_t *p2 = dst2 + iy2 * w + ix2;
+
+		int code  = *src++;
 		int count = code & 0x3F;
+
+#if DECODE_TO_DST
 		int clippedCount = count;
-		if (y < 0 || y >= H) {
+		if (y < 0 || y >= H)
 			clippedCount = 0;
-		}
+#endif
+
 		switch (code >> 6) {
+
+		/* ---------- COPY ---------- */
 		case 0:
+#if DECODE_TO_DST
 			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
 				memcpy(p, src, clippedCount);
-				x += count;
 			} else if (flags & kSprHorizFlip) {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x - i >= 0 && x - i < W) {
-						p[-i] = src[i];
-					}
-				}
-				x -= count;
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) p[-i] = src[i];
 			} else {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x + i >= 0 && x + i < W) {
-						p[i] = src[i];
-					}
-				}
-				x += count;
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) p[i] = src[i];
 			}
+#endif
+			if (!(flags & kSprHorizFlip)) {
+				memcpy(p2, src, count);
+				ix2 += count;
+			} else {
+				for (int i = 0; i < count; ++i)
+					p2[-i] = src[i];
+				ix2 -= count;
+			}
+			x += (flags & kSprHorizFlip) ? -count : count;
 			src += count;
 			break;
+
+		/* ---------- FILL ---------- */
 		case 1:
 			code = *src++;
+#if DECODE_TO_DST
 			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
 				memset(p, code, clippedCount);
-				x += count;
 			} else if (flags & kSprHorizFlip) {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x - i >= 0 && x - i < W) {
-						p[-i] = code;
-					}
-				}
-				x -= count;
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) p[-i] = code;
 			} else {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x + i >= 0 && x + i < W) {
-						p[i] = code;
-					}
-				}
-				x += count;
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) p[i] = code;
 			}
+#endif
+			if (!(flags & kSprHorizFlip)) {
+				memset(p2, code, count);
+				ix2 += count;
+			} else {
+				for (int i = 0; i < count; ++i)
+					p2[-i] = code;
+				ix2 -= count;
+			}
+			x += (flags & kSprHorizFlip) ? -count : count;
 			break;
+
+		/* ---------- SKIP X ---------- */
 		case 2:
-			if (count == 0) {
-				count = *src++;
-			}
-			if (flags & kSprHorizFlip) {
-				x -= count;
-			} else {
-				x += count;
-			}
+			if (count == 0) count = *src++;
+			x   += (flags & kSprHorizFlip) ? -count : count;
+			ix2 += (flags & kSprHorizFlip) ? -count : count;
 			break;
+
+		/* ---------- NEW LINE ---------- */
 		case 3:
 			if (count == 0) {
 				count = *src++;
-				if (count == 0) {
-					return;
-				}
+				if (count == 0) return;
 			}
-			if (flags & kSprVertFlip) {
-				y -= count;
-			} else {
-				y += count;
-			}
+
+			y   += (flags & kSprVertFlip) ? -count : count;
+			iy2 += (flags & kSprVertFlip) ? -count : count;
+
+			uint8_t dx = *src++;
 			if (flags & kSprHorizFlip) {
-				x = xOrig - *src++;
+				x   = xOrig   - dx;
+				ix2 = ix2Orig - dx;
 			} else {
-				x = xOrig + *src++;
+				x   = xOrig   + dx;
+				ix2 = ix2Orig + dx;
 			}
 			break;
 		}
 	}
 }
+
 
 void Video::decodeRLE(const uint8_t *src, uint8_t *dst, int size) {
 	int count;

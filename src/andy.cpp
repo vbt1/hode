@@ -1653,10 +1653,11 @@ sameAnim:
 	ptr->frame = currentAnimFrame;
 
 	ptr->currentSound = ash->sound;
+#ifdef SOUND
 	if (ptr->currentSound != 0xFFFF && ptr->type == 8 && ptr->spriteNum < 5) {
 		playSound(ptr->currentSound, ptr, 0, 0);
 	}
-
+#endif
 	ptr->flags0 = merge_bits(ptr->flags0, ash->flags0, 0x3FF);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);

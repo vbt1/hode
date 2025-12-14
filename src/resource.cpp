@@ -454,7 +454,10 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 	dat->bitmapBits = 0; src += 4;
 	dat->callbackFuncPtr = 0; src += 4;
 	dat->dataPtr = 0; src += 4;
-	dat->sssObject = 0; src += 4;
+#ifdef SOUND
+	dat->sssObject = 0; 
+#endif
+	src += 4;
 	dat->levelData0x2988 = 0; src += 4;
 	for (int i = 0; i < 8; ++i) {
 		dat->posTable[i].x = READ_LE_UINT16(src); src += 2;
