@@ -1535,10 +1535,8 @@ void Game::updateAndyObject(LvlObject *ptr) {
 	assert(ptr->frame < ah->seqCount);
 	LvlAnimSeqHeader *ash = ((LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset)) + ptr->frame;
 	LvlAnimSeqFrameHeader *asfh = (LvlAnimSeqFrameHeader *)(dat->animsInfoData + ash->offset);
-
 	int count = ash->count;
 	if (count == 0) goto sameAnim;
-
 	setupAndyObjectMoveData(ptr);
 	if (dat->frame != 0) {
 		setupAndyObjectMoveState();
@@ -1651,9 +1649,8 @@ sameAnim:
 
 	ptr->anim = currentAnim;
 	ptr->frame = currentAnimFrame;
-
-	ptr->currentSound = ash->sound;
 #ifdef SOUND
+	ptr->currentSound = ash->sound;
 	if (ptr->currentSound != 0xFFFF && ptr->type == 8 && ptr->spriteNum < 5) {
 		playSound(ptr->currentSound, ptr, 0, 0);
 	}
@@ -1661,11 +1658,8 @@ sameAnim:
 	ptr->flags0 = merge_bits(ptr->flags0, ash->flags0, 0x3FF);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
-
 	ptr->currentSprite = ash->firstFrame;
-
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
-
 	LvlSprHotspotData *hs = ((LvlSprHotspotData *)dat->hotspotsData) + ash->firstFrame;
 
 	if (_andyUpdatePositionFlag) {
