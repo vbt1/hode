@@ -437,7 +437,7 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 	user_sprite.CTRL = 0;
 //	user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
 	user_sprite.XA   = xAnchor - 160;
-	user_sprite.YA   = yAnchor - 112 + 15;
+	user_sprite.YA   = yAnchor - 112 + 16;
 //	user_sprite.XB   = (spr_w * 5) >> 1;
 	user_sprite.XB   = (w * 5) >> 1;
 	user_sprite.YB   = spr_h;
@@ -448,7 +448,7 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 
 	memset(dst2, 0x00, size);
 
-	int ix2 = (flags & kSprHorizFlip) ? (w - 1) : 0;
+	int ix2 = (flags & kSprHorizFlip) ? (w_raw - 1) : 0;
 	int iy2 = (flags & kSprVertFlip)  ? (h - 1) : 0;
 	const int ix2Orig = ix2;
 	const int xOrig   = x;
