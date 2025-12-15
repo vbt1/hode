@@ -1154,8 +1154,8 @@ void Game::setupAndyLvlObject() {
 	_fallingAndyFlag = false;
 	_andyActionKeysFlags = 0;
 	_hideAndyObjectFlag = false;
-//	const CheckpointData *dat = _level->getCheckpointData(_level->_checkpoint);
-	const CheckpointData *dat = _level->getCheckpointData(5);
+	const CheckpointData *dat = _level->getCheckpointData(_level->_checkpoint);
+//	const CheckpointData *dat = _level->getCheckpointData(5);
 	_plasmaCannonFlags = 0;
 	_actionDirectionKeyMaskIndex = 0;
 	_mstAndyCurrentScreenNum = ptr->screenNum;
