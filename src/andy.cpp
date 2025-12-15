@@ -1533,7 +1533,13 @@ void Game::updateAndyObject(LvlObject *ptr) {
 	int currentAnim = ptr->anim;
 
 	LvlAnimHeader *ah = ((LvlAnimHeader *)(dat->animsInfoData + kLvlAnimHdrOffset)) + ptr->anim;
-	assert(ptr->frame < ah->seqCount);
+//	assert(ptr->frame < ah->seqCount);
+	if(ptr->frame >= ah->seqCount)
+	{
+		emu_printf("ptr->frame %d ah->seqCount %d", ptr->frame, ah->seqCount);
+		return;
+	}
+		
 	LvlAnimSeqHeader *ash = ((LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset)) + ptr->frame;
 	LvlAnimSeqFrameHeader *asfh = (LvlAnimSeqFrameHeader *)(dat->animsInfoData + ash->offset);
 	int count = ash->count;

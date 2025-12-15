@@ -1216,7 +1216,7 @@ void Game::setupScreenLvlObjects(int num) {
 		case 1: {
 				uint8_t *data =  _res->_resLvlScreenBackgroundDataTable[num].backgroundSoundTable[ptr->dataNum];
 				if (!data) {
-					//emu_printf("No backgroundSoundData num %d screen %d\n", ptr->dataNum, num);
+					emu_printf("No backgroundSoundData num %d screen %d\n", ptr->dataNum, num);
 					break;
 				}
 				ptr->currentSound = READ_LE_UINT16(data); data += 2;
@@ -1224,9 +1224,10 @@ void Game::setupScreenLvlObjects(int num) {
 			}
 			break;
 		case 2:
+emu_printf("setupScreenLvlObjects %p\n", _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum]);
 			ptr->levelData0x2988 = _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum];
 			if (!ptr->levelData0x2988) {
-				//emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
+				emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
 				break;
 			}
 			if (_currentLevel == kLvl_rock) {
@@ -1248,7 +1249,7 @@ void Game::setupScreenLvlObjects(int num) {
 					ptr->callbackFuncPtr = &Game::objectUpdate_rock_case4;
 					break;
 				default:
-					//emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
+					emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
 					break;
 				}
 			} else {
@@ -1261,7 +1262,7 @@ void Game::setupScreenLvlObjects(int num) {
 					ptr->callbackFuncPtr = &Game::objectUpdate_rock_case3;
 					break;
 				default:
-					//emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
+					emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
 					break;
 				}
 			}
