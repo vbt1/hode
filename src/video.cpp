@@ -3,20 +3,20 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-
+//#define USE_SPRITE 1
 extern "C" {
 #include <sl_def.h>
 }
 #include "game.h"
 #include "menu.h"
 #include "video.h"
-#include "mdec.h"
+//#include "mdec.h"
 #include "system.h"
 #include "systemstub.h"
 #include "util.h"
 
 extern Uint32 position_vram;
-extern SAT_sprite _sprData[10];
+extern SAT_sprite _sprData[4];
 static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
@@ -256,6 +256,7 @@ void Video::SAT_decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_
 
 void Video::SAT_cleanSprites()
 {
+emu_printf("SAT_cleanSprites\n");
 	SPRITE user_sprite;
 	user_sprite.CTRL= FUNC_End;
 	user_sprite.PMOD=0;
@@ -274,7 +275,7 @@ void Video::SAT_cleanSprites()
 	slSynch(); // vbt à remettre
 }
 
-void Video::decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
+void Video::decodeBG(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
 	if (y >= H) {
 		return;
 	} else if (y < 0) {
@@ -389,6 +390,188 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t fl
 	}
 }
 
+void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
+                      int x, int y, uint8_t flags,
+                      uint16_t spr_w, uint16_t spr_h)
+{
+	if (y >= H) return;
+	else if (y < 0) flags |= kSprClipTop;
+
+	const int y2 = y + spr_h - 1;
+	if (y2 < 0) return;
+	else if (y2 >= H) flags |= kSprClipBottom;
+
+	if (x >= W) return;
+	else if (x < 0) flags |= kSprClipLeft;
+
+	const int x2 = x + spr_w - 1;
+	if (x2 < 0) return;
+	else if (x2 >= W) flags |= kSprClipRight;
+
+#ifdef USE_SPRITE
+	const int xAnchor = x;
+	const int yAnchor = y;
+#endif
+	/* Curseurs de décodage écran */
+	if (flags & kSprHorizFlip) x = x2;
+	if (flags & kSprVertFlip)  y = y2;
+
+	/* Sauvegarde de l’ancrage écran */
+#ifdef USE_SPRITE
+	const uint16_t w_raw = spr_w;
+	const uint16_t w     = (w_raw + 7) & ~7;
+	const uint16_t h     = spr_h;
+	const uint16_t size  = w * h;
+
+	if (position_vram + size >= 0x79000)
+		position_vram = 0;
+
+	TEXTURE tx = TEXDEF(w, h, position_vram);
+	uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+	position_vram += size;
+
+	SPRITE user_sprite;
+	user_sprite.PMOD = CL256Bnk | ECdis /*| SPdis*/ | 0x0800;
+	user_sprite.COLR = 0;
+	user_sprite.SIZE = (w / 8) << 8 | h;
+	user_sprite.CTRL = (FUNC_Sprite | _ZmLT);
+//	user_sprite.CTRL = 0;
+	user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
+//	user_sprite.XA   = xAnchor - 160;
+	user_sprite.YA   = yAnchor - 112 + 16;
+//	user_sprite.XB   = (spr_w * 5) >> 1;
+	user_sprite.XB   = (w * 5) >> 1;
+	user_sprite.YB   = spr_h;
+	user_sprite.GRDA = 0;
+	user_sprite.SRCA = tx.CGadr;
+
+	slSetSprite(&user_sprite, toFIXED2(240));
+
+	memset(dst2, 0x00, size);
+
+	int ix2 = (flags & kSprHorizFlip) ? (w_raw - 1) : 0;
+	int iy2 = (flags & kSprVertFlip)  ? (h - 1) : 0;
+	const int ix2Orig = ix2;
+#endif
+	const int xOrig   = x;
+
+	while (1) {
+#ifndef USE_SPRITE
+		uint8_t *p = dst + y * W + x;
+#else
+		uint8_t *p2 = dst2 + iy2 * w + ix2;
+#endif
+		int code  = *src++;
+		int count = code & 0x3F;
+
+#ifndef USE_SPRITE
+		int clippedCount = count;
+		if (y < 0 || y >= H)
+			clippedCount = 0;
+#endif
+
+		switch (code >> 6) {
+
+		/* ---------- COPY ---------- */
+		case 0:
+#ifndef USE_SPRITE
+			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+				memcpy(p, src, clippedCount);
+				x += count;
+			} else if (flags & kSprHorizFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) p[-i] = src[i];
+				x -= count;
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) p[i] = src[i];
+				x += count;
+			}
+#else
+			if (!(flags & kSprHorizFlip)) {
+				memcpy(p2, src, count);
+				ix2 += count;
+			} else {
+				for (int i = 0; i < count; ++i)
+					p2[-i] = src[i];
+				ix2 -= count;
+			}
+#endif
+//			x += (flags & kSprHorizFlip) ? -count : count;
+			src += count;
+			break;
+
+		/* ---------- FILL ---------- */
+		case 1:
+			code = *src++;
+#ifndef USE_SPRITE
+			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+				memset(p, code, clippedCount);
+				x += count;
+			} else if (flags & kSprHorizFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) p[-i] = code;
+				x -= count;	
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) p[i] = code;
+				x += count;
+			}
+#else
+			if (!(flags & kSprHorizFlip)) {
+				memset(p2, code, count);
+				ix2 += count;
+			} else {
+				for (int i = 0; i < count; ++i)
+					p2[-i] = code;
+				ix2 -= count;
+			}
+#endif
+//			x += (flags & kSprHorizFlip) ? -count : count;
+			break;
+
+		/* ---------- SKIP X ---------- */
+		case 2:
+			if (count == 0) count = *src++;
+#ifdef USE_SPRITE
+			ix2 += (flags & kSprHorizFlip) ? -count : count;
+#else
+			x   += (flags & kSprHorizFlip) ? -count : count;
+#endif
+			break;
+
+		/* ---------- NEW LINE ---------- */
+		case 3:
+			if (count == 0) {
+				count = *src++;
+				if (count == 0) return;
+			}
+
+#ifdef USE_SPRITE
+			iy2 += (flags & kSprVertFlip) ? -count : count;
+#else
+			y   += (flags & kSprVertFlip) ? -count : count;
+#endif
+			uint8_t dx = *src++;
+			if (flags & kSprHorizFlip) {
+#ifdef USE_SPRITE
+				ix2 = ix2Orig - dx;
+#else
+				x   = xOrig   - dx;
+#endif
+			} else {
+#ifdef USE_SPRITE
+				ix2 = ix2Orig + dx;
+#else
+				x   = xOrig   + dx;
+#endif
+			}
+			break;
+		}
+	}
+}
+
+
 void Video::decodeRLE(const uint8_t *src, uint8_t *dst, int size) {
 	int count;
 
@@ -457,10 +640,26 @@ bool Video::clipLineCoords(int &x1, int &y1, int &x2, int &y2) {
 	return false;
 }
 
-void Video::drawLine(uint8_t* dstLayer, int x1, int y1, int x2, int y2, uint8_t color) {
+void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
+	
 	if (clipLineCoords(x1, y1, x2, y2)) {
 		return;
 	}
+#ifdef USE_SPRITE	
+	SPRITE line;
+	line.CTRL = FUNC_Line | _ZmLT;
+//	line.CTRL = FUNC_Line;
+	line.PMOD = CL256Bnk | 0x0800;
+	line.COLR = color;
+	line.XA = ((x1 * 5) >> 1) - 320;
+//	line.XA = x1 - 160;
+	line.YA = y1 - 112+16;
+	line.XB = ((x2 * 5) >> 1) - 320;
+//	line.XB = x2 - 160;
+	line.YB = y2 - 112+16;
+
+	slSetSprite(&line, toFIXED2(240));	
+#else	
 	assert(x1 >= _drawLine.x1 && x1 <= _drawLine.x2);
 	assert(y1 >= _drawLine.y1 && y1 <= _drawLine.y2);
 	assert(x2 >= _drawLine.x1 && x2 <= _drawLine.x2);
@@ -473,7 +672,7 @@ void Video::drawLine(uint8_t* dstLayer, int x1, int y1, int x2, int y2, uint8_t 
 			y1 += dy;
 			dy = -dy;
 		}
-		uint8_t *dst = dstLayer + y1 * W + x1;
+		uint8_t *dst = _frontLayer + y1 * W + x1;
 		for (int i = 0; i <= dy; ++i) {
 			*dst = color;
 			dst += dstPitch;
@@ -485,7 +684,7 @@ void Video::drawLine(uint8_t* dstLayer, int x1, int y1, int x2, int y2, uint8_t 
 		dx = -dx;
 		SWAP(y1, y2);
 	}
-	uint8_t *dst = dstLayer + y1 * W + x1;
+	uint8_t *dst = _frontLayer + y1 * W + x1;
 	int dy = y2 - y1;
 	if (dy == 0) {
 		memset(dst, color, dx);
@@ -524,6 +723,7 @@ void Video::drawLine(uint8_t* dstLayer, int x1, int y1, int x2, int y2, uint8_t 
 			dst += dstPitch;
 		}
 	}
+#endif
 }
 
 #if 0
@@ -532,39 +732,8 @@ static uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 }
 
 void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
-//	assert(dst1 == _shadowLayer);
-//	assert(dst2 == _frontLayer);
-	// src1 == projectionData
-	// src2 == shadowPalette
-
-	dst2 += y * dst_pitch + x;
-	for (int j = 0; j < src_h; ++j) {
-		for (int i = 0; i < src_w; ++i) {
-			int offset = READ_LE_UINT16(src1); src1 += 2;
-			assert(offset <= W * H);
-			if (kUseShadowColorLut) {
-				// build lookup offset
-				//   msb : _shadowLayer[ _projectionData[ (x, y) ] ]
-				//   lsb : _frontLayer[ (x, y) ]
-				offset = (dst1[offset] << 8) | dst2[i];
-
-				// lookup color matrix
-				//   if msb < 144 : _frontLayer.color
-				//   if msb >= 144 : if _frontLayer.color < 144 ? shadowPalette[ _frontLayer.color ] : _frontLayer.color
-				dst2[i] = _shadowColorLookupTable[offset];
-			} else {
-				dst2[i] = lookupColor(_shadowLayer[offset], dst2[i], _shadowColorLut);
-			}
-		}
-		dst2 += dst_pitch;
-	}
-}
-#else
-static inline uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
-	return (a >= 144 && b < 144) ? lut[b] : b;
-}
-
-void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
+// vbt comparer les 2 versions
+	
 	assert(dst1 == _shadowLayer);
 	assert(dst2 == _frontLayer);
 	
@@ -594,6 +763,71 @@ void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch,
 		
 		dst2 += dst_pitch;
 	}
+/*
+	assert(dst1 == _shadowLayer);
+	assert(dst2 == _frontLayer);
+	// src1 == projectionData
+	// src2 == shadowPalette
+
+	dst2 += y * dst_pitch + x;
+	for (int j = 0; j < src_h; ++j) {
+		for (int i = 0; i < src_w; ++i) {
+			int offset = READ_LE_UINT16(src1); src1 += 2;
+			assert(offset <= W * H);
+			if (kUseShadowColorLut) {
+				// build lookup offset
+				//   msb : _shadowLayer[ _projectionData[ (x, y) ] ]
+				//   lsb : _frontLayer[ (x, y) ]
+				offset = (dst1[offset] << 8) | dst2[i];
+
+				// lookup color matrix
+				//   if msb < 144 : _frontLayer.color
+				//   if msb >= 144 : if _frontLayer.color < 144 ? shadowPalette[ _frontLayer.color ] : _frontLayer.color
+				dst2[i] = _shadowColorLookupTable[offset];
+			} else {
+				dst2[i] = lookupColor(_shadowLayer[offset], dst2[i], _shadowColorLut);
+			}
+		}
+		dst2 += dst_pitch;
+	}
+*/
+}
+#else
+
+static inline uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
+	return (a >= 144 && b < 144) ? lut[b] : b;
+}
+
+void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
+    assert(dst1 == _shadowLayer);
+    assert(dst2 == _frontLayer);
+
+    dst2 += y * dst_pitch + x;
+
+    for (int j = 0; j < src_h; ++j) {
+        // Simple 2x unroll - reduces loop overhead without complexity
+        int i = 0;
+        for (; i < (src_w & ~1); i += 2) {
+            uint16_t offset0 = READ_LE_UINT16(src1); src1 += 2;
+            uint16_t offset1 = READ_LE_UINT16(src1); src1 += 2;
+
+            uint8_t a0 = dst1[offset0];
+            uint8_t b0 = dst2[i];
+            uint8_t a1 = dst1[offset1];
+            uint8_t b1 = dst2[i + 1];
+
+            dst2[i] = (a0 >= 144 && b0 < 144) ? _shadowColorLut[b0] : b0;
+            dst2[i + 1] = (a1 >= 144 && b1 < 144) ? _shadowColorLut[b1] : b1;
+        }
+
+        // Handle odd pixel
+        if (i < src_w) {
+            uint16_t offset = READ_LE_UINT16(src1); src1 += 2;
+            dst2[i] = lookupColor(dst1[offset], dst2[i], _shadowColorLut);
+        }
+
+        dst2 += dst_pitch;
+    }
 }
 #endif
 

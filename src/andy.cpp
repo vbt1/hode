@@ -79,7 +79,7 @@ int Game::moveAndyObjectOp1(int op) {
 	case 27:
 		return _directionKeyMask & 10;
 	default:
-		error("moveAndyObjectOp1 op %d", op);
+		emu_printf("moveAndyObjectOp1 op %d\n", op);
 		break;
 	}
 	return 0;
@@ -184,7 +184,7 @@ int Game::moveAndyObjectOp2(int op) {
 	case 47:
 		return ((_actionKeyMask & 6) == 4) ? 1 : 0;
 	default:
-		error("moveAndyObjectOp2 op %d", op);
+		emu_printf("moveAndyObjectOp2 op %d\n", op);
 		break;
 	}
 	return 0;
@@ -1411,7 +1411,7 @@ int Game::moveAndyObjectOp3(int op) {
 		}
 		return 0;
 	default:
-		error("moveAndyObjectOp3 op %d", op);
+		emu_printf("moveAndyObjectOp3 op %d\n", op);
 		break;
 	}
 	return 0;
@@ -1433,7 +1433,7 @@ int Game::moveAndyObjectOp4(int op) {
 		_andyUpdatePositionFlag = true;
 		return 1;
 	default:
-		error("moveAndyObjectOp4 op %d", op);
+		emu_printf("moveAndyObjectOp4 op %d\n", op);
 		break;
 	}
 	return 0;
@@ -1519,6 +1519,7 @@ void Game::setupAndyObjectMoveState() {
 }
 
 void Game::updateAndyObject(LvlObject *ptr) {
+//emu_printf("updateAndyObject\n");
 	_andyUpdatePositionFlag = false;
 	int xPos = 0;
 	int yPos = 0;
@@ -1532,34 +1533,53 @@ void Game::updateAndyObject(LvlObject *ptr) {
 	int currentAnim = ptr->anim;
 
 	LvlAnimHeader *ah = ((LvlAnimHeader *)(dat->animsInfoData + kLvlAnimHdrOffset)) + ptr->anim;
-	assert(ptr->frame < ah->seqCount);
+//	assert(ptr->frame < ah->seqCount);
+	if(ptr->frame >= ah->seqCount)
+	{
+		emu_printf("ptr->frame %d ah->seqCount %d", ptr->frame, ah->seqCount);
+		return;
+	}
+		
 	LvlAnimSeqHeader *ash = ((LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset)) + ptr->frame;
 	LvlAnimSeqFrameHeader *asfh = (LvlAnimSeqFrameHeader *)(dat->animsInfoData + ash->offset);
-
 	int count = ash->count;
+//emu_printf("count %d\n", count);
 	if (count == 0) goto sameAnim;
-
+//emu_printf("setupAndyObjectMoveData\n");
 	setupAndyObjectMoveData(ptr);
 	if (dat->frame != 0) {
+//emu_printf("setupAndyObjectMoveState\n");
 		setupAndyObjectMoveState();
 	}
+//emu_printf("setupAndyObjectMoveData done\n");
 	while (count != 0) {
 		--count;
-		assert(asfh[count].move < dat->movesCount);
+//			emu_printf("assert %d %d\n", asfh[count].move , dat->movesCount);
+//		assert(asfh[count].move < dat->movesCount);
+		if(asfh[count].move >= dat->movesCount)
+		{
+			emu_printf("assert %d %d\n", asfh[count].move , dat->movesCount);
+			count=0;
+		}
+		
 		LvlSprMoveData *m = ((LvlSprMoveData *)dat->movesData) + asfh[count].move;
 		int op = m->op1 * 4 + ((ptr->flags1 >> 4) & 3);
+//emu_printf("moveAndyObjectOp1\n");
 		mask = moveAndyObjectOp1(op);
 		if (mask == 0) {
 			continue;
 		}
+//emu_printf("moveAndyObjectOp2\n");
 		mask &= moveAndyObjectOp2(m->op2);
 		if (mask == 0) {
 			continue;
 		}
+//emu_printf("moveAndyObjectOp3\n");
 		mask &= moveAndyObjectOp3(m->op3);
 		if (mask == 0) {
 			continue;
 		}
+//emu_printf("moveAndyObjectOp4\n");
 		mask &= moveAndyObjectOp4(m->op4);
 		if (mask == 0) {
 			continue;
@@ -1575,8 +1595,15 @@ void Game::updateAndyObject(LvlObject *ptr) {
 		yPos = ptr->posTable[7].y + ptr->yPos;
 	}
 	if (mask) {
-
-		assert(count < ash->count);
+//			emu_printf("assert2 %d %d\n", count , ash->count);
+//		assert(count < ash->count);
+		if(count >= ash->count)
+		{
+			emu_printf("assert2 %d %d\n", count , ash->count);
+			count = 0;
+//			return;
+		}
+			
 		currentAnimFrame = asfh[count].frame;
 		currentAnim = asfh[count].anim;
 
@@ -1651,7 +1678,7 @@ sameAnim:
 
 	ptr->anim = currentAnim;
 	ptr->frame = currentAnimFrame;
-
+#ifdef SOUND
 	ptr->currentSound = ash->sound;
 #ifdef SOUND
 	if (ptr->currentSound != 0xFFFF && ptr->type == 8 && ptr->spriteNum < 5) {
@@ -1661,11 +1688,9 @@ sameAnim:
 	ptr->flags0 = merge_bits(ptr->flags0, ash->flags0, 0x3FF);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
-
 	ptr->currentSprite = ash->firstFrame;
-
+//emu_printf("getLvlSpriteFramePtr\n");
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
-
 	LvlSprHotspotData *hs = ((LvlSprHotspotData *)dat->hotspotsData) + ash->firstFrame;
 
 	if (_andyUpdatePositionFlag) {

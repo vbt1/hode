@@ -507,12 +507,14 @@ struct Game {
 	bool _snd_muted;
 	int _snd_masterPanning;
 	int _snd_masterVolume;
+#ifdef SOUND
 	SssObject _sssObjectsTable[kMaxSssObjects];
 	bool _sssObjectsChanged;
 	int _sssObjectsCount;
 	SssObject *_sssObjectsList1; // playing
 	SssObject *_sssObjectsList2; // paused/idle
 	SssObject *_lowPrioritySssObject;
+#endif
 	bool _sssUpdatedObjectsTable[kMaxSssObjects];
 	int _playingSssObjectsMax;
 	int _playingSssObjectsCount;

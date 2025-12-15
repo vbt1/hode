@@ -566,6 +566,7 @@ int Game::objectUpdate_rock_case2(LvlObject *o) {
 }
 
 int Game::objectUpdate_rock_case3(LvlObject *o) {
+//emu_printf("objectUpdate_rock_case3\n");
 	updateAndyObject(o);
 	return 1;
 }

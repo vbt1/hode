@@ -454,7 +454,10 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 	dat->bitmapBits = 0; src += 4;
 	dat->callbackFuncPtr = 0; src += 4;
 	dat->dataPtr = 0; src += 4;
-	dat->sssObject = 0; src += 4;
+#ifdef SOUND
+	dat->sssObject = 0; 
+#endif
+	src += 4;
 	dat->levelData0x2988 = 0; src += 4;
 	for (int i = 0; i < 8; ++i) {
 		dat->posTable[i].x = READ_LE_UINT16(src); src += 2;
@@ -829,7 +832,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 	assert(readSize <= size);
-//emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
+////emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = allocate_memory (TYPE_BGLVL, size);
 	
@@ -837,7 +840,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
 	_lvlFile->seekAlign(baseOffset + kMaxScreens * 16 + num * 160);
-//emu_printf("g %d\n", baseOffset + kMaxScreens * 16 + num * 160);
+////emu_printf("g %d\n", baseOffset + kMaxScreens * 16 + num * 160);
 	_lvlFile->read(hdr, 160);
 	LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2B88(hdr, ptr, ptr + readSize, dat, _isPsx);
@@ -846,16 +849,14 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
 //	assert(allocatedOffsetsSize == readOffsetsSize);
 	if(allocatedOffsetsSize != readOffsetsSize)
-	{
 		return;
-	}
 
 	_resLvlScreenBackgroundDataPtrTable[num] = ptr;
 	_resLevelData0x2B88SizeTable[num] = size;
 }
 
 void Resource::unloadLvlScreenBackgroundData(int num) {
-emu_printf("unloadLvlScreenBackgroundData %d\n");
+emu_printf("unloadLvlScreenBackgroundData %p\n", cs1ram_bg);
 	if (_resLevelData0x2B88SizeTable[num] != 0) {
 //		free(_resLvlScreenBackgroundDataPtrTable[num]);
 		_resLvlScreenBackgroundDataPtrTable[num] = 0;

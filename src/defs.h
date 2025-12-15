@@ -177,12 +177,14 @@ struct LvlObject {
 	const uint8_t *bitmapBits; // 28
 	int (Game::*callbackFuncPtr)(LvlObject *ptr); // 2C
 	void *dataPtr; // 30
+#ifdef SOUND
 	SssObject *sssObject; // 34
+#endif
 	LvlObjectData *levelData0x2988;
 	Point16_t posTable[8];
 	LvlObject *nextPtr;
 };
-
+#ifdef SOUND
 struct SssFilter;
 struct SssPcm;
 
@@ -225,7 +227,7 @@ struct SssObject {
 	int32_t nextSoundSample; // 0x7C
 	SssFilter *filter;
 };
-
+#endif
 struct Sprite {
 	int16_t xPos;
 	int16_t yPos;

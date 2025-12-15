@@ -1,8 +1,6 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define PAF 1
 //#define DEBUG 1
-//#define DEBUG2 1
-//#define UNLOADBG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -36,7 +34,7 @@ static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
 Game::Game(const char *dataPath, const char *savePath, uint32_t cheats)
 	: _fs(dataPath, savePath) {
 
-//////emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
+//emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 
 	_level = 0;
 	_res = new Resource(&_fs);
@@ -96,10 +94,12 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats)
 	_snd_bufferOffset = _snd_bufferSize = 0;
 	_snd_masterPanning = kDefaultSoundPanning;
 	_snd_masterVolume = kDefaultSoundVolume;
+#ifdef SOUND
 	_sssObjectsCount = 0;
 	_sssObjectsList1 = 0;
 	_sssObjectsList2 = 0;
 	_playingSssObjectsMax = 16; // 10 if (lowMemory || slowCPU)
+#endif
 }
 
 Game::~Game() {
@@ -286,7 +286,7 @@ void Game::loadTransformLayerData(const uint8_t *data) {
 }
 
 void Game::unloadTransformLayerData() {
-////emu_printf("vbt unloadTransformLayerData\n");	
+//emu_printf("vbt unloadTransformLayerData\n");	
 	free(_video->_transformShadowBuffer);
 	_video->_transformShadowBuffer = 0;
 }
@@ -294,13 +294,13 @@ void Game::unloadTransformLayerData() {
 void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 	uint8_t *dst = _video->_shadowScreenMaskBuffer;
 	for (int i = lvl->currentShadowId; i < lvl->shadowCount; ++i) {
-////emu_printf("backgroundMaskTable %d %p dest %p\n", i, lvl->backgroundMaskTable[i], _video->_shadowScreenMaskBuffer);
+//emu_printf("backgroundMaskTable %d %p dest %p\n", i, lvl->backgroundMaskTable[i], _video->_shadowScreenMaskBuffer);
 		const uint8_t *src = lvl->backgroundMaskTable[i];
 		if (src) {
 			const int decodedSize = decodeLZW(src + 2, dst);
 
 			_shadowScreenMasksTable[i].dataSize = READ_LE_UINT32(dst);
-////emu_printf("vbt _shadowScreenMasksTable %d decodedSize %d\n", _shadowScreenMasksTable[i].dataSize, decodedSize);
+//emu_printf("vbt _shadowScreenMasksTable %d decodedSize %d\n", _shadowScreenMasksTable[i].dataSize, decodedSize);
 			// header : 20 bytes
 			// projectionData : w * h * sizeof(uint16_t) - for a given (x, y) returns the casted (x, y)
 			// paletteData : 256 (only the first 144 bytes are read)
@@ -315,28 +315,27 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 			const int size = w * h;
 			uint8_t *p = _shadowScreenMasksTable[i].projectionDataPtr + 2;
 
-			////emu_printf("shadow screen mask #%d pos %d,%d dim %d,%d size %d %p next %p\n", i, x, y, w, h, decodedSize, p, p+size);
+			//emu_printf("shadow screen mask #%d pos %d,%d dim %d,%d size %d %p next %p\n", i, x, y, w, h, decodedSize, p, p+size);
 
 			for (int j = 1; j < size; ++j) {
-//////emu_printf("shadow screen j %d\n", j);
+//emu_printf("shadow screen j %d\n", j);
 				const int16_t offset = (int16_t)READ_LE_UINT16(p - 2) + (int16_t)READ_LE_UINT16(p);
 				// fprintf(stdout, "shadow #%d offset #%d 0x%x 0x%x\n", i, j, READ_LE_UINT16(p), offset);
 				WRITE_LE_UINT16(p, offset);
 				p += 2;
 			}
-////emu_printf("shadow screen\n");
+//emu_printf("shadow screen\n");
 			const int shadowPaletteSize = decodedSize - 20 - w * h * sizeof(uint16_t);
-////emu_printf("shadowPaletteSize %d 144\n", shadowPaletteSize);
+//emu_printf("shadowPaletteSize %d 144\n", shadowPaletteSize);
 			assert(shadowPaletteSize >= 144);
 			_video->buildShadowColorLookupTable(_shadowScreenMasksTable[i].shadowPalettePtr, _video->_shadowColorLookupTable);
-////emu_printf("dst %p %d 144\n", dst, decodedSize);
+//emu_printf("dst %p %d 144\n", dst, decodedSize);
 			dst += decodedSize;
 		}
 	}
 }
-
-// a: type/source (0, 1, 2) b: num/index (3, monster1Index, monster2.monster1Index)
 #ifdef SOUND
+// a: type/source (0, 1, 2) b: num/index (3, monster1Index, monster2.monster1Index)
 SssObject *Game::playSound(int num, LvlObject *ptr, int a, int b) {
 	MixerLock ml(&_mix);
 	SssObject *so = 0;
@@ -382,12 +381,12 @@ void Game::setupBackgroundBitmap() {
 	} else 
 #endif
 	{
-////emu_printf("decodeLZW %p %p num %d\n", bmp, _video->_backgroundLayer, num);
+//emu_printf("decodeLZW %p %p num %d\n", bmp, _video->_backgroundLayer, num);
 		decodeLZW(bmp, _video->_backgroundLayer);
 	}
 //lvl->shadowCount = 1;
 	if (lvl->shadowCount != 0) {
-////emu_printf("decodeShadowScreenMask\n");
+//emu_printf("decodeShadowScreenMask\n");
 		decodeShadowScreenMask(lvl);
 	}
 	for (int i = 0; i < 256 * 3; ++i) {
@@ -516,22 +515,22 @@ void Game::setupScreenPosTable(uint8_t num) {
 }
 
 void Game::setupScreenMask(uint8_t num) {
-////emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroundDataTable[num].currentMaskId);
+//emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroundDataTable[num].currentMaskId);
 	if (num == kNoScreen) {
 		return;
 	}
 	int mask = _res->_resLvlScreenBackgroundDataTable[num].currentMaskId;
 	if (_res->_screensState[num].s3 != mask) {
-		////emu_printf("setupScreenMask num %d mask %d\n", num, mask);
+		//emu_printf("setupScreenMask num %d mask %d\n", num, mask);
 		_res->_screensState[num].s3 = mask;
 		const uint8_t *maskData = _res->getLvlScreenMaskDataPtr(num * 4 + mask);
 		if (maskData) {
-			////emu_printf("setupScreenMask decodeRLE\n");
+			//emu_printf("setupScreenMask decodeRLE\n");
 			Video::decodeRLE(maskData, _screenTempMaskBuffer, 32 * 24);
 		} else {
 			memset(_screenTempMaskBuffer, 0, 32 * 24);
 		}
-			////emu_printf("setupScreenMask _screenMaskBuffer\n");
+			//emu_printf("setupScreenMask _screenMaskBuffer\n");
 		uint8_t *p = _screenMaskBuffer + screenMaskOffset(_res->_screensBasePos[num].u, _res->_screensBasePos[num].v);
 		for (int i = 0; i < 24; ++i) {
 			memcpy(p, _screenTempMaskBuffer + i * 32, 32);
@@ -539,7 +538,7 @@ void Game::setupScreenMask(uint8_t num) {
 		}
 	}
 	if (_res->_currentScreenResourceNum == num) {
-			////emu_printf("setupScreenMask setupScreenPosTable\n");
+			//emu_printf("setupScreenMask setupScreenPosTable\n");
 		setupScreenPosTable(num);
 	}
 }
@@ -633,14 +632,14 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
-//////emu_printf("getLvlSpriteFramePtr\n");
+//emu_printf("getLvlSpriteFramePtr\n");
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 
 	const int w = ptr->width - 1;
 	const int h = ptr->height - 1;
 
 	if (ptr->type == 8 && (ptr->spriteNum == 2 || ptr->spriteNum == 0)) {
-//////emu_printf("getLvlObjectDataPtr\n");
+//emu_printf("getLvlObjectDataPtr\n");
 		AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 		dataPtr->boundingBox.x1 = ptr->xPos;
 		dataPtr->boundingBox.y1 = ptr->yPos;
@@ -670,7 +669,7 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 			break;
 		}
 	}
-//////emu_printf("setupLvlObjectBitmap end\n");
+//emu_printf("setupLvlObjectBitmap end\n");
 }
 
 void Game::randomizeInterpolatePoints(int32_t *pts, int count) {
@@ -812,13 +811,12 @@ void Game::destroyLvlObject(LvlObject *o) {
 			break;
 		}
 	}
-
-	if (o->sssObject) {
 #ifdef SOUND
+	if (o->sssObject) {
 		removeSound(o);
-#endif
 		o->sssObject = 0;
 	}
+#endif
 	o->bitmapBits = 0;
 }
 
@@ -969,20 +967,34 @@ endDir:
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	assert(num != kNoScreen);
-#ifdef UNLOADBG
+#if 1 // vbt : fait planter au passage des deux gros monstres
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
-////emu_printf("free unloadLvlData %d %d\n", num, prev);
+//emu_printf("free unloadLvlData1 %d %d\n", num, prev);
+//		LvlObjectData *dat = &_res->_resLevelData0x2988Table[prev];
 		_res->unloadLvlScreenBackgroundData(prev);
+/*
+		_res->_resLevelData0x2B88SizeTable[prev] = 0;
+		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
+		memset(_res->_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_res->_resLvlScreenBackgroundDataPtrTable));
+		_res->_resLvlScreenBackgroundDataPtrTable[prev] = 0;
+*/
 	}
 
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
+//emu_printf("free unloadLvlData2 %d %d\n", num, prev);
 		_res->unloadLvlScreenBackgroundData(num);
+//		LvlObjectData *dat = &_res->_resLevelData0x2988Table[num];
+/*
+		_res->_resLevelData0x2B88SizeTable[num] = 0;
+		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
+		memset(_res->_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_res->_resLvlScreenBackgroundDataPtrTable));
+		_res->_resLvlScreenBackgroundDataPtrTable[num] = 0;
+*/
 	}
-#else
-	if (!_res->isLvlBackgroundDataLoaded(num)) 
 #endif
+	if (!_res->isLvlBackgroundDataLoaded(num)) 
 	{
 //		//emu_printf("to be loaded\n");
 		_res->loadLvlScreenBackgroundData(num);
@@ -1143,6 +1155,7 @@ void Game::setupAndyLvlObject() {
 	_andyActionKeysFlags = 0;
 	_hideAndyObjectFlag = false;
 	const CheckpointData *dat = _level->getCheckpointData(_level->_checkpoint);
+//	const CheckpointData *dat = _level->getCheckpointData(5);
 	_plasmaCannonFlags = 0;
 	_actionDirectionKeyMaskIndex = 0;
 	_mstAndyCurrentScreenNum = ptr->screenNum;
@@ -1175,13 +1188,13 @@ void Game::setupAndyLvlObject() {
 void Game::setupScreenLvlObjects(int num) {
 	_res->_screensState[num].s2 = 1;
 	for (LvlObject *ptr = _screenLvlObjectsList[num]; ptr; ptr = ptr->nextPtr) {
-////emu_printf("ptr->type %d addr %p\n", ptr->type, ptr);
+//emu_printf("ptr->type %d addr %p\n", ptr->type, ptr);
 		switch (ptr->type) {
 		case 0: {
 				AnimBackgroundData *p = (AnimBackgroundData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAnimBackgroundData);
 				const uint8_t *data = _res->_resLvlScreenBackgroundDataTable[num].backgroundAnimationTable[ptr->dataNum];
 				if (!data) {
-					////emu_printf("No backgroundAnimationData num %d screen %d\n", ptr->dataNum, num);
+					//emu_printf("No backgroundAnimationData num %d screen %d\n", ptr->dataNum, num);
 					break;
 				}
 #ifdef PSX
@@ -1203,7 +1216,7 @@ void Game::setupScreenLvlObjects(int num) {
 		case 1: {
 				uint8_t *data =  _res->_resLvlScreenBackgroundDataTable[num].backgroundSoundTable[ptr->dataNum];
 				if (!data) {
-					////emu_printf("No backgroundSoundData num %d screen %d\n", ptr->dataNum, num);
+					emu_printf("No backgroundSoundData num %d screen %d\n", ptr->dataNum, num);
 					break;
 				}
 				ptr->currentSound = READ_LE_UINT16(data); data += 2;
@@ -1211,9 +1224,10 @@ void Game::setupScreenLvlObjects(int num) {
 			}
 			break;
 		case 2:
+emu_printf("setupScreenLvlObjects %p\n", _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum]);
 			ptr->levelData0x2988 = _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum];
 			if (!ptr->levelData0x2988) {
-				////emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
+				emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
 				break;
 			}
 			if (_currentLevel == kLvl_rock) {
@@ -1235,7 +1249,7 @@ void Game::setupScreenLvlObjects(int num) {
 					ptr->callbackFuncPtr = &Game::objectUpdate_rock_case4;
 					break;
 				default:
-					////emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
+					emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
 					break;
 				}
 			} else {
@@ -1248,11 +1262,11 @@ void Game::setupScreenLvlObjects(int num) {
 					ptr->callbackFuncPtr = &Game::objectUpdate_rock_case3;
 					break;
 				default:
-					////emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
+					emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
 					break;
 				}
 			}
-////emu_printf("setupLvlObjectBitmap %p\n", ptr);
+//emu_printf("setupLvlObjectBitmap %p\n", ptr);
 			setupLvlObjectBitmap(ptr);
 			break;
 		}
@@ -1276,26 +1290,26 @@ void Game::setupScreen(uint8_t num) {
 	}
 	prev = _res->_currentScreenResourceNum;
 	_res->_currentScreenResourceNum = num;
-////emu_printf("setupScreenLvlObjects0 num %d\n", num);
+//emu_printf("setupScreenLvlObjects0 num %d\n", num);
 	setupScreenLvlObjects(num);
-//////emu_printf("callLevel_preScreenUpdate\n");
+//emu_printf("callLevel_preScreenUpdate\n");
 	callLevel_preScreenUpdate(num);
 	if (_res->_screensState[num].s0 >= _res->_screensState[num].s1) {
 		_res->_screensState[num].s0 = _res->_screensState[num].s1 - 1;
 	}
-//////emu_printf("callLevel_postScreenUpdate\n");
+//emu_printf("callLevel_postScreenUpdate\n");
 	callLevel_postScreenUpdate(num);
 	i = _res->_screensGrid[num][kPosTopScreen];
 	if (i != kNoScreen && prev != i) {
-//	////emu_printf("callLevel_preScreenUpdate\n");
+//	//emu_printf("callLevel_preScreenUpdate\n");
 		callLevel_preScreenUpdate(i);
-//	////emu_printf("setupScreenMask\n");
+//	//emu_printf("setupScreenMask\n");
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
 	i = _res->_screensGrid[num][kPosRightScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-////emu_printf("setupScreenLvlObjects1\n");
+//emu_printf("setupScreenLvlObjects1\n");
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -1303,26 +1317,26 @@ void Game::setupScreen(uint8_t num) {
 	}
 	i = _res->_screensGrid[num][kPosBottomScreen];
 	if (i != kNoScreen && prev != i) {
-////emu_printf("callLevel_preScreenUpdate1\n");
+//emu_printf("callLevel_preScreenUpdate1\n");
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
 	i = _res->_screensGrid[num][kPosLeftScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-////emu_printf("setupScreenLvlObjects2\n");
+//emu_printf("setupScreenLvlObjects2\n");
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
-//////emu_printf("callLevel_postScreenUpdate fin\n");
+//emu_printf("callLevel_postScreenUpdate fin\n");
 	callLevel_postScreenUpdate(num);
-////emu_printf("setupBackgroundBitmap fin lw %p cs1 %p\n", current_lwram, cs1ram);
+//emu_printf("setupBackgroundBitmap fin lw %p cs1 %p\n", current_lwram, cs1ram);
 	setupBackgroundBitmap();
-////emu_printf("setupScreenMask fin\n");
+//emu_printf("setupScreenMask fin\n");
 	setupScreenMask(num);
-////emu_printf("resetDisplay fin\n");
+//emu_printf("resetDisplay fin\n");
 	resetDisplay();
 }
 
@@ -1337,23 +1351,23 @@ void Game::resetScreen() {
 		_res->_screensState[i].s0 = *dat2++;
 		_level->_screenCounterTable[i] = *dat2++;
 	}
-//////emu_printf("4\n");
+//emu_printf("4\n");
 	resetScreenMask();
-//////emu_printf("5\n");
+//emu_printf("5\n");
 	for (int i = screenNum; i < _res->_lvlHdr.screensCount; ++i) {
 		_level->setupScreenCheckpoint(i);
 	}
-//////emu_printf("6\n");
+//emu_printf("6\n");
 	resetWormHoleSprites();
 }
 
 void Game::restartLevel() {
-////emu_printf("restartLevel\n");
-////emu_printf("setupAndyLvlObject\n");
+//emu_printf("restartLevel\n");
+//emu_printf("setupAndyLvlObject\n");
 	setupAndyLvlObject();
-////emu_printf("clearLvlObjectsList2\n");
+//emu_printf("clearLvlObjectsList2\n");
 	clearLvlObjectsList2();
-////emu_printf("clearLvlObjectsList3\n");
+//emu_printf("clearLvlObjectsList3\n");
 	clearLvlObjectsList3();
 	if (!_mstDisabled) {
 		resetMstCode();
@@ -1375,13 +1389,13 @@ void Game::restartLevel() {
 #ifdef PSX
 	_video->clearYuvBackBuffer();
 #endif
-////emu_printf("resetScreen\n");
+//emu_printf("resetScreen\n");
 	resetScreen();
 	if (_andyObject->screenNum != screenNum) {
 //emu_printf("preloadLevelScreenData2\n");		
 		preloadLevelScreenData(_andyObject->screenNum, kNoScreen);
 	}
-////emu_printf("setupScreen1\n");
+//emu_printf("setupScreen1\n");
 	setupScreen(_andyObject->screenNum);
 }
 
@@ -1844,6 +1858,7 @@ int Game::restoreAndyCollidesLava() {
 }
 
 int Game::updateAndyLvlObject() {
+//emu_printf("updateAndyLvlObject\n");
 	if (!_andyObject) {
 		return 0;
 	}
@@ -1889,11 +1904,12 @@ int Game::updateAndyLvlObject() {
 	if ((_andyObject->flags0 & 0x1F) != 0xB) {
 		playAndyFallingCutscene(0);
 	}
+emu_printf("return 1\n");
 	restartLevel();
 	return 1;
 }
 
-void Game::drawPlasmaCannon(uint8_t* dst) {
+void Game::drawPlasmaCannon() {
 	int index = _plasmaCannonFirstIndex;
 	int lastIndex = _plasmaCannonLastIndex1;
 	if (lastIndex == 0) {
@@ -1906,13 +1922,13 @@ void Game::drawPlasmaCannon(uint8_t* dst) {
 		int x2 = _plasmaCannonXPointsTable1[index];
 		int y2 = _plasmaCannonYPointsTable1[index];
 		if (_plasmaCannonDirection == 1) {
-			_video->drawLine(dst, x1 - 1, y1, x2 - 1, y2, 0xA9);
-			_video->drawLine(dst, x1 + 1, y1, x2 + 1, y2, 0xA9);
+			_video->drawLine(x1 - 1, y1, x2 - 1, y2, 0xA9);
+			_video->drawLine(x1 + 1, y1, x2 + 1, y2, 0xA9);
 		} else {
-			_video->drawLine(dst, x1, y1 - 1, x2, y2 - 1, 0xA9);
-			_video->drawLine(dst, x1, y1 + 1, x2, y2 + 1, 0xA9);
+			_video->drawLine(x1, y1 - 1, x2, y2 - 1, 0xA9);
+			_video->drawLine(x1, y1 + 1, x2, y2 + 1, 0xA9);
 		}
-		_video->drawLine(dst, x1, y1, x2, y2, 0xA6);
+		_video->drawLine(x1, y1, x2, y2, 0xA6);
 		x1 = x2;
 		y1 = y2;
 		index += 4;
@@ -1931,35 +1947,29 @@ void Game::updateBackgroundPsx(int num) {
 }
 #endif
 void Game::drawScreen() {
-
+int nbspr=0;
 #ifdef DEBUG
-//	////emu_printf("------drawScreen\n");
+//	//emu_printf("------drawScreen\n");
 	unsigned int s1 = g_system->getTimeStamp();
 #endif
 
-	memcpy(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
+	memcpyl(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
 //	memset4_fast(_video->_frontLayer, 0x00, Video::W * Video::H);
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","memcpyl", result);
 #endif
-
 #ifdef PSX
 	_video->copyYuvBackBuffer();
 #endif
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e2 = g_system->getTimeStamp();
 	result = e2-e1;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","copyYuvBackBuffer", result);
 #endif
-	const uint32_t w = 256;
-	const uint32_t h = 192;
-	const uint32_t size = w*h;
-
-
 	// redraw background animation sprites
 	LvlBackgroundData *dat = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 #ifdef PSX
@@ -1972,40 +1982,15 @@ void Game::drawScreen() {
 
 	} else 
 #endif
-
-
-	TEXTURE tx = TEXDEF(w, h, position_vram);
-	uint8_t *src = (uint8_t *)_video->_frontLayer;
-	position_vram += size;
-
-	if (position_vram>=0x74000)
-		position_vram = 0;
-
-    SPRITE user_sprite;
-    user_sprite.PMOD = CL256Bnk | ECdis | SPdis | 0x0800;
-    user_sprite.COLR = 0;
-    user_sprite.SIZE = (w/8)<<8|h;;
-    user_sprite.CTRL = 0;
-    user_sprite.XA = -258;
-    user_sprite.YA = -127;
-    user_sprite.GRDA = 0;
-    user_sprite.SRCA = tx.CGadr;
-
 		{
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1F) == 0) {
-//emu_printf("decodeSPR\n");
-//				_video->decodeSPR(spr->bitmapBits, (uint8_t*)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, 0, spr->w, spr->h);
-				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, spr->xPos, spr->yPos, 0, spr->w, spr->h);
+				_video->decodeBG(spr->bitmapBits, _video->_backgroundLayer, spr->xPos, spr->yPos, 0, spr->w, spr->h);
+				nbspr++;
 			}
 		}
 	}
-
-	memcpy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)src, size);
-    slSetSprite(&user_sprite, toFIXED2(240));	
-	tx = TEXDEF(w, h, position_vram);
-	
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e3 = g_system->getTimeStamp();
 	result = e3-e2;
 	if(result>0)
@@ -2016,26 +2001,25 @@ void Game::drawScreen() {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
 				_video->decodeSPR(spr->bitmapBits, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				nbspr++;
 			}
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e4 = g_system->getTimeStamp();
 	result = e4-e3;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","decodeSPR2", result);
 #endif
-
-
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
 				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				nbspr++;
 			}
 		}
 	}
-	
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e5 = g_system->getTimeStamp();
 	result = e5-e4;
 	if(result>0)
@@ -2043,12 +2027,10 @@ void Game::drawScreen() {
 #endif
 	if (_andyObject->spriteNum == 0 && (_andyObject->flags2 & 0x1F) == 4) {
 		if (_plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
-			drawPlasmaCannon(_video->_frontLayer);
-//			drawPlasmaCannon((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)));
+			drawPlasmaCannon();
 		}
 	}
-
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e6 = g_system->getTimeStamp();
 	result = e6-e5;
 	if(result>0)
@@ -2057,37 +2039,32 @@ void Game::drawScreen() {
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-//				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+					nbspr++;
 			}
 		}
 	}
-	
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
 	result = e7-e6;
 	if(result>0)
-		//emu_printf("--duration %s : %d\n","decodeSPR4", result);
+		emu_printf("--duration %s : %d\n","decodeSPR4", result);
 #endif
-
-// bloc gestion des ombres
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-//				_video->decodeSPR(spr->bitmapBits, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				nbspr++;
 			}
 		}
 	}
-
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e8 = g_system->getTimeStamp();
 	result = e8-e7;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
 	for (int i = 0; i < dat->shadowCount; ++i) {
-////emu_printf("applyShadowColors %d\n",i);
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
 			_shadowScreenMasksTable[i].w,
@@ -2099,25 +2076,21 @@ void Game::drawScreen() {
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
-
-
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","applyShadowColors", result);
 #endif
-
 	for (int i = 1; i < 12; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-//				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				nbspr++;
 			}
 		}
 	}
-	
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e10 = g_system->getTimeStamp();
 	result = e10-e9;
 	if(result>0)
@@ -2125,56 +2098,31 @@ void Game::drawScreen() {
 #endif
 	if (_andyObject->spriteNum == 0 && (_andyObject->flags2 & 0x1F) == 0xC) {
 		if (_plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
-			drawPlasmaCannon(_video->_frontLayer);
-//			drawPlasmaCannon((uint8_t *)(SpriteVRAM + (tx.CGadr << 3)));
+			drawPlasmaCannon();
 		}
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e11 = g_system->getTimeStamp();
 	result = e11-e10;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","drawPlasmaCannon2", result);
 #endif
-
-
-
-	src = _video->_shadowLayer;
-
-	memcpy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)src, size);
-
-
-#if 1 // les vrais sprites
 	for (int i = 12; i <= 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-//				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				_video->decodeSPR(spr->bitmapBits, (uint8_t *)(SpriteVRAM + (tx.CGadr << 3)), spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				nbspr++;
 			}
 		}
 	}
-#endif
-
-
-
-	position_vram += size;
-
-    user_sprite.XA = -255;
-    user_sprite.YA = -127;
-
-    user_sprite.SRCA = tx.CGadr;
-    slSetSprite(&user_sprite, toFIXED2(240));
-	if (position_vram>=0x74000)
-		position_vram = 0;
-
-slSynch();	
-
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e12 = g_system->getTimeStamp();
 	result = e12-e11;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","decodeSPR7", result);
 #endif
-
+//	emu_printf("slsynch nb %d\n", nbspr);
+//	slSynch();
 }
 
 static void gamePafCallback(void *userdata) {
@@ -2184,7 +2132,7 @@ static void gamePafCallback(void *userdata) {
 }
 
 void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
-//////emu_printf("game mainloop\n");
+//emu_printf("game mainloop\n");
 /*	if (_playDemo && _res->loadHodDem()) {
 		_rnd._rndSeed = _res->_dem.randSeed;
 		level = _res->_dem.level;
@@ -2202,7 +2150,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 			checkpoint = _setupConfig.players[num].progress[level];
 		}
 #if PAF
-		////emu_printf("Restart at level %d checkpoint %d cutscenes 0x%x\n", level, checkpoint, _paf->_playedMask);
+		//emu_printf("Restart at level %d checkpoint %d cutscenes 0x%x\n", level, checkpoint, _paf->_playedMask);
 		_paf->_playedMask = _setupConfig.players[num].cutscenesMask;
 		_snd_masterVolume = _setupConfig.players[num].volume;
 		_paf->setVolume(_snd_masterVolume);
@@ -2226,12 +2174,12 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	_cheats = 	kCheatSpectreFireballNoHit | kCheatOneHitPlasmaCannon |	kCheatOneHitSpecialPowers |	kCheatWalkOnLava | kCheatGateNoCrush |
 	kCheatLavaNoHit | kCheatRockShadowNoHit;
 	_currentLevel = level;
-//////emu_printf("createLevel %d\n", _currentLevel);
+//emu_printf("createLevel %d\n", _currentLevel);
 
 #ifdef DEBUG
 	g_system->initTimeStamp();
 #endif
-////emu_printf("createLevel\n");
+//emu_printf("createLevel\n");
 	createLevel();
 
 	assert(checkpoint < _res->_datHdr.levelCheckpointsCount[level]);
@@ -2239,7 +2187,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #ifdef SOUND
 	_mix._lock(1);
 #endif
-//////emu_printf("loadLevelData %d\n", _currentLevel);
+//emu_printf("loadLevelData %d\n", _currentLevel);
 	_res->loadLevelData(_currentLevel);
 #ifdef SOUND
 	clearSoundObjects();
@@ -2247,7 +2195,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #endif
 //_mstDisabled = true; // vbt : ajout pour test
 #if PAF
-//_paf->_skipCutscenes = true; // vbt : ajout pour test
+_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
 	_mstAndyCurrentScreenNum = -1;
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
@@ -2263,11 +2211,11 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		initMstCode();
 	}
 	memset(_level->_screenCounterTable, 0, sizeof(_level->_screenCounterTable));
-//////emu_printf("clearDeclaredLvlObjectsList\n");
+//emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
-//////emu_printf("initLvlObjects\n");
+//emu_printf("initLvlObjects\n");
 	initLvlObjects();
-//////emu_printf("resetPlasmaCannonState\n");
+//emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_res->_screensState[i].s2 = 0;
@@ -2279,12 +2227,12 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		startMstCode();
 	}
 #if PAF
-////emu_printf("_paf->_skipCutscenes %d _level->_checkpoint %d && !levelChanged %d\n", _paf->_skipCutscenes, _level->_checkpoint, levelChanged);
+//emu_printf("_paf->_skipCutscenes %d _level->_checkpoint %d && !levelChanged %d\n", _paf->_skipCutscenes, _level->_checkpoint, levelChanged);
 //	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 && !levelChanged) {
 // vbt: ne joue pas la video de fin du premier niveau
 	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 /*&& !levelChanged*/) {
 		const uint8_t num = _cutscenes[_currentLevel];
-		////emu_printf("vbt play cutscene\n");
+		//emu_printf("vbt play cutscene\n");
 		_paf->preload(num);
 		_paf->play(num);
 		_paf->unload(num);
@@ -2294,23 +2242,25 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	}
 #endif
 	_endLevel = false;
-//////emu_printf("resetShootLvlObjectDataTable\n");
+//emu_printf("resetShootLvlObjectDataTable\n");
 	resetShootLvlObjectDataTable();
-//////emu_printf("callLevel_initialize\n");
+//emu_printf("callLevel_initialize\n");
 	callLevel_initialize();
-//////emu_printf("restartLevel\n");
+//emu_printf("restartLevel\n");
 	restartLevel();
 	frame_y = frame_x = 0;
 
 	uint8_t last_frame_z = 0xFF;
 	char buffer[8];
+	
+	position_vram = 0;
 
 	while (true) {
 		const int frameTimeStamp = g_system->getTimeStamp() + _frameMs;
-//////emu_printf("levelMainLoop\n");
+//emu_printf("levelMainLoop\n");
 		levelMainLoop();
 		if (g_system->inp.quit || _endLevel) {
-//////emu_printf("levelMainLoop quit\n");
+//emu_printf("levelMainLoop quit\n");
 			break;
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
@@ -2417,7 +2367,6 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 	AnimBackgroundData *vg = (AnimBackgroundData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAnimBackgroundData);
 	const uint8_t *data = vg->currentSpriteData + soundDataLen;
 	if (_res->_currentScreenResourceNum == ptr->screenNum) {
-
 		if (ptr->currentSound != 0xFFFF) {
 #ifdef SOUND
 			playSound(ptr->currentSound, ptr, 0, 3);
@@ -2579,7 +2528,6 @@ LvlObject *Game::updateAnimatedLvlObjectType1(LvlObject *ptr) {
 
 LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 	LvlObject *next, *o;
-
 	o = next = ptr->nextPtr;
 	if ((ptr->spriteNum > 15 && !ptr->dataPtr) || !ptr->levelData0x2988) {
 		if (ptr->childPtr) {
@@ -2592,8 +2540,9 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 		return o;
 	}
 	if (!ptr->callbackFuncPtr) {
-		//emu_printf("updateAnimatedLvlObjectType2: no callback ptr\n");
+		emu_printf("updateAnimatedLvlObjectType2: no callback ptr\n");
 	} else {
+//		emu_printf("updateAnimatedLvlObjectType2: callback ptr %p\n", ptr->callbackFuncPtr);
 		if ((this->*(ptr->callbackFuncPtr))(ptr) == 0) {
 			return o;
 		}
@@ -2603,12 +2552,11 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 		ptr->yPos += calcScreenMaskDy(ptr->xPos + ptr->posTable[index].x, ptr->yPos + ptr->posTable[index].y, ptr->screenNum);
 	}
 	if (!ptr->bitmapBits) {
-//		//emu_printf("!ptr->bitmapBits\n");
 		return o;
 	}
 	if (_currentScreen == ptr->screenNum) {
 		const uint8_t *bitmap = ptr->bitmapBits;
-//		//emu_printf("ptr->bitmapBits\n");
+
 		LvlObjectData *dat = ptr->levelData0x2988;
 		LvlAnimHeader *ah = (LvlAnimHeader *)(dat->animsInfoData + kLvlAnimHdrOffset) + ptr->anim;
 		LvlAnimSeqHeader *ash = (LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset) + ptr->frame;
@@ -2624,18 +2572,19 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 			spr->h = ptr->height;
 			spr->bitmapBits = bitmap;
 			spr->num = num;
-//emu_printf("bitmapBits addToSpriteList\n");
 			addToSpriteList(spr);
 		}
 	}
+
 	if (ptr->spriteNum <= 15 || ptr->dataPtr == 0) {
 #ifdef SOUND
 		if (ptr->currentSound != 0xFFFF) {
 			playSound(ptr->currentSound, ptr, 0, 3);
 		}
-#endif	
+#endif
 		return o;
 	}
+
 	int a, c;
 	if (ptr->dataPtr >= &_monsterObjects1Table[0] && ptr->dataPtr < &_monsterObjects1Table[kMaxMonsterObjects1]) {
 		MonsterObject1 *m = (MonsterObject1 *)ptr->dataPtr;
@@ -2666,18 +2615,15 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 }
 
 LvlObject *Game::updateAnimatedLvlObject(LvlObject *o) {
-//emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
+//emu_printf("updateAnimatedLvlObject %d\n", o->type);
 	switch (o->type) {
 	case 0: // background animation
-//emu_printf("updateAnimatedLvlObjectType0\n");
 		o = updateAnimatedLvlObjectType0(o);
 		break;
 	case 1: // background sound
-//emu_printf("updateAnimatedLvlObjectType1\n");
 		o = updateAnimatedLvlObjectType1(o);
 		break;
 	case 2: // sprite / monster
-//emu_printf("updateAnimatedLvlObjectType2\n");
 		o = updateAnimatedLvlObjectType2(o);
 		break;
 	case 3:
@@ -2688,7 +2634,7 @@ LvlObject *Game::updateAnimatedLvlObject(LvlObject *o) {
 		o = o->nextPtr;
 		break;
 	default:
-		error("updateAnimatedLvlObject unhandled type %d", o->type);
+		emu_printf("updateAnimatedLvlObject unhandled type %d\n", o->type);
 		break;
 	}
 	return o;
@@ -2875,7 +2821,7 @@ void Game::levelMainLoop() {
 	_spritesTable[kMaxSprites - 1].nextPtr = 0;
 	_directionKeyMask = 0;
 	_actionKeyMask = 0;
-//////emu_printf("updateInput\n");
+//emu_printf("updateInput\n");
 	updateInput();
 	if (_playDemo && _res->_demOffset < _res->_dem.keyMaskLen) {
 		_andyObject->actionKeyMask = _res->_dem.actionKeyMask[_res->_demOffset];
@@ -2885,7 +2831,7 @@ void Game::levelMainLoop() {
 		_andyObject->directionKeyMask = _directionKeyMask;
 		_andyObject->actionKeyMask = _actionKeyMask;
 	}
-//////emu_printf("clearBackBuffer\n");
+//emu_printf("clearBackBuffer\n");
 
 	_video->clearBackBuffer();
 	if (_andyObject->screenNum != _res->_currentScreenResourceNum) {
@@ -2897,17 +2843,22 @@ void Game::levelMainLoop() {
 		preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
-	//emu_printf("--duration %s : %d\n","preloadLevel", e1-s1);
+	int result = e1-s1;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","preloadLevel", result);
 #endif
 //emu_printf("setupScreen2\n");
 		setupScreen(_andyObject->screenNum);
 #ifdef DEBUG
 	unsigned int e2 = g_system->getTimeStamp();
-	//emu_printf("--duration %s : %d\n","setupScreen", e2-e1);
+	result = e2-e1;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","setupScreen", result);
 #endif
 	} else if (_fadePalette && _levelRestartCounter == 0) {
 		restartLevel();
 	} else {
+//emu_printf("callLevel_postScreenUpdate\n");
 		callLevel_postScreenUpdate(_res->_currentScreenResourceNum);
 		if (_currentLeftScreen != kNoScreen) {
 			callLevel_postScreenUpdate(_currentLeftScreen);
@@ -2921,43 +2872,51 @@ void Game::levelMainLoop() {
 	}
 	_currentLevelCheckpoint = _level->_checkpoint;
 	if (updateAndyLvlObject()) {
+//emu_printf("callLevel_tick\n");
 		callLevel_tick();
 		return;
 	}
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e2b = g_system->getTimeStamp();
 #endif	
 //emu_printf("executeMstCode\n");
 	executeMstCode();
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e3 = g_system->getTimeStamp();
-	//emu_printf("--duration %s : %d\n","executeMst", e3-e2b);
+	int result = e3-e2b;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","executeMst", result);
 #endif
 //emu_printf("updateLvlObjectLists\n");
 	updateLvlObjectLists();
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e4 = g_system->getTimeStamp();
-	//emu_printf("--duration %s : %d\n","updateLvlObject", e4-e3);
+	result = e4-e3;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","updateLvlObject", result);
 #endif
 //emu_printf("callLevel_tick\n");
 	callLevel_tick();
 //emu_printf("updateAndyMonsterObjects\n");
 	updateAndyMonsterObjects();
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e5 = g_system->getTimeStamp();
-	//emu_printf("--duration %s : %d\n","updateAndyMonster", e5-e4);
+	result = e5-e4;
+	if(result>0)	
+		emu_printf("--duration %s : %d\n","updateAndyMonster", result);
 #endif
 	if (!_hideAndyObjectFlag) {
-//emu_printf("addToSpriteList\n");
 		addToSpriteList(_andyObject);
 	}
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dxPos = 0;
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dyPos = 0;
 //emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
 	updateAnimatedLvlObjectsLeftRightCurrentScreens();
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e6 = g_system->getTimeStamp();
-	//emu_printf("--duration %s : %d\n","updateAnimatedLvl", e6-e5);
+	result = e6-e5;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","updateAnimatedLvl", result);
 #endif
 	if (_currentLevel == kLvl_rock || _currentLevel == kLvl_lar2 || _currentLevel == kLvl_test) {
 		if (_andyObject->spriteNum == 0 && _plasmaExplosionObject && _plasmaExplosionObject->nextPtr != 0) {
@@ -2970,23 +2929,31 @@ void Game::levelMainLoop() {
 //emu_printf("updateGamePalette\n");
 		_video->updateGamePalette(_video->_displayPaletteBuffer);
 //emu_printf("copyRectWidescreen\n");
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
-	//emu_printf("--duration %s : %d\n","updateGamePalette", e7-e6);
+	result = e7-e6;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","updateGamePalette", result);
 #endif
-//		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
-#ifdef DEBUG2
+//emu_printf("copyRectWidescreen\n");
+		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+#ifdef DEBUG
 	unsigned int e8 = g_system->getTimeStamp();
-	//emu_printf("--duration %s : %d\n","copyRectWidescreen", e8-e7);
+	result = e8-e7;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","copyRectWidescreen", result);
 #endif
 	}
-#ifdef DEBUG2
-	unsigned int e6a = g_system->getTimeStamp();
+#ifdef DEBUG
+	unsigned int e6c = g_system->getTimeStamp();
 #endif
+//emu_printf("drawScreen\n");
 	drawScreen();
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
-	//emu_printf("------duration %s : %d\n","drawScreen", e7-e6a);
+	result = e7-e6c;
+	if(result>0)
+		emu_printf("------duration %s : %d\n","drawScreen", result);
 #endif
 #if 0
 	if (g_system->inp.screenshot) {
@@ -2995,7 +2962,7 @@ void Game::levelMainLoop() {
 	}
 
 	if (_cheats != 0) {
-//////emu_printf("_cheats\n");
+//emu_printf("_cheats\n");
 		char buffer[256];
 		snprintf(buffer, sizeof(buffer), "P%d S%02d %d R%d", _currentLevel, _andyObject->screenNum, _res->_screensState[_andyObject->screenNum].s0, _level->_checkpoint);
 		_video->drawString(buffer, (Video::W - strlen(buffer) * 8) / 2, 8, _video->findWhiteColor(), _video->_frontLayer);
@@ -3083,7 +3050,7 @@ void Game::callLevel_terminate() {
 }
 
 void Game::displayLoadingScreen() {
-//////emu_printf("displayLoadingScreen\n");
+//emu_printf("displayLoadingScreen\n");
 #ifdef PSX
 	if (_res->_isPsx) {
 		static const int kHintPsxLoading = 39;
@@ -4396,7 +4363,9 @@ LvlObject *Game::declareLvlObject(uint8_t type, uint8_t num) {
 			lvlObjectTypeCallback(ptr);
 		}
 		ptr->currentSprite = 0;
+#ifdef SOUND
 		ptr->sssObject = 0;
+#endif
 		ptr->nextPtr = 0;
 		ptr->bitmapBits = 0;
 		return ptr;
@@ -4432,7 +4401,7 @@ void Game::initLvlObjects() {
 			break;
 		case 1:
 			if (ptr->dataPtr) {
-				////emu_printf("Trying to free _resLvlScreenBackgroundDataTable.backgroundSoundTable (i=%d index=%d)\n", i, index);
+				//emu_printf("Trying to free _resLvlScreenBackgroundDataTable.backgroundSoundTable (i=%d index=%d)\n", i, index);
 			}
 			ptr->xPos = 0;
 			ptr->yPos = 0;

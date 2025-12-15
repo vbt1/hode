@@ -92,8 +92,8 @@ static const char *_usage =
 	"  --checkpoint=NUM  Start at checkpoint NUM\n"
 ;
 */
-static bool _fullscreen = false;
-static bool _widescreen = false;
+//static bool _fullscreen = false;
+//static bool _widescreen = false;
 
 //static const bool _runBenchmark = false;
 static bool _runMenu = true;
