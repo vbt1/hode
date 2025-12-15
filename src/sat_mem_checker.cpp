@@ -47,7 +47,7 @@ emu_printf("malloc %d type %d\n", alignedSize, type);
 		hwram = dst+alignedSize;
 	}
 	
-	if(type == TYPE_BGLVL || type == TYPE_BGLVLOBJ) // toujours moins de 500ko?
+	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
 //		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 //		{
@@ -66,13 +66,13 @@ emu_printf("malloc %d type %d\n", alignedSize, type);
 //		vdp1ram += SAT_ALIGN(alignedSize);
 //		}
 //vbt++;
-//emu_printf("TYPE_BGLVL %p nb calls %d\n", dst, vbt);
+emu_printf("TYPE_BGLVL %p size %d\n", dst, alignedSize);
 emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 	}
 
 	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
 	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE 	|| type == TYPE_PAF
-	|| type == TYPE_PAFHEAD || type == TYPE_GFSFILE || type == TYPE_SCRMASK)
+	|| type == TYPE_PAFHEAD || type == TYPE_GFSFILE || type == TYPE_SCRMASK || type == TYPE_BGLVLOBJ)
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{

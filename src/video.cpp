@@ -3,7 +3,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-#define USE_SPRITE 1
+//#define USE_SPRITE 1
 extern "C" {
 #include <sl_def.h>
 }
@@ -16,7 +16,7 @@ extern "C" {
 #include "util.h"
 
 extern Uint32 position_vram;
-extern SAT_sprite _sprData[10];
+extern SAT_sprite _sprData[4];
 static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 

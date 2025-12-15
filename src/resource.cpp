@@ -856,7 +856,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 }
 
 void Resource::unloadLvlScreenBackgroundData(int num) {
-//emu_printf("unloadLvlScreenBackgroundData %d\n");
+emu_printf("unloadLvlScreenBackgroundData %p\n", cs1ram_bg);
 	if (_resLevelData0x2B88SizeTable[num] != 0) {
 //		free(_resLvlScreenBackgroundDataPtrTable[num]);
 		_resLvlScreenBackgroundDataPtrTable[num] = 0;
