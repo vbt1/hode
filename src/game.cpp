@@ -1,6 +1,6 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
-#define DEBUG 1
+//#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -970,7 +970,7 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 #if 1 // vbt : fait planter au passage des deux gros monstres
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
-emu_printf("free unloadLvlData1 %d %d\n", num, prev);
+//emu_printf("free unloadLvlData1 %d %d\n", num, prev);
 //		LvlObjectData *dat = &_res->_resLevelData0x2988Table[prev];
 		_res->unloadLvlScreenBackgroundData(prev);
 /*
@@ -983,7 +983,7 @@ emu_printf("free unloadLvlData1 %d %d\n", num, prev);
 
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
-emu_printf("free unloadLvlData2 %d %d\n", num, prev);
+//emu_printf("free unloadLvlData2 %d %d\n", num, prev);
 		_res->unloadLvlScreenBackgroundData(num);
 //		LvlObjectData *dat = &_res->_resLevelData0x2988Table[num];
 /*
@@ -1857,7 +1857,7 @@ int Game::restoreAndyCollidesLava() {
 }
 
 int Game::updateAndyLvlObject() {
-emu_printf("updateAndyLvlObject\n");
+//emu_printf("updateAndyLvlObject\n");
 	if (!_andyObject) {
 		return 0;
 	}
@@ -2541,7 +2541,7 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 	if (!ptr->callbackFuncPtr) {
 		emu_printf("updateAnimatedLvlObjectType2: no callback ptr\n");
 	} else {
-		emu_printf("updateAnimatedLvlObjectType2: callback ptr %p\n", ptr->callbackFuncPtr);
+//		emu_printf("updateAnimatedLvlObjectType2: callback ptr %p\n", ptr->callbackFuncPtr);
 		if ((this->*(ptr->callbackFuncPtr))(ptr) == 0) {
 			return o;
 		}
@@ -2614,7 +2614,7 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 }
 
 LvlObject *Game::updateAnimatedLvlObject(LvlObject *o) {
-emu_printf("updateAnimatedLvlObject %d\n", o->type);
+//emu_printf("updateAnimatedLvlObject %d\n", o->type);
 	switch (o->type) {
 	case 0: // background animation
 		o = updateAnimatedLvlObjectType0(o);
@@ -2909,7 +2909,7 @@ void Game::levelMainLoop() {
 	}
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dxPos = 0;
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dyPos = 0;
-emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
+//emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
 	updateAnimatedLvlObjectsLeftRightCurrentScreens();
 #ifdef DEBUG
 	unsigned int e6 = g_system->getTimeStamp();
@@ -2925,7 +2925,7 @@ emu_printf("updateAnimatedLvlObjectsLeftRightCurrentScreens\n");
 	}
 	if (_video->_paletteChanged) {
 		_video->_paletteChanged = false;
-emu_printf("updateGamePalette\n");
+//emu_printf("updateGamePalette\n");
 		_video->updateGamePalette(_video->_displayPaletteBuffer);
 //emu_printf("copyRectWidescreen\n");
 #ifdef DEBUG
@@ -2934,7 +2934,7 @@ emu_printf("updateGamePalette\n");
 	if(result>0)
 		emu_printf("--duration %s : %d\n","updateGamePalette", result);
 #endif
-emu_printf("copyRectWidescreen\n");
+//emu_printf("copyRectWidescreen\n");
 		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG
 	unsigned int e8 = g_system->getTimeStamp();
@@ -2946,7 +2946,7 @@ emu_printf("copyRectWidescreen\n");
 #ifdef DEBUG
 	unsigned int e6c = g_system->getTimeStamp();
 #endif
-emu_printf("drawScreen\n");
+//emu_printf("drawScreen\n");
 	drawScreen();
 #ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();

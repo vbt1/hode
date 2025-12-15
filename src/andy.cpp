@@ -1548,7 +1548,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 //emu_printf("setupAndyObjectMoveData done\n");
 	while (count != 0) {
 		--count;
-			emu_printf("assert %d %d\n", asfh[count].move , dat->movesCount);
+//			emu_printf("assert %d %d\n", asfh[count].move , dat->movesCount);
 //		assert(asfh[count].move < dat->movesCount);
 		if(asfh[count].move >= dat->movesCount)
 		{
@@ -1589,8 +1589,15 @@ void Game::updateAndyObject(LvlObject *ptr) {
 		yPos = ptr->posTable[7].y + ptr->yPos;
 	}
 	if (mask) {
+//			emu_printf("assert2 %d %d\n", count , ash->count);
+//		assert(count < ash->count);
+		if(count >= ash->count)
+		{
 			emu_printf("assert2 %d %d\n", count , ash->count);
-		assert(count < ash->count);
+			count = 0;
+//			return;
+		}
+			
 		currentAnimFrame = asfh[count].frame;
 		currentAnim = asfh[count].anim;
 
