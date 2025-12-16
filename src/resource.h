@@ -534,7 +534,7 @@ struct ResStruct {
 	}
 
 	void allocate(unsigned int size) {
-		free(ptr);
+//		free(ptr);
 		count = size;
 // vbt : on garde malloc, peu couteux
 		ptr = (T *)malloc(size * sizeof(T));

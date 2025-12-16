@@ -1680,7 +1680,6 @@ sameAnim:
 	ptr->frame = currentAnimFrame;
 #ifdef SOUND
 	ptr->currentSound = ash->sound;
-#ifdef SOUND
 	if (ptr->currentSound != 0xFFFF && ptr->type == 8 && ptr->spriteNum < 5) {
 		playSound(ptr->currentSound, ptr, 0, 0);
 	}

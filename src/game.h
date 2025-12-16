@@ -306,7 +306,7 @@ struct Game {
 	int clipLvlObjectsSmall(LvlObject *o, LvlObject *ptr, int count);
 	int restoreAndyCollidesLava();
 	int updateAndyLvlObject();
-	void drawPlasmaCannon(uint8_t* dst);
+	void drawPlasmaCannon();
 	void updateBackgroundPsx(int num);
 	void drawScreen();
 	void updateLvlObjectList(LvlObject **list);

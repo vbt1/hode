@@ -2094,68 +2094,68 @@ void Resource::loadMstData(File *fp) {
 void Resource::unloadMstData() {
 //emu_printf("unloadMstData\n");
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
-		free(_mstWalkCodeData[i].codeData);
+//		free(_mstWalkCodeData[i].codeData);
 		_mstWalkCodeData[i].codeData = 0;
-		free(_mstWalkCodeData[i].indexData);
+//		free(_mstWalkCodeData[i].indexData);
 		_mstWalkCodeData[i].indexData = 0;
 	}
 	for (int i = 0; i < _mstHdr.behaviorIndexDataCount; ++i) {
-		free(_mstBehaviorIndexData[i].behavior);
+//		free(_mstBehaviorIndexData[i].behavior);
 		_mstBehaviorIndexData[i].behavior = 0;
-		free(_mstBehaviorIndexData[i].data);
+//		free(_mstBehaviorIndexData[i].data);
 		_mstBehaviorIndexData[i].data = 0;
 	}
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
-		free(_mstMonsterActionIndexData[i].indexUnk48);
+//		free(_mstMonsterActionIndexData[i].indexUnk48);
 		_mstMonsterActionIndexData[i].indexUnk48 = 0;
-		free(_mstMonsterActionIndexData[i].data);
+//		free(_mstMonsterActionIndexData[i].data);
 		_mstMonsterActionIndexData[i].data = 0;
 	}
 	for (int i = 0; i < _mstHdr.walkPathDataCount; ++i) {
-		free(_mstWalkPathData[i].data);
+//		free(_mstWalkPathData[i].data);
 		_mstWalkPathData[i].data = 0;
-		free(_mstWalkPathData[i].walkNodeData);
+//		free(_mstWalkPathData[i].walkNodeData);
 		_mstWalkPathData[i].walkNodeData = 0;
 	}
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
-		free(_mstBehaviorData[i].data);
+//		free(_mstBehaviorData[i].data);
 		_mstBehaviorData[i].data = 0;
 	}
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
-		free(_mstAttackBoxData[i].data);
+//		free(_mstAttackBoxData[i].data);
 		_mstAttackBoxData[i].data = 0;
 	}
 	for (int i = 0; i < _mstHdr.monsterActionDataCount; ++i) {
 		MstMonsterAction *m = &_mstMonsterActionData[i];
 		for (int j = 0; j < 2; ++j) {
-			free(m->data1[j]);
+//			free(m->data1[j]);
 			m->data1[j] = 0;
-			free(m->data2[j]);
+//			free(m->data2[j]);
 			m->data2[j] = 0;
 		}
-		free(m->area);
+//		free(m->area);
 		m->area = 0;
 	}
 
-	free(_mstMonsterInfos);
+//	free(_mstMonsterInfos);
 	_mstMonsterInfos = 0;
 
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
-		free(_mstMovingBoundsData[i].data1);
+//		free(_mstMovingBoundsData[i].data1);
 		_mstMovingBoundsData[i].data1 = 0;
-		free(_mstMovingBoundsData[i].indexData);
+//		free(_mstMovingBoundsData[i].indexData);
 		_mstMovingBoundsData[i].indexData = 0;
 	}
 	for (int i = 0; i < _mstHdr.shootDataCount; ++i) {
-		free(_mstShootData[i].data);
+//		free(_mstShootData[i].data);
 		_mstShootData[i].data = 0;
 	}
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {
-		free(_mstShootIndexData[i].indexUnk50Unk1);
+//		free(_mstShootIndexData[i].indexUnk50Unk1);
 		_mstShootIndexData[i].indexUnk50Unk1 = 0;
 	}
 
-	free(_mstCodeData);
+//	free(_mstCodeData);
 	_mstCodeData = 0;
 }
 

@@ -57,11 +57,11 @@ Video::Video() {
 
 Video::~Video() {
 	//emu_printf("free video\n");
-	free(_shadowLayer);
-	free(_frontLayer);
-	free(_backgroundLayer);
-	free(_shadowColorLookupTable);
-	free(_shadowScreenMaskBuffer);
+//	free(_shadowLayer);
+//	free(_frontLayer);
+//	free(_backgroundLayer);
+//	free(_shadowColorLookupTable);
+//	free(_shadowScreenMaskBuffer);
 #ifdef PSX
 	free(_mdec.planes[kOutputPlaneY].ptr);
 	free(_mdec.planes[kOutputPlaneCb].ptr);
@@ -412,11 +412,10 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 	const int xAnchor = x;
 	const int yAnchor = y;
 #endif
-	/* Curseurs de décodage écran */
+	
 	if (flags & kSprHorizFlip) x = x2;
 	if (flags & kSprVertFlip)  y = y2;
 
-	/* Sauvegarde de l’ancrage écran */
 #ifdef USE_SPRITE
 	const uint16_t w_raw = spr_w;
 	const uint16_t w     = (w_raw + 7) & ~7;
@@ -431,15 +430,12 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 	position_vram += size;
 
 	SPRITE user_sprite;
-	user_sprite.PMOD = CL256Bnk | ECdis /*| SPdis*/ | 0x0800;
+	user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
 	user_sprite.COLR = 0;
 	user_sprite.SIZE = (w / 8) << 8 | h;
 	user_sprite.CTRL = (FUNC_Sprite | _ZmLT);
-//	user_sprite.CTRL = 0;
 	user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
-//	user_sprite.XA   = xAnchor - 160;
 	user_sprite.YA   = yAnchor - 112 + 16;
-//	user_sprite.XB   = (spr_w * 5) >> 1;
 	user_sprite.XB   = (w * 5) >> 1;
 	user_sprite.YB   = spr_h;
 	user_sprite.GRDA = 0;
@@ -453,7 +449,14 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 	int iy2 = (flags & kSprVertFlip)  ? (h - 1) : 0;
 	const int ix2Orig = ix2;
 #endif
-	const int xOrig   = x;
+	const int xOrig = x;
+	
+	// Pre-compute commonly used flag checks
+	const bool hFlip = (flags & kSprHorizFlip) != 0;
+	const bool vFlip = (flags & kSprVertFlip) != 0;
+#ifndef USE_SPRITE
+	const uint8_t clipFlags = flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight);
+#endif
 
 	while (1) {
 #ifndef USE_SPRITE
@@ -475,10 +478,10 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 		/* ---------- COPY ---------- */
 		case 0:
 #ifndef USE_SPRITE
-			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+			if (clipFlags == 0) {
 				memcpy(p, src, clippedCount);
 				x += count;
-			} else if (flags & kSprHorizFlip) {
+			} else if (hFlip) {
 				for (int i = 0; i < clippedCount; ++i)
 					if (x - i >= 0 && x - i < W) p[-i] = src[i];
 				x -= count;
@@ -488,7 +491,7 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 				x += count;
 			}
 #else
-			if (!(flags & kSprHorizFlip)) {
+			if (!hFlip) {
 				memcpy(p2, src, count);
 				ix2 += count;
 			} else {
@@ -497,7 +500,6 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 				ix2 -= count;
 			}
 #endif
-//			x += (flags & kSprHorizFlip) ? -count : count;
 			src += count;
 			break;
 
@@ -505,10 +507,10 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 		case 1:
 			code = *src++;
 #ifndef USE_SPRITE
-			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+			if (clipFlags == 0) {
 				memset(p, code, clippedCount);
 				x += count;
-			} else if (flags & kSprHorizFlip) {
+			} else if (hFlip) {
 				for (int i = 0; i < clippedCount; ++i)
 					if (x - i >= 0 && x - i < W) p[-i] = code;
 				x -= count;	
@@ -518,7 +520,7 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 				x += count;
 			}
 #else
-			if (!(flags & kSprHorizFlip)) {
+			if (!hFlip) {
 				memset(p2, code, count);
 				ix2 += count;
 			} else {
@@ -527,16 +529,15 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 				ix2 -= count;
 			}
 #endif
-//			x += (flags & kSprHorizFlip) ? -count : count;
 			break;
 
 		/* ---------- SKIP X ---------- */
 		case 2:
 			if (count == 0) count = *src++;
 #ifdef USE_SPRITE
-			ix2 += (flags & kSprHorizFlip) ? -count : count;
+			ix2 += hFlip ? -count : count;
 #else
-			x   += (flags & kSprHorizFlip) ? -count : count;
+			x   += hFlip ? -count : count;
 #endif
 			break;
 
@@ -548,48 +549,42 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
 			}
 
 #ifdef USE_SPRITE
-			iy2 += (flags & kSprVertFlip) ? -count : count;
+			iy2 += vFlip ? -count : count;
 #else
-			y   += (flags & kSprVertFlip) ? -count : count;
+			y   += vFlip ? -count : count;
 #endif
 			uint8_t dx = *src++;
-			if (flags & kSprHorizFlip) {
 #ifdef USE_SPRITE
-				ix2 = ix2Orig - dx;
+			ix2 = hFlip ? (ix2Orig - dx) : (ix2Orig + dx);
 #else
-				x   = xOrig   - dx;
+			x   = hFlip ? (xOrig - dx) : (xOrig + dx);
 #endif
-			} else {
-#ifdef USE_SPRITE
-				ix2 = ix2Orig + dx;
-#else
-				x   = xOrig   + dx;
-#endif
-			}
 			break;
 		}
 	}
 }
 
-
 void Video::decodeRLE(const uint8_t *src, uint8_t *dst, int size) {
-	int count;
-
-	while (size > 0) {
+//	emu_printf("decode RLE\n");
+	uint8_t *dstEnd = dst + size;
+	
+	while (dst < dstEnd) {
 		int8_t code = *src++;
+		int count;
+		
 		if (code < 0) {
+			// RLE run - fill
 			count = 1 - code;
 			const uint8_t color = *src++;
 			memset(dst, color, count);
 		} else {
+			// Literal run - copy
 			count = code + 1;
 			memcpy(dst, src, count);
 			src += count;
 		}
 		dst += count;
-		size -= count;
 	}
-	assert(size == 0);
 }
 
 // https://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm

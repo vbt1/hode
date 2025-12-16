@@ -281,13 +281,13 @@ void Game::loadTransformLayerData(const uint8_t *data) {
 //	_video->_transformShadowBuffer = (uint8_t *)malloc(256 * 192 + 256);
 	_video->_transformShadowBuffer = allocate_memory (TYPE_SHADWBUF, 256 * 192 + 256);
 	const int size = decodeLZW(data, _video->_transformShadowBuffer);
-	assert(size == 256 * 192);
+//	assert(size == 256 * 192);
 	memcpy(_video->_transformShadowBuffer + 256 * 192, _video->_transformShadowBuffer, 256);
 }
 
 void Game::unloadTransformLayerData() {
 //emu_printf("vbt unloadTransformLayerData\n");	
-	free(_video->_transformShadowBuffer);
+//	free(_video->_transformShadowBuffer);
 	_video->_transformShadowBuffer = 0;
 }
 
@@ -382,7 +382,17 @@ void Game::setupBackgroundBitmap() {
 #endif
 	{
 //emu_printf("decodeLZW %p %p num %d\n", bmp, _video->_backgroundLayer, num);
-		decodeLZW(bmp, _video->_backgroundLayer);
+	unsigned int s1 = g_system->getTimeStamp();
+	
+//	for(int i=0;i<10;i++)
+	decodeLZW(bmp, _video->_backgroundLayer);
+
+#ifdef DEBUG
+	unsigned int e1 = g_system->getTimeStamp();
+	int result = e1-s1;
+	if(result>0)
+		emu_printf("--duration %s : %d\n","decodeLZW", result);
+#endif		
 	}
 //lvl->shadowCount = 1;
 	if (lvl->shadowCount != 0) {
