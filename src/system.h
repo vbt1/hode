@@ -16,9 +16,10 @@
 #define SYS_INP_JUMP  (1 << 5) /* (1 << 1) */
 #define SYS_INP_SHOOT (1 << 6) /* (1 << 2) */
 #define SYS_INP_ESC   (1 << 7)
+#define SYS_INP_NEXT  (1 << 8)
 
 struct PlayerInput {
-	uint8_t prevMask, mask;
+	uint16_t prevMask, mask;
 	bool quit;
 //	bool screenshot;
 

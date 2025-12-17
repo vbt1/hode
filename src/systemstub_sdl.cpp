@@ -449,6 +449,16 @@ void SystemStub_SDL::processEvents() {
 					inp.mask &= ~SYS_INP_JUMP;
 			}
 
+			if (PAD_PUSH_X)
+			{
+				inp.mask |= SYS_INP_NEXT;
+			}
+			else
+			{
+				if (PAD_PULL_X)
+					inp.mask &= ~SYS_INP_NEXT;
+			}
+
 			if (PAD_PUSH_RTRIG)
 				inp.mask |= SYS_INP_SHOOT;
 			else

@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define PAF 1
 //#define DEBUG 1
 /*
@@ -2800,7 +2800,7 @@ void Game::updateAndyMonsterObjects() {
 }
 
 void Game::updateInput() {
-	const uint8_t inputMask = g_system->inp.mask;
+	const uint16_t inputMask = g_system->inp.mask;
 	if (inputMask & SYS_INP_RUN) {
 		_actionKeyMask |= kActionKeyMaskRun;
 	}
@@ -2810,6 +2810,13 @@ void Game::updateInput() {
 	if (inputMask & SYS_INP_SHOOT) {
 		_actionKeyMask |= kActionKeyMaskShoot;
 	}
+	if (inputMask & SYS_INP_NEXT) {
+//		_actionKeyMask |= kActionKeyMaskShoot;
+emu_printf("next check point\n");
+		_level->_checkpoint++;
+		_level->getCheckpointData(_level->_checkpoint);
+		restartLevel();
+	}	
 	if (inputMask & SYS_INP_UP) {
 		_directionKeyMask |= kDirectionKeyMaskUp;
 	} else if (inputMask & SYS_INP_DOWN) {

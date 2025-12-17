@@ -796,31 +796,31 @@ static inline uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
     assert(dst1 == _shadowLayer);
     assert(dst2 == _frontLayer);
-
+    
     dst2 += y * dst_pitch + x;
-
+    const uint8_t * const lut = _shadowColorLut;
+    
+    // Process one scanline at a time
     for (int j = 0; j < src_h; ++j) {
-        // Simple 2x unroll - reduces loop overhead without complexity
-        int i = 0;
-        for (; i < (src_w & ~1); i += 2) {
-            uint16_t offset0 = READ_LE_UINT16(src1); src1 += 2;
-            uint16_t offset1 = READ_LE_UINT16(src1); src1 += 2;
-
-            uint8_t a0 = dst1[offset0];
-            uint8_t b0 = dst2[i];
-            uint8_t a1 = dst1[offset1];
-            uint8_t b1 = dst2[i + 1];
-
-            dst2[i] = (a0 >= 144 && b0 < 144) ? _shadowColorLut[b0] : b0;
-            dst2[i + 1] = (a1 >= 144 && b1 < 144) ? _shadowColorLut[b1] : b1;
+        const uint8_t *offsets_ptr = src1;
+        uint8_t *out = dst2;
+        
+        // Just process pixels sequentially - keep it simple
+        for (int i = 0; i < src_w; ++i) {
+            uint16_t offset = READ_LE_UINT16(offsets_ptr);
+            offsets_ptr += 2;
+            
+            uint8_t shadow_val = dst1[offset];
+            uint8_t front_val = *out;
+            
+            // Simple condition - let compiler optimize
+            if (shadow_val >= 144 && front_val < 144) {
+                *out = lut[front_val];
+            }
+            out++;
         }
-
-        // Handle odd pixel
-        if (i < src_w) {
-            uint16_t offset = READ_LE_UINT16(src1); src1 += 2;
-            dst2[i] = lookupColor(dst1[offset], dst2[i], _shadowColorLut);
-        }
-
+        
+        src1 += src_w * 2;
         dst2 += dst_pitch;
     }
 }
