@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define PAF 1
 //#define DEBUG 1
 /*
@@ -976,39 +976,18 @@ endDir:
 }
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
-	assert(num != kNoScreen);
-#if 1 // vbt : fait planter au passage des deux gros monstres
+	if(num == kNoScreen)
+		return;
+
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
-//emu_printf("free unloadLvlData1 %d %d\n", num, prev);
-//		LvlObjectData *dat = &_res->_resLevelData0x2988Table[prev];
 		_res->unloadLvlScreenBackgroundData(prev);
-/*
-		_res->_resLevelData0x2B88SizeTable[prev] = 0;
-		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
-		memset(_res->_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_res->_resLvlScreenBackgroundDataPtrTable));
-		_res->_resLvlScreenBackgroundDataPtrTable[prev] = 0;
-*/
 	}
-
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
-//emu_printf("free unloadLvlData2 %d %d\n", num, prev);
 		_res->unloadLvlScreenBackgroundData(num);
-//		LvlObjectData *dat = &_res->_resLevelData0x2988Table[num];
-/*
-		_res->_resLevelData0x2B88SizeTable[num] = 0;
-		memset(_res->_resLvlScreenBackgroundDataTable, 0, sizeof(_res->_resLvlScreenBackgroundDataTable));
-		memset(_res->_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_res->_resLvlScreenBackgroundDataPtrTable));
-		_res->_resLvlScreenBackgroundDataPtrTable[num] = 0;
-*/
 	}
-#endif
-	if (!_res->isLvlBackgroundDataLoaded(num)) 
-	{
-//		//emu_printf("to be loaded\n");
-		_res->loadLvlScreenBackgroundData(num);
-	}
+	_res->loadLvlScreenBackgroundData(num);
 #ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {
 		const SssPreloadInfo *preloadInfo = &_res->_sssPreloadInfosData[num];
@@ -1234,7 +1213,7 @@ void Game::setupScreenLvlObjects(int num) {
 			}
 			break;
 		case 2:
-emu_printf("setupScreenLvlObjects %p\n", _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum]);
+//emu_printf("setupScreenLvlObjects %p\n", _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum]);
 			ptr->levelData0x2988 = _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum];
 			if (!ptr->levelData0x2988) {
 				emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
