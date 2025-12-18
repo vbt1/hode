@@ -35,6 +35,9 @@ static const uint8_t _pwr1_screenStartData[80] = {
 
 struct Level_pwr1: Level {
 	virtual const CheckpointData *getCheckpointData(int num) const { return &_pwr1_checkpointData[num]; }
+	virtual int getLastCheckpointNumber() const { 
+		return sizeof(_pwr1_checkpointData) / sizeof(_pwr1_checkpointData[0]) - 1; 
+	}
 	virtual const uint8_t *getScreenRestartData() const { return _pwr1_screenStartData; }
 	virtual void initialize();
 	virtual void terminate();

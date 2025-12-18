@@ -33,6 +33,9 @@ static const uint8_t _rock_screenStartData[56] = {
 
 struct Level_rock: Level {
 	virtual const CheckpointData *getCheckpointData(int num) const { return &_rock_checkpointData[num]; }
+	virtual int getLastCheckpointNumber() const { 
+		return sizeof(_rock_checkpointData) / sizeof(_rock_checkpointData[0]) - 1; 
+	}
 	virtual const uint8_t *getScreenRestartData() const { return _rock_screenStartData; }
 	virtual void initialize();
 	virtual void terminate();

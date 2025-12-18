@@ -29,6 +29,9 @@ static const uint8_t _fort_screenStartData[56] = {
 
 struct Level_fort: Level {
 	virtual const CheckpointData *getCheckpointData(int num) const { return &_fort_checkpointData[num]; }
+	virtual int getLastCheckpointNumber() const { 
+		return sizeof(_fort_checkpointData) / sizeof(_fort_checkpointData[0]) - 1; 
+	}
 	virtual const uint8_t *getScreenRestartData() const { return _fort_screenStartData; }
 	//virtual void initialize();
 	//virtual void terminate();

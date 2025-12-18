@@ -2791,10 +2791,13 @@ void Game::updateInput() {
 	}
 	if (inputMask & SYS_INP_NEXT) {
 //		_actionKeyMask |= kActionKeyMaskShoot;
-emu_printf("next check point\n");
-		_level->_checkpoint++;
-		_level->getCheckpointData(_level->_checkpoint);
-		restartLevel();
+		if(_level->_checkpoint < _level->getLastCheckpointNumber())
+		{
+			_level->_checkpoint++;
+			emu_printf("next check point %d\n", _level->_checkpoint);
+			_level->getCheckpointData(_level->_checkpoint);
+			restartLevel();
+		}
 	}	
 	if (inputMask & SYS_INP_UP) {
 		_directionKeyMask |= kDirectionKeyMaskUp;

@@ -24,6 +24,9 @@ static const uint8_t _lava_screenStartData[40] = {
 
 struct Level_lava: Level {
 	virtual const CheckpointData *getCheckpointData(int num) const { return &_lava_checkpointData[num]; }
+	virtual int getLastCheckpointNumber() const { 
+		return sizeof(_lava_checkpointData) / sizeof(_lava_checkpointData[0]) - 1; 
+	}
 	virtual const uint8_t *getScreenRestartData() const { return _lava_screenStartData; }
 	virtual void initialize();
 	virtual void terminate();

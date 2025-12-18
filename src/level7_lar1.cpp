@@ -28,6 +28,9 @@ static const uint8_t _lar1_screenStartData[56] = {
 
 struct Level_lar1: Level {
 	virtual const CheckpointData *getCheckpointData(int num) const { return &_lar1_checkpointData[num]; }
+	virtual int getLastCheckpointNumber() const { 
+		return sizeof(_lar1_checkpointData) / sizeof(_lar1_checkpointData[0]) - 1; 
+	}
 	virtual const uint8_t *getScreenRestartData() const { return _lar1_screenStartData; }
 	virtual void initialize();
 	virtual void terminate();
