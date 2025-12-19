@@ -2184,7 +2184,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #endif
 //_mstDisabled = true; // vbt : ajout pour test
 #if PAF
-_paf->_skipCutscenes = true; // vbt : ajout pour test
+//_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
 	_mstAndyCurrentScreenNum = -1;
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
