@@ -61,8 +61,8 @@ void errGfsFunc(void *obj, int ec)
 #define GFCD_ERR_QFULL          -8      /* ã‚³ãƒžãƒ³ãƒ‰ã‚­ãƒ¥ãƒ¼ãŒã„ã£ã±ã„ */
 #define GFCD_ERR_NOTOWNER       -9      /* éžæ‰€æœ‰è€…ãŒè³‡æºã‚’æ“ä½œã—ã‚ˆã†ã¨ã—ãŸ */
 #define GFCD_ERR_CDC            -10     /* CDCã‹ã‚‰ã®ã‚¨ãƒ©ãƒ¼ */
-#define GFCD_ERR_CDBFS          -11     /* CDãƒ–ãƒ­ãƒƒã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ã‚¨ãƒ©ãƒ¼ */
-#define GFCD_ERR_TMOUT          -12     /* ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ */
+#define GFCD_ERR_CDBFS          -11     /* CDãƒ–ãƒ­ãƒƒã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ã‚¨ãƒ©ãƒ¼ */
+#define GFCD_ERR_TMOUT          -12     /* ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ */
 #define GFCD_ERR_OPEN           -13     /* ãƒˆãƒ¬ã‚¤ãŒé–‹ã„ã¦ã„ã‚‹ */
 #define GFCD_ERR_NODISC         -14     /* ãƒ‡ã‚£ã‚¹ã‚¯ãŒå…¥ã£ã¦ã„ãªã„ */
 #define GFCD_ERR_CDROM          -15     /* CD-ROMã§ãªã„ãƒ‡ã‚£ã‚¹ã‚¯ãŒå…¥ã£ã¦ã„ã‚‹ */
@@ -329,4 +329,3 @@ size_t sat_fwrite(const void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) 
 int sat_ferror(GFS_FILE *stream) {
 	return 0;
 }
-

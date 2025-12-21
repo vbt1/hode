@@ -10,6 +10,8 @@
 #include "defs.h"
 #include "fileio.h"
 #include "video.h"
+//#define FORCE_INLINE __attribute__((always_inline)) inline
+#define FORCE_INLINE 
 
 struct PafHeader {
 	uint32_t preloadFrameBlocksCount;
@@ -118,8 +120,8 @@ struct PafPlayer {
 	void decodeVideoFrame(const uint8_t *src);
 	inline uint8_t *getVideoPageOffset(uint16_t val);
 	void decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code);
-	void decodeVideoFrameOp1(const uint8_t *src);
-	void decodeVideoFrameOp2(const uint8_t *src);
+	FORCE_INLINE void decodeVideoFrameOp1(const uint8_t *src);
+	FORCE_INLINE void decodeVideoFrameOp2(const uint8_t *src);
 	void decodeVideoFrameOp4(const uint8_t *src);
 
 	void decodeAudioFrame(const uint8_t *src, uint32_t offset, uint32_t size);

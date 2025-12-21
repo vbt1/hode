@@ -2113,13 +2113,11 @@ int nbspr=0;
 //	emu_printf("slsynch nb %d\n", nbspr);
 //	slSynch();
 }
-
-static void gamePafCallback(void *userdata) {
 #ifdef SOUND
+static void gamePafCallback(void *userdata) {
 	((Game *)userdata)->resetSound();
-#endif
 }
-
+#endif
 void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 //emu_printf("game mainloop\n");
 /*	if (_playDemo && _res->loadHodDem()) {
@@ -2151,7 +2149,9 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #if PAF
 	PafCallback pafCb;
 	pafCb.frameProc = 0;
+#ifdef SOUND
 	pafCb.endProc = gamePafCallback;
+#endif
 	pafCb.userdata = this;
 	_paf->setCallback(&pafCb);
 #endif

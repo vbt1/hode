@@ -30,6 +30,7 @@ static const char *_filenames[] = {
 	0
 };
 */
+
 static bool openPaf(FileSystem *fs, File *f) {
 ////emu_printf("openPaf\n");	
 /*	
@@ -192,10 +193,11 @@ bool PafPlayer::readPafHeader() {
 	////emu_printf("readPafHeader\n");
 	static const char *kSignature = "Packed Animation File V1.0\n(c) 1992-96 Amazing Studio\n";
 	_file.read(_bufferBlock, kBufferBlockSize);
-	if (memcmp(_bufferBlock, kSignature, strlen(kSignature)) != 0) {
+/*	if (memcmp(_bufferBlock, kSignature, strlen(kSignature)) != 0) {
 		////emu_printf("readPafHeader() Unexpected signature\n");
 		return false;
 	}
+*/
 	_pafHdr.frameDuration = READ_LE_UINT32(_bufferBlock + 0x88);
 	_pafHdr.startOffset = READ_LE_UINT32(_bufferBlock + 0xA4);
 	_pafHdr.preloadFrameBlocksCount = READ_LE_UINT32(_bufferBlock + 0x9C);
@@ -276,7 +278,6 @@ emu_printf("decode %d -- ", code & 0xF);
 		break;
 	}
 }
-#define FORCE_INLINE __attribute__((always_inline)) inline
 
 FORCE_INLINE void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
 /*	for (int i = 0; i < 4; ++i) {
@@ -588,11 +589,11 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 }
 
 #endif
-void PafPlayer::decodeVideoFrameOp1(const uint8_t *src) {
+FORCE_INLINE void PafPlayer::decodeVideoFrameOp1(const uint8_t *src) {
 	memcpy(_pageBuffers[_currentPageBuffer], src + 2, kVideoWidth * kVideoHeight);
 }
 
-void PafPlayer::decodeVideoFrameOp2(const uint8_t *src) {
+FORCE_INLINE void PafPlayer::decodeVideoFrameOp2(const uint8_t *src) {
 	const int page = *src++;
 	if (page != _currentPageBuffer) {
 		memcpy(_pageBuffers[_currentPageBuffer], _pageBuffers[page], kVideoWidth * kVideoHeight);
@@ -709,7 +710,7 @@ void PafPlayer::mix(int16_t *buf, int samples) {
 static void mixAudio(void *userdata, int16_t *buf, int len) {
 	((PafPlayer *)userdata)->mix(buf, len);
 }
-#if 1
+#if 0
 void PafPlayer::mainLoop() {
 ////emu_printf("mainLoop paf\n");
 	_file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
@@ -777,11 +778,12 @@ unsigned int e2 = g_system->getTimeStamp();
 int result = e2-s2;
 if(result>0)
 	emu_printf("--duration %s : %d\n","decodeframe", result);
-		if (_pafCb.frameProc) {
+/*		if (_pafCb.frameProc) {
 			_pafCb.frameProc(_pafCb.userdata, i, _pageBuffers[_currentPageBuffer]);
 		} else {
+*/
 			g_system->copyRect((int)0, (int)0, (int)kVideoWidth, (int)kVideoHeight, _pageBuffers[_currentPageBuffer], (int)kVideoWidth);
-		}
+//		}
 		if (_paletteChanged) {
 			_paletteChanged = false;
 			g_system->setPalette(_paletteBuffer, 256, 6);
@@ -795,6 +797,8 @@ if(result>0)
 			buffer[2] = 0;
 		}
 		_video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
+#else
+	emu_printf("fps %d\n", frame_z);
 #endif
 
 unsigned int e3 = g_system->getTimeStamp();
@@ -816,11 +820,11 @@ if(result>0)
 		++_currentPageBuffer;
 		_currentPageBuffer &= 3;
 	}
-
+#ifdef SOUND
 	if (_pafCb.endProc) {
 		_pafCb.endProc(_pafCb.userdata);
 	}
-#ifdef SOUND
+
 	// restore audio callback
 	if (_demuxAudioFrameBlocks) {
 		g_system->setAudioCallback(prevAudioCb);
@@ -829,7 +833,104 @@ if(result>0)
 	unload();
 }
 #else
+void PafPlayer::mainLoop() {
+////emu_printf("mainLoop paf\n");
+	_file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
+	for (int i = 0; i < 4; ++i) {
+		memset(_pageBuffers[i], 0, kPageBufferSize);
+	}
+	memset(_paletteBuffer, 0, sizeof(_paletteBuffer));
+	_paletteChanged = true;
+	_currentPageBuffer = 0;
+	int currentFrameBlock = 0;
+#ifdef SOUND
+	AudioCallback prevAudioCb;
+	if (_demuxAudioFrameBlocks) {
+		AudioCallback audioCb;
+		audioCb.proc = mixAudio;
+		audioCb.userdata = this;
+		prevAudioCb = g_system->setAudioCallback(audioCb);
+	}
+#endif
+	// keep original frame rate for audio
+	const uint32_t frameMs = (_demuxAudioFrameBlocks != 0) ? _pafHdr.frameDuration : (_pafHdr.frameDuration * _frameMs / kFrameDuration);
+//	uint32_t frameTime = g_system->getTimeStamp() + frameMs;
 
+	uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
+#ifdef DEBUG
+	_video->_font = (uint8_t *)0x25e6df94;	// vbt : hardcoded font buffer address vram vdp2
+	static uint8_t last_frame_z = 0xFF;
+	static char buffer[8];
+#endif
+//emu_printf("framesCount %d %d\n", _pafHdr.framesCount, _pafHdr.readBufferSize);
+	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
+ 		blocksCountForFrame += _pafHdr.frameBlocksCountTable[i];
+		uint32_t totalBytes = (blocksCountForFrame * _pafHdr.readBufferSize); 
+		uint8_t* readBuffer = cs1ram;
+//		_file.read(readBuffer, totalBytes);
+		int r = _file.batchRead(readBuffer, totalBytes);
+		readBuffer += (r-totalBytes);
+		
+		while (blocksCountForFrame != 0) {
+//			int r = _file.batchRead(readBuffer, _pafHdr.readBufferSize);
+//			readBuffer += (r-_pafHdr.readBufferSize);
+//			_file.read(readBuffer, _pafHdr.readBufferSize);
+			const uint32_t dstOffset = _pafHdr.frameBlocksOffsetTable[currentFrameBlock] & ~(1 << 31);
+			if (!(_pafHdr.frameBlocksOffsetTable[currentFrameBlock] & (1 << 31)))
+			{
+				if (dstOffset + _pafHdr.readBufferSize >
+					_pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize) {
+					break;
+				}
+				memcpy(_demuxVideoFrameBlocks + dstOffset, readBuffer, _pafHdr.readBufferSize);
+			}
+			++currentFrameBlock;
+			--blocksCountForFrame;
+			readBuffer+=_pafHdr.readBufferSize;
+		}
+		// decode video data
+unsigned int s2 = g_system->getTimeStamp();
+		decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
+unsigned int e2 = g_system->getTimeStamp();
+int result = e2-s2;
+if(result>0)
+	emu_printf("--duration %s : %d\n","decodeframe", result);
+		g_system->copyRect((int)0, (int)0, (int)kVideoWidth, (int)kVideoHeight, _pageBuffers[_currentPageBuffer], (int)kVideoWidth);
+
+		if (_paletteChanged) {
+			_paletteChanged = false;
+			g_system->setPalette(_paletteBuffer, 256, 6);
+			g_system->updateScreen(false);
+		}
+		
+#ifdef DEBUG
+		if (frame_z != last_frame_z) {
+			last_frame_z = frame_z;
+
+			buffer[0] = '0' + (frame_z / 10);
+			buffer[1] = '0' + (frame_z % 10);
+			buffer[2] = 0;
+		}
+		_video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
+#else
+	emu_printf("fps %d\n", frame_z);
+#endif
+
+unsigned int e3 = g_system->getTimeStamp();
+result = e3-e2;
+if(result>0)
+	emu_printf("--duration %s : %d\n","copyrect", result);
+		if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) || g_system->inp.keyPressed(SYS_INP_RUN)) {
+			break;
+		}
+
+//		frameTime = g_system->getTimeStamp() + frameMs;
+		frame_x++;
+		++_currentPageBuffer;
+		_currentPageBuffer &= 3;
+	}
+	unload();
+}
 #endif
 
 void PafPlayer::setCallback(const PafCallback *pafCb) {

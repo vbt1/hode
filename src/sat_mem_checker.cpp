@@ -47,7 +47,7 @@ emu_printf("malloc %d type %d\n", alignedSize, type);
 		hwram = dst+alignedSize;
 	}
 	
-	if(type == TYPE_BGLVL) // toujours moins de 500ko?
+	if(type == TYPE_BGLVL || type == TYPE_PAFBUF) // toujours moins de 500ko?
 	{
 //		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 //		{
@@ -72,7 +72,8 @@ emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, 
 
 	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
 	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE 	|| type == TYPE_PAF
-	|| type == TYPE_PAFHEAD || type == TYPE_GFSFILE || type == TYPE_SCRMASK || type == TYPE_BGLVLOBJ)
+	|| type == TYPE_PAFHEAD || type == TYPE_GFSFILE || type == TYPE_SCRMASK 
+	|| type == TYPE_BGLVLOBJ)
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
@@ -87,7 +88,7 @@ emu_printf("no more ram %d\n", alignedSize);
 		}
 	}
 
-//	//emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
+emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
 	
 	return dst;
 }

@@ -51,6 +51,18 @@ void File::seek(int pos, int whence) {
 	}
 }
 
+Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
+//emu_printf("start %d len %d\n",(_fp->f_seek_pos)/SECTOR_SIZE, len);
+	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
+	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+	Sint32 tot_bytes = len + skip_bytes;
+	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+	Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
+	_fp->f_seek_pos += (readBytes - skip_bytes);
+	return readBytes;
+}
+
 int File::read(uint8_t *ptr, int size) {
 ////emu_printf("sat_fread %d\n", size);
 	return sat_fread(ptr, 1, size, _fp);
@@ -85,7 +97,7 @@ SectorFile::SectorFile() {
 int fioAlignSizeTo2048(int size) {
 	return ((size + 2043) / 2044) * 2048;
 }
-
+/*
 uint32_t fioUpdateCRC(uint32_t sum, const uint8_t *buf, uint32_t size) {
 //	assert((size & 3) == 0);
 	for (uint32_t offset = 0; offset < size; offset += 4) {
@@ -93,13 +105,16 @@ uint32_t fioUpdateCRC(uint32_t sum, const uint8_t *buf, uint32_t size) {
 	}
 	return sum;
 }
-
+*/
 void SectorFile::refillBuffer(uint8_t *ptr) {
 ////emu_printf("SectorFile::refillBuffer %p\n", ptr);
 	if (ptr) {
 		static const int kPayloadSize = kFioBufferSize - 4;
 		const int size = sat_fread(ptr, 1, kPayloadSize, _fp);
-		assert(size == kPayloadSize);
+//		assert(size == kPayloadSize);
+		if(size != kPayloadSize)
+			return;
+			
 		uint8_t buf[4];
 		const int count = sat_fread(buf, 1, 4, _fp);
 		if(count != 4)
@@ -183,7 +198,7 @@ int SectorFile::read(uint8_t *ptr, int size) {
 			size -= bufLen;
 		}
 		const int count = (fioAlignSizeTo2048(size) / 2048) - 1;
-		
+//emu_printf("refillBuffer %p count %d\n", ptr, count);		
 		for (int i = 0; i < count; ++i) {
 ////emu_printf("refillBuffer %p count %d\n", ptr, count);
 			refillBuffer(ptr);

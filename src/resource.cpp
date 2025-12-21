@@ -206,10 +206,10 @@ bool Resource::sectorAlignedGameData() {
 	int sz = sat_fread(buf, 1, sizeof(buf), fp);
 	
 //	//emu_printf("aligned sz %d buf sz %d\n", sz, sizeof(buf));
-	
+	/*
 	if (sz == sizeof(buf)) {
 		ret = fioUpdateCRC(0, buf, sizeof(buf)) == 0;
-	}
+	}*/
 	_fs->closeFile(fp);
 ////emu_printf("sectorAlignedGameData true ? %d\n", ret);
 	return ret;

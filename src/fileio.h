@@ -23,7 +23,7 @@ struct File {
 	virtual void seekAlign(uint32_t pos);
 	virtual void seek(int pos, int whence);
 	virtual int read(uint8_t *ptr, int size);
-//	virtual uint8_t batchRead (uint8_t *ptr, uint32_t len);
+	virtual Uint32 batchRead (uint8_t *ptr, uint32_t len);
 	uint8_t readByte();
 	uint16_t readUint16();
 	uint32_t readUint32();
