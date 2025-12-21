@@ -10,8 +10,8 @@
 #include "defs.h"
 #include "fileio.h"
 #include "video.h"
-//#define FORCE_INLINE __attribute__((always_inline)) inline
-#define FORCE_INLINE 
+#define FORCE_INLINE __attribute__((always_inline)) inline
+//#define FORCE_INLINE 
 
 struct PafHeader {
 	uint32_t preloadFrameBlocksCount;

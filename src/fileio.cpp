@@ -50,12 +50,18 @@ void File::seek(int pos, int whence) {
 		sat_fseek(_fp, pos, whence);
 	}
 }
-
+/*
+void File::batchSeek()
+{
+	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
+	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+}
+*/
 Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 //emu_printf("start %d len %d\n",(_fp->f_seek_pos)/SECTOR_SIZE, len);
 	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
 	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
 	Sint32 tot_bytes = len + skip_bytes;
 	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
 	Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
