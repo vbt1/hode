@@ -24,6 +24,8 @@ struct File {
 	virtual void seek(int pos, int whence);
 	virtual int read(uint8_t *ptr, int size);
 	virtual Uint32 batchRead (uint8_t *ptr, uint32_t len);
+	virtual void asynchRead(uint8_t *ptr, uint32_t len);
+	virtual Uint32 asynchWait();
 //	virtual void batchSeek ();
 	uint8_t readByte();
 	uint16_t readUint16();

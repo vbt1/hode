@@ -82,6 +82,27 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 	return ndata;
 }
 
+void File::asynchRead(uint8_t *ptr, uint32_t len) {
+	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
+	//GFS_SetTmode(_fp->fid, GFS_TMODE_SCU);
+	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+	Sint32 tot_bytes = len + skip_bytes;
+	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+	GFS_NwFread(_fp->fid, tot_sectors, ptr, tot_bytes);	
+}
+
+Uint32 File::asynchWait() {
+    Sint32		stat, ndata;
+	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+    do {
+          GFS_NwExecOne(_fp->fid);
+          GFS_NwGetStat(_fp->fid, &stat, &ndata);
+    }while(stat != GFS_SVR_COMPLETED);	
+	_fp->f_seek_pos += (ndata - skip_bytes);
+	return ndata;
+}
+
 int File::read(uint8_t *ptr, int size) {
 ////emu_printf("sat_fread %d\n", size);
 	return sat_fread(ptr, 1, size, _fp);

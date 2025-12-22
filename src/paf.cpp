@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-//#define DEBUG 1
+#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -817,6 +817,7 @@ void PafPlayer::mainLoop() {
 #endif
 
 	uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
+	uint32_t blocksCountForFrame2;
 #ifdef DEBUG
     _video->_font = (uint8_t *)0x25e6df94;
     static uint8_t last_frame_z = 0xFF;
@@ -830,6 +831,7 @@ void PafPlayer::mainLoop() {
 	uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
 emu_printf("totalBytes1b %d\n", totalBytes);
 	uint8_t* readBuffer = cs1ram;  // Start with cs1ram
+	uint8_t* readBuffer2 = cs1ram;  // Start with cs1ram
     unsigned int s0 = g_system->getTimeStamp();
     int r = _file.batchRead(readBuffer, totalBytes);
     readBuffer += (r - totalBytes);
@@ -853,6 +855,15 @@ unsigned int e0 = g_system->getTimeStamp();
 int result = e0-s0;
 if(result>0)
 	emu_printf("--duration %s : %d\n","readcd", result);
+#else
+        // === Prepare next frame (if not the last one) ===
+        if (i + 1 < (int)_pafHdr.framesCount) 
+		{
+			readBuffer2 = (readBuffer2 > cs1ram) ? cs1ram : (cs1ram + 100000);
+			blocksCountForFrame2 = _pafHdr.frameBlocksCountTable[i+1];
+            totalBytes = blocksCountForFrame2 * _pafHdr.readBufferSize;
+			_file.asynchRead(readBuffer2, totalBytes);
+        }
 #endif
         // Process all blocks for current frame
         while (blocksCountForFrame > 0) {
@@ -868,7 +879,6 @@ if(result>0)
             --blocksCountForFrame;
             readBuffer += _pafHdr.readBufferSize;
         }
-
         // Decode current frame
         unsigned int s2 = g_system->getTimeStamp();
         decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
@@ -904,6 +914,12 @@ if(result>0)
         if (result > 0)
             emu_printf("--duration %s : %d\n", "copyrect", result);
 
+#ifdef DOUBLE			
+		r = _file.asynchWait();
+		readBuffer2 += (r - totalBytes);
+		readBuffer = readBuffer2;
+		blocksCountForFrame = blocksCountForFrame2;
+#endif		
         // Quit check
         if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) ||
             g_system->inp.keyPressed(SYS_INP_RUN)) {
@@ -913,28 +929,7 @@ if(result>0)
         frame_x++;
         ++_currentPageBuffer;
         _currentPageBuffer &= 3;
-#ifdef DOUBLE
-        // === Prepare next frame (if not the last one) ===
-//        if (i + 1 < (int)_pafHdr.framesCount) 
-		{
-            // Swap buffer: cs1ram <-> cs2ram
-            if (readBuffer > cs1ram) {        // We were using cs2ram
-                readBuffer = cs1ram;
-            } else {                           // We were using cs1ram
-                readBuffer = cs1ram+100000;
-            }
-            // Load next batch into the alternate buffer
-			blocksCountForFrame = _pafHdr.frameBlocksCountTable[i+1];
-            totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
-            s0 = g_system->getTimeStamp();
-            r = _file.batchRead(readBuffer, totalBytes);
-            readBuffer += (r - totalBytes);  // Reset pointer to actual data start
-            e0 = g_system->getTimeStamp();
-            result = e0 - s0;
-            if (result > 0)
-                emu_printf("--duration %s : %d\n", "readcd2", result);
-        }
-#endif
+
     }
 
     unload();
