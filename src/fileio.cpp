@@ -101,29 +101,30 @@ void File::asynchInit(uint8_t *ptr, uint32_t len) {
 }
 
 void File::asynchRead() {
-    GFS_NwExecOne(_fp->fid);
-    GFS_NwGetStat(_fp->fid, &iostat, &iondata);
-
-	if(iostat == GFS_SVR_COMPLETED)
+	GFS_NwGetStat(_fp->fid, &iostat, &iondata);
+    if(iostat != GFS_SVR_COMPLETED && iostat != -1)
 	{
-//		ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
-		_fp->f_seek_pos += (iondata - ioskip_bytes);
-		iostat = -1;
+    GFS_NwExecOne(_fp->fid);
+	return;
 	}
+	iostat = -1;    
+    // Don't update _fp->f_seek_pos here - let asynchWait() handle it
 }
 
 void File::asynchWait() {
-	if(iostat == GFS_SVR_COMPLETED && iostat !=-1)
-		return;
-
-	//ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+    if(iostat == GFS_SVR_COMPLETED)
+	{
+		_fp->f_seek_pos += (iondata - ioskip_bytes);
+		iostat = -1;
+        return;
+    }
     do {
-          GFS_NwExecOne(_fp->fid);
-          GFS_NwGetStat(_fp->fid, &iostat, &iondata);
-    }while(iostat != GFS_SVR_COMPLETED);
-//	ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
-	_fp->f_seek_pos += (iondata - ioskip_bytes);
-	iostat = -1;
+        GFS_NwExecOne(_fp->fid);
+        GFS_NwGetStat(_fp->fid, &iostat, &iondata);
+    } while(iostat != GFS_SVR_COMPLETED);
+    
+    _fp->f_seek_pos += (iondata - ioskip_bytes);
+    iostat = -1;
 }
 
 int File::read(uint8_t *ptr, int size) {
