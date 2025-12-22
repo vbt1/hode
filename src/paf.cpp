@@ -20,6 +20,8 @@ void *calloc(size_t nmemb, size_t size);
 extern unsigned char frame_x;
 extern unsigned char frame_z;
 extern Uint8 *cs2ram;
+extern Sint32 iondata;
+extern void (*asynchread)();
 }
 /*
 static const char *_filenames[] = {
@@ -862,11 +864,13 @@ if(result>0)
 			readBuffer2 = (readBuffer2 > cs1ram) ? cs1ram : (cs1ram + 100000);
 			blocksCountForFrame2 = _pafHdr.frameBlocksCountTable[i+1];
             totalBytes = blocksCountForFrame2 * _pafHdr.readBufferSize;
-			_file.asynchRead(readBuffer2, totalBytes);
+			_file.asynchInit(readBuffer2, totalBytes);
+//			_file.asynchRead();
         }
 #endif
         // Process all blocks for current frame
         while (blocksCountForFrame > 0) {
+//			_file.asynchRead();
             const uint32_t dstOffset = _pafHdr.frameBlocksOffsetTable[currentFrameBlock] & ~(1 << 31);
             if (!(_pafHdr.frameBlocksOffsetTable[currentFrameBlock] & (1 << 31))) {
                 if (dstOffset + _pafHdr.readBufferSize >
@@ -880,13 +884,14 @@ if(result>0)
             readBuffer += _pafHdr.readBufferSize;
         }
         // Decode current frame
+//		_file.asynchRead();
         unsigned int s2 = g_system->getTimeStamp();
         decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
         unsigned int e2 = g_system->getTimeStamp();
         result = e2 - s2;
         if (result > 0)
             emu_printf("--duration %s : %d\n", "decodeframe", result);
-
+//		_file.asynchRead();
         // Render to screen
         g_system->copyRect(0, 0, kVideoWidth, kVideoHeight,
                            _pageBuffers[_currentPageBuffer], kVideoWidth);
@@ -915,8 +920,8 @@ if(result>0)
             emu_printf("--duration %s : %d\n", "copyrect", result);
 
 #ifdef DOUBLE			
-		r = _file.asynchWait();
-		readBuffer2 += (r - totalBytes);
+		_file.asynchWait();
+		readBuffer2 += (iondata - totalBytes);
 		readBuffer = readBuffer2;
 		blocksCountForFrame = blocksCountForFrame2;
 #endif		
