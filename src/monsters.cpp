@@ -5920,6 +5920,7 @@ void Game::mstOp57_addWormHoleSprite(int x, int y, int screenNum) {
 		} else {
 			spriteNum = _wormHoleSpritesCount;
 		}
+#if 0
 		switch (_currentLevel) {
 		case 2:
 			initWormHoleSprite(&_wormHoleSpritesTable[spriteNum], _pwr1_spritesData + screenNum * 16);
@@ -5937,6 +5938,7 @@ void Game::mstOp57_addWormHoleSprite(int x, int y, int screenNum) {
 			warning("mstOp57 unhandled level %d", _currentLevel);
 			return;
 		}
+#endif
 	}
 	WormHoleSprite *boulderWormSprite = &_wormHoleSpritesTable[spriteNum];
 	const int dx = x - boulderWormSprite->xPos;

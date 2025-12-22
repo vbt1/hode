@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-#define DEBUG 1
+//#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -123,6 +123,7 @@ void PafPlayer::preload(int num) {
 //	cs1ram+=(kPageBufferSize * 4 + 256 * 4);
 	
 	for (int i = 0; i < 4; ++i) {
+//		_pageBuffers[i] = (uint8_t *)VDP2_VRAM_A0 + i * kPageBufferSize;
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 	}
 ////emu_printf("preload2 %d\n", num);
@@ -824,13 +825,11 @@ void PafPlayer::mainLoop() {
 	static char buffer[8];
 #endif
 //emu_printf("framesCount %d %d\n", _pafHdr.framesCount, _pafHdr.readBufferSize);
-int xx =0;
 	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
 unsigned int s0 = g_system->getTimeStamp();
  		blocksCountForFrame += _pafHdr.frameBlocksCountTable[i];
 		uint32_t totalBytes = (blocksCountForFrame * _pafHdr.readBufferSize); 
 		uint8_t* readBuffer = cs1ram;
-//		_file.read(readBuffer, totalBytes);
 		int r = _file.batchRead(readBuffer, totalBytes);
 		readBuffer += (r-totalBytes);
 

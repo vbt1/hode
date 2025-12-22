@@ -9,8 +9,6 @@ SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/menu.cpp \
 		$(SRCDIR)/monsters.cpp \
 		$(SRCDIR)/level1_rock.cpp \
-		$(SRCDIR)/level2_fort.cpp \
-		$(SRCDIR)/level3_pwr1.cpp \
 		$(SRCDIR)/random.cpp \
 		$(SRCDIR)/fs_posix.cpp \
 		$(SRCDIR)/fileio.cpp \

@@ -99,14 +99,14 @@ GFS_LOCAL Sint32 gfs_mngSetErrCode(Sint32 code)
     }
     return code;
 }
-
+/*
 void GFS_SetErrFunc(GfsErrFunc func, void *obj)
 {
     GFS_ERR_FUNC(&MNG_ERROR(gfs_mng_ptr)) = func;
     GFS_ERR_OBJ(&MNG_ERROR(gfs_mng_ptr)) = obj;
     gfs_mngSetErrCode(GFS_ERR_OK);
 }
-
+*/
 
 void init_GFS() { //Initialize GFS system
 

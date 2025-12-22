@@ -251,11 +251,11 @@ void Game::transformShadowLayer(int delta) {
 		}
 	}
 	uint8_t r = 0;
-
+#if 0
 	if (_currentLevel == kLvl_pwr1) {
 		r = _pwr1_screenTransformLut[_res->_currentScreenResourceNum * 2 + 1];
 	} 
-#if 0
+
 	else if (_currentLevel == kLvl_pwr2) {
 		r = _pwr2_screenTransformLut[_res->_currentScreenResourceNum * 2 + 1];
 	}
@@ -290,7 +290,7 @@ void Game::unloadTransformLayerData() {
 //	free(_video->_transformShadowBuffer);
 	_video->_transformShadowBuffer = 0;
 }
-
+#if 1
 void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 	uint8_t *dst = _video->_shadowScreenMaskBuffer;
 	for (int i = lvl->currentShadowId; i < lvl->shadowCount; ++i) {
@@ -334,6 +334,7 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 		}
 	}
 }
+#endif
 #ifdef SOUND
 // a: type/source (0, 1, 2) b: num/index (3, monster1Index, monster2.monster1Index)
 SssObject *Game::playSound(int num, LvlObject *ptr, int a, int b) {
@@ -397,7 +398,9 @@ void Game::setupBackgroundBitmap() {
 //lvl->shadowCount = 1;
 	if (lvl->shadowCount != 0) {
 //emu_printf("decodeShadowScreenMask\n");
+#if 1
 		decodeShadowScreenMask(lvl);
+#endif
 	}
 	for (int i = 0; i < 256 * 3; ++i) {
 		_video->_displayPaletteBuffer[i] = pal[i] << 8;
@@ -3002,13 +3005,13 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
-	case 1:
+/*	case 1:
 		_level = Level_fort_create();
 		break;
 	case 2:
 		_level = Level_pwr1_create();
 		break;
-/*
+
 	case 3:
 		_level = Level_isld_create();
 		break;
@@ -3326,7 +3329,7 @@ int Game::calcScreenMaskDx(int x, int y, int num) {
 	}
 	return 0;
 }
-#if 1
+#if 0
 void Game::lvlObjectType0CallbackBreathBubbles(LvlObject *ptr) {
 
 	AndyLvlObjectData *vf = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
@@ -3626,6 +3629,7 @@ int Game::lvlObjectType0Callback(LvlObject *ptr) {
 			setupPlasmaCannonPoints(ptr);
 		}
 		break;
+#if 0
 	case 9: // test_hod
 		if (ptr->spriteNum == 0) {
 			setupPlasmaCannonPoints(ptr);
@@ -3646,6 +3650,7 @@ int Game::lvlObjectType0Callback(LvlObject *ptr) {
 	case 6:
 		setupSpecialPowers(ptr);
 		break;
+#endif
 	case 1:
 	case 8:
 		break;

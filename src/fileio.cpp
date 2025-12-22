@@ -2,9 +2,15 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
+ 
+ extern "C" {
+#include 	<sl_def.h>
+}
+
 #include <sys/param.h>
 #include "fileio.h"
 #include "util.h"
+
 
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
@@ -60,13 +66,20 @@ void File::batchSeek()
 Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 //emu_printf("start %d len %d\n",(_fp->f_seek_pos)/SECTOR_SIZE, len);
 	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
+	//GFS_SetTmode(_fp->fid, GFS_TMODE_SCU);
 	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
 	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
 	Sint32 tot_bytes = len + skip_bytes;
 	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
-	Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
-	_fp->f_seek_pos += (readBytes - skip_bytes);
-	return readBytes;
+
+    Sint32		stat, ndata;
+	GFS_NwFread(_fp->fid, tot_sectors, ptr, tot_bytes);
+    do {
+          GFS_NwExecOne(_fp->fid);
+          GFS_NwGetStat(_fp->fid, &stat, &ndata);
+    }while(stat != GFS_SVR_COMPLETED);	
+	_fp->f_seek_pos += (ndata - skip_bytes);
+	return ndata;
 }
 
 int File::read(uint8_t *ptr, int size) {
