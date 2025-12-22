@@ -32,7 +32,6 @@ extern unsigned char frame_x;
 extern unsigned char frame_y;
 extern unsigned char frame_z;
 #endif
-void (*asynchread)();
 }
 extern void snd_init();
 //extern void //emu_printf(const char *format, ...);
@@ -762,7 +761,6 @@ void vblIn (void) {
 //		system_saturn.updateScreen(0);
 	}
 	g_system->processEvents();
-	if(asynchread!=NULL) asynchread();
 	timeTick();
 }
 

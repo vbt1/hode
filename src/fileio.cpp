@@ -5,7 +5,7 @@
  
  extern "C" {
 #include 	<sl_def.h>
-Sint32		iostat, iondata;
+Sint32		iondata;
 Uint32 ioskip_bytes;
 }
 
@@ -86,45 +86,23 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 	return ndata;
 }
 
-void File::asynchInit(uint8_t *ptr, uint32_t len) {
+void File::asynchInit(uint32_t len) {
 	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-	GFS_SetTmode(_fp->fid, GFS_TMODE_SDMA0);
 	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-//	GFS_SetReadPara(_fp->fid, 6);
 	ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
 	Sint32 tot_bytes = len + ioskip_bytes;
 	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
-	GFS_NwFread(_fp->fid, tot_sectors, ptr, tot_bytes);
-	iostat = -1;
-//	GFS_NwExecOne(_fp->fid);
-//	GFS_NwGetStat(_fp->fid, &iostat, &iondata);
+	GFS_NwCdRead(_fp->fid, tot_sectors);
+	GFS_NwExecOne(_fp->fid);
 }
 
-void File::asynchRead() {
-	GFS_NwGetStat(_fp->fid, &iostat, &iondata);
-    if(iostat != GFS_SVR_COMPLETED && iostat != -1)
-	{
-    GFS_NwExecOne(_fp->fid);
-	return;
-	}
-	iostat = -1;    
-    // Don't update _fp->f_seek_pos here - let asynchWait() handle it
-}
+void File::asynchWait(uint8_t *ptr, Sint32 bsize) {
+    Sint32 nsct, bytes_read;
+    #define SECTOR_SIZE 2048 
+    nsct = (bsize + SECTOR_SIZE - 1) / SECTOR_SIZE;
+    bytes_read = GFS_Fread(_fp->fid, nsct, ptr, bsize);
 
-void File::asynchWait() {
-    if(iostat == GFS_SVR_COMPLETED)
-	{
-		_fp->f_seek_pos += (iondata - ioskip_bytes);
-		iostat = -1;
-        return;
-    }
-    do {
-        GFS_NwExecOne(_fp->fid);
-        GFS_NwGetStat(_fp->fid, &iostat, &iondata);
-    } while(iostat != GFS_SVR_COMPLETED);
-    
-    _fp->f_seek_pos += (iondata - ioskip_bytes);
-    iostat = -1;
+    _fp->f_seek_pos += (bytes_read - ioskip_bytes);
 }
 
 int File::read(uint8_t *ptr, int size) {

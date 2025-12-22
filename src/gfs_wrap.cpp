@@ -18,6 +18,7 @@ Sint32 gfsDirN;
 extern Sint32  gfcd_fatal_err;
 extern GfsMng   *gfs_mng_ptr;
 void	*malloc(size_t);
+void CSH_Purge(void *adrs, Uint32 P_size);
 }
 
 #define MNG_SVR(mng)            ((mng)->svr)
@@ -328,4 +329,17 @@ size_t sat_fwrite(const void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) 
 
 int sat_ferror(GFS_FILE *stream) {
 	return 0;
+}
+
+void CSH_Purge(void *adrs, Uint32 P_size)
+{
+	typedef Uint32 Linex[0x10/sizeof(Uint32)];	/* ラインは 0x10 バイト単位 */
+	Linex *ptr, *end;
+	Uint32 zero = 0;
+	ptr = (Linex*)(((Uint32)adrs & 0x1fffffff) | 0x40000000);	/* キャッシュパージ領域 */
+	end = (Linex*)((Uint32)ptr + P_size - 0x10);	/* 終了ポインタ（-0x10 はポストインクリメントの為） */
+	ptr = (Linex*)((Uint32)ptr & -sizeof(Linex));	/* ラインアライメントに整合 */
+	do {
+		(*ptr)[0] = zero;			
+	} while (ptr++ < end);
 }
