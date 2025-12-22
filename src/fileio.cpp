@@ -5,7 +5,7 @@
  
  extern "C" {
 #include 	<sl_def.h>
-Sint32		iondata;
+Sint32		iostat, iondata;
 Uint32 ioskip_bytes;
 }
 
@@ -77,24 +77,58 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 	return readBytes;
 }
 
-void File::asynchInit(uint32_t len) {
-	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-	ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
-	Sint32 tot_bytes = len + ioskip_bytes;
-	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+#define NWREAD 1
+
+void File::asynchInit(uint8_t *ptr, uint32_t len) {
+    Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
+    GFS_SetTmode(_fp->fid, GFS_TMODE_SDMA0);
+    GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+    GFS_SetReadPara(_fp->fid, 6);
+    ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+    Sint32 tot_bytes = len + ioskip_bytes;
+    Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+#ifdef NWREAD
+    GFS_NwFread(_fp->fid, tot_sectors, ptr, tot_bytes);
+//	GFS_NwExecOne(_fp->fid);
+#else
 	GFS_NwCdRead(_fp->fid, tot_sectors);
-	GFS_NwExecOne(_fp->fid);
+//	GFS_NwExecOne(_fp->fid);
+#endif
+    iostat = -1;
 }
 
-void File::asynchWait(uint8_t *ptr, Sint32 bsize) {
-    Sint32 nsct, bytes_read;
-    #define SECTOR_SIZE 2048 
-	Sint32 tot_bytes = bsize + ioskip_bytes;
-	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
-    bytes_read = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
+void File::asynchRead() {
+emu_printf("asynchRead\n");
+    if(iostat == GFS_SVR_COMPLETED && iostat != -1)
+	{
+emu_printf("asynchRead return\n");
+        return ;
+	}
+emu_printf("execone\n");
+    GFS_NwExecOne(_fp->fid);
+emu_printf("getstat\n");
+    GFS_NwGetStat(_fp->fid, &iostat, &iondata);
+emu_printf("getstat %d %d\n", iostat,iondata);
+    // Don't update _fp->f_seek_pos here - let asynchWait() handle it
+}
 
-    _fp->f_seek_pos += (bytes_read - ioskip_bytes);
+int File::asynchWait(uint8_t *ptr, Sint32 len) {
+
+#ifdef NWREAD
+    if(iostat == GFS_SVR_COMPLETED && iostat != -1)
+        return iondata;
+    do {
+        GFS_NwExecOne(_fp->fid);
+        GFS_NwGetStat(_fp->fid, &iostat, &iondata);
+    } while(iostat != GFS_SVR_COMPLETED);
+#else
+	Sint32 tot_bytes = len + ioskip_bytes;
+	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+    iondata = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
+#endif
+    _fp->f_seek_pos += (iondata - ioskip_bytes);
+    iostat = -1;
+	return iondata;
 }
 
 int File::read(uint8_t *ptr, int size) {
@@ -141,7 +175,7 @@ uint32_t fioUpdateCRC(uint32_t sum, const uint8_t *buf, uint32_t size) {
 }
 */
 void SectorFile::refillBuffer(uint8_t *ptr) {
-////emu_printf("SectorFile::refillBuffer %p\n", ptr);
+emu_printf("SectorFile::refillBuffer %p\n", ptr);
 	if (ptr) {
 		static const int kPayloadSize = kFioBufferSize - 4;
 		const int size = sat_fread(ptr, 1, kPayloadSize, _fp);

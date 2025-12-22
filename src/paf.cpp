@@ -729,19 +729,21 @@ unsigned int s1 = g_system->getTimeStamp();
 unsigned int e1 = g_system->getTimeStamp();
 int result = e1-s1;
 if(result>0)
-	emu_printf("--duration %s : %d\n","read_copy", result);
+	//emu_printf("--duration %s : %d\n","read_copy", result);
 			}
 			++currentFrameBlock;
 			--blocksCountForFrame;
 		}
 		// decode video data
+
 unsigned int s2 = g_system->getTimeStamp();
 		decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
 unsigned int e2 = g_system->getTimeStamp();
+/*
 int result = e2-s2;
 if(result>0)
-	emu_printf("--duration %s : %d\n","decodeframe", result);
-/*		if (_pafCb.frameProc) {
+	//emu_printf("--duration %s : %d\n","decodeframe", result);
+		if (_pafCb.frameProc) {
 			_pafCb.frameProc(_pafCb.userdata, i, _pageBuffers[_currentPageBuffer]);
 		} else {
 */
@@ -767,7 +769,7 @@ if(result>0)
 unsigned int e3 = g_system->getTimeStamp();
 result = e3-e2;
 if(result>0)
-	emu_printf("--duration %s : %d\n","copyrect", result);
+	//emu_printf("--duration %s : %d\n","copyrect", result);
 
 		g_system->updateScreen(false);
 //		g_system->processEvents();
@@ -832,14 +834,14 @@ void PafPlayer::mainLoop() {
 	uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
 emu_printf("totalBytes1b %d\n", totalBytes);
 	uint8_t* readBuffer = cs1ram;  // Start with cs1ram
-	uint8_t* readBuffer2 = cs1ram;  // Start with cs1ram
+	uint8_t* readBuffer2 = cs1ram+100000;  // Start with cs1ram
     unsigned int s0 = g_system->getTimeStamp();
     int r = _file.batchRead(readBuffer, totalBytes);
     readBuffer += (r - totalBytes);
     unsigned int e0 = g_system->getTimeStamp();
     int result = e0 - s0;
     if (result > 0)
-        emu_printf("--duration %s : %d\n", "readcd1", result);
+        //emu_printf("--duration %s : %d\n", "readcd1", result);
 #endif
     for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
 
@@ -851,19 +853,20 @@ unsigned int s0 = g_system->getTimeStamp();
 //		_file.read(readBuffer, totalBytes);
 		int r = _file.batchRead(readBuffer, totalBytes);
 		readBuffer += (r-totalBytes);
-
+emu_printf("read0 %d\n", r);
 unsigned int e0 = g_system->getTimeStamp();
 int result = e0-s0;
 if(result>0)
-	emu_printf("--duration %s : %d\n","readcd", result);
+	//emu_printf("--duration %s : %d\n","readcd", result);
 #else
         // === Prepare next frame (if not the last one) ===
         if (i + 1 < (int)_pafHdr.framesCount) 
 		{
-			readBuffer2 = (readBuffer2 > cs1ram) ? cs1ram : (cs1ram + 100000);
 			blocksCountForFrame2 = _pafHdr.frameBlocksCountTable[i+1];
             totalBytes = blocksCountForFrame2 * _pafHdr.readBufferSize;
-			_file.asynchInit(totalBytes);
+	//emu_printf("--2\n");
+			_file.asynchInit(readBuffer2, totalBytes);
+	//emu_printf("--3\n");
         }
 #endif
         // Process all blocks for current frame
@@ -879,17 +882,21 @@ if(result>0)
             ++currentFrameBlock;
             --blocksCountForFrame;
             readBuffer += _pafHdr.readBufferSize;
+//	//emu_printf("--4\n");
+//			_file.asynchRead();
+	//emu_printf("--5 frame %d\n", blocksCountForFrame);
         }
         unsigned int s2 = g_system->getTimeStamp();
         decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
+	//emu_printf("--6\n");
         unsigned int e2 = g_system->getTimeStamp();
-        result = e2 - s2;
+/*        result = e2 - s2;
         if (result > 0)
-            emu_printf("--duration %s : %d\n", "decodeframe", result);
-        // Render to screen
+            //emu_printf("--duration %s : %d\n", "decodeframe", result);
+*/        // Render to screen
         g_system->copyRect(0, 0, kVideoWidth, kVideoHeight,
                            _pageBuffers[_currentPageBuffer], kVideoWidth);
-
+	//emu_printf("--7\n");
         if (_paletteChanged) {
             _paletteChanged = false;
             g_system->setPalette(_paletteBuffer, 256, 6);
@@ -904,20 +911,37 @@ if(result>0)
             buffer[2] = 0;
         }
         _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
+	//emu_printf("--8\n");
 #else
         emu_printf("fps %d\n", frame_z);
 #endif
 
         unsigned int e3 = g_system->getTimeStamp();
-        result = e3 - e2;
+/*        result = e3 - e2;
         if (result > 0)
-            emu_printf("--duration %s : %d\n", "copyrect", result);
-
+            //emu_printf("--duration %s : %d\n", "copyrect", result);
+*/
 #ifdef DOUBLE			
-		_file.asynchWait(readBuffer, totalBytes);
-		readBuffer2 += (iondata - totalBytes);
-		readBuffer = readBuffer2;
-		blocksCountForFrame = blocksCountForFrame2;
+    // Wait for the async read that wrote to readBuffer2
+    int r = _file.asynchWait(readBuffer2, totalBytes);
+    
+    // Swap the buffers
+    uint8_t* temp = readBuffer;
+    readBuffer = readBuffer2;
+    readBuffer2 = temp;
+    
+    // Adjust readBuffer (which now points to the data that was just read)
+    readBuffer += (r - totalBytes);
+
+if (readBuffer2 >= cs1ram + 100000)
+ { // It was cs1ram+100000 
+readBuffer2 = cs1ram  + 100000; } 
+else { // It was cs1ram 
+readBuffer2 = cs1ram; }
+
+    blocksCountForFrame = blocksCountForFrame2;
+    
+    emu_printf("--1 rb1 %p rb2 %p\n", readBuffer, readBuffer2);
 #endif		
         // Quit check
         if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) ||
