@@ -88,7 +88,8 @@ emu_printf("no more ram %d\n", alignedSize);
 		}
 	}
 
-emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
+//emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
+emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 	
 	return dst;
 }
