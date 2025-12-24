@@ -42,7 +42,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	|| type == TYPE_SHADWBUF || type == TYPE_SHADWLUT
 	|| type == TYPE_SCRMASKBUF) // jamais libéré 6762
 	{
-emu_printf("malloc %d type %d\n", alignedSize, type);
+//emu_printf("malloc %d type %d\n", alignedSize, type);
 		dst = (Uint8 *)malloc(alignedSize);
 		hwram = dst+alignedSize;
 	}

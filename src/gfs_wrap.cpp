@@ -1,4 +1,4 @@
-//#pragma GCC optimize ("O2")
+#pragma GCC optimize ("O2")
 #include "util.h"
 extern "C" {
 

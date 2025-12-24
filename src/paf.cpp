@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-#define DEBUG 1
+//#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -263,7 +263,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		_paletteChanged = true;
 		src += count;
 	}
-//emu_printf("decode %d -- ", code & 0xF);	
+emu_printf("decode %d -- ", code & 0xF);	
 	
 	switch (code & 0xF) {
 	case 0:
@@ -832,7 +832,7 @@ void PafPlayer::mainLoop() {
     // First batch read (preload + first frame)
 	blocksCountForFrame += _pafHdr.frameBlocksCountTable[0];    
 	uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
-emu_printf("totalBytes1b %d\n", totalBytes);
+//emu_printf("totalBytes1b %d\n", totalBytes);
 	uint8_t* readBuffer = cs1ram;  // Start with cs1ram
 	uint8_t* readBuffer2 = cs1ram+100000;  // Start with cs1ram
     unsigned int s0 = g_system->getTimeStamp();
@@ -933,15 +933,13 @@ if(result>0)
     // Adjust readBuffer (which now points to the data that was just read)
     readBuffer += (r - totalBytes);
 
-if (readBuffer2 >= cs1ram + 100000)
- { // It was cs1ram+100000 
-readBuffer2 = cs1ram  + 100000; } 
-else { // It was cs1ram 
-readBuffer2 = cs1ram; }
+	if (readBuffer2 >= cs1ram + 100000)
+	 { // It was cs1ram+100000 
+	readBuffer2 = cs1ram  + 100000; } 
+	else { // It was cs1ram 
+	readBuffer2 = cs1ram; }
 
     blocksCountForFrame = blocksCountForFrame2;
-    
-    emu_printf("--1 rb1 %p rb2 %p\n", readBuffer, readBuffer2);
 #endif		
         // Quit check
         if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) ||

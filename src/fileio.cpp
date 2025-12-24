@@ -2,7 +2,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
- 
+ #pragma GCC optimize ("O2")
  extern "C" {
 #include 	<sl_def.h>
 Sint32		iostat, iondata;
@@ -77,38 +77,42 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 	return readBytes;
 }
 
-#define NWREAD 1
+//#define NWREAD 1
 
 void File::asynchInit(uint8_t *ptr, uint32_t len) {
     Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
     GFS_SetTmode(_fp->fid, GFS_TMODE_SDMA0);
     GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-    GFS_SetReadPara(_fp->fid, 6);
+//   GFS_SetReadPara(_fp->fid, 24);
     ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
     Sint32 tot_bytes = len + ioskip_bytes;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
 #ifdef NWREAD
     GFS_NwFread(_fp->fid, tot_sectors, ptr, tot_bytes);
-//	GFS_NwExecOne(_fp->fid);
+	GFS_NwExecOne(_fp->fid);
 #else
 	GFS_NwCdRead(_fp->fid, tot_sectors);
-//	GFS_NwExecOne(_fp->fid);
+	GFS_NwExecOne(_fp->fid);
 #endif
     iostat = -1;
 }
 
 void File::asynchRead() {
-emu_printf("asynchRead\n");
+//emu_printf("asynchRead\n");
+#ifdef NWREAD
     if(iostat == GFS_SVR_COMPLETED && iostat != -1)
 	{
-emu_printf("asynchRead return\n");
+//emu_printf("asynchRead return\n");
         return ;
 	}
-emu_printf("execone\n");
+//emu_printf("execone\n");
     GFS_NwExecOne(_fp->fid);
-emu_printf("getstat\n");
+//emu_printf("getstat\n");
     GFS_NwGetStat(_fp->fid, &iostat, &iondata);
-emu_printf("getstat %d %d\n", iostat,iondata);
+#else
+	GFS_NwExecOne(_fp->fid);	
+#endif
+//emu_printf("getstat %d %d\n", iostat,iondata);
     // Don't update _fp->f_seek_pos here - let asynchWait() handle it
 }
 
