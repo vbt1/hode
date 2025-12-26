@@ -13,7 +13,7 @@ void emu_printf(const char *format, ...);
 extern Uint8 *hwram;
 extern Uint8 *current_lwram;
 extern Uint8 *cs1ram;
-Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B1;
+Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B0;
 Uint8 *vdp1ram = (Uint8 *)SpriteVRAM+0x20;
 Uint8 *cs2ram = (uint8_t *)0x22600000;
 }
@@ -42,13 +42,18 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	|| type == TYPE_SHADWBUF || type == TYPE_SHADWLUT
 	|| type == TYPE_SCRMASKBUF) // jamais libéré 6762
 	{
-//emu_printf("malloc %d type %d\n", alignedSize, type);
+emu_printf("malloc %d type %d\n", alignedSize, type);
 		dst = (Uint8 *)malloc(alignedSize);
 		hwram = dst+alignedSize;
 	}
 	
-	if(type == TYPE_BGLVL || type == TYPE_PAFBUF) // toujours moins de 500ko?
+	if(type == TYPE_PAFBUF)
+		dst = hwram+1024;
+	
+	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
+emu_printf("cs1ram %d type %d\n", alignedSize, type);
+
 //		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 //		{
 //		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
@@ -85,6 +90,8 @@ emu_printf("hwram used %d lwram used %d cs1 used %d\n", ((int)hwram)-0x6000000, 
 emu_printf("no more ram %d\n", alignedSize);
 			dst = cs2ram;
 			cs2ram += SAT_ALIGN(alignedSize);
+//		dst = (Uint8 *)malloc(alignedSize);
+//		hwram = dst+alignedSize;
 		}
 	}
 

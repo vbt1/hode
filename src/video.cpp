@@ -28,12 +28,9 @@ Video::Video() {
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
-//	_shadowLayer = (uint8_t *)malloc(W * H + 1); // projectionData offset can be equal to W * H
-	_shadowLayer = allocate_memory (TYPE_LAYER, W * H + 1);
-//	_frontLayer = (uint8_t *)malloc(W * H);
+//	_shadowLayer = allocate_memory (TYPE_LAYER, W * H + 1);
 	_frontLayer = allocate_memory (TYPE_LAYER, W * H);
-//	_backgroundLayer = (uint8_t *)malloc(W * H);
-	_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
+//	_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
 	
 	if (kUseShadowColorLut) {
 //		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
@@ -42,7 +39,7 @@ Video::Video() {
 		_shadowColorLookupTable = 0;
 	}
 //	_shadowScreenMaskBuffer = (uint8_t *)malloc(256 * 192 * 2 + 256 * 4);
-	_shadowScreenMaskBuffer = allocate_memory (TYPE_SCRMASKBUF, 256 * 192 * 2 + 256 * 4);
+//	_shadowScreenMaskBuffer = allocate_memory (TYPE_SCRMASKBUF, 256 * 192 * 2 + 256 * 4);
 	for (int i = 144; i < 256; ++i) {
 		_shadowColorLut[i] = i;
 	}

@@ -361,7 +361,6 @@ void Game::removeSound(LvlObject *ptr) {
 #endif
 
 void Game::setupBackgroundBitmap() {
-//	cs1ram = (uint8_t *)0x22402000;
 	LvlBackgroundData *lvl = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 	const int num = lvl->currentBackgroundId;
 	const uint8_t *pal = lvl->backgroundPaletteTable[num];
@@ -2185,7 +2184,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-//_mstDisabled = true; // vbt : ajout pour test
+_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2205,8 +2204,6 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	memset(_level->_screenCounterTable, 0, sizeof(_level->_screenCounterTable));
 //emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
-//emu_printf("initLvlObjects\n");
-	initLvlObjects();
 //emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
@@ -2233,6 +2230,8 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		}
 	}
 #endif
+//emu_printf("initLvlObjects\n");
+	initLvlObjects();
 	_endLevel = false;
 //emu_printf("resetShootLvlObjectDataTable\n");
 	resetShootLvlObjectDataTable();

@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-//#define DEBUG 1
+#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -87,12 +87,10 @@ void PafPlayer::setVolume(int volume) {
 	_volume = volume;
 }
 
-uint8_t *cs1ram_cut;
 uint8_t *lwram_cut;
 
 void PafPlayer::preload(int num) {
 //emu_printf("preload %d\n", num);
-	cs1ram_cut = cs2ram;
 	lwram_cut = current_lwram;
 	
 //	assert(num >= 0 && num < kMaxVideosCount);
@@ -114,22 +112,18 @@ void PafPlayer::preload(int num) {
 		unload();
 		return;
 	}
-//	uint8_t *buffer = (uint8_t *)cs1ram;//calloc(kPageBufferSize * 4 + 256 * 4, 1);
+//	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
 	uint8_t *buffer = (uint8_t *)allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
 	if (!buffer) {
 		////emu_printf("preloadPaf() Unable to allocate page buffers\n");
 		unload();
 		return;
 	}
-//	cs1ram+=(kPageBufferSize * 4 + 256 * 4);
 	
 	for (int i = 0; i < 4; ++i) {
 //		_pageBuffers[i] = (uint8_t *)VDP2_VRAM_A0 + i * kPageBufferSize;
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 	}
-////emu_printf("preload2 %d\n", num);
-//	_demuxVideoFrameBlocks = (uint8_t *)cs1ram;//calloc(_pafHdr.maxVideoFrameBlocksCount, _pafHdr.readBufferSize);
-//	cs1ram+=(_pafHdr.maxVideoFrameBlocksCount* _pafHdr.readBufferSize);
 	_demuxVideoFrameBlocks = (uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
 	
 	_pafHdr.maxAudioFrameBlocksCount = 0; // vbt : on enleve le son
@@ -162,13 +156,10 @@ void PafPlayer::play(int num) {
 }
 
 void PafPlayer::unload(int num) {
-//emu_printf("unload reset cs1ram\n");
-	cs2ram = cs1ram_cut;
 	current_lwram = lwram_cut;	
 	if (_videoNum < 0) {
 		return;
 	}
-//emu_printf("vbt unload paf %p\n", cs1ram);
 //	free(_pageBuffers[0]);
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
 //	free(_demuxVideoFrameBlocks);
@@ -188,6 +179,7 @@ void PafPlayer::unload(int num) {
 		_audioQueue = next;
 	}
 	_audioQueueTail = 0;
+	buf = 0;
 #endif
 }
 
@@ -225,12 +217,9 @@ bool PafPlayer::readPafHeader() {
 
 uint32_t *PafPlayer::readPafHeaderTable(int count) {
 //	uint32_t *dst = (uint32_t *)malloc(count * sizeof(uint32_t));
-//emu_printf("readPafHeaderTable %d\n", count);
 	uint32_t *dst = (uint32_t *)allocate_memory (TYPE_PAFHEAD, count * sizeof(uint32_t));
-//	uint32_t *dst = (uint32_t *)cs1ram;
-//	cs1ram+=(count * sizeof(uint32_t));
 	if (!dst) {
-		////emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
+		//emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		return 0;
 	}
 	for (int i = 0; i < count; ++i) {
@@ -769,7 +758,7 @@ if(result>0)
 unsigned int e3 = g_system->getTimeStamp();
 result = e3-e2;
 if(result>0)
-	//emu_printf("--duration %s : %d\n","copyrect", result);
+	emu_printf("--duration %s : %d\n","copyrect", result);
 
 		g_system->updateScreen(false);
 //		g_system->processEvents();
@@ -797,6 +786,8 @@ if(result>0)
 	unload();
 }
 #else
+uint8_t *buf = NULL;
+
 void PafPlayer::mainLoop() {
     _file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
     
@@ -833,13 +824,15 @@ void PafPlayer::mainLoop() {
 #define FRAMES_PER_READ 4
 
 #ifdef DOUBLE
+	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 200000);
+
     // Setup buffer array
     uint8_t* buffers[NUM_BUFFERS] = {
-        cs1ram,
-        cs1ram + 100000,
-        cs1ram + 200000,
-        cs1ram + 300000,
-        cs1ram + 400000
+        buf,
+        buf + 90000,
+        buf + 120000,
+        buf + 150000,
+        buf + 175000
     };
     
     int currentBuffer = 0;  // Buffer being processed
@@ -879,7 +872,7 @@ void PafPlayer::mainLoop() {
         unsigned int s0 = g_system->getTimeStamp();
         blocksCountForFrame += _pafHdr.frameBlocksCountTable[i];
         uint32_t totalBytes = (blocksCountForFrame * _pafHdr.readBufferSize);
-        uint8_t* readBuffer = cs1ram;
+        uint8_t* readBuffer = buf;
         
         int r = _file.batchRead(readBuffer, totalBytes);
         readBuffer += (r - totalBytes);
@@ -936,11 +929,19 @@ void PafPlayer::mainLoop() {
         }
         
         blocksCountForFrame = tempBlocksCount;
-
+unsigned int s2 = g_system->getTimeStamp();
         decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
-        
+unsigned int e2 = g_system->getTimeStamp();
+
+int result = e2-s2;
+if(result>0)
+	emu_printf("--duration %s : %d\n","decodeframe", result);       
         g_system->copyRect(0, 0, kVideoWidth, kVideoHeight, _pageBuffers[_currentPageBuffer], kVideoWidth);
-        
+//	slTransferEntry((void*)_pageBuffers[_currentPageBuffer], (void*)(VDP2_VRAM_A0), kVideoWidth * kVideoHeight);
+//unsigned int e3 = g_system->getTimeStamp();
+//result = e3-e2;
+//if(result>0)
+//	emu_printf("--duration %s : %d\n","copyRect", result);        
         if (_paletteChanged) {
             _paletteChanged = false;
             g_system->setPalette(_paletteBuffer, 256, 6);

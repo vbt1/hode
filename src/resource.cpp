@@ -1,3 +1,4 @@
+//#define LOAD_SPRITE 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -98,11 +99,12 @@ Resource::Resource(FileSystem *fs)
 	_lvlSssOffset = 0;
 #endif
 	// sprites
+#ifdef LOAD_SPRITE
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 	memset(_resLvlSpriteDataPtrTable, 0, sizeof(_resLvlSpriteDataPtrTable));
-
+#endif
 	// backgrounds
 	memset(_resLvlScreenBackgroundDataTable, 0, sizeof(_resLvlScreenBackgroundDataTable));
 	memset(_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_resLvlScreenBackgroundDataPtrTable));
@@ -593,7 +595,6 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 	assert(readSize <= size);
 //	//emu_printf("malloc sprite %d\n", size);
-//	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = allocate_memory (TYPE_SPRITE, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
@@ -695,7 +696,7 @@ void Resource::loadLvlData(File *fp) {
 	}
 //emu_printf("loadLvlScreenMaskData\n");
 	loadLvlScreenMaskData();
-
+#ifdef LOAD_SPRITE
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 
@@ -707,7 +708,7 @@ void Resource::loadLvlData(File *fp) {
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}
-
+#endif
 	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
 #if 0
 	if (kPreloadLvlBackgroundData) {
@@ -737,6 +738,8 @@ emu_printf("unloadLvlData reset cs1ram\n");
 		}
 	}
 #endif
+
+#ifdef LOAD_SPRITE
 	for (unsigned int i = 0; i < kMaxSpriteTypes; ++i) {
 		LvlObjectData *dat = &_resLevelData0x2988Table[i];
 #ifdef PS1
@@ -748,6 +751,7 @@ emu_printf("unloadLvlData reset cs1ram\n");
 //		free(_resLvlSpriteDataPtrTable[i]);
 		_resLvlSpriteDataPtrTable[i] = 0;
 	}
+#endif
 }
 
 static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat, bool isPsx) {
