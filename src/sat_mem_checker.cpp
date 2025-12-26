@@ -48,7 +48,11 @@ emu_printf("malloc %d type %d\n", alignedSize, type);
 	}
 	
 	if(type == TYPE_PAFBUF)
-		dst = hwram+1024;
+	{
+		dst = (Uint8 *)malloc(alignedSize);
+		hwram = dst+alignedSize;
+//		dst = hwram+1024;
+	}
 	
 	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
