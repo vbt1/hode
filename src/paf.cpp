@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-#define DEBUG 1
+//#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -252,7 +252,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		_paletteChanged = true;
 		src += count;
 	}
-emu_printf("decode %d -- ", code & 0xF);	
+//emu_printf("decode %d -- ", code & 0xF);	
 	
 	switch (code & 0xF) {
 	case 0:
@@ -820,11 +820,11 @@ void PafPlayer::mainLoop() {
 #endif
 
 #define DOUBLE 1
-#define NUM_BUFFERS 5
-#define FRAMES_PER_READ 4
+#define NUM_BUFFERS 6
+#define FRAMES_PER_READ 5
 
 #ifdef DOUBLE
-	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 200000);
+	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 220000);
 
     // Setup buffer array
     uint8_t* buffers[NUM_BUFFERS] = {
@@ -832,7 +832,8 @@ void PafPlayer::mainLoop() {
         buf + 90000,
         buf + 120000,
         buf + 150000,
-        buf + 175000
+        buf + 175000,
+        buf + 200000
     };
     
     int currentBuffer = 0;  // Buffer being processed
@@ -877,11 +878,20 @@ void PafPlayer::mainLoop() {
         int r = _file.batchRead(readBuffer, totalBytes);
         readBuffer += (r - totalBytes);
 #else
+/*
+	Sint32 stat, ndata;
+    GFS_NwGetStat(_file._fp->fid, &stat, &ndata);
+
+    if(stat == GFS_SVR_COMPLETED)
+    {
+asyncReadActive= false;
+    }
+*/
         // Wait and start next read every 4th frame (1, 5, 9, 13...)
         if (i > 0 && i % FRAMES_PER_READ == 1 && asyncReadActive) {
             // Wait for async read to complete
             int r = _file.asynchWait(buffers[readBuffer], totalBytes2);
-            
+
             // Switch to the buffer that just finished reading
             currentBuffer = readBuffer;
             delta = (r - totalBytes2);
@@ -929,19 +939,9 @@ void PafPlayer::mainLoop() {
         }
         
         blocksCountForFrame = tempBlocksCount;
-unsigned int s2 = g_system->getTimeStamp();
         decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
-unsigned int e2 = g_system->getTimeStamp();
-
-int result = e2-s2;
-if(result>0)
-	emu_printf("--duration %s : %d\n","decodeframe", result);       
         g_system->copyRect(0, 0, kVideoWidth, kVideoHeight, _pageBuffers[_currentPageBuffer], kVideoWidth);
-//	slTransferEntry((void*)_pageBuffers[_currentPageBuffer], (void*)(VDP2_VRAM_A0), kVideoWidth * kVideoHeight);
-//unsigned int e3 = g_system->getTimeStamp();
-//result = e3-e2;
-//if(result>0)
-//	emu_printf("--duration %s : %d\n","copyRect", result);        
+
         if (_paletteChanged) {
             _paletteChanged = false;
             g_system->setPalette(_paletteBuffer, 256, 6);
@@ -957,7 +957,7 @@ if(result>0)
         }
         _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-        emu_printf("fps %d\n", frame_z);
+//        emu_printf("fps %d\n", frame_z);
 #endif
 
         // Quit check
@@ -975,7 +975,7 @@ if(result>0)
         if (frameTime > currentTime) {
             const int delay = frameTime - currentTime;
             g_system->sleep(delay);
-            emu_printf("delay %d ms\n", delay);
+//            emu_printf("delay %d ms\n", delay);
         } else {
             emu_printf("behind by %d ms!\n", (int)(currentTime - frameTime));
             frameTime = currentTime;
