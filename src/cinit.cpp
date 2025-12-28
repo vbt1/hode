@@ -2,6 +2,8 @@
 extern "C" {
 #include 	<sl_def.h>
 #include	<sega_sys.h>
+#include	<sega_spr.h>
+#include	<sega_csh.h>
 #include	"gfs_wrap.h"
 #include <stdarg.h>
 #include <string.h>
@@ -85,9 +87,13 @@ int	main( void )
 		*dst = 0;
 	}
 
-	init_GFS(); // Initialize GFS system
-
 	slInitSystem(TV_640x224, (TEXTURE*)NULL, 1); // Init SGL
+
+	init_GFS(); // Initialize GFS system	
+	CSH_Init(CSH_4WAY);
+//	SPR_InitSlaveSH();
+	
+	
 //	memset4_fast((void *)LOW_WORK_RAM_START,0x00,LOW_WORK_RAM_SIZE);
 
 //	slBitMapNbg0(COL_TYPE_256, BM_512x256, (void*)VDP2_VRAM_A1);
@@ -122,8 +128,8 @@ memcpy((void *) CELL_SCROLL_TBL_ADDR, cellScrTbl, HRES/8*4);
 slVCellTable((void *)CELL_SCROLL_TBL_ADDR);
 
 #endif
+
 	slSynch();
-//	DMA_ScuInit(); // Init for SCU DMA
 	ss_main();
 	return 0;
 }

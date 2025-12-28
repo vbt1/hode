@@ -1,6 +1,7 @@
 extern "C" {
 #include 	<sl_def.h>
 #include	<sega_sys.h>
+#include	<sega_spr.h>
 #include	"gfs_wrap.h"
 #include <stdarg.h>
 #include <string.h>
@@ -610,6 +611,7 @@ int Menu::handleTitleScreen() {
 //		g_system->sleep(kDelayMs);
 	}
 	_video->SAT_cleanSprites();
+	SPR_InitSlaveSH();
 	return currentOption;
 }
 
