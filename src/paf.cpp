@@ -22,16 +22,26 @@ extern unsigned char frame_x;
 extern unsigned char frame_z;
 extern Uint8 *cs2ram;
 extern Sint32 iondata;
+}
 
-// Structure to pass parameters to slave CPU
+// Configuration: choose which section runs on slave CPU
+#define V_ON_SLAVE 0  // 1 = V on slave, H on master; 0 = H on slave, V on master
+
+// Keep your exact original structures
 typedef struct {
 	const uint8_t *src;
 	uint8_t *dst;
 	uint8_t **pageBuffers;
 } VerticalParams;
-static volatile int v_done = 0;
-//static VerticalParams vParams;
-}
+
+typedef struct {
+	const uint8_t *base;
+	const uint8_t *src;
+	uint8_t **pageBuffers;
+	uint8_t code;
+} HorizontalParams;
+
+
 /*
 static const char *_filenames[] = {
 	"HOD.PAF",
@@ -369,255 +379,29 @@ FORCE_INLINE uint8_t *fastOffset(uint8_t **pages, const uint8_t *src) {
 	return pages[page] + (((y << 8) + x) << 1);
 }
 #if 1
-
-
-static void decodeVideoFrameVertical(VerticalParams *vParams)
-{
-    VerticalParams *params = vParams;
-emu_printf("running decodeVideoFrameVertical\n");
-    const uint8_t *src = params->src;
-    uint8_t *dst = params->dst;
-    uint8_t **pages = params->pageBuffers;
-
-    for (int y = 0; y < 192; y += 4, dst += 256 * 3) {
-        for (int x = 0; x < 256; x += 4, dst += 4) {
-            const int x_val = src[1] & 0x7F;
-            const int page  = src[0] >> 6;
-            const int y_val = ((src[0] << 1) | (src[1] >> 7)) & 0x7F;
-
-            const uint8_t *src2 =
-                pages[page] + (((y_val << 8) + x_val) << 1);
-
-            src += 2;
-
-            uint8_t *r0 = dst;
-            uint8_t *r1 = dst + 256;
-            uint8_t *r2 = dst + 512;
-            uint8_t *r3 = dst + 768;
-
-            r0[0] = src2[0];   r0[1] = src2[1];
-            r0[2] = src2[2];   r0[3] = src2[3];
-
-            r1[0] = src2[256]; r1[1] = src2[257];
-            r1[2] = src2[258]; r1[3] = src2[259];
-
-            r2[0] = src2[512]; r2[1] = src2[513];
-            r2[2] = src2[514]; r2[3] = src2[515];
-
-            r3[0] = src2[768]; r3[1] = src2[769];
-            r3[2] = src2[770]; r3[3] = src2[771];
-        }
-    }
-
-    v_done = 1;   // signal completion
+extern "C" {
+void free(void *ptr);
+void *malloc(size_t);
+void *calloc(size_t nmemb, size_t size);
+extern unsigned char frame_x;
+extern unsigned char frame_z;
+extern Uint8 *cs2ram;
+extern Sint32 iondata;
 }
 
-static const uint8_t* skipHorizontalSection(const uint8_t *base,
-                                            const uint8_t *src,
-                                            uint8_t code)
-{
-    const int count = *src++;
-
-    if (count != 0) {
-        if ((code & 0x10) != 0) {
-            const int align = (src - base) & 3;
-            if (align != 0)
-                src += 4 - align;
-        }
-
-        for (int i = 0; i < count; ++i) {
-            uint32_t offset = (src[1] & 0x7F) * 2;
-            const uint32_t end = READ_LE_UINT16(src + 2) + offset;
-            src += 4;
-
-            do {
-                ++offset;
-                src += 16;
-            } while (offset < end);
-        }
-    }
-
-    return src;
-}
-
-void PafPlayer::decodeVideoFrameOp0(const uint8_t *base,
-                                    const uint8_t *src,
-                                    uint8_t code)
-{
-    unsigned int t0, t1, t2, t3;
-    t0 = g_system->getTimeStamp();
-
-    // -------------------------------------------------
-    // 1) Compute V section pointer FIRST
-    // -------------------------------------------------
-    const uint8_t *v_src = skipHorizontalSection(base, src, code);
-
-    // -------------------------------------------------
-    // 2) Launch slave BEFORE doing H work
-    // -------------------------------------------------
-    v_done = 0;
-	static VerticalParams vParams;
-    vParams.src = v_src;
-    vParams.dst = _pageBuffers[_currentPageBuffer];
-    vParams.pageBuffers = _pageBuffers;
-
-//    slSlaveFunc(decodeVideoFrameVertical, NULL);
- //   slSlaveFunc(decodeVideoFrameVertical, NULL);
-    SPR_RunSlaveSH((PARA_RTN*)decodeVideoFrameVertical, &vParams);
-
-    // -------------------------------------------------
-    // 3) Now do horizontal decode (master)
-    // -------------------------------------------------
-    const int count = *src++;
-
-    if (count != 0) {
-        if ((code & 0x10) != 0) {
-            const int align = (src - base) & 3;
-            if (align != 0)
-                src += 4 - align;
-        }
-
-        for (int i = 0; i < count; ++i) {
-            uint8_t *dst = fastOffset(_pageBuffers, src);
-            uint32_t offset = (src[1] & 0x7F) * 2;
-            const uint32_t end = READ_LE_UINT16(src + 2) + offset;
-            src += 4;
-
-            do {
-                ++offset;
-                pafCopy4x4h(dst, src);
-                src += 16;
-
-                if ((offset & 0x3F) == 0)
-                    dst += kVideoWidth * 3;
-
-                dst += 4;
-            } while (offset < end);
-        }
-    }
-
-    t1 = g_system->getTimeStamp();
-
-    // -------------------------------------------------
-    // 4) Wait for slave to finish
-    // -------------------------------------------------
-    // Advance src past V section
-    src = v_src + 6144;
-
-    t2 = g_system->getTimeStamp();
-
-    // -------------------------------------------------
-    // 5) OP section (unchanged)
-    // -------------------------------------------------
-    const uint32_t opcodesSize = READ_LE_UINT16(src);
-    src += 4;
-
-    const uint8_t *opcodesData = src;
-    src += opcodesSize;
-
-    uint8_t mask = 0;
-    uint8_t color = 0;
-    const uint8_t *src2 = 0;
-    const char *seq;
-
-    uint8_t *dst = _pageBuffers[_currentPageBuffer];
-
-    for (int y = 0; y < kVideoHeight; y += 4, dst += kVideoWidth * 3) {
-        for (int x = 0; x < kVideoWidth; x += 4, dst += 4) {
-
-            if (x & 4) {
-                seq = updateSequences[*opcodesData & 15];
-                ++opcodesData;
-            } else {
-                seq = updateSequences[*opcodesData >> 4];
-            }
-
-            for (; (code = *seq) != 0; ++seq) {
-                uint8_t *d0, *d1;
-                d0 = dst + 512;
-
-                switch (code) {
-                case 2:
-                    d0 = dst;
-                case 3:
-                    color = *src++;
-                case 4:
-                    mask = *src++;
-                    d1 = d0 + 256;
-                    pafCopyColorMask(mask >> 4, d0, color);
-                    pafCopyColorMask(mask & 15, d1, color);
-                    break;
-
-                case 5:
-                    d0 = dst;
-                case 6:
-                    src2 = fastOffset(_pageBuffers, src);
-                    src += 2;
-                case 7:
-                    mask = *src++;
-                    d1 = d0 + 256;
-                    pafCopySrcMask(mask >> 4, d0, src2 + (d0 - dst));
-                    pafCopySrcMask(mask & 15, d1, src2 + (d1 - dst));
-                    break;
-                }
-            }
-        }
-    }
-/*
-	do
-	{
-		asm("nop\n");
-	}
-	while (!*((volatile bool *)(&v_done + 0x20000000)));
-*/
-//	v_done = false;
-//	slCashPurge();
-SPR_WaitEndSlaveSH();
-
-    t3 = g_system->getTimeStamp();
-
-    emu_printf("Section times: H=%d V=%d OP=%d\n",
-               t1 - t0,
-               t2 - t1,
-               t3 - t2);
-}
+// Your EXACT vertical function
+static void decodeVideoFrameVertical(VerticalParams *vParams) {
+	VerticalParams *params = vParams;
+	const uint8_t *src = params->src;
+	uint8_t *dst = params->dst;
+	uint8_t **pages = params->pageBuffers;
 	
-#else
-void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code) {
-	unsigned int t0, t1, t2, t3, t4;
-	t0 = g_system->getTimeStamp();
-	
-	const int count = *src++;
-	if (count != 0) {
-		if ((code & 0x10) != 0) {
-			const int align = (src - base) & 3;
-			if (align != 0) {
-				src += 4 - align;
-			}
-		}
-
-		for (int i = 0; i < count; ++i) {
-			uint8_t *dst = fastOffset(_pageBuffers, src);
-			uint32_t offset = (src[1] & 0x7F) * 2;
-			const uint32_t end = READ_LE_UINT16(src + 2) + offset; src += 4;
-			do {
-				++offset;
-				pafCopy4x4h(dst, src);
-				src += 16;
-				if ((offset & 0x3F) == 0) {
-					dst += kVideoWidth * 3;
-				}
-				dst += 4;
-			} while (offset < end);
-		}
-	}
-	t1 = g_system->getTimeStamp();
-
-	uint8_t *dst = _pageBuffers[_currentPageBuffer];
-	
-	for (int y = 0; y < kVideoHeight; y += 4, dst += kVideoWidth * 3) {
-		for (int x = 0; x < kVideoWidth; x += 4, dst += 4) {
-			const uint8_t *src2 = fastOffset(_pageBuffers, src);
+	for (int y = 0; y < 192; y += 4, dst += 256 * 3) {
+		for (int x = 0; x < 256; x += 4, dst += 4) {
+			const int x_val = src[1] & 0x7F;
+			const int page = src[0] >> 6;
+			const int y_val = ((src[0] << 1) | (src[1] >> 7)) & 0x7F;
+			const uint8_t *src2 = pages[page] + (((y_val << 8) + x_val) << 1);
 			src += 2;
 			
 			uint8_t *r0 = dst;
@@ -631,18 +415,161 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 			r3[0] = src2[768]; r3[1] = src2[769]; r3[2] = src2[770]; r3[3] = src2[771];
 		}
 	}
-	t2 = g_system->getTimeStamp();
+//	v_done = 1;
+}
 
-	const uint32_t opcodesSize = READ_LE_UINT16(src); src += 4;
+// Horizontal function - same pattern
+static void decodeVideoFrameHorizontal(HorizontalParams *hParams) {
+	HorizontalParams *params = hParams;
+	const uint8_t *base = params->base;
+	const uint8_t *src = params->src;
+	uint8_t code = params->code;
+	uint8_t **pages = params->pageBuffers;
+	
+	const int count = *src++;
+	if (count != 0) {
+		if ((code & 0x10) != 0) {
+			const int align = (src - base) & 3;
+			if (align != 0) src += 4 - align;
+		}
+		for (int i = 0; i < count; ++i) {
+			const int x = src[1] & 0x7F;
+			const int page = src[0] >> 6;
+			const int y = ((src[0] << 1) | (src[1] >> 7)) & 0x7F;
+			uint8_t *dst = pages[page] + (((y << 8) + x) << 1);
+			
+			uint32_t offset = (src[1] & 0x7F) * 2;
+			const uint32_t end = READ_LE_UINT16(src + 2) + offset;
+			src += 4;
+			do {
+				++offset;
+				pafCopy4x4h(dst, src);
+				src += 16;
+				if ((offset & 0x3F) == 0) dst += 256 * 3;
+				dst += 4;
+			} while (offset < end);
+		}
+	}
+//	v_done = 1;
+}
+
+// Your EXACT skipHorizontalSection
+static const uint8_t* skipHorizontalSection(const uint8_t *base, const uint8_t *src, uint8_t code) {
+	const int count = *src++;
+	if (count != 0) {
+		if ((code & 0x10) != 0) {
+			const int align = (src - base) & 3;
+			if (align != 0) src += 4 - align;
+		}
+		for (int i = 0; i < count; ++i) {
+			uint32_t offset = (src[1] & 0x7F) * 2;
+			const uint32_t end = READ_LE_UINT16(src + 2) + offset;
+			src += 4;
+			do {
+				++offset;
+				src += 16;
+			} while (offset < end);
+		}
+	}
+	return src;
+}
+
+void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code) {
+	unsigned int t0, t1, t2, t3;
+	t0 = g_system->getTimeStamp();
+	
+	const uint8_t *v_src = skipHorizontalSection(base, src, code);
+	
+//	v_done = 0;
+	
+#if V_ON_SLAVE
+	// Your EXACT V on slave code
+	static VerticalParams vParams;
+	vParams.src = v_src;
+	vParams.dst = _pageBuffers[_currentPageBuffer];
+	vParams.pageBuffers = _pageBuffers;
+	SPR_RunSlaveSH((PARA_RTN*)decodeVideoFrameVertical, &vParams);
+	
+	// H on master
+	const int count = *src++;
+	if (count != 0) {
+		if ((code & 0x10) != 0) {
+			const int align = (src - base) & 3;
+			if (align != 0) src += 4 - align;
+		}
+		for (int i = 0; i < count; ++i) {
+			uint8_t *dst = fastOffset(_pageBuffers, src);
+			uint32_t offset = (src[1] & 0x7F) * 2;
+			const uint32_t end = READ_LE_UINT16(src + 2) + offset;
+			src += 4;
+			do {
+				++offset;
+				pafCopy4x4h(dst, src);
+				src += 16;
+				if ((offset & 0x3F) == 0) dst += kVideoWidth * 3;
+				dst += 4;
+			} while (offset < end);
+		}
+	}
+	
+	SPR_WaitEndSlaveSH();
+	t1 = g_system->getTimeStamp();
+	
+	src = v_src + 6144;  // Your EXACT value
+	t2 = g_system->getTimeStamp();
+	
+#else
+	// H on slave, V on master
+	static HorizontalParams hParams;
+	hParams.base = base;
+	hParams.src = src;
+	hParams.pageBuffers = _pageBuffers;
+	hParams.code = code;
+	SPR_RunSlaveSH((PARA_RTN*)decodeVideoFrameHorizontal, &hParams);
+	
+	// V on master
+	uint8_t *dst = _pageBuffers[_currentPageBuffer];
+	const uint8_t *v_ptr = v_src;
+	for (int y = 0; y < kVideoHeight; y += 4, dst += kVideoWidth * 3) {
+		for (int x = 0; x < kVideoWidth; x += 4, dst += 4) {
+			const uint8_t *src2 = fastOffset(_pageBuffers, v_ptr);
+			v_ptr += 2;
+			
+			uint8_t *r0 = dst;
+			uint8_t *r1 = dst + 256;
+			uint8_t *r2 = dst + 512;
+			uint8_t *r3 = dst + 768;
+			
+			r0[0] = src2[0]; r0[1] = src2[1]; r0[2] = src2[2]; r0[3] = src2[3];
+			r1[0] = src2[256]; r1[1] = src2[257]; r1[2] = src2[258]; r1[3] = src2[259];
+			r2[0] = src2[512]; r2[1] = src2[513]; r2[2] = src2[514]; r2[3] = src2[515];
+			r3[0] = src2[768]; r3[1] = src2[769]; r3[2] = src2[770]; r3[3] = src2[771];
+		}
+	}
+	
+	SPR_WaitEndSlaveSH();
+	t1 = g_system->getTimeStamp();
+	
+	src = v_src + 6144;
+	t2 = g_system->getTimeStamp();
+#endif
+	
+	// Your EXACT OP section
+	const uint32_t opcodesSize = READ_LE_UINT16(src);
+	src += 4;
 	const uint8_t *opcodesData = src;
 	src += opcodesSize;
-
+	
 	uint8_t mask = 0;
 	uint8_t color = 0;
 	const uint8_t *src2 = 0;
 	const char *seq;
 
+#if V_ON_SLAVE	
+	uint8_t *dst = _pageBuffers[_currentPageBuffer];
+#else
 	dst = _pageBuffers[_currentPageBuffer];
+#endif
 	for (int y = 0; y < kVideoHeight; y += 4, dst += kVideoWidth * 3) {
 		for (int x = 0; x < kVideoWidth; x += 4, dst += 4) {
 			if (x & 4) {
@@ -659,10 +586,8 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 				switch (code) {
 				case 2:
 					d0 = dst;
-					/* fall-through */
 				case 3:
 					color = *src++;
-					/* fall-through */
 				case 4:
 					mask = *src++;
 					d1 = d0 + 256;
@@ -671,10 +596,9 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 					break;
 				case 5:
 					d0 = dst;
-					/* fall-through */
 				case 6:
-					src2 = fastOffset(_pageBuffers, src); src += 2;
-					/* fall-through */
+					src2 = fastOffset(_pageBuffers, src);
+					src += 2;
 				case 7:
 					mask = *src++;
 					d1 = d0 + 256;
@@ -685,10 +609,18 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 			}
 		}
 	}
+	
 	t3 = g_system->getTimeStamp();
 	
-	emu_printf("Section times: H=%d V=%d OP=%d\n", t1-t0, t2-t1, t3-t2);
+#if V_ON_SLAVE
+	emu_printf("Section times: H(master)=%d V(slave)=%d OP=%d\n", t1-t0, t2-t1, t3-t2);
+#else
+	emu_printf("Section times: H(slave)=%d V(master)=%d OP=%d\n", t1-t0, t2-t1, t3-t2);
+#endif
 }
+#else
+	ccccccccccccccccccccccccccccccccccccccccc
+
 #endif
 
 FORCE_INLINE void PafPlayer::decodeVideoFrameOp1(const uint8_t *src) {
