@@ -18,6 +18,7 @@ extern "C" {
 void 	free(void *ptr);
 void	*malloc(size_t);
 void *calloc(size_t nmemb, size_t size);
+void CSH_AllClr(void);
 extern unsigned char frame_x;
 extern unsigned char frame_z;
 extern Uint8 *cs2ram;
@@ -289,14 +290,14 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		break;
 	}
 }
-
+/*
 FORCE_INLINE void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
 	memcpy(dst, src, 4);
 	memcpy(dst + 256, src + 4, 4);
 	memcpy(dst + 512, src + 8, 4);
 	memcpy(dst + 768, src + 12, 4);
 }
-
+*/
 FORCE_INLINE void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
 	memcpy(dst, src, 4);
 	memcpy(dst + 256, src + 256, 4);
@@ -380,208 +381,191 @@ FORCE_INLINE uint8_t *fastOffset(uint8_t **pages, const uint8_t *src) {
 }
 #if 1
 extern "C" {
-void free(void *ptr);
-void *malloc(size_t);
-void *calloc(size_t nmemb, size_t size);
-extern unsigned char frame_x;
-extern unsigned char frame_z;
-extern Uint8 *cs2ram;
-extern Sint32 iondata;
+    void free(void *ptr);
+    void *malloc(size_t);
+    void *calloc(size_t nmemb, size_t size);
+    extern unsigned char frame_x;
+    extern unsigned char frame_z;
+    extern Uint8 *cs2ram;
+    extern Sint32 iondata;
 }
 
-// Your EXACT vertical function
-static void decodeVideoFrameVertical(VerticalParams *vParams) {
-	VerticalParams *params = vParams;
-	const uint8_t *src = params->src;
-	uint8_t *dst = params->dst;
-	uint8_t **pages = params->pageBuffers;
-	
-	for (int y = 0; y < 192; y += 4, dst += 256 * 3) {
-		for (int x = 0; x < 256; x += 4, dst += 4) {
-			const int x_val = src[1] & 0x7F;
-			const int page = src[0] >> 6;
-			const int y_val = ((src[0] << 1) | (src[1] >> 7)) & 0x7F;
-			const uint8_t *src2 = pages[page] + (((y_val << 8) + x_val) << 1);
-			src += 2;
-			
-			uint8_t *r0 = dst;
-			uint8_t *r1 = dst + 256;
-			uint8_t *r2 = dst + 512;
-			uint8_t *r3 = dst + 768;
-			
-			r0[0] = src2[0]; r0[1] = src2[1]; r0[2] = src2[2]; r0[3] = src2[3];
-			r1[0] = src2[256]; r1[1] = src2[257]; r1[2] = src2[258]; r1[3] = src2[259];
-			r2[0] = src2[512]; r2[1] = src2[513]; r2[2] = src2[514]; r2[3] = src2[515];
-			r3[0] = src2[768]; r3[1] = src2[769]; r3[2] = src2[770]; r3[3] = src2[771];
-		}
-	}
-}
+#include <stdint.h>  // For uint32_t, uint16_t, etc.
 
-// Horizontal function - same pattern
-static void decodeVideoFrameHorizontal(HorizontalParams *hParams) {
-	HorizontalParams *params = hParams;
-	const uint8_t *base = params->base;
-	const uint8_t *src = params->src;
-	uint8_t code = params->code;
-	uint8_t **pages = params->pageBuffers;
-	
-	const int count = *src++;
-	if (count != 0) {
-		if ((code & 0x10) != 0) {
-			const int align = (src - base) & 3;
-			if (align != 0) src += 4 - align;
-		}
-		for (int i = 0; i < count; ++i) {
-			const int x = src[1] & 0x7F;
-			const int page = src[0] >> 6;
-			const int y = ((src[0] << 1) | (src[1] >> 7)) & 0x7F;
-			uint8_t *dst = pages[page] + (((y << 8) + x) << 1);
-			
-			uint32_t offset = (src[1] & 0x7F) * 2;
-			const uint32_t end = READ_LE_UINT16(src + 2) + offset;
-			src += 4;
-			do {
-				++offset;
-				pafCopy4x4h(dst, src);
-				src += 16;
-				if ((offset & 0x3F) == 0) dst += 256 * 3;
-				dst += 4;
-			} while (offset < end);
-		}
-	}
-}
+#define READ_LE_UINT16(p) ((uint16_t)((p)[0] | ((p)[1] << 8)))
 
-// Your EXACT skipHorizontalSection
-static const uint8_t* skipHorizontalSection(const uint8_t *base, const uint8_t *src, uint8_t code) {
-	const int count = *src++;
-	if (count != 0) {
-		if ((code & 0x10) != 0) {
-			const int align = (src - base) & 3;
-			if (align != 0) src += 4 - align;
-		}
-		for (int i = 0; i < count; ++i) {
-			uint32_t offset = (src[1] & 0x7F) * 2;
-			const uint32_t end = READ_LE_UINT16(src + 2) + offset;
-			src += 4;
-			do {
-				++offset;
-				src += 16;
-			} while (offset < end);
-		}
-	}
-	return src;
+FORCE_INLINE void pafCopy4x4h(uint8_t *d, const uint8_t *s) {
+    // Fully unrolled with <<8 instead of *256
+    d[0]          = s[0];  d[1]          = s[1];  d[2]          = s[2];  d[3]          = s[3];
+    d[1<<8]       = s[4];  d[(1<<8)+1]   = s[5];  d[(1<<8)+2]   = s[6];  d[(1<<8)+3]   = s[7];
+    d[2<<8]       = s[8];  d[(2<<8)+1]   = s[9];  d[(2<<8)+2]   = s[10]; d[(2<<8)+3]   = s[11];
+    d[3<<8]       = s[12]; d[(3<<8)+1]   = s[13]; d[(3<<8)+2]   = s[14]; d[(3<<8)+3]   = s[15];
+    // Alternative (even smaller assembly on SH-2):
+    // uint32_t *dst = (uint32_t*)d;
+    // const uint32_t *src = (const uint32_t*)s;
+    // dst[0] = src[0]; dst[64] = src[1]; dst[128] = src[2]; dst[192] = src[3];
 }
 
 void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code) {
-	unsigned int t0, t1, t2, t3;
-	t0 = g_system->getTimeStamp();
-	
-	const uint8_t *v_src = skipHorizontalSection(base, src, code);
-	
-#if V_ON_SLAVE
-	// V on slave using function
-	static VerticalParams vParams;
-	vParams.src = v_src;
-	vParams.dst = _pageBuffers[_currentPageBuffer];
-	vParams.pageBuffers = _pageBuffers;
-	SPR_RunSlaveSH((PARA_RTN*)decodeVideoFrameVertical, &vParams);
-	
-	// H on master using function
-	static HorizontalParams hParams;
-	hParams.base = base;
-	hParams.src = src;
-	hParams.pageBuffers = _pageBuffers;
-	hParams.code = code;
-	decodeVideoFrameHorizontal(&hParams);
-	
-	SPR_WaitEndSlaveSH();
-	t1 = g_system->getTimeStamp();
-	
-	src = v_src + 6144;  // Your EXACT value
-	t2 = g_system->getTimeStamp();
-	
-#else
-	// H on slave using function
-	static HorizontalParams hParams;
-	hParams.base = base;
-	hParams.src = src;
-	hParams.pageBuffers = _pageBuffers;
-	hParams.code = code;
-	SPR_RunSlaveSH((PARA_RTN*)decodeVideoFrameHorizontal, &hParams);
-	
-	// V on master using function
-	static VerticalParams vParams;
-	vParams.src = v_src;
-	vParams.dst = _pageBuffers[_currentPageBuffer];
-	vParams.pageBuffers = _pageBuffers;
-	decodeVideoFrameVertical(&vParams);
-	
-	SPR_WaitEndSlaveSH();
-	t1 = g_system->getTimeStamp();
-	
-	src = v_src + 6144;
-	t2 = g_system->getTimeStamp();
-#endif
-	
-	// Your EXACT OP section
-	const uint32_t opcodesSize = READ_LE_UINT16(src);
-	src += 4;
-	const uint8_t *opcodesData = src;
-	src += opcodesSize;
-	
-	uint8_t mask = 0;
-	uint8_t color = 0;
-	const uint8_t *src2 = 0;
-	const char *seq;
+    uint32_t t0 = g_system->getTimeStamp();
 
-	uint8_t *dst = _pageBuffers[_currentPageBuffer];
-	for (int y = 0; y < kVideoHeight; y += 4, dst += kVideoWidth * 3) {
-		for (int x = 0; x < kVideoWidth; x += 4, dst += 4) {
-			if (x & 4) {
-				seq = updateSequences[*opcodesData & 15];
-				++opcodesData;
-			} else {
-				seq = updateSequences[*opcodesData >> 4];
+    // === Skip horizontal section ===
+    const uint8_t *v = src;
+    int n = *v++;
+    if (n) {
+        if (code & 0x10) {
+            int a = (v - base) & 3;
+            if (a) v += 4 - a;
+        }
+        for (int i = 0; i < n; ++i) {
+            uint32_t o = (v[1] & 0x7F) << 1;
+            uint32_t e = READ_LE_UINT16(v + 2) + o;
+            v += 4;
+            while (o < e) {
+                v += 16;
+                ++o;
+            }
+        }
+    }
+    uint32_t t1 = g_system->getTimeStamp();
+
+	// === Decode horizontal (optimized) ===
+	{
+		int n = *src;
+		if (n) {
+			const uint8_t *s = src + 1;
+			if (code & 0x10) {
+				int a = (s - base) & 3;
+				if (a) s += 4 - a;
 			}
-			
-			for (; (code = *seq) != 0; ++seq) {
-				uint8_t *d0, *d1;
-				d0 = dst + 512;
-				
-				switch (code) {
-				case 2:
-					d0 = dst;
-				case 3:
-					color = *src++;
-				case 4:
-					mask = *src++;
-					d1 = d0 + 256;
-					pafCopyColorMask(mask >> 4, d0, color);
-					pafCopyColorMask(mask & 15, d1, color);
-					break;
-				case 5:
-					d0 = dst;
-				case 6:
-					src2 = fastOffset(_pageBuffers, src);
-					src += 2;
-				case 7:
-					mask = *src++;
-					d1 = d0 + 256;
-					pafCopySrcMask(mask >> 4, d0, src2 + (d0 - dst));
-					pafCopySrcMask(mask & 15, d1, src2 + (d1 - dst));
-					break;
+
+			uint8_t **p = _pageBuffers;
+
+			for (int i = 0; i < n; ++i) {
+				// Precompute common bitfield parts
+				uint8_t hi = s[0];
+				uint8_t lo = s[1];
+				uint8_t idx = hi >> 6;
+				uint32_t temp = ((hi << 1) | (lo >> 7)) & 0x7F;
+				uint32_t offset = (temp << 8 | (lo & 0x7F)) << 1;
+
+				uint8_t *d_base = p[idx] + offset;
+
+				uint32_t o = (lo & 0x7F) << 1;
+				uint32_t e = READ_LE_UINT16(s + 2) + o;
+				s += 4;
+
+				// Precompute row destinations (only 3 shifts total!)
+				uint8_t *d0 = d_base;
+				uint8_t *d1 = d_base + (1 << 8);
+				uint8_t *d2 = d_base + (2 << 8);
+				uint8_t *d3 = d_base + (3 << 8);
+
+				while (o < e) {
+					// Source rows (stride 16 bytes per row in source block)
+					const uint8_t *s0 = s;
+					const uint8_t *s1 = s + 4;
+					const uint8_t *s2 = s + 8;
+					const uint8_t *s3 = s + 12;
+
+					// Fast 4x4 copy using row pointers — no repeated shifts
+					d0[0] = s0[0]; d0[1] = s0[1]; d0[2] = s0[2]; d0[3] = s0[3];
+					d1[0] = s1[0]; d1[1] = s1[1]; d1[2] = s1[2]; d1[3] = s1[3];
+					d2[0] = s2[0]; d2[1] = s2[1]; d2[2] = s2[2]; d2[3] = s2[3];
+					d3[0] = s3[0]; d3[1] = s3[1]; d3[2] = s3[2]; d3[3] = s3[3];
+
+					// Alternative: 32-bit writes if alignment is guaranteed
+					// *((uint32_t*)d0) = *((uint32_t*)s0);
+					// *((uint32_t*)d1) = *((uint32_t*)s1);
+					// *((uint32_t*)d2) = *((uint32_t*)s2);
+					// *((uint32_t*)d3) = *((uint32_t*)s3);
+
+					s += 16;
+					d_base += 4;
+					d0 += 4; d1 += 4; d2 += 4; d3 += 4;
+
+					if ((++o & 0x3F) == 0) {
+						d_base += 768;
+						d0 += 768; d1 += 768; d2 += 768; d3 += 768;
+					}
 				}
 			}
 		}
 	}
-	
-	t3 = g_system->getTimeStamp();
-	
-#if V_ON_SLAVE
-	emu_printf("Section times: H(master)=%d V(slave)=%d OP=%d\n", t1-t0, t2-t1, t3-t2);
-#else
-	emu_printf("Section times: H(slave)=%d V(master)=%d OP=%d\n", t1-t0, t2-t1, t3-t2);
-#endif
+
+    uint32_t t2 = g_system->getTimeStamp();
+
+    // === Decode vertical (uses <<8 instead of *256) ===
+    {
+		uint8_t *d = _pageBuffers[_currentPageBuffer];
+		uint8_t **p = _pageBuffers;
+		const uint8_t *s = v;
+
+		for (int y = 0; y < 192; y += 4, d += 768) {
+			for (int x = 0; x < 256; x += 4, d += 4, s += 2) {
+				uint8_t idx = s[0] >> 6;
+				uint32_t offset = (((((s[0] << 1) | (s[1] >> 7)) & 0x7F) << 8) | (s[1] & 0x7F)) << 1;
+				const uint8_t *t = p[idx] + offset;
+
+				// Precompute row pointers — only 4 shifts per tile
+				uint8_t       *d0 = d;
+				uint8_t       *d1 = d + (1 << 8);
+				uint8_t       *d2 = d + (2 << 8);
+				uint8_t       *d3 = d + (3 << 8);
+
+				const uint8_t *t0 = t;
+				const uint8_t *t1 = t + (1 << 8);
+				const uint8_t *t2 = t + (2 << 8);
+				const uint8_t *t3 = t + (3 << 8);
+
+				// Fully unrolled 4×4 copy — pure ASCII, no hidden characters
+				d0[0] = t0[0]; d0[1] = t0[1]; d0[2] = t0[2]; d0[3] = t0[3];
+				d1[0] = t1[0]; d1[1] = t1[1]; d1[2] = t1[2]; d1[3] = t1[3];
+				d2[0] = t2[0]; d2[1] = t2[1]; d2[2] = t2[2]; d2[3] = t2[3];
+				d3[0] = t3[0]; d3[1] = t3[1]; d3[2] = t3[2]; d3[3] = t3[3];
+			}
+		}
+
+    }
+    uint32_t t3 = g_system->getTimeStamp();
+
+    // === OP section (mask operations) ===
+    const uint8_t *op = v + 6144;
+    uint32_t sz = READ_LE_UINT16(op);
+    op += 4;
+    uint8_t *d = _pageBuffers[_currentPageBuffer];
+    const uint8_t *src2 = op + sz;
+
+    for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
+        for (int x = 0; x < kVideoWidth; x += 4, d += 4) {
+            const char *q = updateSequences[(x & 4) ? (*op++ & 15) : (*op >> 4)];
+            uint8_t k;
+            while ((k = *q++)) {
+                uint8_t *d0 = d + 512, *d1;  // 512 is intentional (half-page offset)
+                const uint8_t *s2;
+                uint8_t m, c;
+                switch (k) {
+                    case 2: d0 = d;
+                    case 3: c = *src2++;
+                    case 4: m = *src2++;
+                            d1 = d0 + (1<<8);  // <<8 instead of +256
+                            pafCopyColorMask(m >> 4, d0, c);
+                            pafCopyColorMask(m & 15, d1, c);
+                            break;
+                    case 5: d0 = d;
+                    case 6: s2 = fastOffset(_pageBuffers, src2); src2 += 2;
+                    case 7: m = *src2++;
+                            d1 = d0 + (1<<8);  // <<8 instead of +256
+                            pafCopySrcMask(m >> 4, d0, s2 + (d0 - d));
+                            pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                            break;
+                }
+            }
+        }
+    }
+    uint32_t t5 = g_system->getTimeStamp();
+
+    emu_printf("Times: Skip=%u H=%u V=%u Prep=0 OP=%u\n", t1-t0, t2-t1, t3-t2, t5-t3);
 }
 #else
 static const uint8_t* skipHorizontalSection(const uint8_t *base, const uint8_t *src, uint8_t code) {
@@ -1155,12 +1139,14 @@ asyncReadActive= false;
         // Wait and start next read every 4th frame (1, 5, 9, 13...)
         if (i > 0 && i % FRAMES_PER_READ == 1 && asyncReadActive) {
             // Wait for async read to complete
+    uint32_t a = g_system->getTimeStamp();
             int r = _file.asynchWait(buffers[readBuffer], totalBytes2);
-
             // Switch to the buffer that just finished reading
             currentBuffer = readBuffer;
             delta = (r - totalBytes2);
-            
+uint32_t b = g_system->getTimeStamp();           
+emu_printf("chunk %d duration %d\n", totalBytes2, b-a);
+
             blocksCountForFrame = blocksCountForFrame2;
             
             // Move to next buffer for next async read
