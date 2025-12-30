@@ -351,8 +351,8 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 		DMA_ScuMemCopy(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);
-		SCU_DMAWait();
 	}
+	SCU_DMAWait();
 #else
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();
@@ -371,8 +371,8 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 		DMA_ScuMemCopy(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);
-		SCU_DMAWait();
 	}
+	SCU_DMAWait();
 #else
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();

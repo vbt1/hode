@@ -81,9 +81,11 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 
 void File::asynchInit(uint8_t *ptr, uint32_t len) {
     Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-    GFS_SetTmode(_fp->fid, GFS_TMODE_SDMA0);
+//    GFS_SetTmode(_fp->fid, GFS_TMODE_SDMA1);
+//    GFS_SetTmode(_fp->fid, GFS_TMODE_CPU);
+//    GFS_SetTmode(_fp->fid, GFS_TMODE_STM);
     GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-//   GFS_SetReadPara(_fp->fid, 24);
+   GFS_SetReadPara(_fp->fid, 60);
     ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
     Sint32 tot_bytes = len + ioskip_bytes;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
@@ -96,7 +98,7 @@ void File::asynchInit(uint8_t *ptr, uint32_t len) {
 #endif
     iostat = -1;
 }
-
+/*
 void File::asynchRead() {
 //emu_printf("asynchRead\n");
 #ifdef NWREAD
@@ -115,7 +117,7 @@ void File::asynchRead() {
 //emu_printf("getstat %d %d\n", iostat,iondata);
     // Don't update _fp->f_seek_pos here - let asynchWait() handle it
 }
-
+*/
 int File::asynchWait(uint8_t *ptr, Sint32 len) {
 
 #ifdef NWREAD

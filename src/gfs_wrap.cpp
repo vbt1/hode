@@ -150,7 +150,8 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
-		GFS_SetTmode(fid, GFS_TMODE_SCU); // DMA transfer by SCU
+    GFS_SetTmode(fid, GFS_TMODE_CPU);
+//    GFS_SetTmode(fid, GFS_TMODE_SCU);
 
 		// Encapsulate the file data
 //		fp = (GFS_FILE*)malloc(sizeof(GFS_FILE));
@@ -162,18 +163,21 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 		fp->f_size = fsize;
 //		//emu_printf("position %d %p fsize %d\n", position, fp->fid, fsize);
 
+		Sint32 tot_sectors = TOT_SECTOR;
+		
 		if (!position) // on conserve le cache existant
 		{
 			fp->f_seek_pos = 0;
-			Sint32 tot_sectors = TOT_SECTOR;
-			GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
-			memset4_fast((Uint8*)cache, 0, CACHE_SIZE);
 			cache_offset = 0;
-			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
+			if(position!=-1)
+			{
+				GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
+				memset4_fast((Uint8*)cache, 0, CACHE_SIZE);
+				GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
+			}
 		}
 		else
 		{
-			Sint32 tot_sectors = TOT_SECTOR;
 			GFS_Seek(fp->fid, position, GFS_SEEK_SET);
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
 		}

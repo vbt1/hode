@@ -393,7 +393,7 @@ extern "C" {
 #include <stdint.h>  // For uint32_t, uint16_t, etc.
 
 #define READ_LE_UINT16(p) ((uint16_t)((p)[0] | ((p)[1] << 8)))
-
+/*
 FORCE_INLINE void pafCopy4x4h(uint8_t *d, const uint8_t *s) {
     // Fully unrolled with <<8 instead of *256
     d[0]          = s[0];  d[1]          = s[1];  d[2]          = s[2];  d[3]          = s[3];
@@ -402,10 +402,10 @@ FORCE_INLINE void pafCopy4x4h(uint8_t *d, const uint8_t *s) {
     d[3<<8]       = s[12]; d[(3<<8)+1]   = s[13]; d[(3<<8)+2]   = s[14]; d[(3<<8)+3]   = s[15];
     // Alternative (even smaller assembly on SH-2):
     // uint32_t *dst = (uint32_t*)d;
-    // const uint32_t *src = (const uint32_t*)s;
+   // const uint32_t *src = (const uint32_t*)s;
     // dst[0] = src[0]; dst[64] = src[1]; dst[128] = src[2]; dst[192] = src[3];
 }
-
+*/
 void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code) {
     uint32_t t0 = g_system->getTimeStamp();
 
@@ -474,12 +474,6 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 					d2[0] = s2[0]; d2[1] = s2[1]; d2[2] = s2[2]; d2[3] = s2[3];
 					d3[0] = s3[0]; d3[1] = s3[1]; d3[2] = s3[2]; d3[3] = s3[3];
 
-					// Alternative: 32-bit writes if alignment is guaranteed
-					// *((uint32_t*)d0) = *((uint32_t*)s0);
-					// *((uint32_t*)d1) = *((uint32_t*)s1);
-					// *((uint32_t*)d2) = *((uint32_t*)s2);
-					// *((uint32_t*)d3) = *((uint32_t*)s3);
-
 					s += 16;
 					d_base += 4;
 					d0 += 4; d1 += 4; d2 += 4; d3 += 4;
@@ -525,7 +519,6 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 				d3[0] = t3[0]; d3[1] = t3[1]; d3[2] = t3[2]; d3[3] = t3[3];
 			}
 		}
-
     }
     uint32_t t3 = g_system->getTimeStamp();
 
@@ -565,7 +558,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
     }
     uint32_t t5 = g_system->getTimeStamp();
 
-    emu_printf("Times: Skip=%u H=%u V=%u Prep=0 OP=%u\n", t1-t0, t2-t1, t3-t2, t5-t3);
+//    emu_printf("Times: Skip=%u H=%u V=%u Prep=0 OP=%u\n", t1-t0, t2-t1, t3-t2, t5-t3);
 }
 #else
 static const uint8_t* skipHorizontalSection(const uint8_t *base, const uint8_t *src, uint8_t code) {
@@ -781,10 +774,9 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 		}
 	}
 	
-	t3 = g_system->getTimeStamp();
+//	t3 = g_system->getTimeStamp();
 	
-	emu_printf("Times: V(master)+H_build(slave)=%d H_exec=%d OP=%d runs=%d\n", 
-	           t1-t0, t2-t1, t3-t2, hCtx.count);
+//	emu_printf("Times: V(master)+H_build(slave)=%d H_exec=%d OP=%d runs=%d\n", 	           t1-t0, t2-t1, t3-t2, hCtx.count);
 }
 #endif
 
@@ -1073,7 +1065,7 @@ void PafPlayer::mainLoop() {
 #define FRAMES_PER_READ 5
 
 #ifdef DOUBLE
-	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 220000);
+	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 250000);
 
     // Setup buffer array
     uint8_t* buffers[NUM_BUFFERS] = {
@@ -1145,7 +1137,7 @@ asyncReadActive= false;
             currentBuffer = readBuffer;
             delta = (r - totalBytes2);
 uint32_t b = g_system->getTimeStamp();           
-emu_printf("chunk %d duration %d\n", totalBytes2, b-a);
+//emu_printf("chunk %d duration %d\n", totalBytes2, b-a);
 
             blocksCountForFrame = blocksCountForFrame2;
             
