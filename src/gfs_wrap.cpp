@@ -179,7 +179,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 			{
 				GFS_CdMovePickup(fp->fid);
 				GFS_SetTransPara(fp->fid,12);
-				GFS_SetTmode(fp->fid,GFS_TMODE_SCU);
+				GFS_SetTmode(fp->fid,GFS_TMODE_CPU);
 			}
 		}
 		else

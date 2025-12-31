@@ -1066,7 +1066,7 @@ void PafPlayer::mainLoop() {
 #define FRAMES_PER_READ 5
 
 #ifdef DOUBLE
-	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 250000);
+	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 220000);
 
     // Setup buffer array
     uint8_t* buffers[NUM_BUFFERS] = {
