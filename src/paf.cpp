@@ -23,6 +23,8 @@ extern unsigned char frame_x;
 extern unsigned char frame_z;
 extern Uint8 *cs2ram;
 extern Sint32 iondata;
+Sint32 GFCD_GetBufSiz(void);
+Sint32  CDC_GetBufSiz(Sint32 *totalsiz, Sint32 *bufnum, Sint32 *freesiz);
 }
 
 // Configuration: choose which section runs on slave CPU
@@ -273,7 +275,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		_paletteChanged = true;
 		src += count;
 	}
-//emu_printf("decode %d -- ", code & 0xF);	
+//emu_printf("decode %d -- \n", code & 0xF);	
 	
 	switch (code & 0xF) {
 	case 0:
@@ -1028,7 +1030,6 @@ if(result>0)
 }
 #else
 uint8_t *buf = NULL;
-
 void PafPlayer::mainLoop() {
     _file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
     
@@ -1039,7 +1040,7 @@ void PafPlayer::mainLoop() {
     _paletteChanged = true;
     _currentPageBuffer = 0;
     int currentFrameBlock = 0;
-
+    
 #ifdef SOUND
     AudioCallback prevAudioCb;
     if (_demuxAudioFrameBlocks) {
@@ -1053,7 +1054,7 @@ void PafPlayer::mainLoop() {
     uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
     uint32_t blocksCountForFrame2;
     uint32_t totalBytes2;
-
+    
 #ifdef DEBUG
     _video->_font = (uint8_t *)0x25e6df94;
     static uint8_t last_frame_z = 0xFF;
@@ -1065,9 +1066,9 @@ void PafPlayer::mainLoop() {
 #define FRAMES_PER_READ 5
 
 #ifdef DOUBLE
-	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 250000);
-
-    // Setup buffer array
+    buf = (uint8_t *)allocate_memory(TYPE_PAFBUF, 250000);
+    
+    // Setup buffer arrays - both point to same memory
     uint8_t* buffers[NUM_BUFFERS] = {
         buf,
         buf + 90000,
@@ -1077,29 +1078,37 @@ void PafPlayer::mainLoop() {
         buf + 200000
     };
     
-    int currentBuffer = 0;  // Buffer being processed
-    int readBuffer = 1;     // Buffer being read into
+    uint8_t* buffers2[NUM_BUFFERS] = {
+        buf,
+        buf + 90000,
+        buf + 120000,
+        buf + 150000,
+        buf + 175000,
+        buf + 200000
+    };
+    
+    uint8_t** activeBuffers = buffers;    // Currently processing from this set
+    uint8_t** asyncBuffers = buffers;     // Currently reading into this set
+    int currentBuffer = 0;
+    int readBuffer = 1;
+    int delta = 0;
     
     // First batch read (preload + first frame) into buffer 0
     blocksCountForFrame += _pafHdr.frameBlocksCountTable[0];
     uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
-    
-    unsigned int s0 = g_system->getTimeStamp();
     int r = _file.batchRead(buffers[0], totalBytes);
-    int delta = (r - totalBytes);
+    delta = (r - totalBytes);
     
-    // Start first async read for frames 1-4 into buffer 1
+    // Start first async read for frames 1-5 into buffer 1
     if (_pafHdr.framesCount > 1) {
         blocksCountForFrame2 = 0;
         totalBytes = 0;
-        
         for (int j = 1; j <= FRAMES_PER_READ && j < (int)_pafHdr.framesCount; j++) {
             blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[j];
             totalBytes += _pafHdr.frameBlocksCountTable[j] * _pafHdr.readBufferSize;
         }
-        
         totalBytes2 = totalBytes;
-        _file.asynchInit(buffers[readBuffer], totalBytes);
+        _file.asynchInit(asyncBuffers[readBuffer], totalBytes);
     }
     
     bool asyncReadActive = (_pafHdr.framesCount > 1);
@@ -1108,62 +1117,81 @@ void PafPlayer::mainLoop() {
     // Force 10fps = 100ms per frame
     const uint32_t frameMs = 100;
     uint32_t frameTime = g_system->getTimeStamp();
-
+    
     for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
 #ifndef DOUBLE
-        unsigned int s0 = g_system->getTimeStamp();
         blocksCountForFrame += _pafHdr.frameBlocksCountTable[i];
         uint32_t totalBytes = (blocksCountForFrame * _pafHdr.readBufferSize);
         uint8_t* readBuffer = buf;
-        
         int r = _file.batchRead(readBuffer, totalBytes);
         readBuffer += (r - totalBytes);
 #else
-/*
-	Sint32 stat, ndata;
-    GFS_NwGetStat(_file._fp->fid, &stat, &ndata);
-
-    if(stat == GFS_SVR_COMPLETED)
-    {
-asyncReadActive= false;
-    }
-*/
-        // Wait and start next read every 4th frame (1, 5, 9, 13...)
+        // Wait and start next read every 5th frame (1, 6, 11, 16...)
         if (i > 0 && i % FRAMES_PER_READ == 1 && asyncReadActive) {
-            // Wait for async read to complete
-    uint32_t a = g_system->getTimeStamp();
-            int r = _file.asynchWait(buffers[readBuffer], totalBytes2);
-            // Switch to the buffer that just finished reading
+            long totalsiz, bufnum, freesiz;
+            CDC_GetBufSiz(&totalsiz, &bufnum, &freesiz);
+            uint32_t a = g_system->getTimeStamp();
+            
+            // Wait for async read - it reads the FULL requested amount
+            int r = _file.asynchWait(asyncBuffers[readBuffer], totalBytes2);
+            uint32_t b = g_system->getTimeStamp();
+            
+            if(freesiz == 200) 
+                emu_printf("chunk %d duration %d\n", totalBytes2, b-a);
+            
+//            emu_printf("Got %d bytes of %d requested\n", r, totalBytes2);
+            
+            // Switch to the buffer we just read
+            activeBuffers = asyncBuffers;
             currentBuffer = readBuffer;
             delta = (r - totalBytes2);
-uint32_t b = g_system->getTimeStamp();           
-//emu_printf("chunk %d duration %d\n", totalBytes2, b-a);
-
             blocksCountForFrame = blocksCountForFrame2;
             
-            // Move to next buffer for next async read
-            readBuffer = (readBuffer + 1) % NUM_BUFFERS;
-            
-            // IMMEDIATELY start next async read
+            // Prepare next async read
             int nextFrameStart = i + FRAMES_PER_READ;
+			int previous=0;
             if (nextFrameStart < (int)_pafHdr.framesCount) {
                 blocksCountForFrame2 = 0;
                 totalBytes = 0;
                 
+                // Calculate how much data we need for next batch
                 for (int j = 0; j < FRAMES_PER_READ && (nextFrameStart + j) < (int)_pafHdr.framesCount; j++) {
                     blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[nextFrameStart + j];
-                    totalBytes += _pafHdr.frameBlocksCountTable[nextFrameStart + j] * _pafHdr.readBufferSize;
+                    previous = totalBytes;
+					totalBytes += _pafHdr.frameBlocksCountTable[nextFrameStart + j] * _pafHdr.readBufferSize;
+                }
+                
+                // Check if we need to limit this request
+                const uint32_t MAX_REQUEST = 1208320-1;
+                bool needToLimit = (totalBytes > MAX_REQUEST);
+                
+                if (needToLimit) {
+                    // Limit to safe amount and swap buffer arrays
+					int save_tot = totalBytes;
+                    totalBytes = previous;  // Safe limit
+                    blocksCountForFrame2 = totalBytes / _pafHdr.readBufferSize;
+                    
+                    emu_printf("Limiting next request to %d bytes, swapping to %s\n", 
+                               totalBytes, (asyncBuffers == buffers) ? "buffers2" : "buffers");
+                    
+                    // Swap to other buffer array
+                    asyncBuffers = (asyncBuffers == buffers) ? buffers2 : buffers;
+                    readBuffer = 0;  // Start at first buffer of swapped array
+                } else {
+                    // Normal - continue in same array
+                    readBuffer = (readBuffer + 1) % NUM_BUFFERS;
                 }
                 
                 totalBytes2 = totalBytes;
-                _file.asynchInit(buffers[readBuffer], totalBytes);
+                _file.asynchInit(asyncBuffers[readBuffer], totalBytes);
+                
             } else {
                 asyncReadActive = false;
             }
         }
         
-        // Use current buffer with delta offset
-        uint8_t* currentData = buffers[currentBuffer] + delta;
+        // Use active buffer
+        uint8_t* currentData = activeBuffers[currentBuffer] + delta;
 #endif
 
         // Process all blocks for current frame
@@ -1180,17 +1208,17 @@ uint32_t b = g_system->getTimeStamp();
             --tempBlocksCount;
             currentData += _pafHdr.readBufferSize;
         }
-        
         blocksCountForFrame = tempBlocksCount;
+        
         decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
         g_system->copyRect(0, 0, kVideoWidth, kVideoHeight, _pageBuffers[_currentPageBuffer], kVideoWidth);
-
+        
         if (_paletteChanged) {
             _paletteChanged = false;
             g_system->setPalette(_paletteBuffer, 256, 6);
             g_system->updateScreen(false);
         }
-
+        
 #ifdef DEBUG
         if (frame_z != last_frame_z) {
             last_frame_z = frame_z;
@@ -1199,36 +1227,32 @@ uint32_t b = g_system->getTimeStamp();
             buffer[2] = 0;
         }
         _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
-#else
-//        emu_printf("fps %d\n", frame_z);
 #endif
 
         // Quit check
         if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) || g_system->inp.keyPressed(SYS_INP_RUN)) {
             break;
         }
-
+        
         frame_x++;
         ++_currentPageBuffer;
         _currentPageBuffer &= 3;
-
+        
         // Frame rate synchronization - 10fps = 100ms per frame
         frameTime += frameMs;
         uint32_t currentTime = g_system->getTimeStamp();
         if (frameTime > currentTime) {
             const int delay = frameTime - currentTime;
             g_system->sleep(delay);
-//            emu_printf("delay %d ms\n", delay);
         } else {
-            emu_printf("behind by %d ms!\n", (int)(currentTime - frameTime));
+//            emu_printf("behind by %d ms!\n", (int)(currentTime - frameTime));
             frameTime = currentTime;
         }
     }
-
+    
     unload();
 }
 #endif
-
 void PafPlayer::setCallback(const PafCallback *pafCb) {
 	if (pafCb) {
 		_pafCb = *pafCb;

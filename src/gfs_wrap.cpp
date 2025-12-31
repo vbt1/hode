@@ -150,9 +150,6 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
-    GFS_SetTmode(fid, GFS_TMODE_CPU);
-//    GFS_SetTmode(fid, GFS_TMODE_SCU);
-
 		// Encapsulate the file data
 //		fp = (GFS_FILE*)malloc(sizeof(GFS_FILE));
 		fp = (GFS_FILE*)allocate_memory (TYPE_GFSFILE, sizeof(GFS_FILE));
@@ -171,14 +168,25 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 			cache_offset = 0;
 			if(position!=-1)
 			{
+				GFS_SetTmode(fid, GFS_TMODE_CPU);
 				GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
+				while(!GFS_NwIsComplete(fp->fid));
+				
 				memset4_fast((Uint8*)cache, 0, CACHE_SIZE);
 				GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
+			}
+			else
+			{
+				GFS_CdMovePickup(fp->fid);
+				GFS_SetTransPara(fp->fid,12);
+				GFS_SetTmode(fp->fid,GFS_TMODE_CPU);
 			}
 		}
 		else
 		{
+			GFS_SetTmode(fid, GFS_TMODE_CPU);
 			GFS_Seek(fp->fid, position, GFS_SEEK_SET);
+			while(!GFS_NwIsComplete(fp->fid));
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
 		}
 	}
@@ -300,6 +308,8 @@ partial_cache:
 			tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
 
 			GFS_Seek(stream->fid, start_sector, GFS_SEEK_SET);
+			while(!GFS_NwIsComplete(stream->fid));
+			
 			readBytes = GFS_Fread(stream->fid, tot_sectors, (Uint8*)cache, tot_bytes);
 			cache_offset = start_sector * SECTOR_SIZE; // obligatoire
 //			readBytes = tot_bytes;

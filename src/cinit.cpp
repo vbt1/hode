@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 //#define LINEAR_BITMAP 1
 extern "C" {
 #include 	<sl_def.h>

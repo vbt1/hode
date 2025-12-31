@@ -4,8 +4,11 @@
  */
  #pragma GCC optimize ("O2")
  extern "C" {
+#include 	<sega_gfs.h>
+#include 	<gfs_def.h>
 #include 	<sl_def.h>
 Sint32		iostat, iondata;
+Sint32		gfsstat;
 Uint32 ioskip_bytes;
 }
 
@@ -45,7 +48,7 @@ void File::seekAlign(uint32_t pos) {
 }
 
 void File::seek(int pos, int whence) {
-////emu_printf("File::seek %d %d\n");
+//emu_printf("File::seek %d %d\n");
 	if(_fp)
 	{
 		if (kSeekAbsolutePosition && whence == SEEK_CUR) {
@@ -69,6 +72,7 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 //emu_printf("start %d len %d\n",(_fp->f_seek_pos)/SECTOR_SIZE, len);
 	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
 	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+	while(!GFS_NwIsComplete(_fp->fid));
 	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
 	Sint32 tot_bytes = len + skip_bytes;
 	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
@@ -81,11 +85,9 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 
 void File::asynchInit(uint8_t *ptr, uint32_t len) {
     Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-//    GFS_SetTmode(_fp->fid, GFS_TMODE_SDMA1);
-//    GFS_SetTmode(_fp->fid, GFS_TMODE_CPU);
-//    GFS_SetTmode(_fp->fid, GFS_TMODE_STM);
-    GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-   GFS_SetReadPara(_fp->fid, 60);
+//	GFS_NwStop(_fp->fid);
+	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+	while(!GFS_NwIsComplete(_fp->fid));
     ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
     Sint32 tot_bytes = len + ioskip_bytes;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
@@ -118,23 +120,26 @@ void File::asynchRead() {
     // Don't update _fp->f_seek_pos here - let asynchWait() handle it
 }
 */
-int File::asynchWait(uint8_t *ptr, Sint32 len) {
 
+int File::asynchWait(uint8_t *ptr, Sint32 len) {
 #ifdef NWREAD
     if(iostat == GFS_SVR_COMPLETED && iostat != -1)
         return iondata;
     do {
         GFS_NwExecOne(_fp->fid);
-        GFS_NwGetStat(_fp->fid, &iostat, &iondata);
-    } while(iostat != GFS_SVR_COMPLETED);
+        gfsstat = GFS_NwGetStat(_fp->fid, &iostat, &iondata);
+    } while(gfsstat != GFS_SVR_COMPLETED);
 #else
-	Sint32 tot_bytes = len + ioskip_bytes;
-	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+    Sint32 tot_bytes = len + ioskip_bytes;
+    Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+    
+    // Just read the full requested amount - no limiting here
     iondata = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
+    GFS_NwStop(_fp->fid);
 #endif
     _fp->f_seek_pos += (iondata - ioskip_bytes);
     iostat = -1;
-	return iondata;
+    return iondata;
 }
 
 int File::read(uint8_t *ptr, int size) {
@@ -234,7 +239,7 @@ void SectorFile::seekAlign(uint32_t pos) {
 }
 
 void SectorFile::seek(int pos, int whence) {
-////emu_printf("SectorFile::seek\n");
+emu_printf("SectorFile::seek\n");
 	if (whence == SEEK_SET) {
 //		assert((pos & 2047) == 0);
 		if((pos & 2047) != 0)

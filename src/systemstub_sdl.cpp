@@ -339,6 +339,7 @@ void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
 */
 void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) 
 {
+
 #ifndef LINEAR_BITMAP
 	int pitch = 256;
 	int x = 0;
@@ -348,19 +349,25 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
 	for (uint16 idx = 0; idx < h; ++idx) {
-		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+//		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+		memcpyl(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);
 	}
-	SCU_DMAWait();
+//	SCU_DMAWait();
 #else
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();
 #endif
+
+//slTransferEntry((void*)buf, (void*)(VDP2_VRAM_A0), 49152);
+//memcpyl( (void*)(VDP2_VRAM_A0), (void*)buf, 49152);
+
 	////emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
 }
 
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
+
 #ifndef LINEAR_BITMAP
 	// Calculate initial source and destination pointers
 ////emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
@@ -368,15 +375,18 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
 	for (uint16 idx = 0; idx < h; ++idx) {
-		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+	//	DMA_ScuMemCopy(dstPtr, srcPtr, w);
+		memcpyl(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);
 	}
-	SCU_DMAWait();
+//	SCU_DMAWait();
 #else
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();
 #endif
+
+//memcpyl( (void*)(VDP2_VRAM_A0), (void*)buf, 49152);
 ////emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
 }
 

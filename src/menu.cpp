@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 extern "C" {
 #include 	<sl_def.h>
 #include	<sega_sys.h>
