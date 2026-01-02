@@ -21,20 +21,20 @@ static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
-//	//emu_printf("video init\n");
+emu_printf("video init\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
-//	_shadowLayer = allocate_memory (TYPE_LAYER, W * H + 1);
-	_frontLayer = allocate_memory (TYPE_LAYER, W * H);
-//	_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
+	_shadowLayer = hwram_work;//allocate_memory (TYPE_LAYER, W * H + 1);
+	_frontLayer = _shadowLayer + W * H + 1;//allocate_memory (TYPE_LAYER, W * H);
+	_backgroundLayer = _frontLayer + W * H;//allocate_memory (TYPE_LAYER, W * H);
 	
 	if (kUseShadowColorLut) {
 //		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
-		_shadowColorLookupTable = allocate_memory (TYPE_SHADWLUT, 256 * 256);
+		_shadowColorLookupTable = _backgroundLayer + W * H;//allocate_memory (TYPE_SHADWLUT, 256 * 256);
 	} else {
 		_shadowColorLookupTable = 0;
 	}

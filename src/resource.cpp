@@ -134,11 +134,11 @@ Resource::Resource(FileSystem *fs)
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[32];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
-////emu_printf("filename %s here\n", filename);
+emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
-////emu_printf("seek %s %p\n", filename, _lvlFile);
+emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
-////emu_printf("skipUint32 %s\n", filename);
+emu_printf("skipUint32 %s\n", filename);
 			_lvlFile->skipUint32();
 ////emu_printf("readUint32 %s\n", filename);
 			const int size = _lvlFile->readUint32();
@@ -178,7 +178,7 @@ Resource::Resource(FileSystem *fs)
 	_fontDefaultColor = 0;
 	_menuBuffer0 = 0;
 	_menuBuffer1 = 0;
-
+	current_lwram = (Uint8 *)VBT_L_START;
 	memset(&_dem, 0, sizeof(_dem));
 	_demOffset = 0;
 }
@@ -330,7 +330,7 @@ bool Resource::loadDatHintImage(int num, uint8_t *dst, uint8_t *pal) {
 }
 
 bool Resource::loadDatLoadingImage(uint8_t *dst, uint8_t *pal) {
-////emu_printf("loadDatLoadingImage\n");
+emu_printf("loadDatLoadingImage\n");
 //	assert(!_isPsx);
 	if (_loadingImageBuffer) {
 		const uint32_t bufferSize = READ_LE_UINT32(_loadingImageBuffer);
@@ -353,7 +353,7 @@ void Resource::loadDatMenuBuffers() {
 #endif
 	const uint32_t baseOffset = _menuBuffersOffset;
 	_datFile->seek(baseOffset, SEEK_SET);
-////emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
+emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
 //	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
 	_menuBuffer1 = allocate_memory (TYPE_MENU, _datHdr.bufferSize1);
 	
@@ -395,7 +395,7 @@ void Resource::loadLevelData(int levelNum) {
 		//emu_printf("Unable to open '%s'\n", filename);
 	}
 
-#if 1
+#if 0
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
@@ -2086,6 +2086,7 @@ void Resource::loadMstData(File *fp) {
 	}
 
 //	_mstCodeData = (uint8_t *)malloc(_mstHdr.codeSize * 4);
+emu_printf("loading _mstCodeData!!!!\n");
 	_mstCodeData = (uint8_t *)allocate_memory (TYPE_MSTCODE, _mstHdr.codeSize * 4);
 	fp->read(_mstCodeData, _mstHdr.codeSize * 4);
 	bytesRead += _mstHdr.codeSize * 4;

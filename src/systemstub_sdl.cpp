@@ -365,22 +365,22 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 
 	////emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
 }
-
+#if 0
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
 // le dma ne fonctionne pas sur les videos car type_paf est en lwram
 #ifndef LINEAR_BITMAP
 	// Calculate initial source and destination pointers
-////emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
+//emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
 	for (uint16 idx = 0; idx < h; ++idx) {
-	//	DMA_ScuMemCopy(dstPtr, srcPtr, w);
-		memcpyl(dstPtr, srcPtr, w);
+		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+	//	memcpy(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);
 	}
-//	SCU_DMAWait();
+	SCU_DMAWait();
 #else
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();
@@ -389,7 +389,100 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 //memcpyl( (void*)(VDP2_VRAM_A0), (void*)buf, 49152);
 ////emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
 }
+#else
+	
+	static inline void	set_sr( unsigned int	sr ){
+		asm volatile ( "ldc\t%0,sr": : "r" (sr) );
+	}
+	static inline unsigned int	get_sr( void ){
+		unsigned int	sr;
+		
+		asm volatile ( "stc\tsr,%0": "=r" (sr) );
+		return	sr;
+	}
+	static inline unsigned int	get_imask( void ){
+		unsigned int	imask = ( get_sr() & 0x000000f0 ) >> 4;
+		
+		return	imask;
+	}
+	static inline void	set_imask( unsigned int	imask ){
+		unsigned int	sr = get_sr();
+		
+		sr &= ~0x000000f0;
+		sr |= ( imask << 4 );
+		set_sr( sr );
+	}
 
+#define CADR_WORKRAM_L_START   0x200000
+#define CADR_WORKRAM_L_END     0x300000
+
+#define ADR_WORKRAM_L_START2 0x20200000
+#define ADR_WORKRAM_L_END2 0x20300000
+
+void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch)
+{
+    // pitch = 256 bytes per line in source buffer
+    // VRAM = 512 bytes per line
+
+    const uint8_t *src = buf + y * w + x;
+    uint8_t * dst = (uint8_t *)VDP2_VRAM_A0 + y * 512 + x;
+/*
+uintptr_t dst_addr = reinterpret_cast<uintptr_t>(dst);
+uintptr_t src_addr = reinterpret_cast<uintptr_t>(src);
+
+    if(((dst_addr >= ADR_WORKRAM_L_START2) && (dst_addr < ADR_WORKRAM_L_END2)) ||
+       ((dst_addr >= CADR_WORKRAM_L_START) && (dst_addr < CADR_WORKRAM_L_END)) ||
+       ((src_addr >= ADR_WORKRAM_L_START2) && (src_addr < ADR_WORKRAM_L_END2)) ||
+       ((src_addr >= CADR_WORKRAM_L_START) && (src_addr < CADR_WORKRAM_L_END))){
+	emu_printf("no dma\n");
+return;	
+	   }
+*/
+    Uint32 saved_imask = get_imask();
+    set_imask(15);  // Disable interrupts during DMA setup
+
+    DmaScuPrm prm;
+
+    // Fixed parameters (same for all lines)
+    prm.dxc    = w;                     // bytes per line
+    prm.dxad_r = DMA_SCU_R4;           // +4 read (Work RAM)
+    prm.dxad_w = DMA_SCU_W2;           // +2 write (VDP2 VRAM 16-bit)
+    prm.dxmod  = DMA_SCU_DIR;
+    prm.dxft   = DMA_SCU_F_DMA;
+    prm.dxrup  = DMA_SCU_KEEP;         // no line skipping needed (we update manually)
+    prm.dxwup  = DMA_SCU_KEEP;
+    prm.msk    = DMA_SCU_M_DXR | DMA_SCU_M_DXW;  // CRITICAL: update only source/dest addresses
+
+    // First line
+    prm.dxr = (Uint32)src;
+    prm.dxw = (Uint32)dst;
+
+    DMA_ScuSetPrm(&prm, DMA_SCU_CH0);
+    DMA_ScuStart(DMA_SCU_CH0);
+
+    // Remaining lines (if any)
+    for (int i = 1; i < h; ++i) {
+        // Wait for previous line DMA to finish before starting next
+  //      SCU_DMAWait();
+
+        src += w;     // next source line (256 bytes)
+        dst += 512;       // next destination line in VRAM
+
+        prm.dxr = (Uint32)src;
+        prm.dxw = (Uint32)dst;
+
+        DMA_ScuSetPrm(&prm, DMA_SCU_CH0);
+        DMA_ScuStart(DMA_SCU_CH0);
+    }
+
+    // Wait for the very last line to complete
+//    SCU_DMAWait();
+
+//    slCachePurge();  // Purge cache to ensure coherency after DMA (SGL function)
+
+    set_imask(saved_imask);
+}
+#endif
 void SystemStub_SDL::updateScreen(bool drawWidescreen) {
 	slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);  // vbt à remettre
 //	slTransferEntry((void*)_clut, (void*)(CRAM_BANK+512), 256 * 2);  // vbt à remettre

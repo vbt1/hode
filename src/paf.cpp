@@ -84,7 +84,7 @@ static void closePaf(FileSystem *fs, File *f) {
 
 PafPlayer::PafPlayer(FileSystem *fs)
 	: _fs(fs) {
-////emu_printf("PafPlayer\n");
+emu_printf("PafPlayer\n");
 	_skipCutscenes = !openPaf(_fs, &_file);
 	_videoNum = -1;
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
@@ -113,7 +113,7 @@ void PafPlayer::setVolume(int volume) {
 uint8_t *lwram_cut;
 
 void PafPlayer::preload(int num) {
-//emu_printf("preload %d\n", num);
+emu_printf("preload %d\n", num);
 	lwram_cut = current_lwram;
 	
 //	assert(num >= 0 && num < kMaxVideosCount);
@@ -136,7 +136,9 @@ void PafPlayer::preload(int num) {
 		return;
 	}
 //	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
-	uint8_t *buffer = (uint8_t *)allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
+	uint8_t *buffer = (uint8_t *)hwram_work; //allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
+emu_printf("-1 %p sz %d\n", hwram_work, kPageBufferSize * 4 + 256 * 4);
+	hwram_work += kPageBufferSize * 4 + 256 * 4;
 	if (!buffer) {
 		////emu_printf("preloadPaf() Unable to allocate page buffers\n");
 		unload();
@@ -147,8 +149,9 @@ void PafPlayer::preload(int num) {
 //		_pageBuffers[i] = (uint8_t *)VDP2_VRAM_A0 + i * kPageBufferSize;
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 	}
-	_demuxVideoFrameBlocks = (uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
-	
+	_demuxVideoFrameBlocks = hwram_work;//(uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
+emu_printf("-2 %p %d src %p\n", hwram_work, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize, hwram_src);
+	hwram_work += _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize;
 	_pafHdr.maxAudioFrameBlocksCount = 0; // vbt : on enleve le son
 #if 0
 	if (_pafHdr.maxAudioFrameBlocksCount != 0) {
@@ -179,7 +182,8 @@ void PafPlayer::play(int num) {
 }
 
 void PafPlayer::unload(int num) {
-	current_lwram = lwram_cut;	
+	current_lwram = lwram_cut;
+	hwram_work = hwram_src;
 	if (_videoNum < 0) {
 		return;
 	}
@@ -1031,6 +1035,7 @@ if(result>0)
 #else
 uint8_t *buf = NULL;
 void PafPlayer::mainLoop() {
+emu_printf("mainloop\n");
     _file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
     
     for (int i = 0; i < 4; ++i) {
@@ -1062,19 +1067,22 @@ void PafPlayer::mainLoop() {
 #endif
 
 #define DOUBLE 1
-#define NUM_BUFFERS 6
-#define FRAMES_PER_READ 5
+#define NUM_BUFFERS 5
+#define FRAMES_PER_READ 4
 
+// FRAMES_PER_READ 4 mini sinon perte de perfs
 #ifdef DOUBLE
-	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 220000);
-
+//	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 24576*NUM_BUFFERS);
+	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 300000);
+//	buf = (uint8_t *)hwram_work;
+emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
+//	hwram_work+=(24576*NUM_BUFFERS);
     // Setup buffer array
     uint8_t* buffers[NUM_BUFFERS] = {
         buf,
         buf + 90000,
         buf + 120000,
-        buf + 150000,
-        buf + 175000,
+        buf + 120000,
         buf + 200000
     };
     
@@ -1086,9 +1094,9 @@ void PafPlayer::mainLoop() {
     uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
     
     unsigned int s0 = g_system->getTimeStamp();
-    int r = _file.batchRead(buffers[0], totalBytes);
+    int r = _file.batchRead(buf, totalBytes);
     int delta = (r - totalBytes);
-    
+    buffers[readBuffer] = buf+r;
     // Start first async read for frames 1-4 into buffer 1
     if (_pafHdr.framesCount > 1) {
         blocksCountForFrame2 = 0;
@@ -1120,17 +1128,8 @@ void PafPlayer::mainLoop() {
         int r = _file.batchRead(readBuffer, totalBytes);
         readBuffer += (r - totalBytes);
 #else
-/*
-	Sint32 stat, ndata;
-    GFS_NwGetStat(_file._fp->fid, &stat, &ndata);
-
-    if(stat == GFS_SVR_COMPLETED)
-    {
-asyncReadActive= false;
-    }
-*/
         // Wait and start next read every 4th frame (1, 5, 9, 13...)
-        if (i > 0 && i % FRAMES_PER_READ == 1 && asyncReadActive) {
+        if (i % FRAMES_PER_READ == 1 && asyncReadActive) {
             // Wait for async read to complete
     uint32_t a = g_system->getTimeStamp();
             int r = _file.asynchWait(buffers[readBuffer], totalBytes2);

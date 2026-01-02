@@ -80,7 +80,7 @@ static bool isEmptySetupCfg(SetupConfig *config, int num) {
 
 Menu::Menu(Game *g, PafPlayer *paf, Resource *res, Video *video)
 	: _g(g), _paf(paf), _res(res), _video(video) {
-
+emu_printf("new menu\n");
 	_config = &_g->_setupConfig;
 }
 
@@ -123,7 +123,7 @@ static uint32_t readSoundData(uint8_t *soundData, uint32_t soundDataSize) {
 }
 #endif
 void Menu::loadData() {
-//emu_printf("loadData\n");
+emu_printf("loadData\n");
 #ifdef SOUND
 	_g->_mix._lock(1);
 #endif
@@ -504,6 +504,7 @@ static void menuPafCallback(void *userdata, int frame, const uint8_t *buffer) {
 }
 
 bool Menu::mainLoop() {
+emu_printf("Menu::mainLoop\n");
 	bool ret = false;
 	loadData();
 	while (!g_system->inp.quit) {

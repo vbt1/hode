@@ -58,6 +58,8 @@ extern Uint8 *current_lwram;
 extern Uint8 *save_current_lwram;
 extern Uint8 *cs1ram;
 extern Uint8 *save_cs1ram;
+extern Uint8 *hwram_src;
+extern Uint8 *hwram_work;
 #include "sat_mem_checker.h"
 }
 

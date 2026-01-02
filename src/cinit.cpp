@@ -91,7 +91,7 @@ int	main( void )
 	slInitSystem(TV_640x224, (TEXTURE*)NULL, 1); // Init SGL
 
 	init_GFS(); // Initialize GFS system	
-	CSH_Init(CSH_4WAY);
+//	CSH_Init(CSH_4WAY);
 //	SPR_InitSlaveSH();
 	
 	

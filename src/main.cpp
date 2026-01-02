@@ -236,7 +236,8 @@ int ss_main() {
 	g_debugMask = 0; //kDebug_GAME | kDebug_RESOURCE | kDebug_SOUND | kDebug_MONSTER;
 	int cheats = 0;
 
-////emu_printf("ss_main\n");
+	hwram_work = allocate_memory (TYPE_HWRAM, 576000);
+emu_printf("-0 %p\n", hwram_work);
 
 #ifdef WII
 	System_earlyInit();
@@ -340,17 +341,21 @@ int ss_main() {
 		g->_video->initPsx();
 	}
 #endif
-
+emu_printf("0\n");
 	if (_displayLoadingScreen) {
 		g->displayLoadingScreen();
 	}
 	slTVOn();
 	do {
+emu_printf("1\n");
 		g->loadSetupCfg(resume);
-
+emu_printf("2\n");
 		if (_runMenu && resume) {
+emu_printf("3\n");
 			Menu *m = new Menu(g, g->_paf, g->_res, g->_video);
+emu_printf("4\n");
 			const bool runGame = m->mainLoop();
+emu_printf("5\n");
 			delete m;
 			if (!runGame) {
 				break;

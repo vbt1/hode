@@ -132,10 +132,13 @@ int File::asynchWait(uint8_t *ptr, Sint32 len) {
 #else
     Sint32 tot_bytes = len + ioskip_bytes;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
-    
+//emu_printf("1 %d %p %d\n", tot_sectors, ptr, tot_bytes);    
     // Just read the full requested amount - no limiting here
     iondata = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
+//emu_printf("2\n");    
     GFS_NwStop(_fp->fid);
+//emu_printf("3\n");    
+
 #endif
     _fp->f_seek_pos += (iondata - ioskip_bytes);
     iostat = -1;
