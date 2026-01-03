@@ -711,6 +711,8 @@ struct Resource {
 	bool writeSetupCfg(const SetupConfig *config);
 	bool readSetupCfg(SetupConfig *config);
 	void setDefaultsSetupCfg(SetupConfig *config, int num);
+	
+	void loadLvlSprite();
 };
 
 #endif // RESOURCE_H__

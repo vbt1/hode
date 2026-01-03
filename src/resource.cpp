@@ -1,4 +1,5 @@
-//#define LOAD_SPRITE 1
+#define LOAD_SPRITE 1
+#define LOAD_MONSTER 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -178,7 +179,7 @@ emu_printf("skipUint32 %s\n", filename);
 	_fontDefaultColor = 0;
 	_menuBuffer0 = 0;
 	_menuBuffer1 = 0;
-	current_lwram = (Uint8 *)VBT_L_START;
+//	current_lwram = (Uint8 *)VBT_L_START;
 	memset(&_dem, 0, sizeof(_dem));
 	_demOffset = 0;
 }
@@ -395,7 +396,7 @@ void Resource::loadLevelData(int levelNum) {
 		//emu_printf("Unable to open '%s'\n", filename);
 	}
 
-#if 0
+#ifdef LOAD_MONSTER
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
@@ -577,12 +578,14 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 }
 
 void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
+emu_printf("assert %d %d\n", num, kMaxSpriteTypes);
 	assert((unsigned int)num < kMaxSpriteTypes);
 
 	static const uint32_t baseOffset = _lvlSpritesOffset;
 
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
+emu_printf("!buf\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
@@ -593,8 +596,10 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 		return;
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
-	assert(readSize <= size);
-//	//emu_printf("malloc sprite %d\n", size);
+emu_printf("readSize %d %d\n", readSize, size);
+	if(readSize > size)
+		return;
+emu_printf("malloc sprite %d\n", size);
 	uint8_t *ptr = allocate_memory (TYPE_SPRITE, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
@@ -710,7 +715,7 @@ void Resource::loadLvlData(File *fp) {
 	}
 #endif
 	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
-#if 0
+#if 0 // vbt : pas besoin de réactiver
 	if (kPreloadLvlBackgroundData) {
 		_lvlFile->seekAlign(_lvlBackgroundsOffset);
 		uint8_t buf[kMaxScreens * 16];
@@ -721,6 +726,26 @@ void Resource::loadLvlData(File *fp) {
 		}
 	}
 #endif
+}
+
+void Resource::loadLvlSprite()
+{
+	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
+emu_printf("a\n");
+	_lvlFile->seekAlign(_lvlSpritesOffset);
+emu_printf("b\n");
+	uint8_t spr[kMaxSpriteTypes * 16];
+emu_printf("c\n");
+	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
+emu_printf("d\n");
+	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
+emu_printf("e\n");
+//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
+	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
+emu_printf("f %d\n", i);
+		loadLvlSpriteData(i, spr + i * 16);
+	}	
 }
 
 void Resource::unloadLvlData() {
@@ -810,7 +835,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
 	}
-	//emu_printf("%d == 160\n", src- start);
+	emu_printf("%d == 160\n", src- start);
 	assert((src - start) == 160);
 	return offsetsSize;
 }

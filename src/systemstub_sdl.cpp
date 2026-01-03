@@ -350,7 +350,7 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 
 	for (uint16 idx = 0; idx < h; ++idx) {
 //		DMA_ScuMemCopy(dstPtr, srcPtr, w);
-		memcpyl(dstPtr, srcPtr, w);
+		memcpy(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);
 	}

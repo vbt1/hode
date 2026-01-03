@@ -29,12 +29,16 @@ emu_printf("video init\n");
 	_drawLine.y2 = H - 1;
 #if 1
 	_shadowLayer = hwram_work;//allocate_memory (TYPE_LAYER, W * H + 1);
-	_frontLayer = _shadowLayer + W * H + 1;//allocate_memory (TYPE_LAYER, W * H);
+	_frontLayer = _shadowLayer + W * H + 4;//allocate_memory (TYPE_LAYER, W * H);
 	_backgroundLayer = _frontLayer + W * H;//allocate_memory (TYPE_LAYER, W * H);
+	_shadowScreenMaskBuffer = _backgroundLayer + W * H;
+emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
+
 	
 	if (kUseShadowColorLut) {
 //		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
-		_shadowColorLookupTable = _backgroundLayer + W * H;//allocate_memory (TYPE_SHADWLUT, 256 * 256);
+		_shadowColorLookupTable = _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4;
+		//allocate_memory (TYPE_SHADWLUT, 256 * 256);
 	} else {
 		_shadowColorLookupTable = 0;
 	}

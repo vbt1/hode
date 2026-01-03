@@ -182,6 +182,7 @@ void PafPlayer::play(int num) {
 }
 
 void PafPlayer::unload(int num) {
+emu_printf("unload paf\n");
 	current_lwram = lwram_cut;
 	hwram_work = hwram_src;
 	if (_videoNum < 0) {
@@ -271,6 +272,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		_currentPageBuffer = 0;
 	}
 	if (code & 0x40) {
+emu_printf("code & 0x40 %d -- \n", code & 0xF);
 		const int index = src[0] * 3;
 		const int count = (src[1] + 1) * 3;
 		assert(index + count <= 768);
@@ -433,7 +435,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
             }
         }
     }
-    uint32_t t1 = g_system->getTimeStamp();
+//    uint32_t t1 = g_system->getTimeStamp();
 
 	// === Decode horizontal (optimized) ===
 	{
@@ -493,7 +495,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 		}
 	}
 
-    uint32_t t2 = g_system->getTimeStamp();
+//    uint32_t t2 = g_system->getTimeStamp();
 
     // === Decode vertical (uses <<8 instead of *256) ===
     {
@@ -526,7 +528,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 			}
 		}
     }
-    uint32_t t3 = g_system->getTimeStamp();
+//    uint32_t t3 = g_system->getTimeStamp();
 
     // === OP section (mask operations) ===
     const uint8_t *op = v + 6144;
@@ -562,7 +564,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
             }
         }
     }
-    uint32_t t5 = g_system->getTimeStamp();
+//    uint32_t t5 = g_system->getTimeStamp();
 
 //    emu_printf("Times: Skip=%u H=%u V=%u Prep=0 OP=%u\n", t1-t0, t2-t1, t3-t2, t5-t3);
 }
@@ -1035,7 +1037,6 @@ if(result>0)
 #else
 uint8_t *buf = NULL;
 void PafPlayer::mainLoop() {
-emu_printf("mainloop\n");
     _file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
     
     for (int i = 0; i < 4; ++i) {
@@ -1075,8 +1076,7 @@ emu_printf("mainloop\n");
 //	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 24576*NUM_BUFFERS);
 	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 300000);
 //	buf = (uint8_t *)hwram_work;
-emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
-//	hwram_work+=(24576*NUM_BUFFERS);
+//emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
     // Setup buffer array
     uint8_t* buffers[NUM_BUFFERS] = {
         buf,
@@ -1093,7 +1093,7 @@ emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
     blocksCountForFrame += _pafHdr.frameBlocksCountTable[0];
     uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
     
-    unsigned int s0 = g_system->getTimeStamp();
+ //   unsigned int s0 = g_system->getTimeStamp();
     int r = _file.batchRead(buf, totalBytes);
     int delta = (r - totalBytes);
     buffers[readBuffer] = buf+r;
@@ -1131,12 +1131,12 @@ emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
         // Wait and start next read every 4th frame (1, 5, 9, 13...)
         if (i % FRAMES_PER_READ == 1 && asyncReadActive) {
             // Wait for async read to complete
-    uint32_t a = g_system->getTimeStamp();
+//    uint32_t a = g_system->getTimeStamp();
             int r = _file.asynchWait(buffers[readBuffer], totalBytes2);
             // Switch to the buffer that just finished reading
             currentBuffer = readBuffer;
             delta = (r - totalBytes2);
-uint32_t b = g_system->getTimeStamp();           
+//uint32_t b = g_system->getTimeStamp();           
 //emu_printf("chunk %d duration %d\n", totalBytes2, b-a);
 
             blocksCountForFrame = blocksCountForFrame2;
