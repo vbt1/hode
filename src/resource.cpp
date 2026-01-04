@@ -64,7 +64,10 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 }
 
 static void closeDat(FileSystem *fs, File *f) {
-//	//emu_printf("closeDat\n");
+emu_printf("closeDat ");
+Sint32 fileid, fsize;
+GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
+emu_printf("------ filename %s\n", GFS_IdToName(fileid));
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -331,7 +334,7 @@ bool Resource::loadDatHintImage(int num, uint8_t *dst, uint8_t *pal) {
 }
 
 bool Resource::loadDatLoadingImage(uint8_t *dst, uint8_t *pal) {
-emu_printf("loadDatLoadingImage\n");
+//emu_printf("loadDatLoadingImage\n");
 //	assert(!_isPsx);
 	if (_loadingImageBuffer) {
 		const uint32_t bufferSize = READ_LE_UINT32(_loadingImageBuffer);
@@ -580,11 +583,11 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 emu_printf("assert %d %d\n", num, kMaxSpriteTypes);
 	assert((unsigned int)num < kMaxSpriteTypes);
-
 	static const uint32_t baseOffset = _lvlSpritesOffset;
-
+	
 	uint8_t header[3 * sizeof(uint32_t)];
-	if (!buf) {
+	if (!buf) 
+	{
 emu_printf("!buf\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
 		_lvlFile->read(header, sizeof(header));
@@ -730,20 +733,42 @@ void Resource::loadLvlData(File *fp) {
 #ifndef LOAD_SPRITE
 void Resource::loadLvlSprite()
 {
+Sint32 fileid, fsize;
+GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
+emu_printf("------ filename %s seed %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
+//unsigned char toto[50];
+//	GFS_Seek(_lvlFile->_fp->fid, _lvlFile->_fp->f_seek_pos, GFS_SEEK_SET);
+//uint8_t *toto=(uint8_t *)0x200000;
+	static const uint32_t baseOffset = _lvlSpritesOffset;
+
+//openDat(_fs, (const char *)GFS_IdToName(fileid), _lvlFile);
+//	GfsHn fid = NULL;
+	// OPEN FILE
+//	fid = GFS_Open(fileid);
+	
+//memset(toto,0x00,2048);
+//GFS_Seek(fid, 0, GFS_SEEK_SET);
+//Uint32 readBytes = GFS_Fread(fid, 1, toto, 2048);
+
+//char toto[50];
+//openDat(_fs, (const char *)GFS_IdToName(fileid), _lvlFile);
+	
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
-emu_printf("a\n");
 	_lvlFile->seekAlign(_lvlSpritesOffset);
-emu_printf("b\n");
 	uint8_t spr[kMaxSpriteTypes * 16];
-emu_printf("c\n");
+	
+/*
+for(int i = 0; i< 8;i++)
+{
+	emu_printf("%x", spr[i]);
+}
+emu_printf("\n %p\n", spr);	
+*/	
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
-emu_printf("d\n");
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-emu_printf("e\n");
 //emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
-emu_printf("f %d\n", i);
 		loadLvlSpriteData(i, spr + i * 16);
 	}	
 }

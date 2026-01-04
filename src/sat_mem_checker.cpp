@@ -45,7 +45,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 
 	if(type == TYPE_HWRAM)
 	{
-emu_printf("malloc1 %d type %d\n", alignedSize, type);
+//emu_printf("malloc1 %d type %d\n", alignedSize, type);
 		dst = (Uint8 *)malloc(alignedSize);
 		hwram_src = dst;
 		hwram = dst+alignedSize;
@@ -56,7 +56,7 @@ emu_printf("malloc1 %d type %d\n", alignedSize, type);
 	|| type == TYPE_SHADWBUF || type == TYPE_SHADWLUT
 	|| type == TYPE_SCRMASKBUF) // jamais libéré 6762
 	{
-emu_printf("malloc2 %d type %d\n", alignedSize, type);
+//emu_printf("malloc2 %d type %d\n", alignedSize, type);
 		dst = (Uint8 *)malloc(alignedSize);
 		hwram = dst+alignedSize;
 		
@@ -80,27 +80,32 @@ emu_printf("2hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 	
 	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
-emu_printf("cs1ram %d type %d\n", alignedSize, type);
-
-//		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
-//		{
-//		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
+emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+emu_printf("hwram ptr %p\n", hwram_work);
+//		dst = hwram_work; // vbt : on dirait qu'il ne faut pas incrémenter
 		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
+//		cs1ram += SAT_ALIGN(alignedSize);
+//emu_printf("cs1ram %d type %d\n", alignedSize, type);
+/*
+		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
+		{
+		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
+//		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 //		dst = vdp1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 //		memset(dst,0x00, SAT_ALIGN(alignedSize));
 // vbt à recommenter lorsque  pb au moment de mourir est résolu		
-//		current_lwram += SAT_ALIGN(alignedSize);
-		cs1ram += SAT_ALIGN(alignedSize);
+		current_lwram += SAT_ALIGN(alignedSize);
+//		cs1ram += SAT_ALIGN(alignedSize);
 //		vdp1ram += SAT_ALIGN(alignedSize);
-//		}
-//		else
-//		{
-//		dst = vdp1ram;
-//		vdp1ram += SAT_ALIGN(alignedSize);
-//		}
-//vbt++;
-emu_printf("TYPE_BGLVL %p size %d\n", dst, alignedSize);
-emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+		}
+		else
+		{
+			dst = hwram_work;
+			hwram_work += alignedSize;
+		}
+*/
+//emu_printf("TYPE_BGLVL %p size %d\n", dst, alignedSize);
+		return dst;
 	}
 
 	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
@@ -114,7 +119,7 @@ emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x
 		
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
-emu_printf("lwram bglvl current_lwram %x\n", ((int)current_lwram)+SAT_ALIGN(alignedSize));
+//emu_printf("lwram bglvl current_lwram %x\n", ((int)current_lwram)+SAT_ALIGN(alignedSize));
 			dst = current_lwram;
 			current_lwram += SAT_ALIGN(alignedSize);
 		}

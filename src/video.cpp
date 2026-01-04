@@ -21,7 +21,7 @@ static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
-emu_printf("video init\n");
+//emu_printf("video init\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;
@@ -42,6 +42,7 @@ emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, 
 	} else {
 		_shadowColorLookupTable = 0;
 	}
+	hwram_work = _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4;
 //	_shadowScreenMaskBuffer = (uint8_t *)malloc(256 * 192 * 2 + 256 * 4);
 //	_shadowScreenMaskBuffer = allocate_memory (TYPE_SCRMASKBUF, 256 * 192 * 2 + 256 * 4);
 	for (int i = 144; i < 256; ++i) {

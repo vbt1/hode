@@ -84,7 +84,7 @@ static void closePaf(FileSystem *fs, File *f) {
 
 PafPlayer::PafPlayer(FileSystem *fs)
 	: _fs(fs) {
-emu_printf("PafPlayer\n");
+//emu_printf("PafPlayer\n");
 	_skipCutscenes = !openPaf(_fs, &_file);
 	_videoNum = -1;
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
@@ -121,6 +121,8 @@ emu_printf("preload %d\n", num);
 	{
 		return;
 	}
+	if(_file._fp == 0)
+		openPaf(_fs, &_file);
 	
 	if (_videoNum != num) {
 		unload(_videoNum);
@@ -138,7 +140,7 @@ emu_printf("preload %d\n", num);
 //	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
 	uint8_t *buffer = (uint8_t *)hwram_work; //allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
 emu_printf("-1 %p sz %d\n", hwram_work, kPageBufferSize * 4 + 256 * 4);
-	hwram_work += kPageBufferSize * 4 + 256 * 4;
+//	hwram_work += kPageBufferSize * 4 + 256 * 4;
 	if (!buffer) {
 		////emu_printf("preloadPaf() Unable to allocate page buffers\n");
 		unload();
@@ -168,14 +170,15 @@ emu_printf("-2 %p %d src %p\n", hwram_work, _pafHdr.maxVideoFrameBlocksCount * _
 }
 
 void PafPlayer::play(int num) {
-	//emu_printf("play %d %d\n", num, _videoNum);
+	emu_printf("play %d %d\n", num, _videoNum);
 //	if(num==2)
 //	while(1);
 	if (_videoNum != num) {
-		//emu_printf("preload play\n");
+		emu_printf("preload play\n");
 		preload(num);
 	}
 	if (_videoNum == num) {
+		emu_printf("mainloop play\n");
 		_playedMask |= 1 << num;
 		mainLoop();
 	}
@@ -1078,14 +1081,7 @@ void PafPlayer::mainLoop() {
 //	buf = (uint8_t *)hwram_work;
 //emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
     // Setup buffer array
-    uint8_t* buffers[NUM_BUFFERS] = {
-        buf,
-        buf + 90000,
-        buf + 120000,
-        buf + 120000,
-        buf + 120000,
-        buf + 120000,
-        buf + 200000
+    uint8_t* buffers[NUM_BUFFERS] = { buf, buf, buf, buf, buf, buf, buf
     };
     
     int currentBuffer = 0;  // Buffer being processed
@@ -1205,7 +1201,7 @@ void PafPlayer::mainLoop() {
         }
         _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-//        emu_printf("fps %d\n", frame_z);
+        emu_printf("fps %d\n", frame_z);
 #endif
 
         // Quit check
@@ -1225,12 +1221,14 @@ void PafPlayer::mainLoop() {
             g_system->sleep(delay);
 //            emu_printf("delay %d ms\n", delay);
         } else {
-            emu_printf("behind by %d ms!\n", (int)(currentTime - frameTime));
+//            emu_printf("behind by %d ms!\n", (int)(currentTime - frameTime));
             frameTime = currentTime;
         }
     }
 
     unload();
+// vbt : on force la fermeture du fichier video !
+	closePaf(_fs, &_file);
 }
 #endif
 void PafPlayer::setCallback(const PafCallback *pafCb) {

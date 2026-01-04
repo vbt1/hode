@@ -124,7 +124,7 @@ void init_GFS() { //Initialize GFS system
 }
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
-//emu_printf("sat_fopen %s\n", path);	
+emu_printf("-- sat_fopen %s\n", path);	
 	memset(satpath, 0, 25);
 
 	if (path == NULL) 
@@ -201,9 +201,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 }
 
 int sat_fclose(GFS_FILE* fp) {
-////emu_printf("sat_fclose\n");	
 	GFS_Close(fp->fid);
-
 	return 0; // always ok :-)
 }
 
