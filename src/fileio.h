@@ -27,7 +27,7 @@ struct File {
 	virtual void asynchInit(uint8_t *ptr, uint32_t len);
 //	virtual void asynchRead();
 	virtual int asynchWait(uint8_t *ptr, Sint32 bsize);
-//	virtual void batchSeek ();
+	virtual void batchSeek(int32_t off);
 	uint8_t readByte();
 	uint16_t readUint16();
 	uint32_t readUint32();

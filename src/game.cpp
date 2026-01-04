@@ -2209,7 +2209,10 @@ _mstDisabled = true; // vbt : ajout pour test
 //emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
 //////emu_printf("initLvlObjects\n");
+#if 0
+ // vbt : à remettre !!!
 	initLvlObjects();
+
 //emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
@@ -2221,6 +2224,7 @@ _mstDisabled = true; // vbt : ajout pour test
 	if (!_mstDisabled) {
 		startMstCode();
 	}
+#endif
 #if PAF
 //emu_printf("_paf->_skipCutscenes %d _level->_checkpoint %d && !levelChanged %d\n", _paf->_skipCutscenes, _level->_checkpoint, levelChanged);
 //	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 && !levelChanged) {
@@ -2236,8 +2240,26 @@ _mstDisabled = true; // vbt : ajout pour test
 		}
 	}
 #endif
-//emu_printf("initLvlObjects\n");
-//	initLvlObjects();
+
+#if 0
+ // vbt : à remettre !!!
+	initLvlObjects();
+
+//emu_printf("resetPlasmaCannonState\n");
+	resetPlasmaCannonState();
+	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
+		_res->_screensState[i].s2 = 0;
+	}
+	_res->_currentScreenResourceNum = _andyObject->screenNum;
+	_currentRightScreen = _res->_screensGrid[_res->_currentScreenResourceNum][kPosRightScreen];
+	_currentLeftScreen = _res->_screensGrid[_res->_currentScreenResourceNum][kPosLeftScreen];
+	if (!_mstDisabled) {
+		startMstCode();
+	}
+#endif
+
+//xxxxx	initLvlObjects();
+
 	_endLevel = false;
 emu_printf("resetShootLvlObjectDataTable\n");
 	resetShootLvlObjectDataTable();
@@ -4394,6 +4416,7 @@ void Game::clearDeclaredLvlObjectsList() {
 }
 
 void Game::initLvlObjects() {
+emu_printf("initLvlObjects\n");
 emu_printf("1\n");
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_screenLvlObjectsList[i] = 0;
@@ -4430,13 +4453,14 @@ emu_printf("2\n");
 	}
 emu_printf("3\n");
 
-//	_res->loadLvlSprite();
-
+#if 1
+	_res->loadLvlSprite();
 
 	for (int i = _res->_lvlHdr.staticLvlObjectsCount; i < _res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount; ++i) {
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];
 		lvlObjectTypeInit(ptr);
 	}
+#endif
 emu_printf("4\n");
 }
 

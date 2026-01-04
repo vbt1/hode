@@ -1,5 +1,5 @@
-#define LOAD_SPRITE 1
-#define LOAD_MONSTER 1
+//#define LOAD_SPRITE 1
+//#define LOAD_MONSTER 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -727,7 +727,7 @@ void Resource::loadLvlData(File *fp) {
 	}
 #endif
 }
-
+#ifndef LOAD_SPRITE
 void Resource::loadLvlSprite()
 {
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
@@ -747,7 +747,7 @@ emu_printf("f %d\n", i);
 		loadLvlSpriteData(i, spr + i * 16);
 	}	
 }
-
+#endif
 void Resource::unloadLvlData() {
 emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);

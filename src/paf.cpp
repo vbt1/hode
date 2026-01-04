@@ -272,7 +272,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 		_currentPageBuffer = 0;
 	}
 	if (code & 0x40) {
-emu_printf("code & 0x40 %d -- \n", code & 0xF);
+//emu_printf("code & 0x40 %d -- \n", code & 0xF);
 		const int index = src[0] * 3;
 		const int count = (src[1] + 1) * 3;
 		assert(index + count <= 768);
@@ -1068,19 +1068,21 @@ void PafPlayer::mainLoop() {
 #endif
 
 #define DOUBLE 1
-#define NUM_BUFFERS 5
-#define FRAMES_PER_READ 4
+#define NUM_BUFFERS 7
+#define FRAMES_PER_READ 6
 
 // FRAMES_PER_READ 4 mini sinon perte de perfs
 #ifdef DOUBLE
 //	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 24576*NUM_BUFFERS);
-	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 300000);
+	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 400+24576*NUM_BUFFERS);
 //	buf = (uint8_t *)hwram_work;
 //emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
     // Setup buffer array
     uint8_t* buffers[NUM_BUFFERS] = {
         buf,
         buf + 90000,
+        buf + 120000,
+        buf + 120000,
         buf + 120000,
         buf + 120000,
         buf + 200000
@@ -1090,13 +1092,16 @@ void PafPlayer::mainLoop() {
     int readBuffer = 1;     // Buffer being read into
     
     // First batch read (preload + first frame) into buffer 0
-    blocksCountForFrame += _pafHdr.frameBlocksCountTable[0];
+//    blocksCountForFrame += _pafHdr.frameBlocksCountTable[0];
     uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
-    
+ emu_printf("first-read %d\n", totalBytes);   
  //   unsigned int s0 = g_system->getTimeStamp();
+//	_file.batchSeek(_pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
+// vbt : on ne lit plus la partie preload, inutile ?
     int r = _file.batchRead(buf, totalBytes);
     int delta = (r - totalBytes);
     buffers[readBuffer] = buf+r;
+	memset(buf,0x00, _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
     // Start first async read for frames 1-4 into buffer 1
     if (_pafHdr.framesCount > 1) {
         blocksCountForFrame2 = 0;

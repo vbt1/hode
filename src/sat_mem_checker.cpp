@@ -108,7 +108,7 @@ emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 	|| type == type == TYPE_GFSFILE || type == TYPE_SCRMASK 
 	|| type == TYPE_BGLVLOBJ)
 	{
-emu_printf("lwram bglvl %x\n", ((int)current_lwram)+SAT_ALIGN(alignedSize));		
+emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 		
 		
 		
@@ -131,7 +131,7 @@ emu_printf("no more ram %d over %d\n", alignedSize, ((int)current_lwram)+SAT_ALI
 
 
 //emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
-emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+emu_printf("5hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 	
 	return dst;
 }

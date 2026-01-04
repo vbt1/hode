@@ -68,6 +68,10 @@ void File::batchSeek()
 	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
 }
 */
+	void File::batchSeek(int32_t off) {
+		_fp->f_seek_pos += off;
+	}
+
 Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 //emu_printf("start %d len %d\n",(_fp->f_seek_pos)/SECTOR_SIZE, len);
 	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
