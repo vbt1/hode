@@ -1094,14 +1094,14 @@ void PafPlayer::mainLoop() {
     // First batch read (preload + first frame) into buffer 0
 //    blocksCountForFrame += _pafHdr.frameBlocksCountTable[0];
     uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
- emu_printf("first-read %d\n", totalBytes);   
+// emu_printf("first-read %d\n", totalBytes);   
  //   unsigned int s0 = g_system->getTimeStamp();
 //	_file.batchSeek(_pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
 // vbt : on ne lit plus la partie preload, inutile ?
     int r = _file.batchRead(buf, totalBytes);
     int delta = (r - totalBytes);
     buffers[readBuffer] = buf+r;
-	memset(buf,0x00, _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
+//	memset(buf,0x00, _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
     // Start first async read for frames 1-4 into buffer 1
     if (_pafHdr.framesCount > 1) {
         blocksCountForFrame2 = 0;
