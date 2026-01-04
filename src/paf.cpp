@@ -140,7 +140,7 @@ emu_printf("preload %d\n", num);
 //	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
 	uint8_t *buffer = (uint8_t *)hwram_work; //allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
 emu_printf("-1 %p sz %d\n", hwram_work, kPageBufferSize * 4 + 256 * 4);
-//	hwram_work += kPageBufferSize * 4 + 256 * 4;
+	hwram_work += kPageBufferSize * 4 + 256 * 4;
 	if (!buffer) {
 		////emu_printf("preloadPaf() Unable to allocate page buffers\n");
 		unload();
