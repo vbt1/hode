@@ -4454,12 +4454,14 @@ emu_printf("2\n");
 emu_printf("3\n");
 
 #if 1
-	_res->loadLvlSprite();
+	_res->loadLvlSprite(_currentLevel);
 
 	for (int i = _res->_lvlHdr.staticLvlObjectsCount; i < _res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount; ++i) {
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];
 		lvlObjectTypeInit(ptr);
 	}
+
+//	_res->loadLvlMst(_currentLevel);
 #endif
 emu_printf("4\n");
 }

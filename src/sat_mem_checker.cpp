@@ -82,8 +82,8 @@ emu_printf("2hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 	{
 emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 emu_printf("hwram ptr %p\n", hwram_work);
-//		dst = hwram_work; // vbt : on dirait qu'il ne faut pas incrémenter
-		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
+		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
+//		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 //		cs1ram += SAT_ALIGN(alignedSize);
 //emu_printf("cs1ram %d type %d\n", alignedSize, type);
 /*
@@ -107,27 +107,48 @@ emu_printf("hwram ptr %p\n", hwram_work);
 //emu_printf("TYPE_BGLVL %p size %d\n", dst, alignedSize);
 		return dst;
 	}
+	if(type == TYPE_SPRITE)
+	{
+		if(alignedSize<170000)
+		{
+			dst = hwram_work;
+			hwram_work += SAT_ALIGN(alignedSize);
+			return dst;
+		}
+		else
+		{
+			dst = current_lwram;
+			current_lwram += SAT_ALIGN(alignedSize);
+			return dst;			
+		}
+		
+	}
+	
 
 	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
 	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE 	|| type == TYPE_PAF
 	|| type == type == TYPE_GFSFILE || type == TYPE_SCRMASK 
 	|| type == TYPE_BGLVLOBJ)
 	{
+		/*
 emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
-		
-		
+			if(((int)hwram_work)+SAT_ALIGN(alignedSize)<0x300000)
+		{	
+		*/
 		
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
 //emu_printf("lwram bglvl current_lwram %x\n", ((int)current_lwram)+SAT_ALIGN(alignedSize));
 			dst = current_lwram;
 			current_lwram += SAT_ALIGN(alignedSize);
+			return dst;
 		}
 		else
 		{
 emu_printf("no more ram %d over %d\n", alignedSize, ((int)current_lwram)+SAT_ALIGN(alignedSize));
 			dst = cs2ram;
 			cs2ram += SAT_ALIGN(alignedSize);
+			return dst;
 //		dst = (Uint8 *)malloc(alignedSize);
 //		hwram = dst+alignedSize;
 		}

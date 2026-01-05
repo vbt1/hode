@@ -731,46 +731,42 @@ void Resource::loadLvlData(File *fp) {
 #endif
 }
 #ifndef LOAD_SPRITE
-void Resource::loadLvlSprite()
+void Resource::loadLvlSprite(int levelNum)
 {
+	const char *levelName = _prefixes[levelNum];
 Sint32 fileid, fsize;
-GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
-emu_printf("------ filename %s seed %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
-//unsigned char toto[50];
-//	GFS_Seek(_lvlFile->_fp->fid, _lvlFile->_fp->f_seek_pos, GFS_SEEK_SET);
-//uint8_t *toto=(uint8_t *)0x200000;
+	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
+//emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
-
-//openDat(_fs, (const char *)GFS_IdToName(fileid), _lvlFile);
-//	GfsHn fid = NULL;
-	// OPEN FILE
-//	fid = GFS_Open(fileid);
-	
-//memset(toto,0x00,2048);
-//GFS_Seek(fid, 0, GFS_SEEK_SET);
-//Uint32 readBytes = GFS_Fread(fid, 1, toto, 2048);
-
-//char toto[50];
-//openDat(_fs, (const char *)GFS_IdToName(fileid), _lvlFile);
 	
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 	_lvlFile->seekAlign(_lvlSpritesOffset);
 	uint8_t spr[kMaxSpriteTypes * 16];
 	
-/*
-for(int i = 0; i< 8;i++)
-{
-	emu_printf("%x", spr[i]);
-}
-emu_printf("\n %p\n", spr);	
-*/	
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
+
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}	
+}
+#endif
+
+#ifndef LOAD_MONSTER
+void Resource::loadLvlMst(int levelNum)
+{
+	const char *levelName = _prefixes[levelNum];
+	char filename[32];
+	
+	closeDat(_fs, _mstFile);
+	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+	if (openDat(_fs, filename, _mstFile)) {
+		loadMstData(_mstFile);
+	} else {
+		//emu_printf("xxx Unable to open '%s'\n", filename);
+		memset(&_mstHdr, 0, sizeof(_mstHdr));
+	}
 }
 #endif
 void Resource::unloadLvlData() {
