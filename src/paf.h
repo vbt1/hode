@@ -105,7 +105,7 @@ struct PafPlayer {
 	int _volume;
 	int _frameMs;
 
-	PafPlayer(FileSystem *fs);
+	PafPlayer(FileSystem *fs, Video *vid);
 	~PafPlayer();
 
 	void setVolume(int volume);

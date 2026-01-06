@@ -38,11 +38,11 @@ emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 
 	_level = 0;
 	_res = new Resource(&_fs);
-#ifdef PAF
-	_paf = new PafPlayer(&_fs);
-#endif
 	_rnd.setSeed();
 	_video = new Video();
+#ifdef PAF
+	_paf = new PafPlayer(&_fs, _video);
+#endif
 	_cheats = cheats;
 	_playDemo = false;
 
@@ -2238,6 +2238,8 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #endif
 
 #if 1
+// vbt : voir comment restaurer hwram_work correctement
+//	hwram_work = _video->_shadowScreenMaskBuffer + (256 * 192 * 2 + 256 * 4);
  // vbt : à remettre !!!
 	initLvlObjects();
 

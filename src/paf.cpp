@@ -82,7 +82,7 @@ static void closePaf(FileSystem *fs, File *f) {
 	}
 }
 
-PafPlayer::PafPlayer(FileSystem *fs)
+PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
 	: _fs(fs) {
 //emu_printf("PafPlayer\n");
 	_skipCutscenes = !openPaf(_fs, &_file);
@@ -96,9 +96,10 @@ PafPlayer::PafPlayer(FileSystem *fs)
 	memset(&_pafCb, 0, sizeof(_pafCb));
 	_volume = 128;
 	_frameMs = kFrameDuration;
-#ifdef DEBUG	
-	_video = new Video();
-#endif
+//	_video = vid;
+
+//	hwram_work_paf = (uint8_t *)hwram_work;
+	emu_printf("hwram_work_paf init %p\n", hwram_work);
 }
 
 PafPlayer::~PafPlayer() {
@@ -256,6 +257,12 @@ bool PafPlayer::readPafHeader() {
 uint32_t *PafPlayer::readPafHeaderTable(int count) {
 //	uint32_t *dst = (uint32_t *)malloc(count * sizeof(uint32_t));
 	uint32_t *dst = (uint32_t *)allocate_memory (TYPE_PAFHEAD, count * sizeof(uint32_t));
+//	uint32_t *dst = (uint32_t *)hwram_work_paf;
+//	emu_printf("hwram_work_paf bef %p\n", hwram_work_paf);
+//	hwram_work_paf += count * sizeof(uint32_t);
+	emu_printf("hwram_work_paf aft %p\n", hwram_work_paf);
+
+	//(uint32_t *)allocate_memory (TYPE_PAFHEAD, count * sizeof(uint32_t));
 	if (!dst) {
 		//emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		return 0;
