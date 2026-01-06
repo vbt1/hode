@@ -44,7 +44,7 @@ typedef struct {
 	uint8_t code;
 } HorizontalParams;
 
-
+uint8_t *hwram_work_paf;
 /*
 static const char *_filenames[] = {
 	"HOD.PAF",
@@ -138,11 +138,12 @@ void PafPlayer::preload(int num) {
 		return;
 	}
 //	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
-	uint8_t *buffer = (uint8_t *)hwram_work; //allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
-	hwram_work += kPageBufferSize * 4 + 256 * 4;
+	hwram_work_paf = (uint8_t *)hwram_work;
+	uint8_t *buffer = (uint8_t *)hwram_work_paf; //allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
+	hwram_work_paf += kPageBufferSize * 4 + 256 * 4;
 	if (!buffer) {
 		////emu_printf("preloadPaf() Unable to allocate page buffers\n");
-		unload();
+		unload(); 
 		return;
 	}
 	
@@ -150,8 +151,8 @@ void PafPlayer::preload(int num) {
 //		_pageBuffers[i] = (uint8_t *)VDP2_VRAM_A0 + i * kPageBufferSize;
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 	}
-	_demuxVideoFrameBlocks = hwram_work;//(uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
-	hwram_work += _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize;
+	_demuxVideoFrameBlocks = hwram_work_paf;//(uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
+	hwram_work_paf += _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize;
 	_pafHdr.maxAudioFrameBlocksCount = 0; // vbt : on enleve le son
 #if 0
 	if (_pafHdr.maxAudioFrameBlocksCount != 0) {
@@ -183,9 +184,17 @@ void PafPlayer::play(int num) {
 }
 
 void PafPlayer::unload(int num) {
-//emu_printf("unload paf\n");
+emu_printf("unload paf w %p wp %p src %p\n", hwram_work, hwram_work_paf, hwram_src);
+
 	current_lwram = lwram_cut;
-	hwram_work = hwram_src;
+
+emu_printf("_shadowScreenMaskBuffer %p\n", _video->_shadowScreenMaskBuffer);
+//while(1);	
+// vbt : à corriger !!!!	
+	hwram_work = _video->_shadowScreenMaskBuffer + (256 * 192 * 2 + 256 * 4);
+
+emu_printf("unload w %p \n", hwram_work);
+
 	if (_videoNum < 0) {
 		return;
 	}
@@ -1075,8 +1084,9 @@ void PafPlayer::mainLoop() {
 // FRAMES_PER_READ 4 mini sinon perte de perfs
 #ifdef DOUBLE
 //	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 24576*NUM_BUFFERS);
-	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 400+24576*NUM_BUFFERS);
-//	buf = (uint8_t *)hwram_work;
+//	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 400+24576*NUM_BUFFERS);
+	buf = (uint8_t *)hwram_work_paf;
+	hwram_work_paf += 400+24576*NUM_BUFFERS;
 //emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
     // Setup buffer array
     uint8_t* buffers[NUM_BUFFERS] = { buf, buf, buf, buf, buf, buf, buf
