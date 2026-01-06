@@ -25,7 +25,7 @@ Uint8 *hwram_work;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-	emu_printf("allocate_memory type %d size %d \n", type, alignedSize);
+//	emu_printf("allocate_memory type %d size %d \n", type, alignedSize);
     uint8_t* dst;
 	
 	if( type == TYPE_LDIMG || type == TYPE_FONT)
@@ -81,9 +81,9 @@ emu_printf("2hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
 emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
-emu_printf("hwram ptr %p\n", hwram_work);
-		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
-//		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
+//emu_printf("hwram ptr %p\n", hwram_work);
+//		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
+		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 //		cs1ram += SAT_ALIGN(alignedSize);
 //emu_printf("cs1ram %d type %d\n", alignedSize, type);
 /*
@@ -107,7 +107,7 @@ emu_printf("hwram ptr %p\n", hwram_work);
 //emu_printf("TYPE_BGLVL %p size %d\n", dst, alignedSize);
 		return dst;
 	}
-	if(type == TYPE_SPRITE)
+	if(type == TYPE_SPRITE || type == TYPE_RES)
 	{
 		if(alignedSize<170000)
 		{
@@ -141,11 +141,15 @@ emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x
 //emu_printf("lwram bglvl current_lwram %x\n", ((int)current_lwram)+SAT_ALIGN(alignedSize));
 			dst = current_lwram;
 			current_lwram += SAT_ALIGN(alignedSize);
+emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+
 			return dst;
 		}
 		else
 		{
-emu_printf("no more ram %d over %d\n", alignedSize, ((int)current_lwram)+SAT_ALIGN(alignedSize));
+emu_printf("'bhwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+
+//emu_printf("no more ram %d over %d\n", alignedSize, ((int)current_lwram)+SAT_ALIGN(alignedSize));
 			dst = cs2ram;
 			cs2ram += SAT_ALIGN(alignedSize);
 			return dst;

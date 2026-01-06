@@ -341,21 +341,15 @@ emu_printf("-0 %p\n", hwram_work);
 		g->_video->initPsx();
 	}
 #endif
-emu_printf("0\n");
 	if (_displayLoadingScreen) {
 		g->displayLoadingScreen();
 	}
 	slTVOn();
 	do {
-emu_printf("1\n");
 		g->loadSetupCfg(resume);
-emu_printf("2\n");
 		if (_runMenu && resume) {
-emu_printf("3\n");
 			Menu *m = new Menu(g, g->_paf, g->_res, g->_video);
-emu_printf("4\n");
 			const bool runGame = m->mainLoop();
-emu_printf("5\n");
 			delete m;
 			if (!runGame) {
 				break;
@@ -366,7 +360,6 @@ emu_printf("5\n");
 		save_cs1ram = (uint8_t *)cs1ram;
 		while (!g_system->inp.quit && level < kLvl_test) {
 			if (_displayLoadingScreen) {
-////emu_printf("displayLoadingScreen 2\n");
 				g->displayLoadingScreen();
 			}
 			g->mainLoop(level, checkpoint, levelChanged);

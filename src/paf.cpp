@@ -139,7 +139,6 @@ emu_printf("preload %d\n", num);
 	}
 //	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
 	uint8_t *buffer = (uint8_t *)hwram_work; //allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
-emu_printf("-1 %p sz %d\n", hwram_work, kPageBufferSize * 4 + 256 * 4);
 	hwram_work += kPageBufferSize * 4 + 256 * 4;
 	if (!buffer) {
 		////emu_printf("preloadPaf() Unable to allocate page buffers\n");
@@ -152,7 +151,6 @@ emu_printf("-1 %p sz %d\n", hwram_work, kPageBufferSize * 4 + 256 * 4);
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 	}
 	_demuxVideoFrameBlocks = hwram_work;//(uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
-emu_printf("-2 %p %d src %p\n", hwram_work, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize, hwram_src);
 	hwram_work += _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize;
 	_pafHdr.maxAudioFrameBlocksCount = 0; // vbt : on enleve le son
 #if 0
@@ -1201,7 +1199,7 @@ void PafPlayer::mainLoop() {
         }
         _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-        emu_printf("fps %d\n", frame_z);
+//        emu_printf("fps %d\n", frame_z);
 #endif
 
         // Quit check

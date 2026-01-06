@@ -83,7 +83,8 @@ void *malloc(size_t);
 		TYPE_MSTCODE,
 		TYPE_PAFHEAD,
 		TYPE_PAF,       //20
-		TYPE_PAFBUF
+		TYPE_PAFBUF,
+		TYPE_RES
 	};
 
 

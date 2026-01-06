@@ -405,7 +405,7 @@ void Resource::loadLevelData(int levelNum) {
 	if (openDat(_fs, filename, _mstFile)) {
 		loadMstData(_mstFile);
 	} else {
-		//emu_printf("xxx Unable to open '%s'\n", filename);
+emu_printf("xxx Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 	}
 #else
@@ -581,8 +581,11 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 }
 
 void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
-emu_printf("assert %d %d\n", num, kMaxSpriteTypes);
-	assert((unsigned int)num < kMaxSpriteTypes);
+//emu_printf("assert %d %d\n", num, kMaxSpriteTypes);
+//	assert((unsigned int)num < kMaxSpriteTypes);
+	if((unsigned int)num >= kMaxSpriteTypes)
+		return;
+
 	static const uint32_t baseOffset = _lvlSpritesOffset;
 	
 	uint8_t header[3 * sizeof(uint32_t)];
@@ -856,7 +859,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
 	}
-	emu_printf("%d == 160\n", src- start);
+//	emu_printf("%d == 160\n", src- start);
 	assert((src - start) == 160);
 	return offsetsSize;
 }
@@ -1964,7 +1967,7 @@ void Resource::loadMstData(File *fp) {
 			_mstMovingBoundsData[i].indexData = 0;
 		}
 	}
-////emu_printf("x18\n");
+
 	_mstShootData.allocate(_mstHdr.shootDataCount);
 	for (int i = 0; i < _mstHdr.shootDataCount; ++i) {
 		_mstShootData[i].data  = 0; fp->skipUint32();
@@ -1988,7 +1991,6 @@ void Resource::loadMstData(File *fp) {
 			bytesRead += 40;
 		}
 	}
-////emu_printf("x19\n");
 
 	_mstShootIndexData.allocate(_mstHdr.shootIndexDataCount);
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {
@@ -1998,6 +2000,7 @@ void Resource::loadMstData(File *fp) {
 		_mstShootIndexData[i].count = fp->readUint32();
 		bytesRead += 12;
 	}
+
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {
 //		_mstShootIndexData[i].indexUnk50Unk1 = (uint32_t *)malloc(_mstShootIndexData[i].count * 9 * sizeof(uint32_t));
 		_mstShootIndexData[i].indexUnk50Unk1 = (uint32_t *)allocate_memory (TYPE_SHOOT, _mstShootIndexData[i].count * 9 * sizeof(uint32_t));
@@ -2008,6 +2011,7 @@ void Resource::loadMstData(File *fp) {
 			bytesRead += 4;
 		}
 	}
+
 	_mstActionDirectionData.allocate(_mstHdr.actionDirectionDataCount);
 	for (int i = 0; i < _mstHdr.actionDirectionDataCount; ++i) {
 		_mstActionDirectionData[i].unk0 = fp->readByte();
@@ -2132,13 +2136,12 @@ void Resource::loadMstData(File *fp) {
 	}
 
 //	_mstCodeData = (uint8_t *)malloc(_mstHdr.codeSize * 4);
-emu_printf("loading _mstCodeData!!!!\n");
 	_mstCodeData = (uint8_t *)allocate_memory (TYPE_MSTCODE, _mstHdr.codeSize * 4);
 	fp->read(_mstCodeData, _mstHdr.codeSize * 4);
 	bytesRead += _mstHdr.codeSize * 4;
 
 	if (bytesRead != _mstHdr.dataSize) {
-		warning("Unexpected .mst bytesRead %d dataSize %d", bytesRead, _mstHdr.dataSize);
+		emu_printf("Unexpected .mst bytesRead %d dataSize %d\n", bytesRead, _mstHdr.dataSize);
 	}
 }
 

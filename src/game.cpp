@@ -381,12 +381,11 @@ void Game::setupBackgroundBitmap() {
 	} else 
 #endif
 	{
-emu_printf("decodeLZW %p %p num %d\n", bmp, _video->_backgroundLayer, num);
+//emu_printf("decodeLZW %p %p num %d\n", bmp, _video->_backgroundLayer, num);
 	unsigned int s1 = g_system->getTimeStamp();
 	
 //	for(int i=0;i<10;i++)
 	decodeLZW(bmp, _video->_backgroundLayer);
-emu_printf("decodeLZW done\n");
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
@@ -1373,17 +1372,14 @@ void Game::restartLevel() {
 	}
 #endif
 	const int screenNum = _level->getCheckpointData(_level->_checkpoint)->screenNum;
-emu_printf("preloadLevelScreenData1\n");
 	preloadLevelScreenData(screenNum, kNoScreen);
 	_andyObject->levelData0x2988 = _res->_resLevelData0x2988PtrTable[_andyObject->spriteNum];
 	memset(_video->_backgroundLayer, 0, Video::W * Video::H);
 #ifdef PSX
 	_video->clearYuvBackBuffer();
 #endif
-emu_printf("resetScreen\n");
 	resetScreen();
 	if (_andyObject->screenNum != screenNum) {
-emu_printf("preloadLevelScreenData2\n");		
 		preloadLevelScreenData(_andyObject->screenNum, kNoScreen);
 	}
 emu_printf("setupScreen1\n");
@@ -2188,7 +2184,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-_mstDisabled = true; // vbt : ajout pour test
+//_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2196,6 +2192,7 @@ _mstDisabled = true; // vbt : ajout pour test
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
 	_rnd.initTable(rounds);
 	const int screenNum = _level->getCheckpointData(checkpoint)->screenNum;
+#if 0
 	if (_mstDisabled) {
 		_specialAnimMask = 0;
 		_mstCurrentAnim = 0;
@@ -2205,6 +2202,7 @@ _mstDisabled = true; // vbt : ajout pour test
 		_currentScreen = screenNum; // bugfix: clear previous level screen number
 		initMstCode();
 	}
+#endif
 	memset(_level->_screenCounterTable, 0, sizeof(_level->_screenCounterTable));
 //emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
@@ -2231,7 +2229,6 @@ _mstDisabled = true; // vbt : ajout pour test
 // vbt: ne joue pas la video de fin du premier niveau
 	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 /*&& !levelChanged*/) {
 		const uint8_t num = _cutscenes[_currentLevel];
-		emu_printf("vbt play cutscene\n");
 		_paf->preload(num);
 		_paf->play(num);
 		_paf->unload(num);
@@ -2245,6 +2242,16 @@ _mstDisabled = true; // vbt : ajout pour test
  // vbt : à remettre !!!
 	initLvlObjects();
 
+	if (_mstDisabled) {
+		_specialAnimMask = 0;
+		_mstCurrentAnim = 0;
+		_mstOriginPosX = Video::W / 2;
+		_mstOriginPosY = Video::H / 2;
+	} else {
+		_currentScreen = screenNum; // bugfix: clear previous level screen number
+		initMstCode();
+	}
+
 //emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
@@ -2257,11 +2264,8 @@ _mstDisabled = true; // vbt : ajout pour test
 		startMstCode();
 	}
 #endif
-
-//xxxxx	initLvlObjects();
-
 	_endLevel = false;
-emu_printf("resetShootLvlObjectDataTable\n");
+//emu_printf("resetShootLvlObjectDataTable\n");
 	resetShootLvlObjectDataTable();
 //emu_printf("callLevel_initialize\n");
 	callLevel_initialize();
@@ -2860,11 +2864,8 @@ void Game::levelMainLoop() {
 		_andyObject->directionKeyMask = _directionKeyMask;
 		_andyObject->actionKeyMask = _actionKeyMask;
 	}
-//emu_printf("clearBackBuffer\n");
-
 	_video->clearBackBuffer();
 	if (_andyObject->screenNum != _res->_currentScreenResourceNum) {
-emu_printf("preloadLevelScreenData3\n");
 #ifdef DEBUG
 //	g_system->initTimeStamp();
 	unsigned int s1 = g_system->getTimeStamp();
@@ -4461,9 +4462,8 @@ emu_printf("3\n");
 		lvlObjectTypeInit(ptr);
 	}
 
-//	_res->loadLvlMst(_currentLevel);
+	_res->loadLvlMst(_currentLevel);
 #endif
-emu_printf("4\n");
 }
 
 void Game::setLvlObjectSprite(LvlObject *ptr, uint8_t type, uint8_t num) {
