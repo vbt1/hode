@@ -2206,7 +2206,6 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	memset(_level->_screenCounterTable, 0, sizeof(_level->_screenCounterTable));
 //emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
-//////emu_printf("initLvlObjects\n");
 #if 0
  // vbt : à remettre !!!
 	initLvlObjects();

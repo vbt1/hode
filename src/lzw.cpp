@@ -17,8 +17,10 @@ enum {
 };
 
 struct LzwDecoder {
-	uint16_t _prefix[1 << kMaxBits];
-	uint8_t _stack[kStackSize];
+//	uint16_t _prefix[1 << kMaxBits];
+	uint16_t *_prefix;
+//	uint8_t _stack[kStackSize];
+	uint8_t *_stack;
 	const uint8_t *_buf;
 	uint32_t _currentBits;
 	uint8_t _bitsLeft;
@@ -58,6 +60,8 @@ inline uint32_t LzwDecoder::nextCode(int codeSize) {
 
 int LzwDecoder::decode(uint8_t *dst) {
 	uint8_t *p = dst;
+	_stack = hwram_work;
+	_prefix = (uint16_t *)hwram_work + kStackSize;
 	uint8_t * const stackBase = _stack;
 	uint8_t * const stackTop = &_stack[kStackSize - 1];
 	uint8_t * const stackTop2 = &_stack[kStackSize - 2];

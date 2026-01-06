@@ -107,16 +107,27 @@ emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 //emu_printf("TYPE_BGLVL %p size %d\n", dst, alignedSize);
 		return dst;
 	}
-	if(type == TYPE_SPRITE || type == TYPE_RES)
+
+	if(type == TYPE_RES)
+	{
+		dst = hwram_work;
+		hwram_work += alignedSize;
+		return dst;
+	}
+
+	if(type == TYPE_SPRITE)
 	{
 		if(alignedSize<170000)
 		{
+emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 			dst = hwram_work;
 			hwram_work += SAT_ALIGN(alignedSize);
 			return dst;
 		}
 		else
 		{
+emu_printf("sprite size %d\n", alignedSize);
+emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 			dst = current_lwram;
 			current_lwram += SAT_ALIGN(alignedSize);
 			return dst;			

@@ -136,7 +136,7 @@ Resource::Resource(FileSystem *fs)
 		_sssFile = new File;
 #endif
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
-		char filename[32];
+		char filename[16];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
 emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
@@ -155,7 +155,7 @@ emu_printf("skipUint32 %s\n", filename);
 		}
 	}
 	// detect if this is a demo version by trying to open the second level data files
-	char filename[32];
+	char filename[16];
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
 	if (openDat(_fs, filename, _lvlFile)) {
 ////emu_printf("NOT DEMO\n");
@@ -386,7 +386,7 @@ void Resource::unloadDatMenuBuffers() {
 
 void Resource::loadLevelData(int levelNum) {
 
-	char filename[32];
+	char filename[16];
 	const char *levelName = _prefixes[levelNum];
 
 	closeDat(_fs, _lvlFile);
@@ -760,7 +760,7 @@ Sint32 fileid, fsize;
 void Resource::loadLvlMst(int levelNum)
 {
 	const char *levelName = _prefixes[levelNum];
-	char filename[32];
+	char filename[16];
 	
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
@@ -860,7 +860,9 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 		}
 	}
 //	emu_printf("%d == 160\n", src- start);
-	assert((src - start) == 160);
+//	assert((src - start) == 160);
+	if((src - start) != 160)
+		return 0;
 	return offsetsSize;
 }
 uint8_t *cs1ram_bg;
