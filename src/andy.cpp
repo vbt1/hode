@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -79,7 +80,7 @@ int Game::moveAndyObjectOp1(int op) {
 	case 27:
 		return _directionKeyMask & 10;
 	default:
-		emu_printf("moveAndyObjectOp1 op %d\n", op);
+//		emu_printf("moveAndyObjectOp1 op %d\n", op);
 		break;
 	}
 	return 0;
@@ -184,7 +185,7 @@ int Game::moveAndyObjectOp2(int op) {
 	case 47:
 		return ((_actionKeyMask & 6) == 4) ? 1 : 0;
 	default:
-		emu_printf("moveAndyObjectOp2 op %d\n", op);
+//		emu_printf("moveAndyObjectOp2 op %d\n", op);
 		break;
 	}
 	return 0;

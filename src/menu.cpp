@@ -123,7 +123,7 @@ static uint32_t readSoundData(uint8_t *soundData, uint32_t soundDataSize) {
 }
 #endif
 void Menu::loadData() {
-emu_printf("loadData\n");
+//emu_printf("loadData\n");
 #ifdef SOUND
 	_g->_mix._lock(1);
 #endif
@@ -613,7 +613,7 @@ int Menu::handleTitleScreen() {
 //		g_system->sleep(kDelayMs);
 	}
 	_video->SAT_cleanSprites();
-	SPR_InitSlaveSH();
+//	SPR_InitSlaveSH();
 	return currentOption;
 }
 

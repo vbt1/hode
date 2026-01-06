@@ -258,7 +258,7 @@ void Video::SAT_decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_
 
 void Video::SAT_cleanSprites()
 {
-emu_printf("SAT_cleanSprites\n");
+//emu_printf("SAT_cleanSprites\n");
 	SPRITE user_sprite;
 	user_sprite.CTRL= FUNC_End;
 	user_sprite.PMOD=0;

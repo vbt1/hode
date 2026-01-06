@@ -113,7 +113,7 @@ void PafPlayer::setVolume(int volume) {
 uint8_t *lwram_cut;
 
 void PafPlayer::preload(int num) {
-emu_printf("preload %d\n", num);
+//emu_printf("preload %d\n", num);
 	lwram_cut = current_lwram;
 	
 //	assert(num >= 0 && num < kMaxVideosCount);
@@ -168,22 +168,22 @@ emu_printf("preload %d\n", num);
 }
 
 void PafPlayer::play(int num) {
-	emu_printf("play %d %d\n", num, _videoNum);
+//	emu_printf("play %d %d\n", num, _videoNum);
 //	if(num==2)
 //	while(1);
 	if (_videoNum != num) {
-		emu_printf("preload play\n");
+//		emu_printf("preload play\n");
 		preload(num);
 	}
 	if (_videoNum == num) {
-		emu_printf("mainloop play\n");
+//		emu_printf("mainloop play\n");
 		_playedMask |= 1 << num;
 		mainLoop();
 	}
 }
 
 void PafPlayer::unload(int num) {
-emu_printf("unload paf\n");
+//emu_printf("unload paf\n");
 	current_lwram = lwram_cut;
 	hwram_work = hwram_src;
 	if (_videoNum < 0) {

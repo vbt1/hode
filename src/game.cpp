@@ -1382,7 +1382,7 @@ void Game::restartLevel() {
 	if (_andyObject->screenNum != screenNum) {
 		preloadLevelScreenData(_andyObject->screenNum, kNoScreen);
 	}
-emu_printf("setupScreen1\n");
+//emu_printf("setupScreen1\n");
 	setupScreen(_andyObject->screenNum);
 }
 
@@ -3267,7 +3267,7 @@ void Game::lvlObjectType1Init(LvlObject *ptr) {
 }
 
 void Game::lvlObjectTypeInit(LvlObject *o) {
-emu_printf("o->spriteNum %d\n", o->spriteNum);
+//emu_printf("o->spriteNum %d\n", o->spriteNum);
 	switch (o->spriteNum) {
 	case 0: // Andy with plasma cannon and helmet
 	case 2: // Andy
@@ -4416,12 +4416,9 @@ void Game::clearDeclaredLvlObjectsList() {
 }
 
 void Game::initLvlObjects() {
-emu_printf("initLvlObjects\n");
-emu_printf("1\n");
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_screenLvlObjectsList[i] = 0;
 	}
-emu_printf("2\n");
 	LvlObject *prevLvlObj = 0;
 	for (int i = 0; i < _res->_lvlHdr.staticLvlObjectsCount; ++i) {
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];
@@ -4451,8 +4448,6 @@ emu_printf("2\n");
 			break;
 		}
 	}
-emu_printf("3\n");
-
 #if 1
 	_res->loadLvlSprite(_currentLevel);
 

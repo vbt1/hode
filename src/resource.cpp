@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 //#define LOAD_SPRITE 1
 //#define LOAD_MONSTER 1
 /*
@@ -64,10 +65,10 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 }
 
 static void closeDat(FileSystem *fs, File *f) {
-emu_printf("closeDat ");
+//emu_printf("closeDat ");
 Sint32 fileid, fsize;
 GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
-emu_printf("------ filename %s\n", GFS_IdToName(fileid));
+//emu_printf("------ filename %s\n", GFS_IdToName(fileid));
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -138,11 +139,11 @@ Resource::Resource(FileSystem *fs)
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[16];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
-emu_printf("filename %s here\n", filename);
+//emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
-emu_printf("seek %s %p\n", filename, _lvlFile);
+//emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
-emu_printf("skipUint32 %s\n", filename);
+//emu_printf("skipUint32 %s\n", filename);
 			_lvlFile->skipUint32();
 ////emu_printf("readUint32 %s\n", filename);
 			const int size = _lvlFile->readUint32();
@@ -602,10 +603,10 @@ emu_printf("!buf\n");
 		return;
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
-emu_printf("readSize %d %d\n", readSize, size);
+//emu_printf("readSize %d %d\n", readSize, size);
 	if(readSize > size)
 		return;
-emu_printf("malloc sprite %d\n", size);
+//emu_printf("malloc sprite %d\n", size);
 	uint8_t *ptr = allocate_memory (TYPE_SPRITE, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
@@ -773,9 +774,9 @@ void Resource::loadLvlMst(int levelNum)
 }
 #endif
 void Resource::unloadLvlData() {
-emu_printf("unloadLvlData\n");
+//emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
-emu_printf("unloadLvlData reset cs1ram\n");
+//emu_printf("unloadLvlData reset cs1ram\n");
 	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
 

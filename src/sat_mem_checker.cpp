@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -110,8 +111,11 @@ emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 
 	if(type == TYPE_RES)
 	{
-		dst = hwram_work;
+/*		dst = hwram_work;
 		hwram_work += alignedSize;
+*/
+			dst = current_lwram;
+			current_lwram += SAT_ALIGN(alignedSize);
 		return dst;
 	}
 
@@ -126,7 +130,7 @@ emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x
 		}
 		else
 		{
-emu_printf("sprite size %d\n", alignedSize);
+//emu_printf("sprite size %d\n", alignedSize);
 emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 			dst = current_lwram;
 			current_lwram += SAT_ALIGN(alignedSize);

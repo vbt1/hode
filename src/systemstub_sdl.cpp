@@ -365,7 +365,7 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 
 	////emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
 }
-#if 0
+#if 1
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
 // le dma ne fonctionne pas sur les videos car type_paf est en lwram
 #ifndef LINEAR_BITMAP

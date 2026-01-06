@@ -48,7 +48,7 @@ CXXFLAGS = -g -nodefaultlibs -fno-common -fno-lto -D_SATURNPORT_ -DSYS_BIG_ENDIA
 
 # Sega's ld might not understand the --format command used here...
 
-LDFLAGS = -g -m2 -Wl,--allow-multiple-definition -fpermissive -L$(SGLLDR) -L$(SBLLDR) -Xlinker -T$(LDFILE) -Xlinker -Map \
+LDFLAGS = -g -m2 -fpermissive -L$(SGLLDR) -L$(SBLLDR) -Xlinker -T$(LDFILE) -Xlinker -Map \
           -Xlinker $(MPFILE) -Xlinker -e -Xlinker ___Start -nostartfiles -fno-builtin -nodefaultlibs -fno-threadsafe-statics
 DFLAGS =
 # source_program
