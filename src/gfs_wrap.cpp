@@ -29,10 +29,7 @@ void CSH_Purge(void *adrs, Uint32 P_size);
 #define CACHE_SIZE (SECTOR_SIZE * TOT_SECTOR)
 
 static char satpath[25];
-//static char current_path[15][16];
-//static char current_path[3][16];
 
-//static Uint32 current_cached = 0;
 static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
 
 static Uint32 cache_offset = 0;
@@ -124,7 +121,7 @@ void init_GFS() { //Initialize GFS system
 }
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
-emu_printf("-- sat_fopen %s\n", path);	
+//emu_printf("-- sat_fopen %s\n", path);	
 	memset(satpath, 0, 25);
 
 	if (path == NULL) 

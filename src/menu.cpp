@@ -19,7 +19,7 @@ void *memset4_fast(void *, long, size_t);
 #include "util.h"
 #include "video.h"
 
-SAT_sprite _sprData[10];
+SAT_sprite _sprData[4];
 enum {
 	kTitleScreen_AssignPlayer = 0,
 	kTitleScreen_Play = 1,

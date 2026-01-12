@@ -193,7 +193,7 @@ uint32_t fioUpdateCRC(uint32_t sum, const uint8_t *buf, uint32_t size) {
 }
 */
 void SectorFile::refillBuffer(uint8_t *ptr) {
-emu_printf("SectorFile::refillBuffer %p\n", ptr);
+//emu_printf("SectorFile::refillBuffer %p\n", ptr);
 	if (ptr) {
 		static const int kPayloadSize = kFioBufferSize - 4;
 		const int size = sat_fread(ptr, 1, kPayloadSize, _fp);
@@ -246,7 +246,7 @@ void SectorFile::seekAlign(uint32_t pos) {
 }
 
 void SectorFile::seek(int pos, int whence) {
-emu_printf("SectorFile::seek\n");
+//emu_printf("SectorFile::seek\n");
 	if (whence == SEEK_SET) {
 //		assert((pos & 2047) == 0);
 		if((pos & 2047) != 0)

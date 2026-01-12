@@ -236,8 +236,8 @@ int ss_main() {
 	g_debugMask = 0; //kDebug_GAME | kDebug_RESOURCE | kDebug_SOUND | kDebug_MONSTER;
 	int cheats = 0;
 
-	hwram_work = allocate_memory (TYPE_HWRAM, 588000);
-emu_printf("-0 %p\n", hwram_work);
+	hwram_work = allocate_memory (TYPE_HWRAM, 588000+73000);
+//emu_printf("-0 %p\n", hwram_work);
 
 #ifdef WII
 	System_earlyInit();

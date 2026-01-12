@@ -6,6 +6,7 @@
 //#define USE_SPRITE 1
 extern "C" {
 #include <sl_def.h>
+extern Uint8 *	hwram_work_paf;
 }
 #include "game.h"
 #include "menu.h"
@@ -21,13 +22,14 @@ static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
-//emu_printf("video init\n");
+emu_printf("video init\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
+	hwram_work_paf = hwram_work;
 	_shadowLayer = hwram_work;//allocate_memory (TYPE_LAYER, W * H + 1);
 	_frontLayer = _shadowLayer + W * H + 4;//allocate_memory (TYPE_LAYER, W * H);
 	_backgroundLayer = _frontLayer + W * H;//allocate_memory (TYPE_LAYER, W * H);

@@ -1412,7 +1412,7 @@ int Game::moveAndyObjectOp3(int op) {
 		}
 		return 0;
 	default:
-		emu_printf("moveAndyObjectOp3 op %d\n", op);
+//		emu_printf("moveAndyObjectOp3 op %d\n", op);
 		break;
 	}
 	return 0;
@@ -1434,7 +1434,7 @@ int Game::moveAndyObjectOp4(int op) {
 		_andyUpdatePositionFlag = true;
 		return 1;
 	default:
-		emu_printf("moveAndyObjectOp4 op %d\n", op);
+//		emu_printf("moveAndyObjectOp4 op %d\n", op);
 		break;
 	}
 	return 0;

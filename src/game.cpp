@@ -89,12 +89,12 @@ emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 	memset(_monsterObjects1Table, 0, sizeof(_monsterObjects1Table));
 	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
 
+#ifdef SOUND
 	_sssDisabled = true;
 	_snd_muted = true;
 	_snd_bufferOffset = _snd_bufferSize = 0;
 	_snd_masterPanning = kDefaultSoundPanning;
 	_snd_masterVolume = kDefaultSoundVolume;
-#ifdef SOUND
 	_sssObjectsCount = 0;
 	_sssObjectsList1 = 0;
 	_sssObjectsList2 = 0;
@@ -172,7 +172,9 @@ void Game::fadeScreenPalette() {
 			_video->_fadePaletteBuffer[i] = _video->_displayPaletteBuffer[i] / _levelRestartCounter;
 		}
 		_fadePalette = true;
-	} else {
+	} 
+#ifdef SOUND	
+	else {
 		if (_levelRestartCounter != 0) {
 			_snd_masterVolume -= _snd_masterVolume / _levelRestartCounter;
 			if (_snd_masterVolume < 0) {
@@ -181,6 +183,7 @@ void Game::fadeScreenPalette() {
 		}
 		--_levelRestartCounter;
 	}
+#endif
 	for (int i = 0; i < 256 * 3; ++i) {
 		int color = _video->_displayPaletteBuffer[i] - _video->_fadePaletteBuffer[i];
 		if (color < 0) {
@@ -294,13 +297,13 @@ void Game::unloadTransformLayerData() {
 void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 	uint8_t *dst = _video->_shadowScreenMaskBuffer;
 	for (int i = lvl->currentShadowId; i < lvl->shadowCount; ++i) {
-emu_printf("backgroundMaskTable %d %p dest %p\n", i, lvl->backgroundMaskTable[i], _video->_shadowScreenMaskBuffer);
+emu_printf("backMaskTable %d %p dst %p\n", i, lvl->backgroundMaskTable[i], _video->_shadowScreenMaskBuffer);
 		const uint8_t *src = lvl->backgroundMaskTable[i];
 		if (src) {
 			const int decodedSize = decodeLZW(src + 2, dst);
 
 			_shadowScreenMasksTable[i].dataSize = READ_LE_UINT32(dst);
-emu_printf("vbt _shadowScreenMasksTable %d decodedSize %d\n", _shadowScreenMasksTable[i].dataSize, decodedSize);
+emu_printf("vbt _shadow %d sz %d\n", _shadowScreenMasksTable[i].dataSize, decodedSize);
 			// header : 20 bytes
 			// projectionData : w * h * sizeof(uint16_t) - for a given (x, y) returns the casted (x, y)
 			// paletteData : 256 (only the first 144 bytes are read)
@@ -526,7 +529,7 @@ void Game::setupScreenPosTable(uint8_t num) {
 }
 
 void Game::setupScreenMask(uint8_t num) {
-//emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroundDataTable[num].currentMaskId);
+emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroundDataTable[num].currentMaskId);
 	if (num == kNoScreen) {
 		return;
 	}
@@ -541,7 +544,8 @@ void Game::setupScreenMask(uint8_t num) {
 		} else {
 			memset(_screenTempMaskBuffer, 0, 32 * 24);
 		}
-			//emu_printf("setupScreenMask _screenMaskBuffer\n");
+		_screenMaskBuffer = allocate_memory(TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
+emu_printf("--- setupScreenMask _screenMaskBuffer\n");
 		uint8_t *p = _screenMaskBuffer + screenMaskOffset(_res->_screensBasePos[num].u, _res->_screensBasePos[num].v);
 		for (int i = 0; i < 24; ++i) {
 			memcpy(p, _screenTempMaskBuffer + i * 32, 32);
@@ -1269,7 +1273,9 @@ void Game::resetDisplay() {
 	_levelRestartCounter = 0;
 	_fadePalette = false;
 	memset(_video->_fadePaletteBuffer, 0, sizeof(_video->_fadePaletteBuffer));
+#ifdef SOUND
 	_snd_masterVolume = _setupConfig.players[_setupConfig.currentPlayer].volume;
+#endif
 }
 
 void Game::setupScreen(uint8_t num) {
@@ -1892,7 +1898,6 @@ int Game::updateAndyLvlObject() {
 	if ((_andyObject->flags0 & 0x1F) != 0xB) {
 		playAndyFallingCutscene(0);
 	}
-emu_printf("return 1\n");
 	restartLevel();
 	return 1;
 }
@@ -2138,8 +2143,10 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #if PAF
 		//emu_printf("Restart at level %d checkpoint %d cutscenes 0x%x\n", level, checkpoint, _paf->_playedMask);
 		_paf->_playedMask = _setupConfig.players[num].cutscenesMask;
+#ifdef SOUND
 		_snd_masterVolume = _setupConfig.players[num].volume;
 		_paf->setVolume(_snd_masterVolume);
+#endif
 #endif
 		_difficulty = _setupConfig.players[num].difficulty;
 		// resume once, on the starting level

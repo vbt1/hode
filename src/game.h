@@ -130,7 +130,7 @@ struct Game {
 	LvlObject *_lvlObjectsList3;
 	uint8_t _screenPosTable[5][24 * 32];
 	uint8_t _screenTempMaskBuffer[24 * 32];
-	uint8_t _screenMaskBuffer[(16 * 6) * 24 * 32]; // level screens mask : 16 horizontal screens x 6 vertical screens
+	uint8_t *_screenMaskBuffer; //[(16 * 6) * 24 * 32]; // level screens mask : 16 horizontal screens x 6 vertical screens
 	int _mstAndyCurrentScreenNum;
 	uint8_t _shakeScreenDuration;
 	const uint8_t *_shakeScreenTable;
@@ -501,12 +501,15 @@ struct Game {
 	int mstTask_monsterWait11(Task *t);
 
 	// sound.cpp
+#ifdef SOUND
 	bool _sssDisabled;
 	int16_t _snd_buffer[4096];
 	int _snd_bufferOffset, _snd_bufferSize;
 	bool _snd_muted;
 	int _snd_masterPanning;
+#endif
 	int _snd_masterVolume;
+
 #ifdef SOUND
 	SssObject _sssObjectsTable[kMaxSssObjects];
 	bool _sssObjectsChanged;

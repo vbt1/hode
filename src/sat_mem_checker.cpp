@@ -11,17 +11,18 @@ extern "C" {
 //#include <sega_mem.h>
 #include "sat_mem_checker.h"
 void emu_printf(const char *format, ...);
-extern Uint8 *hwram;
+Uint8 *hwram;
 extern Uint8 *current_lwram;
 extern Uint8 *cs1ram;
 extern Uint8 *hwram_src;
 Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B0;
 Uint8 *vdp1ram = (Uint8 *)SpriteVRAM+0x20;
 Uint8 *cs2ram = (uint8_t *)0x22600000;
-}
-Uint8 *hwram;
 Uint8 *hwram_src;
 Uint8 *hwram_work;
+extern Uint8 *hwram_work_paf;
+}
+
 //int vbt=0;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
@@ -34,6 +35,15 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 //emu_printf("TYPE_LDIMG or font %p\n", dst);
 		dst = vdp2ram;
 		vdp2ram += SAT_ALIGN(alignedSize);
+		return dst;
+	}
+	
+	if(type == TYPE_PAF || type == TYPE_PAFBUF)
+	{
+emu_printf("0hwram used %d hwrampaf %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000,  ((int)hwram_work_paf)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+
+		dst = hwram_work_paf;
+		hwram_work_paf += SAT_ALIGN(alignedSize);
 		return dst;
 	}
 	
@@ -55,18 +65,17 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 
 	if(type == TYPE_LAYER 
 	|| type == TYPE_SHADWBUF || type == TYPE_SHADWLUT
-	|| type == TYPE_SCRMASKBUF) // jamais libéré 6762
+	|| type == TYPE_SHADSCRMASKBUF) // jamais libéré 6762
 	{
-//emu_printf("malloc2 %d type %d\n", alignedSize, type);
 		dst = (Uint8 *)malloc(alignedSize);
 		hwram = dst+alignedSize;
 		
-emu_printf("1hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("1hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 
 		return dst;
 	}
 	
-	if(type == TYPE_PAFHEAD || type == TYPE_PAFBUF )
+	if(type == TYPE_PAFHEAD)
 	{
 emu_printf("2hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 
@@ -114,43 +123,34 @@ emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 /*		dst = hwram_work;
 		hwram_work += alignedSize;
 */
-			dst = current_lwram;
-			current_lwram += SAT_ALIGN(alignedSize);
+		dst = current_lwram;
+		current_lwram += SAT_ALIGN(alignedSize);
 		return dst;
 	}
 
 	if(type == TYPE_SPRITE)
 	{
+emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+
 		if(alignedSize<170000)
 		{
-emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 			dst = hwram_work;
 			hwram_work += SAT_ALIGN(alignedSize);
-			return dst;
 		}
 		else
 		{
-//emu_printf("sprite size %d\n", alignedSize);
-emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 			dst = current_lwram;
 			current_lwram += SAT_ALIGN(alignedSize);
-			return dst;			
 		}
-		
+		return dst;		
 	}
 	
 
 	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
-	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE 	|| type == TYPE_PAF
-	|| type == type == TYPE_GFSFILE || type == TYPE_SCRMASK 
+	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE 
+	|| type == type == TYPE_GFSFILE || type == TYPE_SCRMASK || type == TYPE_SCRMASKBUF
 	|| type == TYPE_BGLVLOBJ)
 	{
-		/*
-emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
-			if(((int)hwram_work)+SAT_ALIGN(alignedSize)<0x300000)
-		{	
-		*/
-		
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
 //emu_printf("lwram bglvl current_lwram %x\n", ((int)current_lwram)+SAT_ALIGN(alignedSize));
@@ -162,7 +162,7 @@ emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x
 		}
 		else
 		{
-emu_printf("'bhwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("'bhwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 
 //emu_printf("no more ram %d over %d\n", alignedSize, ((int)current_lwram)+SAT_ALIGN(alignedSize));
 			dst = cs2ram;
@@ -176,7 +176,7 @@ emu_printf("'bhwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0
 
 
 //emu_printf("addr %p next %p\n", dst, dst+SAT_ALIGN(alignedSize));
-emu_printf("5hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("5hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 	
 	return dst;
 }

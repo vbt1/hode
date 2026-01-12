@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>

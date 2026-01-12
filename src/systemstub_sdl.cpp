@@ -1,3 +1,4 @@
+#pragma GCC optimize ("Os")
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
