@@ -6,6 +6,8 @@
 extern "C" {
 void 	free(void *ptr);
 void	*malloc(size_t);
+void emu_printf(const char *format, ...);
+extern uint8_t *hwram_work;
 }
 
 extern "C"
@@ -15,18 +17,36 @@ void __cxa_pure_virtual(void) {
 }
 
 void* operator new(size_t size) {
+	emu_printf("--- allocate2 %d\n", size);
+	if(size==4148|| size==51736)
+	{
+		
+		void *ptr = (void *)hwram_work;
+		hwram_work +=size;
+		return ptr;
+	}
     return malloc(size);
 }
 
 void* operator new[](size_t size) {
-    return malloc(size);
+	emu_printf("--- allocate %d\n", size);
+	if(size==4148|| size==51736 || size==20168)
+	{
+		
+		void *ptr = (void *)hwram_work;
+		hwram_work +=size;
+		return ptr;
+	}
+    return malloc(size);	
 }
 
 void operator delete(void* ptr) {
+	emu_printf("--- delete1 %p\n", ptr);
     free(ptr);
 }
 
 void operator delete[](void* ptr) {
+	emu_printf("--- delete2 %p\n", ptr);
     free(ptr);
 }
 

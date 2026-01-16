@@ -160,7 +160,7 @@ bool Game::mstUpdateInRange(MstMonsterAction *m) {
 }
 
 bool Game::addChasingMonster(MstMonsterAction *m48, uint8_t direction) {
-	debug(kDebug_MONSTER, "addChasingMonster %d", direction);
+//	debug(kDebug_MONSTER, "addChasingMonster %d", direction);
 	m48->direction = direction;
 	if (m48->codeData != kNone) {
 		Task *t = createTask(_res->_mstCodeData + m48->codeData * 4);
@@ -200,7 +200,7 @@ bool Game::addChasingMonster(MstMonsterAction *m48, uint8_t direction) {
 			++_mstChasingMonstersCount;
 		}
 	}
-	debug(kDebug_MONSTER, "_mstChasingMonstersCount %d", _mstChasingMonstersCount);
+//	debug(kDebug_MONSTER, "_mstChasingMonstersCount %d", _mstChasingMonstersCount);
 	return true;
 }
 
@@ -251,7 +251,7 @@ int Game::mstTaskStopMonsterObject1(Task *t) {
 	//   jnz   short return_0
 
 	if ((m->flagsA5 & 8) == 0) {
-		warning("Unexpected flags 0x%x for stopMonsterObject1", m->flagsA5);
+//		warning("Unexpected flags 0x%x for stopMonsterObject1", m->flagsA5);
 	}
 
 	const MstMonsterAreaAction *m48 = m->action;
@@ -384,7 +384,7 @@ bool Game::mstMonster1SetWalkingBounds(MonsterObject1 *m) {
 }
 
 bool Game::mstMonster1UpdateWalkPath(MonsterObject1 *m) {
-	debug(kDebug_MONSTER, "mstMonster1UpdateWalkPath m %p", m);
+//	debug(kDebug_MONSTER, "mstMonster1UpdateWalkPath m %p", m);
 	const uint8_t screenNum = m->o16->screenNum;
 	MstBehaviorState *behaviorState = m->behaviorState;
 	const uint32_t indexWalkPath = behaviorState->walkPath;
@@ -832,9 +832,13 @@ void Game::resetMstCode() {
 	}
 	_mstOp67_x1 = -256;
 	_mstOp67_x2 = -256;
-	memset(_monsterObjects1Table, 0, sizeof(_monsterObjects1Table));
-	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
+//	_monsterObjects1Table = (MonsterObject1*)allocate_memory(TYPE_MONSTER,sizeof(MonsterObject1)*kMaxMonsterObjects1);
+//	_monsterObjects2Table = (MonsterObject2*)allocate_memory(TYPE_MONSTER,sizeof(MonsterObject2)*kMaxMonsterObjects2);
+//	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
+	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
+	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
 	memset(_mstVars, 0, sizeof(_mstVars));
+	_tasksTable = (Task *)allocate_memory(TYPE_MONSTER,kMaxTasks*sizeof(Task));
 	memset(_tasksTable, 0, sizeof(_tasksTable));
 	_m43Num3 = _m43Num1 = _m43Num2 = _mstActionNum = -1;
 	_mstOp54Counter = 0; // bugfix: not reset in the original, causes uninitialized reads at the beginning of 'fort'
@@ -933,7 +937,7 @@ static bool compareOp(int op, int num1, int num2) {
 	case 8:
 		return (num1 ^ num2) == 0;
 	default:
-		error("compareOp unhandled op %d", op);
+		//error("compareOp unhandled op %d", op);
 		break;
 	}
 	return false;
@@ -974,7 +978,7 @@ static void arithOp(int op, int *p, int num) {
 		*p ^= num;
 		break;
 	default:
-		error("arithOp unhandled op %d", op);
+		//error("arithOp unhandled op %d", op);
 		break;
 	}
 }
@@ -1011,7 +1015,7 @@ void Game::executeMstCode() {
 	}
 	const MstScreenArea *msac;
 	while ((msac = _res->findMstCodeForPos(_currentScreen, _mstAndyLevelPosX, _mstAndyLevelPosY)) != 0) {
-		debug(kDebug_MONSTER, "trigger for %d,%d", _mstAndyLevelPosX, _mstAndyLevelPosY);
+//		debug(kDebug_MONSTER, "trigger for %d,%d", _mstAndyLevelPosX, _mstAndyLevelPosY);
 		_res->flagMstCodeForPos(msac->unk0x1C, 0);
 		assert(msac->codeData != kNone);
 		createTask(_res->_mstCodeData + msac->codeData * 4);
@@ -1290,7 +1294,7 @@ void Game::mstLvlObjectSetActionDirection(LvlObject *o, const uint8_t *ptr, uint
 void Game::mstMonster1UpdateGoalPosition(MonsterObject1 *m) {
 	int var1C = 0;
 	int var18 = 0;
-	debug(kDebug_MONSTER, "mstMonster1UpdateGoalPosition m %p goalScreen %d levelBounds [%d,%d,%d,%d]", m, m->goalScreenNum, m->levelPosBounds_x1, m->levelPosBounds_y1, m->levelPosBounds_x2, m->levelPosBounds_y2);
+	//debug(kDebug_MONSTER, "mstMonster1UpdateGoalPosition m %p goalScreen %d levelBounds [%d,%d,%d,%d]", m, m->goalScreenNum, m->levelPosBounds_x1, m->levelPosBounds_y1, m->levelPosBounds_x2, m->levelPosBounds_y2);
 	if (m->goalScreenNum == 0xFD) {
 		int ve, vf, vg, va;
 		const MstMovingBounds *m49 = m->m49;
@@ -1481,7 +1485,7 @@ l41B2DC:
 	if ((ptr[2] & kDirectionKeyMaskHorizontal) == 0) {
 		m->goalDistance_x1 = m->goalPos_x1 = m->goalDistance_x2 = m->goalPos_x2 = m->xMstPos;
 	}
-	debug(kDebug_MONSTER, "mstMonster1UpdateGoalPosition m %p mask 0x%x goal [%d,%d,%d,%d]", m, var1C, m->goalPos_x1, m->goalPos_y1, m->goalPos_x2, m->goalPos_y2);
+	//debug(kDebug_MONSTER, "mstMonster1UpdateGoalPosition m %p mask 0x%x goal [%d,%d,%d,%d]", m, var1C, m->goalPos_x1, m->goalPos_y1, m->goalPos_x2, m->goalPos_y2);
 }
 
 void Game::mstMonster1MoveTowardsGoal1(MonsterObject1 *m) {
@@ -1491,7 +1495,7 @@ void Game::mstMonster1MoveTowardsGoal1(MonsterObject1 *m) {
 	const MstWalkBox *m34 = &_res->_mstWalkBoxData[indexWalkBox];
 	const int w = (int32_t)READ_LE_UINT32(p + 904);
 	const int h = (int32_t)READ_LE_UINT32(p + 908);
-	debug(kDebug_MONSTER, "mstMonster1MoveTowardsGoal1 m %p pos %d,%d [%d,%d,%d,%d]", m, m->xMstPos, m->yMstPos, m34->left, m34->top, m34->right, m34->bottom);
+	//debug(kDebug_MONSTER, "mstMonster1MoveTowardsGoal1 m %p pos %d,%d [%d,%d,%d,%d]", m, m->xMstPos, m->yMstPos, m34->left, m34->top, m34->right, m34->bottom);
 	if (!rect_contains(m34->left - w, m34->top - h, m34->right + w, m34->bottom + h, m->xMstPos, m->yMstPos)) {
 		mstMonster1UpdateWalkPath(m);
 		m->unkC0 = -1;
@@ -1543,7 +1547,7 @@ void Game::mstMonster1MoveTowardsGoal1(MonsterObject1 *m) {
 		_yMstPos1 = m->yMstPos;
 		_yMstPos2 = 0;
 	}
-	debug(kDebug_MONSTER, "mstMonster1MoveTowardsGoal1 m %p pos %d,%d dist %d,%d direction 0x%x", m, _xMstPos1, _yMstPos1, _xMstPos2, _yMstPos2, m->goalDirectionMask);
+	//debug(kDebug_MONSTER, "mstMonster1MoveTowardsGoal1 m %p pos %d,%d dist %d,%d direction 0x%x", m, _xMstPos1, _yMstPos1, _xMstPos2, _yMstPos2, m->goalDirectionMask);
 	if (m->goalDirectionMask == 0) {
 		return;
 	}
@@ -1658,7 +1662,7 @@ void Game::mstMonster1MoveTowardsGoal1(MonsterObject1 *m) {
 	} else {
 		_yMstPos2 = 0;
 	}
-	debug(kDebug_MONSTER, "mstMonster1MoveTowardsGoal1 m %p dist %d,%d", m, _xMstPos2, _yMstPos2);
+	//debug(kDebug_MONSTER, "mstMonster1MoveTowardsGoal1 m %p dist %d,%d", m, _xMstPos2, _yMstPos2);
 }
 
 bool Game::mstMonster1TestGoalDirection(MonsterObject1 *m) {
@@ -2264,7 +2268,7 @@ bool Game::mstCollidesByFlags(MonsterObject1 *m, uint32_t flags) {
 
 bool Game::mstMonster1Collide(MonsterObject1 *m, const uint8_t *p) {
 	const uint32_t a = READ_LE_UINT32(p + 0x10);
-	debug(kDebug_MONSTER, "mstMonster1Collide mask 0x%x flagsA6 0x%x", a, m->flagsA6);
+	//debug(kDebug_MONSTER, "mstMonster1Collide mask 0x%x flagsA6 0x%x", a, m->flagsA6);
 	if (a == 0 || !mstCollidesByFlags(m, a)) {
 		return false;
 	}
@@ -2295,7 +2299,7 @@ bool Game::mstMonster1Collide(MonsterObject1 *m, const uint8_t *p) {
 }
 
 int Game::mstUpdateTaskMonsterObject1(Task *t) {
-	debug(kDebug_MONSTER, "mstUpdateTaskMonsterObject1 t %p", t);
+	//debug(kDebug_MONSTER, "mstUpdateTaskMonsterObject1 t %p", t);
 	_mstCurrentTask = t;
 	MonsterObject1 *m = t->monster1;
 	MonsterObject1 *_mstCurrentMonster1 = m;
@@ -2747,7 +2751,7 @@ int Game::mstUpdateTaskMonsterObject1(Task *t) {
 }
 
 int Game::mstUpdateTaskMonsterObject2(Task *t) {
-	debug(kDebug_MONSTER, "mstUpdateTaskMonsterObject2 t %p", t);
+	//debug(kDebug_MONSTER, "mstUpdateTaskMonsterObject2 t %p", t);
 	mstTaskSetMonster2ScreenPosition(t);
 	MonsterObject2 *m = t->monster2;
 	if (_currentLevel == kLvl_fort && m->monster2Info->type == 27) {
@@ -3079,7 +3083,7 @@ int Game::mstTaskSetActionDirection(Task *t, int num, int delay) {
 	t->flags &= ~0x80;
 	int vf = (int8_t)p[4];
 	int ve = (int8_t)p[5];
-	debug(kDebug_MONSTER, "mstTaskSetActionDirection m %p action 0x%x direction 0x%x (%d,%d)", m, o->actionKeyMask, o->directionKeyMask, vf, ve);
+	//debug(kDebug_MONSTER, "mstTaskSetActionDirection m %p action 0x%x direction 0x%x (%d,%d)", m, o->actionKeyMask, o->directionKeyMask, vf, ve);
 	int va = 0;
 	if (vf != 0 || ve != 0) {
 		int dirMask = 0;
@@ -3146,11 +3150,11 @@ int Game::mstTaskSetActionDirection(Task *t, int num, int delay) {
 		assert((offset % kMonsterInfoDataSize) == 0);
 		t->arg2 = offset / kMonsterInfoDataSize;
 		t->run = &Game::mstTask_monsterWait4;
-		debug(kDebug_MONSTER, "mstTaskSetActionDirection arg2 %d", t->arg2);
+		//debug(kDebug_MONSTER, "mstTaskSetActionDirection arg2 %d", t->arg2);
 	} else {
 		t->arg1 = delay;
 		t->run = &Game::mstTask_monsterWait3;
-		debug(kDebug_MONSTER, "mstTaskSetActionDirection arg1 %d", t->arg1);
+		//debug(kDebug_MONSTER, "mstTaskSetActionDirection arg1 %d", t->arg1);
 	}
 	return 1;
 }
@@ -3163,7 +3167,7 @@ Task *Game::findFreeTask() {
 			return t;
 		}
 	}
-	warning("findFreeTask() no free task");
+	//warning("findFreeTask() no free task");
 	return 0;
 }
 
@@ -3183,7 +3187,7 @@ Task *Game::createTask(const uint8_t *codeData) {
 }
 
 void Game::updateTask(Task *t, int num, const uint8_t *codeData) {
-	debug(kDebug_MONSTER, "updateTask t %p offset 0x%04x", t, codeData - _res->_mstCodeData);
+	//debug(kDebug_MONSTER, "updateTask t %p offset 0x%04x", t, codeData - _res->_mstCodeData);
 	Task *current = _tasksList;
 	bool found = false;
 	while (current) {
@@ -3227,7 +3231,7 @@ void Game::updateTask(Task *t, int num, const uint8_t *codeData) {
 }
 
 void Game::resetTask(Task *t, const uint8_t *codeData) {
-	debug(kDebug_MONSTER, "resetTask t %p offset 0x%04x monster1 %p monster2 %p", t, codeData - _res->_mstCodeData, t->monster1, t->monster2);
+	//debug(kDebug_MONSTER, "resetTask t %p offset 0x%04x monster1 %p monster2 %p", t, codeData - _res->_mstCodeData, t->monster1, t->monster2);
 	assert(codeData);
 	t->state |= 2;
 	t->codeData = codeData;
@@ -3319,7 +3323,7 @@ int Game::getTaskVar(Task *t, int index, int type) const {
 		}
 		break;
 	default:
-		warning("getTaskVar unhandled index %d type %d", index, type);
+		//warning("getTaskVar unhandled index %d type %d", index, type);
 		break;
 	}
 	return 0;
@@ -3349,7 +3353,7 @@ void Game::setTaskVar(Task *t, int index, int type, int value) {
 		}
 		break;
 	default:
-		warning("setTaskVar unhandled index %d type %d", index, type);
+		//warning("setTaskVar unhandled index %d type %d", index, type);
 		break;
 	}
 }
@@ -3420,7 +3424,7 @@ int Game::getTaskAndyVar(int index, Task *t) const {
 		}
 		break;
 	default:
-		warning("getTaskAndyVar unhandled index %d", index);
+		//warning("getTaskAndyVar unhandled index %d", index);
 		break;
 	}
 	return 0;
@@ -3591,7 +3595,7 @@ int Game::getTaskOtherVar(int index, Task *t) const {
 	case 35:
 		return _mstAndyCurrentScreenNum;
 	default:
-		warning("getTaskOtherVar unhandled index %d", index);
+		//warning("getTaskOtherVar unhandled index %d", index);
 		break;
 	}
 	return 0;
@@ -3620,7 +3624,7 @@ int Game::getTaskFlag(Task *t, int num, int type) const {
 		}
 		break;
 	default:
-		warning("getTaskFlag unhandled type %d num %d", type, num);
+		//warning("getTaskFlag unhandled type %d num %d", type, num);
 		break;
 	}
 	return 0;
@@ -3636,7 +3640,7 @@ int Game::mstTask_main(Task *t) {
 		assert(p >= _res->_mstCodeData && p < _res->_mstCodeData + _res->_mstHdr.codeSize * 4);
 		assert(((p - t->codeData) & 3) == 0);
 		const uint32_t codeOffset = p - _res->_mstCodeData;
-		debug(kDebug_MONSTER, "executeMstCode task %d %p code %d offset 0x%04x", taskNum, t, p[0], codeOffset);
+		//debug(kDebug_MONSTER, "executeMstCode task %d %p code %d offset 0x%04x", taskNum, t, p[0], codeOffset);
 		assert(p[0] <= 242);
 		switch (p[0]) {
 		case 0: { // 0
@@ -4692,7 +4696,7 @@ int Game::mstTask_main(Task *t) {
 			}
 			break;
 		case 242: // 78 - terminate
-			debug(kDebug_MONSTER, "child %p monster1 %p monster2 %p", t->child, t->monster1, t->monster2);
+			//debug(kDebug_MONSTER, "child %p monster1 %p monster2 %p", t->child, t->monster1, t->monster2);
 			if (t->child) {
 				Task *child = t->child;
 				child->prevPtr = t->prevPtr;
@@ -4788,7 +4792,7 @@ int Game::mstTask_main(Task *t) {
 			}
 			break;
 		default:
-			warning("Unhandled opcode %d in mstTask_main", *p);
+			//warning("Unhandled opcode %d in mstTask_main", *p);
 			break;
 		}
 		p += 4;
@@ -4798,7 +4802,7 @@ int Game::mstTask_main(Task *t) {
 		}
 		++_runTaskOpcodesCount;
 		if (_runTaskOpcodesCount >= 128) { // prevent infinite loop
-			warning("Stopping task %p, counter %d", t, _runTaskOpcodesCount);
+			//warning("Stopping task %p, counter %d", t, _runTaskOpcodesCount);
 			break;
 		}
 	} while (ret == 0);
@@ -4867,7 +4871,7 @@ void Game::mstOp27_removeMstTaskScreenType(Task **tasksList, int screenNum, int 
 }
 
 int Game::mstOp49_setMovingBounds(int a, int b, int c, int d, int screen, Task *t, int num) {
-	debug(kDebug_MONSTER, "mstOp49 %d %d %d %d %d %d", a, b, c, d, screen, num);
+	//debug(kDebug_MONSTER, "mstOp49 %d %d %d %d %d %d", a, b, c, d, screen, num);
 	MonsterObject1 *m = t->monster1;
 	const MstOp197Data *op197Data = &_res->_mstOp197Data[num];
 	MstMovingBounds *m49 = &_res->_mstMovingBoundsData[op197Data->indexUnk49];
@@ -5214,7 +5218,7 @@ l1:
 			if (va == 1) {
 				vb = -vb;
 			}
-			debug(kDebug_MONSTER, "mstHasMonsterInRange (unk0!=0) count:%d %d %d [%d,%d] screen:%d", m12->count, vb, vg, _mstPosXmin, _mstPosXmax, m12u4->screenNum);
+			//debug(kDebug_MONSTER, "mstHasMonsterInRange (unk0!=0) count:%d %d %d [%d,%d] screen:%d", m12->count, vb, vg, _mstPosXmin, _mstPosXmax, m12u4->screenNum);
 			if (vb >= _mstPosXmin && vb <= _mstPosXmax) {
 				uint8_t var4D = _res->_mstMonsterInfos[m12u4->indexMonsterInfo * kMonsterInfoDataSize + 946] & 2;
 				if (var4D == 0 || (vg >= _mstPosYmin && vg <= _mstPosYmax)) {
@@ -5271,7 +5275,7 @@ l1:
 						const uint8_t num = varC->monster1[var34]->monster1Index;
 						m12u4->monster1Index = num;
 						flagTable[num] = true;
-						debug(kDebug_MONSTER, "monster %d in range", num);
+						//debug(kDebug_MONSTER, "monster %d in range", num);
 						++var24;
 						continue;
 					}
@@ -5304,7 +5308,7 @@ l2:
 			if (va == 1) {
 				vb = -vb;
 			}
-			debug(kDebug_MONSTER, "mstHasMonsterInRange (unk0==0) count:%d %d %d [%d,%d] screen:%d", m12->count, vb, vg, _mstPosXmin, _mstPosXmax, m12u4->screenNum);
+			//debug(kDebug_MONSTER, "mstHasMonsterInRange (unk0==0) count:%d %d %d [%d,%d] screen:%d", m12->count, vb, vg, _mstPosXmin, _mstPosXmax, m12u4->screenNum);
 			if (vb >= _mstPosXmin && vb <= _mstPosXmax) {
 				uint8_t var4D = _res->_mstMonsterInfos[m12u4->indexMonsterInfo * kMonsterInfoDataSize + 946] & 2;
 				if (var4D == 0 || (vg >= _mstPosYmin && vg <= _mstPosYmax)) {
@@ -5360,7 +5364,7 @@ l2:
 						const uint8_t num = varC->monster1[var34]->monster1Index;
 						m12u4->monster1Index = num;
 						flagTable[num] = true;
-						debug(kDebug_MONSTER, "monster %d in range", num);
+						//debug(kDebug_MONSTER, "monster %d in range", num);
 						++var24;
 						continue;
 					}
@@ -5402,7 +5406,7 @@ void Game::mstOp53(MstMonsterAction *m) {
 }
 
 void Game::mstOp54() {
-	debug(kDebug_MONSTER, "mstOp54 %d %d %d", _mstActionNum, _m43Num2, _m43Num3);
+	//debug(kDebug_MONSTER, "mstOp54 %d %d %d", _mstActionNum, _m43Num2, _m43Num3);
 	if (_mstActionNum != -1) {
 		return;
 	}
@@ -5499,7 +5503,7 @@ static uint8_t getLvlObjectFlag(uint8_t type, const LvlObject *o, const LvlObjec
 	case 5:
 		return ~(andyObject->flags1 >> 4) & 1;
 	default:
-		warning("getLvlObjectFlag unhandled type %d", type);
+		//warning("getLvlObjectFlag unhandled type %d", type);
 		break;
 	}
 	return 0;
@@ -5508,7 +5512,7 @@ static uint8_t getLvlObjectFlag(uint8_t type, const LvlObject *o, const LvlObjec
 int Game::mstOp56_specialAction(Task *t, int code, int num) {
 	assert(num < _res->_mstHdr.op204DataCount);
 	const MstOp204Data *op204Data = &_res->_mstOp204Data[num];
-	debug(kDebug_MONSTER, "mstOp56_specialAction code %d", code);
+	//debug(kDebug_MONSTER, "mstOp56_specialAction code %d", code);
 	switch (code) {
 	case 0:
 		if (!_specialAnimFlag && setAndySpecialAnimation(0x71) != 0) {
@@ -5874,7 +5878,7 @@ int Game::mstOp56_specialAction(Task *t, int code, int num) {
 		++_level->_checkpoint;
 		break;
 	default:
-		warning("Unhandled opcode %d in mstOp56_specialAction", code);
+		//warning("Unhandled opcode %d in mstOp56_specialAction", code);
 		break;
 	}
 	return 0;
@@ -5936,7 +5940,7 @@ void Game::mstOp57_addWormHoleSprite(int x, int y, int screenNum) {
 			initWormHoleSprite(&_wormHoleSpritesTable[spriteNum], _lar1_spritesData + screenNum * 16);
 			break;
 		default:
-			warning("mstOp57 unhandled level %d", _currentLevel);
+			//warning("mstOp57 unhandled level %d", _currentLevel);
 			return;
 		}
 #endif
@@ -6470,7 +6474,7 @@ int Game::mstTaskInitMonster1Type1(Task *t) {
 }
 
 int Game::mstTaskInitMonster1Type2(Task *t, int flag) {
-	debug(kDebug_MONSTER, "mstTaskInitMonster1Type2 t %p flag %d", t, flag);
+	//debug(kDebug_MONSTER, "mstTaskInitMonster1Type2 t %p flag %d", t, flag);
 	t->flags &= ~0x80;
 	MonsterObject1 *m = t->monster1;
 	m->flagsA5 = (m->flagsA5 & ~1) | 6;
@@ -6637,7 +6641,7 @@ int Game::mstTaskInitMonster1Type2(Task *t, int flag) {
 }
 
 void Game::mstOp67_addMonster(Task *currentTask, int x1, int x2, int y1, int y2, int screen, int type, int o_flags1, int o_flags2, int arg1C, int arg20, int arg24) {
-	debug(kDebug_MONSTER, "mstOp67_addMonster pos %d,%d,%d,%d %d %d 0x%x 0x%x %d %d %d", y1, x1, y2, x2, screen, type, o_flags1, o_flags2, arg1C, arg20, arg24);
+	//debug(kDebug_MONSTER, "mstOp67_addMonster pos %d,%d,%d,%d %d %d 0x%x 0x%x %d %d %d", y1, x1, y2, x2, screen, type, o_flags1, o_flags2, arg1C, arg20, arg24);
 	if (o_flags2 == 0xFFFF) {
 		LvlObject *o = 0;
 		if (currentTask->monster1) {
@@ -6687,7 +6691,7 @@ void Game::mstOp67_addMonster(Task *currentTask, int x1, int x2, int y1, int y2,
 			}
 		}
 		if (!m) {
-			warning("mstOp67 unable to find a free MonsterObject1");
+			//warning("mstOp67 unable to find a free MonsterObject1");
 			return;
 		}
 		memset(m->localVars, 0, sizeof(m->localVars));
@@ -6722,7 +6726,7 @@ void Game::mstOp67_addMonster(Task *currentTask, int x1, int x2, int y1, int y2,
 		if (_currentLevel == kLvl_lar2 && m->monsterInfos[944] == 26) { // Master of Darkness
 			m->o20 = addLvlObject(ptr[945], x1, y1, objScreen, ptr[944], behaviorState->anim + 1, o_flags1, 0x3001, 0, 0);
 			if (!m->o20) {
-				warning("mstOp67 failed to addLvlObject in kLvl_lar2");
+				//warning("mstOp67 failed to addLvlObject in kLvl_lar2");
 				mstMonster1ResetData(m);
 				return;
 			}
@@ -6744,7 +6748,7 @@ void Game::mstOp67_addMonster(Task *currentTask, int x1, int x2, int y1, int y2,
 			}
 		}
 		if (!mo) {
-			warning("mstOp67 no free monster2");
+			//warning("mstOp67 no free monster2");
 			return;
 		}
 		assert(arg24 >= 0 && arg24 < _res->_mstHdr.infoMonster2Count);
@@ -6892,7 +6896,7 @@ void Game::mstOp68_addMonsterGroup(Task *t, const uint8_t *p, int a, int b, int 
 }
 
 int Game::mstTask_wait1(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_wait1 t %p count %d", t, t->arg1);
+	//debug(kDebug_MONSTER, "mstTask_wait1 t %p count %d", t, t->arg1);
 	--t->arg1;
 	if (t->arg1 == 0) {
 		t->run = &Game::mstTask_main;
@@ -6902,7 +6906,7 @@ int Game::mstTask_wait1(Task *t) {
 }
 
 int Game::mstTask_wait2(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_wait2 t %p count %d", t, t->arg1);
+	//debug(kDebug_MONSTER, "mstTask_wait2 t %p count %d", t, t->arg1);
 	--t->arg1;
 	if (t->arg1 == 0) {
 		mstTaskRestart(t);
@@ -6912,7 +6916,7 @@ int Game::mstTask_wait2(Task *t) {
 }
 
 int Game::mstTask_wait3(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_wait3 t %p type %d flag %d", t, t->arg1, t->arg2);
+	//debug(kDebug_MONSTER, "mstTask_wait3 t %p type %d flag %d", t, t->arg1, t->arg2);
 	if (getTaskFlag(t, t->arg2, t->arg1) == 0) {
 		return 1;
 	}
@@ -6921,12 +6925,12 @@ int Game::mstTask_wait3(Task *t) {
 }
 
 int Game::mstTask_idle(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_idle t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_idle t %p", t);
 	return 1;
 }
 
 int Game::mstTask_mstOp231(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_mstOp231 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_mstOp231 t %p", t);
 	const MstOp234Data *m = &_res->_mstOp234Data[t->arg2];
 	const int a = getTaskFlag(t, m->indexVar1, m->maskVars & 15);
 	const int b = getTaskFlag(t, m->indexVar2, m->maskVars >> 4);
@@ -6938,13 +6942,13 @@ int Game::mstTask_mstOp231(Task *t) {
 }
 
 int Game::mstTask_mstOp232(Task *t) {
-	warning("mstTask_mstOp232 unimplemented");
+	//warning("mstTask_mstOp232 unimplemented");
 	t->run = &Game::mstTask_main;
 	return 0;
 }
 
 int Game::mstTask_mstOp233(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_mstOp233 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_mstOp233 t %p", t);
 	const MstOp234Data *m = &_res->_mstOp234Data[t->arg2];
 	const int a = getTaskVar(t, m->indexVar1, m->maskVars & 15);
 	const int b = getTaskVar(t, m->indexVar2, m->maskVars >> 4);
@@ -6956,7 +6960,7 @@ int Game::mstTask_mstOp233(Task *t) {
 }
 
 int Game::mstTask_mstOp234(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_mstOp234 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_mstOp234 t %p", t);
 	const MstOp234Data *m = &_res->_mstOp234Data[t->arg2];
 	const int a = getTaskVar(t, m->indexVar1, m->maskVars & 15);
 	const int b = getTaskVar(t, m->indexVar2, m->maskVars >> 4);
@@ -6968,7 +6972,7 @@ int Game::mstTask_mstOp234(Task *t) {
 }
 
 int Game::mstTask_monsterWait1(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait1 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait1 t %p", t);
 	if (t->arg1 == 0) {
 		mstMonster1UpdateWalkPath(t->monster1);
 		mstTaskRestart(t);
@@ -6979,7 +6983,7 @@ int Game::mstTask_monsterWait1(Task *t) {
 }
 
 int Game::mstTask_monsterWait2(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait2 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait2 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	const uint16_t flags0 = m->o16->flags0;
 	if ((flags0 & 0x100) != 0 && (flags0 & 0xFF) == m->o_flags0) {
@@ -6991,7 +6995,7 @@ int Game::mstTask_monsterWait2(Task *t) {
 }
 
 int Game::mstTask_monsterWait3(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait3 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait3 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	const uint16_t flags0 = m->o16->flags0;
 	if ((flags0 & 0xFF) == m->o_flags0) {
@@ -7006,7 +7010,7 @@ int Game::mstTask_monsterWait3(Task *t) {
 }
 
 int Game::mstTask_monsterWait4(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait4 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait4 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	const uint32_t offset = m->monsterInfos - _res->_mstMonsterInfos;
 	assert(offset % kMonsterInfoDataSize == 0);
@@ -7020,7 +7024,7 @@ int Game::mstTask_monsterWait4(Task *t) {
 }
 
 int Game::mstTask_monsterWait5(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait5 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait5 t %p", t);
 	// horizontal move
 	MonsterObject1 *m = t->monster1;
 	mstMonster1SetGoalHorizontal(m);
@@ -7042,7 +7046,7 @@ set_am:
 }
 
 int Game::mstTask_monsterWait6(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait6 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait6 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	// horizontal move with goal
 	if (m->goalScreenNum == 0xFD && m->xMstPos < _mstAndyLevelPosX) {
@@ -7071,14 +7075,14 @@ set_am:
 }
 
 int Game::mstTask_monsterWait7(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait7 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait7 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	mstMonster1MoveTowardsGoal1(m);
 	return mstTaskUpdatePositionActionDirection(t, m);
 }
 
 int Game::mstTask_monsterWait8(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait8 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait8 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	mstMonster1UpdateGoalPosition(m);
 	mstMonster1MoveTowardsGoal1(m);
@@ -7086,14 +7090,14 @@ int Game::mstTask_monsterWait8(Task *t) {
 }
 
 int Game::mstTask_monsterWait9(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait9 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait9 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	mstMonster1MoveTowardsGoal2(m);
 	return mstTaskUpdatePositionActionDirection(t, m);
 }
 
 int Game::mstTask_monsterWait10(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait10 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait10 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	mstMonster1UpdateGoalPosition(m);
 	mstMonster1MoveTowardsGoal2(m);
@@ -7101,7 +7105,7 @@ int Game::mstTask_monsterWait10(Task *t) {
 }
 
 int Game::mstTask_monsterWait11(Task *t) {
-	debug(kDebug_MONSTER, "mstTask_monsterWait11 t %p", t);
+	//debug(kDebug_MONSTER, "mstTask_monsterWait11 t %p", t);
 	MonsterObject1 *m = t->monster1;
 	const int num = m->o16->flags0 & 0xFF;
 	if (m->monsterInfos[num * kMonsterInfoSize] == 0) {

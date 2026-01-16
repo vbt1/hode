@@ -117,7 +117,7 @@ void init_GFS() { //Initialize GFS system
 #ifdef DEBUG_GFS
 	GFS_SetErrFunc((GfsErrFunc)errGfsFunc, NULL );
 #endif
-	memset4_fast(cache, 0, CACHE_SIZE);
+	memset(cache, 0, CACHE_SIZE);
 }
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
@@ -169,7 +169,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 				GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
 				while(!GFS_NwIsComplete(fp->fid));
 				
-				memset4_fast((Uint8*)cache, 0, CACHE_SIZE);
+				memset((Uint8*)cache, 0, CACHE_SIZE);
 				GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
 			}
 			else

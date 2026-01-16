@@ -39,7 +39,7 @@ System *SystemStub_SDL_create();
 
 
 Uint32 CartRAMsize = 0;
-
+/*
 Sint16 CartRAM_init(Uint8 cs) {
 	Uint32 setReg, refReg, *DRAM0, *DRAM1;
 	Uint8 id;
@@ -79,8 +79,8 @@ Sint16 CartRAM_init(Uint8 cs) {
 
 	return id;
 }
-
-static const char *_title = "Heart of Darkness";
+*/
+//static const char *_title = "Heart of Darkness";
 /*
 static const char *_configIni = "hode.ini";
 
@@ -225,7 +225,7 @@ static void readConfigIni(const char *filename, Game *g) {
 #endif
 //int main(int argc, char *argv[]) {
 int ss_main() {
-	CartRAM_init(0);
+//	CartRAM_init(0);
 
 	char *dataPath = 0;
 	char *savePath = 0;
@@ -236,7 +236,7 @@ int ss_main() {
 	g_debugMask = 0; //kDebug_GAME | kDebug_RESOURCE | kDebug_SOUND | kDebug_MONSTER;
 	int cheats = 0;
 
-	hwram_work = allocate_memory (TYPE_HWRAM, 588000+73000);
+	hwram_work = allocate_memory (TYPE_HWRAM, 588000+93000+40000);
 //emu_printf("-0 %p\n", hwram_work);
 
 #ifdef WII
@@ -334,7 +334,7 @@ int ss_main() {
 	const bool isPsx = false;
 	
 	g_system = SystemStub_SDL_create();
-	g_system->init(_title, Video::W, Video::H);
+	g_system->init("", Video::W, Video::H);
 #if 0
 	setupAudio(g);
 	if (isPsx) {

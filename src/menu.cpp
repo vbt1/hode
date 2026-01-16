@@ -389,7 +389,7 @@ int Menu::getSoundNum(int num, int index) const {
 			data = _soundData + READ_LE_UINT32(data);
 			return (int16_t)READ_LE_UINT16(data + index * 2);
 		} else {
-			warning("Invalid sound index %d count %d", index, count);
+			//warning("Invalid sound index %d count %d", index, count);
 		}
 	}
 	return -1;
@@ -397,7 +397,7 @@ int Menu::getSoundNum(int num, int index) const {
 
 SssObject *Menu::playSound(int num) {
 	num = getSoundNum(num);
-	debug(kDebug_MENU, "playSound %d", num);
+	//debug(kDebug_MENU, "playSound %d", num);
 	if (num != -1) {
 		return _g->playSound(num, 0, 0, 5);
 	}
@@ -669,7 +669,7 @@ void Menu::drawBitmap(const DatBitmapsGroup *bitmapsGroup, const uint8_t *bitmap
 }
 
 void Menu::setCurrentPlayer(int num) {
-	debug(kDebug_MENU, "setCurrentPlayer %d", num);
+	//debug(kDebug_MENU, "setCurrentPlayer %d", num);
 	setLevelCheckpoint(num);
 	_levelNum = _config->players[num].levelNum;
 	if (_levelNum > kLvl_dark) {
@@ -1837,7 +1837,7 @@ void Menu::handleLoadCheckpoint(int num) {
 				_config->players[_config->currentPlayer].levelNum = _levelNum;
 				_config->players[_config->currentPlayer].checkpointNum = _checkpointNum;
 			}
-			debug(kDebug_MENU, "Restart game at level %d checkpoint %d", _levelNum, _checkpointNum);
+			//debug(kDebug_MENU, "Restart game at level %d checkpoint %d", _levelNum, _checkpointNum);
 			return;
 		}
 	} else if (num == 14) {
@@ -2003,7 +2003,7 @@ bool Menu::handleOptions() {
 		const uint8_t *data = &_optionData[num * 8];
 		const int prevOptionNum = _optionNum;
 		_optionNum = data[3];
-		debug(kDebug_MENU, "handleOptions option %d code %d", _optionNum, data[4]);
+		//debug(kDebug_MENU, "handleOptions option %d code %d", _optionNum, data[4]);
 		switch (data[4]) {
 		case 0:
 			if (prevOptionNum != _optionNum) {
@@ -2113,7 +2113,7 @@ bool Menu::handleOptions() {
 			handleLoadCheckpoint(num);
 			break;
 		default:
-			warning("Unhandled option %d %d", _optionNum, data[4]);
+			//warning("Unhandled option %d %d", _optionNum, data[4]);
 			break;
 		}
 		if (_optionNum == kMenu_Quit + 1) {

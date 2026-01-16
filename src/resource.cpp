@@ -91,6 +91,7 @@ static int readBytesAlign(File *f, uint8_t *buf, int len) {
 
 Resource::Resource(FileSystem *fs)
 	: _fs(fs), _isPsx(false), /*_isDemo(false),*/ _version(V1_1) {
+emu_printf("Resource\n");
 
 	memset(_screensGrid, 0, sizeof(_screensGrid));
 	memset(_screensBasePos, 0, sizeof(_screensBasePos));
@@ -114,8 +115,9 @@ Resource::Resource(FileSystem *fs)
 	memset(_resLvlScreenBackgroundDataTable, 0, sizeof(_resLvlScreenBackgroundDataTable));
 	memset(_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_resLvlScreenBackgroundDataPtrTable));
 	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
-
-	memset(_resLvlScreenObjectDataTable, 0, sizeof(_resLvlScreenObjectDataTable));
+//	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(TYPE_MONSTER, 104 * sizeof(LvlObject));//[104];
+	memset(_resLvlScreenObjectDataTable, 0, 104 * sizeof(LvlObject));
+//	memset(_resLvlScreenObjectDataTable, 0, sizeof(_resLvlScreenObjectDataTable));
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
 
 	if (sectorAlignedGameData()) {
@@ -449,7 +451,7 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 	const uint32_t objRef = READ_LE_UINT32(src); src  += 4;
 	if (objRef) {
 		dat->childPtr = &_dummyObject;
-		debug(kDebug_RESOURCE, "loadLvlObj dat %p linkObjRef 0x%x", dat, objRef);
+//		debug(kDebug_RESOURCE, "loadLvlObj dat %p linkObjRef 0x%x", dat, objRef);
 	}
 	dat->width = READ_LE_UINT16(src); src += 2;
 	dat->height = READ_LE_UINT16(src); src += 2;
@@ -607,7 +609,7 @@ emu_printf("!buf\n");
 	if(readSize > size)
 		return;
 //emu_printf("malloc sprite %d\n", size);
-	uint8_t *ptr = allocate_memory (TYPE_SPRITE, size);
+	uint8_t *ptr = allocate_memory (TYPE_MONSTER, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -700,6 +702,7 @@ void Resource::loadLvlData(File *fp) {
 	static const int kSizeOfLvlObject = 96;
 	const int lvlObjectsCount = (_lvlSpritesOffset - 0x288) / kSizeOfLvlObject;
 	//emu_printf("Resource::loadLvlData() lvlObjectsCount %d\n", lvlObjectsCount);
+	
 	for (int i = 0; i < lvlObjectsCount; ++i) {
 		LvlObject *dat = &_resLvlScreenObjectDataTable[i];
 		uint8_t buf[kSizeOfLvlObject];

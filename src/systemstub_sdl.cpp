@@ -376,12 +376,12 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
 	for (uint16 idx = 0; idx < h; ++idx) {
-		DMA_ScuMemCopy(dstPtr, srcPtr, w);
-	//	memcpy(dstPtr, srcPtr, w);
+//		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+		memcpy(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);
 	}
-	SCU_DMAWait();
+//	SCU_DMAWait();
 #else
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();

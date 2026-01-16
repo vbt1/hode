@@ -27,10 +27,10 @@ extern Uint8 *hwram_work_paf;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-//	emu_printf("allocate_memory type %d size %d \n", type, alignedSize);
+	emu_printf("allocate_memory type %d size %d \n", type, alignedSize);
     uint8_t* dst;
 	
-	if( type == TYPE_LDIMG || type == TYPE_FONT)
+	if( type == TYPE_LDIMG || type == TYPE_FONT  || type == TYPE_MONSTER)
 	{
 //emu_printf("TYPE_LDIMG or font %p\n", dst);
 		dst = vdp2ram;

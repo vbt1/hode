@@ -31,16 +31,20 @@ extern Uint32 position_vram;
 // starting level cutscene number
 static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
 
-Game::Game(const char *dataPath, const char *savePath, uint32_t cheats)
-	: _fs(dataPath, savePath) {
+Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(dataPath, savePath)
+	{
+emu_printf("Game\n");
 
 emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 
 	_level = 0;
+	emu_printf("Before Resource\n");
 	_res = new Resource(&_fs);
 	_rnd.setSeed();
+	emu_printf("Before Video\n");
 	_video = new Video();
 #ifdef PAF
+	emu_printf("Before PafPlayer\n");
 	_paf = new PafPlayer(&_fs, _video);
 #endif
 	_cheats = cheats;
@@ -86,8 +90,11 @@ emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 	memset(_animBackgroundDataTable, 0, sizeof(_animBackgroundDataTable));
 	_animBackgroundDataCount = 0;
 
-	memset(_monsterObjects1Table, 0, sizeof(_monsterObjects1Table));
-	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
+	_monsterObjects1Table = (MonsterObject1 *)allocate_memory(TYPE_MONSTER, sizeof(MonsterObject1) * kMaxMonsterObjects1);
+	_monsterObjects2Table = (MonsterObject2 *)allocate_memory(TYPE_MONSTER, sizeof(MonsterObject2) * kMaxMonsterObjects2);
+	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
+	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
+//	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
 
 #ifdef SOUND
 	_sssDisabled = true;
@@ -131,7 +138,7 @@ void Game::addShootLvlObject(LvlObject *vd, LvlObject *ptr) {
 		_shootLvlObjectDataNextPtr = _shootLvlObjectDataNextPtr->nextPtr;
 		memset(vd->dataPtr, 0, sizeof(ShootLvlObjectData));
 	} else {
-		warning("Nothing free in _shootLvlObjectDataNextPtr");
+		//warning("Nothing free in _shootLvlObjectDataNextPtr");
 	}
 	vd->xPos = ptr->xPos;
 	vd->yPos = ptr->yPos;
@@ -344,7 +351,7 @@ SssObject *Game::playSound(int num, LvlObject *ptr, int a, int b) {
 	MixerLock ml(&_mix);
 	SssObject *so = 0;
 	if (num < _res->_sssHdr.infosDataCount) {
-		debug(kDebug_GAME, "playSound num %d/%d a=%d b=%d", num, _res->_sssHdr.infosDataCount, a, b);
+		//debug(kDebug_GAME, "playSound num %d/%d a=%d b=%d", num, _res->_sssHdr.infosDataCount, a, b);
 		_currentSoundLvlObject = ptr;
 		so = playSoundObject(&_res->_sssInfosData[num], a, b);
 		_currentSoundLvlObject = 0;
@@ -1455,13 +1462,13 @@ int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
 			}
 		}
 		if (ptr->screenNum == kNoScreen) {
-			debug(kDebug_GAME, "Changing screen from -1 to %d, pos=%d,%d (%d,%d)", num, xPos, yPos, xPosPrev, yPosPrev);
+			//debug(kDebug_GAME, "Changing screen from -1 to %d, pos=%d,%d (%d,%d)", num, xPos, yPos, xPosPrev, yPosPrev);
 			ptr->screenNum = num;
 			ptr->xPos = xPosPrev;
 			ptr->yPos = yPosPrev;
 			ret = -1;
 		} else if (ptr->screenNum != num) {
-			debug(kDebug_GAME, "Changing screen from %d to %d, pos=%d,%d", num, ptr->screenNum, xPos, yPos);
+			//debug(kDebug_GAME, "Changing screen from %d to %d, pos=%d,%d", num, ptr->screenNum, xPos, yPos);
 			ret = 1;
 			AndyLvlObjectData *data = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 			data->boundingBox.x1 = ptr->xPos;
@@ -1807,7 +1814,7 @@ int Game::clipLvlObjectsBoundingBox(LvlObject *o, LvlObject *ptr, int type) {
 		}
 		break;
 	default:
-		warning("Unhandled clipLvlObjectsBoundingBox type %d (%d)", type, type - 17);
+		//warning("Unhandled clipLvlObjectsBoundingBox type %d (%d)", type, type - 17);
 		break;
 	}
 	return 0;
@@ -1946,7 +1953,7 @@ int nbspr=0;
 	unsigned int s1 = g_system->getTimeStamp();
 #endif
 
-	memcpyl(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
+	memcpy(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
 //	memset4_fast(_video->_frontLayer, 0x00, Video::W * Video::H);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
@@ -2371,7 +2378,7 @@ void Game::updateLvlObjectList(LvlObject **list) {
 	while (ptr) {
 		LvlObject *next = ptr->nextPtr; // get 'next' as callback can modify linked list (eg. remove)
 		if (ptr->callbackFuncPtr == &Game::lvlObjectList3Callback && list != &_lvlObjectsList3) {
-			warning("lvlObject %p has callbackType3 and not in _lvlObjectsList3", ptr);
+			//warning("lvlObject %p has callbackType3 and not in _lvlObjectsList3", ptr);
 			ptr = next;
 			continue;
 		}
@@ -3187,7 +3194,7 @@ void Game::removeLvlObjectFromList(LvlObject **list, LvlObject *ptr) {
 				prev = current;
 				current = current->nextPtr;
 				if (!current) {
-					warning("LvlObject %p not found for removal", ptr);
+					//warning("LvlObject %p not found for removal", ptr);
 					return;
 				}
 			} while (current != ptr);
@@ -3286,7 +3293,7 @@ void Game::lvlObjectTypeInit(LvlObject *o) {
 		lvlObjectType1Init(o);
 		break;
 	default:
-		error("lvlObjectTypeInit unhandled case %d", o->spriteNum);
+		//error("lvlObjectTypeInit unhandled case %d", o->spriteNum);
 		break;
 	}
 }
@@ -3571,7 +3578,7 @@ void Game::setupSpecialPowers(LvlObject *ptr) {
 				}
 			} else {
 				if (!vg->dataPtr) {
-					warning("lvlObject %p with NULL dataPtr", vg);
+					//warning("lvlObject %p with NULL dataPtr", vg);
 					break;
 				}
 				ShootLvlObjectData *va = (ShootLvlObjectData *)getLvlObjectDataPtr(vg, kObjectDataTypeShoot);
@@ -3837,7 +3844,7 @@ int Game::lvlObjectType8Callback(LvlObject *ptr) {
 		ptr->actionKeyMask = _andyObject->actionKeyMask;
 		ptr->directionKeyMask = _andyObject->directionKeyMask;
 		if (_andyObject->spriteNum == 2 && _lvlObjectsList0) {
-			warning("lvlObjectType8CallbackHelper unimplemented");
+			//warning("lvlObjectType8CallbackHelper unimplemented");
 			// lvlObjectType8CallbackHelper(ptr);
 		}
 		updateAndyObject(ptr);
@@ -4313,7 +4320,7 @@ void Game::lvlObjectTypeCallback(LvlObject *o) {
 		o->callbackFuncPtr = &Game::lvlObjectType8Callback;
 		break;
 	default:
-		warning("lvlObjectTypeCallback unhandled case %d", o->spriteNum);
+		//warning("lvlObjectTypeCallback unhandled case %d", o->spriteNum);
 		break;
 	}
 }
@@ -4415,6 +4422,7 @@ LvlObject *Game::declareLvlObject(uint8_t type, uint8_t num) {
 }
 
 void Game::clearDeclaredLvlObjectsList() {
+//emu_printf("clearDeclaredLvlObjectsList\n");
 	memset(_declaredLvlObjectsList, 0, sizeof(_declaredLvlObjectsList));
 	for (int i = 0; i < kMaxLvlObjects - 1; ++i) {
 		_declaredLvlObjectsList[i].nextPtr = &_declaredLvlObjectsList[i + 1];
@@ -4459,6 +4467,8 @@ void Game::initLvlObjects() {
 	}
 #if 1
 	_res->loadLvlSprite(_currentLevel);
+	
+//	_declaredLvlObjectsList = (LvlObject *)allocate_memory(TYPE_MONSTER, kMaxLvlObjects*sizeof(LvlObject));//[kMaxLvlObjects];
 
 	for (int i = _res->_lvlHdr.staticLvlObjectsCount; i < _res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount; ++i) {
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];

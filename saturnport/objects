@@ -19,7 +19,7 @@ SRCS = 	$(SRCDIR)/util.cpp \
 		$(SRCDIR)/cinit.cpp \
 		$(SRCDIR)/c++-support.cpp
 
-SYSOBJS = $(SRCDIR)/workarea.o $(SRCDIR)/low.o
+SYSOBJS = $(SRCDIR)/workarea.o 
 OBJS = $(SRCS:.cpp=.o)
 LIBS = C:/SaturnOrbit/SGL_302j/LIB_ELF/libsgl_real_elf.a $(SGLLDR)/sega_gfs.a $(SGLLDR)/sega_dma.a $(SGLLDR)/cdcrep.a $(SGLLDR)/sega_per.a \
 $(SGLLDR)/sega_sys.a $(SGLLDR)/sega_int.a -lc -lgcc

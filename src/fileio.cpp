@@ -2,10 +2,10 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
- #pragma GCC optimize ("O2")
+ #pragma GCC optimize ("Os")
  extern "C" {
 #include 	<sega_gfs.h>
-#include 	<gfs_def.h>
+//#include 	<gfs_def.h>
 #include 	<sl_def.h>
 Sint32		iostat, iondata;
 Sint32		gfsstat;
@@ -31,6 +31,7 @@ static const bool kSeekAbsolutePosition = false;
 
 File::File()
 	: _fp(0) {
+		emu_printf("File\n");
 }
 
 File::~File() {
@@ -136,11 +137,11 @@ int File::asynchWait(uint8_t *ptr, Sint32 len) {
 #else
     Sint32 tot_bytes = len + ioskip_bytes;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
-//emu_printf("1 %d %p %d\n", tot_sectors, ptr, tot_bytes);    
+emu_printf("1 %d %p %d\n", tot_sectors, ptr, tot_bytes);    
     // Just read the full requested amount - no limiting here
     iondata = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
 //emu_printf("2\n");    
-    GFS_NwStop(_fp->fid);
+//    GFS_NwStop(_fp->fid);
 //emu_printf("3\n");    
 
 #endif

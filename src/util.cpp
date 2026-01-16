@@ -13,7 +13,7 @@
 //extern void System_fatalError(const char *s);
 
 int g_debugMask;
-
+/*
 void debug(int mask, const char *msg, ...) {
 	char buf[1024];
 	if (mask & g_debugMask) {
@@ -51,3 +51,4 @@ void warning(const char *msg, ...) {
 #endif
 //	System_printLog(stderr, buf);
 }
+*/

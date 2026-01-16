@@ -180,6 +180,7 @@ struct Game {
 	int _mstOp56Counter;
 	bool _mstDisabled;
 	LvlObject _declaredLvlObjectsList[kMaxLvlObjects];
+//	LvlObject *_declaredLvlObjectsList;//[kMaxLvlObjects];
 	LvlObject *_declaredLvlObjectsNextPtr; // pointer to the next free entry
 	int _declaredLvlObjectsListCount;
 	AndyLvlObjectData _andyObjectScreenData;
@@ -188,7 +189,7 @@ struct Game {
 	uint8_t _andyActionKeysFlags;
 	int _executeMstLogicCounter;
 	int _executeMstLogicPrevCounter;
-	Task _tasksTable[kMaxTasks];
+	Task *_tasksTable;//[kMaxTasks];
 	Task *_tasksList;
 	Task *_monsterObjects1TasksList;
 	Task *_monsterObjects2TasksList;
@@ -211,8 +212,10 @@ struct Game {
 	int _mstPosXmin, _mstPosXmax;
 	int _mstPosYmin, _mstPosYmax;
 	int _mstTemp_x1, _mstTemp_x2, _mstTemp_y1, _mstTemp_y2;
-	MonsterObject1 _monsterObjects1Table[kMaxMonsterObjects1];
-	MonsterObject2 _monsterObjects2Table[kMaxMonsterObjects2];
+//	MonsterObject1 _monsterObjects1Table[kMaxMonsterObjects1];
+	MonsterObject1 *_monsterObjects1Table;
+//	MonsterObject2 _monsterObjects2Table[kMaxMonsterObjects2];
+	MonsterObject2 *_monsterObjects2Table;
 	int _mstTickDelay;
 	uint8_t _mstCurrentActionKeyMask;
 	int _mstCurrentPosX, _mstCurrentPosY;
