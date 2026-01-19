@@ -190,6 +190,7 @@ struct Game {
 	int _executeMstLogicCounter;
 	int _executeMstLogicPrevCounter;
 	Task *_tasksTable;//[kMaxTasks];
+//	Task _tasksTable[kMaxTasks];
 	Task *_tasksList;
 	Task *_monsterObjects1TasksList;
 	Task *_monsterObjects2TasksList;

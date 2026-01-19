@@ -30,7 +30,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	emu_printf("allocate_memory type %d size %d \n", type, alignedSize);
     uint8_t* dst;
 	
-	if( type == TYPE_LDIMG || type == TYPE_FONT  || type == TYPE_MONSTER)
+	if( type == TYPE_LDIMG || type == TYPE_FONT)
 	{
 //emu_printf("TYPE_LDIMG or font %p\n", dst);
 		dst = vdp2ram;
@@ -41,7 +41,6 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	if(type == TYPE_PAF || type == TYPE_PAFBUF)
 	{
 emu_printf("0hwram used %d hwrampaf %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000,  ((int)hwram_work_paf)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
-
 		dst = hwram_work_paf;
 		hwram_work_paf += SAT_ALIGN(alignedSize);
 		return dst;
@@ -50,6 +49,7 @@ emu_printf("0hwram used %d hwrampaf %d lwram used %d cs1 used %d\n", ((int)hwram
 // vbt pas besoin d'allouer de la ram
 	if( type == TYPE_MENU)
 	{
+emu_printf("1hwram used %d hwrampaf %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000,  ((int)hwram_work_paf)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 		dst = current_lwram;
 		return dst;
 	}
@@ -71,7 +71,6 @@ emu_printf("0hwram used %d hwrampaf %d lwram used %d cs1 used %d\n", ((int)hwram
 		hwram = dst+alignedSize;
 		
 //emu_printf("1hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
-
 		return dst;
 	}
 	
@@ -81,8 +80,7 @@ emu_printf("2hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 
 		dst = current_lwram;
 		current_lwram += SAT_ALIGN(alignedSize);
-
-			return dst;
+		return dst;
 //		dst = (Uint8 *)malloc(alignedSize);
 //		hwram = dst+alignedSize;
 //		dst = hwram+1024;
@@ -146,10 +144,10 @@ emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x
 	}
 	
 
-	if(type == TYPE_SPRITE || type == TYPE_MONSTER || type == TYPE_MSTAREA || type == TYPE_MAP 
+	if(type == TYPE_SPRITE || type == TYPE_MONSTER1 || type == TYPE_MONSTER2 || type == TYPE_MSTAREA || type == TYPE_MAP 
 	|| type == TYPE_MOVBOUND || type == TYPE_SHOOT || type == TYPE_MSTCODE 
-	|| type == type == TYPE_GFSFILE || type == TYPE_SCRMASK || type == TYPE_SCRMASKBUF
-	|| type == TYPE_BGLVLOBJ)
+	|| type == TYPE_GFSFILE || type == TYPE_SCRMASK || type == TYPE_SCRMASKBUF
+	|| type == TYPE_BGLVLOBJ || type == TYPE_TASK)
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{

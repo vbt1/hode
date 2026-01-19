@@ -90,8 +90,8 @@ emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 	memset(_animBackgroundDataTable, 0, sizeof(_animBackgroundDataTable));
 	_animBackgroundDataCount = 0;
 
-	_monsterObjects1Table = (MonsterObject1 *)allocate_memory(TYPE_MONSTER, sizeof(MonsterObject1) * kMaxMonsterObjects1);
-	_monsterObjects2Table = (MonsterObject2 *)allocate_memory(TYPE_MONSTER, sizeof(MonsterObject2) * kMaxMonsterObjects2);
+	_monsterObjects1Table = (MonsterObject1 *)allocate_memory(TYPE_MONSTER1, sizeof(MonsterObject1) * kMaxMonsterObjects1);
+	_monsterObjects2Table = (MonsterObject2 *)allocate_memory(TYPE_MONSTER2, sizeof(MonsterObject2) * kMaxMonsterObjects2);
 	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
 	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
 //	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));

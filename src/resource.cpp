@@ -609,7 +609,7 @@ emu_printf("!buf\n");
 	if(readSize > size)
 		return;
 //emu_printf("malloc sprite %d\n", size);
-	uint8_t *ptr = allocate_memory (TYPE_MONSTER, size);
+	uint8_t *ptr = allocate_memory (TYPE_MONSTER1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -1567,13 +1567,13 @@ void Resource::loadMstData(File *fp) {
 		fp->skipUint32();
 		_mstWalkCodeData[i].codeDataCount = fp->readUint32();
 //		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
-		_mstWalkCodeData[i].codeData = (uint32_t *)allocate_memory (TYPE_MONSTER, _mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+		_mstWalkCodeData[i].codeData = (uint32_t *)allocate_memory(TYPE_MONSTER1, _mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
 		fp->skipUint32();
 		_mstWalkCodeData[i].indexDataCount = fp->readUint32();
 ////emu_printf("_mstWalkCodeData[%d].indexDataCount %d\n",i,_mstWalkCodeData[i].indexDataCount);
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
 //			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
-			_mstWalkCodeData[i].indexData = (uint8_t *)allocate_memory (TYPE_MONSTER, _mstWalkCodeData[i].indexDataCount);
+			_mstWalkCodeData[i].indexData = (uint8_t *)allocate_memory(TYPE_MONSTER1, _mstWalkCodeData[i].indexDataCount);
 		} else {
 			_mstWalkCodeData[i].indexData = 0;
 		}
@@ -1669,12 +1669,12 @@ void Resource::loadMstData(File *fp) {
 		fp->skipUint32();
 		_mstBehaviorIndexData[i].count1 = fp->readUint32();
 //		_mstBehaviorIndexData[i].behavior = (uint32_t *)malloc(_mstBehaviorIndexData[i].count1 * sizeof(uint32_t));
-		_mstBehaviorIndexData[i].behavior = (uint32_t *)allocate_memory (TYPE_MONSTER, _mstBehaviorIndexData[i].count1 * sizeof(uint32_t));
+		_mstBehaviorIndexData[i].behavior = (uint32_t *)allocate_memory (TYPE_MONSTER1, _mstBehaviorIndexData[i].count1 * sizeof(uint32_t));
 		fp->skipUint32();
 		_mstBehaviorIndexData[i].dataCount = fp->readUint32();
 		if (_mstBehaviorIndexData[i].dataCount != 0) {
 //			_mstBehaviorIndexData[i].data = (uint8_t *)malloc(_mstBehaviorIndexData[i].dataCount);
-			_mstBehaviorIndexData[i].data = (uint8_t *)allocate_memory (TYPE_MONSTER, _mstBehaviorIndexData[i].dataCount);
+			_mstBehaviorIndexData[i].data = (uint8_t *)allocate_memory (TYPE_MONSTER1, _mstBehaviorIndexData[i].dataCount);
 		} else {
 			_mstBehaviorIndexData[i].data = 0;
 		}
@@ -1695,12 +1695,12 @@ void Resource::loadMstData(File *fp) {
 		fp->skipUint32();
 		_mstMonsterActionIndexData[i].count1 = fp->readUint32();
 //		_mstMonsterActionIndexData[i].indexUnk48 = (uint32_t *)malloc(_mstMonsterActionIndexData[i].count1 * sizeof(uint32_t));
-		_mstMonsterActionIndexData[i].indexUnk48 = (uint32_t *)allocate_memory (TYPE_MONSTER, _mstMonsterActionIndexData[i].count1 * sizeof(uint32_t));
+		_mstMonsterActionIndexData[i].indexUnk48 = (uint32_t *)allocate_memory (TYPE_MONSTER1, _mstMonsterActionIndexData[i].count1 * sizeof(uint32_t));
 		fp->skipUint32();
 		_mstMonsterActionIndexData[i].dataCount = fp->readUint32();
 		if (_mstMonsterActionIndexData[i].dataCount != 0) {
 //			_mstMonsterActionIndexData[i].data = (uint8_t *)malloc(_mstMonsterActionIndexData[i].dataCount);
-			_mstMonsterActionIndexData[i].data = (uint8_t *)allocate_memory (TYPE_MONSTER, _mstMonsterActionIndexData[i].dataCount);
+			_mstMonsterActionIndexData[i].data = (uint8_t *)allocate_memory (TYPE_MONSTER1, _mstMonsterActionIndexData[i].dataCount);
 		} else {
 			_mstMonsterActionIndexData[i].data = 0;
 		}
@@ -1729,7 +1729,7 @@ void Resource::loadMstData(File *fp) {
 	for (int i = 0; i < _mstHdr.walkPathDataCount; ++i) {
 		const int count = _mstWalkPathData[i].count;
 //		_mstWalkPathData[i].data = (MstWalkNode *)malloc(sizeof(MstWalkNode) * count);
-		_mstWalkPathData[i].data = (MstWalkNode *)allocate_memory (TYPE_MONSTER, sizeof(MstWalkNode) * count);
+		_mstWalkPathData[i].data = (MstWalkNode *)allocate_memory (TYPE_MONSTER1, sizeof(MstWalkNode) * count);
 
 		for (int j = 0; j < count; ++j) {
 			uint8_t data[104];
@@ -1757,16 +1757,16 @@ void Resource::loadMstData(File *fp) {
 			_mstWalkPathData[i].data[j].nextWalkNode = READ_LE_UINT32(data + 92); // sizeof == 104
 			if (count != 0) {
 //				_mstWalkPathData[i].data[j].unk60[0] = (uint8_t *)malloc(count);
-				_mstWalkPathData[i].data[j].unk60[0] = (uint8_t *)allocate_memory (TYPE_MONSTER, count);
+				_mstWalkPathData[i].data[j].unk60[0] = (uint8_t *)allocate_memory (TYPE_MONSTER1, count);
 //				_mstWalkPathData[i].data[j].unk60[1] = (uint8_t *)malloc(count);
-				_mstWalkPathData[i].data[j].unk60[1] = (uint8_t *)allocate_memory (TYPE_MONSTER, count);
+				_mstWalkPathData[i].data[j].unk60[1] = (uint8_t *)allocate_memory (TYPE_MONSTER1, count);
 			} else {
 				_mstWalkPathData[i].data[j].unk60[0] = 0;
 				_mstWalkPathData[i].data[j].unk60[1] = 0;
 			}
 		}
 //		_mstWalkPathData[i].walkNodeData = (uint32_t *)malloc(_mstHdr.screensCount * sizeof(uint32_t));
-		_mstWalkPathData[i].walkNodeData = (uint32_t *)allocate_memory (TYPE_MONSTER, _mstHdr.screensCount * sizeof(uint32_t));
+		_mstWalkPathData[i].walkNodeData = (uint32_t *)allocate_memory (TYPE_MONSTER1, _mstHdr.screensCount * sizeof(uint32_t));
 		for (int j = 0; j < _mstHdr.screensCount; ++j) {
 			_mstWalkPathData[i].walkNodeData[j] = fp->readUint32();
 			bytesRead += 4;
@@ -1797,7 +1797,7 @@ void Resource::loadMstData(File *fp) {
 ////emu_printf("x9\n");
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 //		_mstBehaviorData[i].data  = (MstBehaviorState *)malloc(_mstBehaviorData[i].count * sizeof(MstBehaviorState));
-		_mstBehaviorData[i].data = (MstBehaviorState *)allocate_memory (TYPE_MONSTER, _mstBehaviorData[i].count * sizeof(MstBehaviorState));
+		_mstBehaviorData[i].data = (MstBehaviorState *)allocate_memory (TYPE_MONSTER1, _mstBehaviorData[i].count * sizeof(MstBehaviorState));
 		for (uint32_t j = 0; j < _mstBehaviorData[i].count; ++j) {
 			uint8_t data[44];
 			fp->read(data, sizeof(data));
@@ -1826,7 +1826,7 @@ void Resource::loadMstData(File *fp) {
 ////emu_printf("x11\n");
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 //		_mstAttackBoxData[i].data = (uint8_t *)malloc(_mstAttackBoxData[i].count * 20);
-		_mstAttackBoxData[i].data = (uint8_t *)allocate_memory (TYPE_MONSTER, _mstAttackBoxData[i].count * 20);
+		_mstAttackBoxData[i].data = (uint8_t *)allocate_memory (TYPE_MONSTER1, _mstAttackBoxData[i].count * 20);
 		fp->read(_mstAttackBoxData[i].data, _mstAttackBoxData[i].count * 20);
 		bytesRead += _mstAttackBoxData[i].count * 20;
 	}
@@ -1855,13 +1855,13 @@ void Resource::loadMstData(File *fp) {
 			const int count = m->count[j];
 			if (count != 0) {
 //				m->data1[j] = (uint32_t *)malloc(count * sizeof(uint32_t));
-				m->data1[j] = (uint32_t *)allocate_memory (TYPE_MONSTER, count * sizeof(uint32_t));
+				m->data1[j] = (uint32_t *)allocate_memory (TYPE_MONSTER1, count * sizeof(uint32_t));
 				for (int k = 0; k < count; ++k) {
 					m->data1[j][k] = fp->readUint32();
 				}
 				bytesRead += count * 4;
 //				m->data2[j] = (uint32_t *)malloc(count * sizeof(uint32_t));
-				m->data2[j] = (uint32_t *)allocate_memory (TYPE_MONSTER, count * sizeof(uint32_t));
+				m->data2[j] = (uint32_t *)allocate_memory (TYPE_MONSTER1, count * sizeof(uint32_t));
 				for (int k = 0; k < count; ++k) {
 					m->data2[j][k] = fp->readUint32();
 				}
@@ -1872,7 +1872,7 @@ void Resource::loadMstData(File *fp) {
 			}
 		}
 //		MstMonsterArea *m12 = (MstMonsterArea *)malloc(m->areaCount * sizeof(MstMonsterArea));
-		MstMonsterArea *m12 = (MstMonsterArea *)allocate_memory (TYPE_MONSTER, m->areaCount * sizeof(MstMonsterArea));
+		MstMonsterArea *m12 = (MstMonsterArea *)allocate_memory (TYPE_MONSTER1, m->areaCount * sizeof(MstMonsterArea));
 ////emu_printf("x14 %p count %d\n", cs1ram, m->areaCount);
 		for (int j = 0; j < m->areaCount; ++j) {
 			m12[j].unk0  = fp->readByte();
@@ -1921,12 +1921,13 @@ void Resource::loadMstData(File *fp) {
 ////emu_printf("x16\n");
 	const int mapDataSize = _mstHdr.infoMonster1Count * kMonsterInfoDataSize;
 	
-////emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
+emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 //	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
 	_mstMonsterInfos = (uint8_t *)allocate_memory (TYPE_MAP, mapDataSize);
+emu_printf("x16a\n");
 	fp->read(_mstMonsterInfos, mapDataSize);
 	bytesRead += mapDataSize;
-
+emu_printf("x16c\n");
 	_mstMovingBoundsData.allocate(_mstHdr.movingBoundsDataCount);
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 		_mstMovingBoundsData[i].indexMonsterInfo = fp->readUint32();
@@ -1941,7 +1942,7 @@ void Resource::loadMstData(File *fp) {
 		_mstMovingBoundsData[i].unk17   = fp->readByte();
 		bytesRead += 24;
 	}
-////emu_printf("x17\n");
+emu_printf("x17\n");
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 //		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)allocate_memory (TYPE_MOVBOUND, _mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
