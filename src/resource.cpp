@@ -1921,13 +1921,12 @@ void Resource::loadMstData(File *fp) {
 ////emu_printf("x16\n");
 	const int mapDataSize = _mstHdr.infoMonster1Count * kMonsterInfoDataSize;
 	
-emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
+////emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 //	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
 	_mstMonsterInfos = (uint8_t *)allocate_memory (TYPE_MAP, mapDataSize);
-emu_printf("x16a\n");
 	fp->read(_mstMonsterInfos, mapDataSize);
 	bytesRead += mapDataSize;
-emu_printf("x16c\n");
+
 	_mstMovingBoundsData.allocate(_mstHdr.movingBoundsDataCount);
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 		_mstMovingBoundsData[i].indexMonsterInfo = fp->readUint32();
@@ -1942,7 +1941,7 @@ emu_printf("x16c\n");
 		_mstMovingBoundsData[i].unk17   = fp->readByte();
 		bytesRead += 24;
 	}
-emu_printf("x17\n");
+////emu_printf("x17\n");
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 //		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)allocate_memory (TYPE_MOVBOUND, _mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));

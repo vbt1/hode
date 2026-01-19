@@ -30,7 +30,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	emu_printf("allocate_memory type %d size %d \n", type, alignedSize);
     uint8_t* dst;
 	
-	if( type == TYPE_LDIMG || type == TYPE_FONT)
+	if( type == TYPE_LDIMG || type == TYPE_FONT  || type == TYPE_MONSTER1 || type == TYPE_MONSTER2)
 	{
 //emu_printf("TYPE_LDIMG or font %p\n", dst);
 		dst = vdp2ram;
@@ -41,6 +41,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	if(type == TYPE_PAF || type == TYPE_PAFBUF)
 	{
 emu_printf("0hwram used %d hwrampaf %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000,  ((int)hwram_work_paf)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+
 		dst = hwram_work_paf;
 		hwram_work_paf += SAT_ALIGN(alignedSize);
 		return dst;
