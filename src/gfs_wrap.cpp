@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O0")
+//#pragma GCC optimize ("O0")
 #include "util.h"
 extern "C" {
 
@@ -143,6 +143,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 */
 	GfsHn fid = NULL;
 	// OPEN FILE
+emu_printf("satpath %s fileid %d\n",satpath, GFS_NameToId((Sint8*)satpath));
 	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
 	
 	if(fid != NULL) { // Opened!
@@ -268,7 +269,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	return 0;
 	}
 	tot_bytes = (nmemb * size) + skip_bytes;
-emu_printf("start_sector %d stream->f_seek_pos %d\n",start_sector,stream->f_seek_pos);
+//emu_printf("start_sector %d stream->f_seek_pos %d\n",start_sector,stream->f_seek_pos);
 //	tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
 	tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
 	if(tot_sectors < 0) return 0;
@@ -288,14 +289,14 @@ partial_cache:
 		if(((stream->f_seek_pos + dataToRead) < end_offset) && (stream->f_seek_pos >= cache_offset)) {
 			Uint32 offset_in_cache = stream->f_seek_pos - cache_offset;
 
-emu_printf("offset_in_cache %d \n", offset_in_cache);
+//emu_printf("offset_in_cache %d \n", offset_in_cache);
 			memcpy(ptr, cache + offset_in_cache, dataToRead);
 			stream->f_seek_pos += dataToRead;
 			return dataToRead;
 		} 
 	
 		else if ((((stream->f_seek_pos + dataToRead) >= end_offset) || (stream->f_seek_pos < cache_offset))) {
-emu_printf("cache 0x%.8X - 0x%.8X req 0x%.8X\n", cache_offset, end_offset, stream->f_seek_pos);
+//emu_printf("cache 0x%.8X - 0x%.8X req 0x%.8X\n", cache_offset, end_offset, stream->f_seek_pos);
 			start_sector = stream->f_seek_pos / SECTOR_SIZE;
 			skip_bytes = stream->f_seek_pos & (SECTOR_SIZE - 1); // Use bitwise AND instead of modulo
 

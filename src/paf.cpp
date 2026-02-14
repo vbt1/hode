@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O0")
+//#pragma GCC optimize ("O0")
 //#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
@@ -1018,7 +1018,7 @@ if(result>0)
 		}
 		_video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-//	//emu_printf("fps %d\n", frame_z);
+//emu_printf("fps %d\n", frame_z);
 #endif
 
 unsigned int e3 = g_system->getTimeStamp();
@@ -1223,7 +1223,7 @@ void PafPlayer::mainLoop() {
         }
         _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-//        //emu_printf("fps %d\n", frame_z);
+//emu_printf("fps %d\n", frame_z);
 #endif
 
         // Quit check

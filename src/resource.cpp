@@ -1,6 +1,6 @@
 #pragma GCC optimize ("Os")
-//#define LOAD_SPRITE 1
-//#define LOAD_MONSTER 1
+#define LOAD_SPRITE 1
+#define LOAD_MONSTER 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -65,10 +65,10 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 }
 
 static void closeDat(FileSystem *fs, File *f) {
-//emu_printf("closeDat ");
+emu_printf("closeDat ");
 Sint32 fileid, fsize;
 GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
-//emu_printf("------ filename %s\n", GFS_IdToName(fileid));
+emu_printf("------ filename %s\n", GFS_IdToName(fileid));
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -141,7 +141,7 @@ emu_printf("Resource\n");
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[16];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
-//emu_printf("filename %s here\n", filename);
+emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
 //emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
@@ -394,7 +394,7 @@ void Resource::loadLevelData(int levelNum) {
 
 	closeDat(_fs, _lvlFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
-//emu_printf("filename %s\n",filename);
+emu_printf("vbt filename %s\n",filename);
 
 	if (openDat(_fs, filename, _lvlFile)) {
 		loadLvlData(_lvlFile);
@@ -659,7 +659,7 @@ uint8_t *cs1ram_res = NULL;
 uint8_t *lwram_res  = NULL;
 
 void Resource::loadLvlData(File *fp) {
-//emu_printf("loadLvlData\n");
+emu_printf("loadLvlData %p\n", _lvlFile);
 //	assert(fp == _lvlFile);
 	if(lwram_res==NULL)
 	{
@@ -669,7 +669,7 @@ void Resource::loadLvlData(File *fp) {
 	unloadLvlData();
 	const uint32_t tag = _lvlFile->readUint32();
 	if (tag != _lvlTag) {
-		//emu_printf("Unhandled .lvl tag 0x%x\n", tag);
+		emu_printf("Unhandled .lvl tag 0x%x\n", tag);
 		closeDat(_fs, _lvlFile);
 		return;
 	}
@@ -777,9 +777,9 @@ void Resource::loadLvlMst(int levelNum)
 }
 #endif
 void Resource::unloadLvlData() {
-//emu_printf("unloadLvlData\n");
+emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
-//emu_printf("unloadLvlData reset cs1ram\n");
+emu_printf("unloadLvlData reset cs1ram\n");
 	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
 
@@ -840,7 +840,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		dat->backgroundMaskTable[i] = (offs != 0) ? ptr + offs : 0;
-		//emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
+		emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
 		
 	}
 	for (int i = 0; i < 4; ++i) {
@@ -1921,13 +1921,12 @@ void Resource::loadMstData(File *fp) {
 ////emu_printf("x16\n");
 	const int mapDataSize = _mstHdr.infoMonster1Count * kMonsterInfoDataSize;
 	
-emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
+////emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 //	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
 	_mstMonsterInfos = (uint8_t *)allocate_memory (TYPE_MAP, mapDataSize);
-emu_printf("x16a\n");
 	fp->read(_mstMonsterInfos, mapDataSize);
 	bytesRead += mapDataSize;
-emu_printf("x16c\n");
+
 	_mstMovingBoundsData.allocate(_mstHdr.movingBoundsDataCount);
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 		_mstMovingBoundsData[i].indexMonsterInfo = fp->readUint32();
@@ -1942,7 +1941,7 @@ emu_printf("x16c\n");
 		_mstMovingBoundsData[i].unk17   = fp->readByte();
 		bytesRead += 24;
 	}
-emu_printf("x17\n");
+////emu_printf("x17\n");
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 //		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)allocate_memory (TYPE_MOVBOUND, _mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));

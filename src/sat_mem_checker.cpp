@@ -78,8 +78,11 @@ emu_printf("1hwram used %d hwrampaf %d lwram used %d cs1 used %d\n", ((int)hwram
 	{
 emu_printf("2hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 
-		dst = current_lwram;
-		current_lwram += SAT_ALIGN(alignedSize);
+//		dst = current_lwram;
+//		current_lwram += SAT_ALIGN(alignedSize);
+			dst = cs1ram;
+			cs1ram += SAT_ALIGN(alignedSize);
+
 		return dst;
 //		dst = (Uint8 *)malloc(alignedSize);
 //		hwram = dst+alignedSize;
@@ -162,7 +165,7 @@ emu_printf("4hwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x
 		{
 //emu_printf("'bhwram used %d %p lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 
-//emu_printf("no more ram %d over %d\n", alignedSize, ((int)current_lwram)+SAT_ALIGN(alignedSize));
+emu_printf("no more ram %d over %d\n", alignedSize, ((int)current_lwram)+SAT_ALIGN(alignedSize));
 			dst = cs2ram;
 			cs2ram += SAT_ALIGN(alignedSize);
 			return dst;
