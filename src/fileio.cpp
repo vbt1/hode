@@ -2,7 +2,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-// #pragma GCC optimize ("O0")
+#pragma GCC optimize ("Os")
  extern "C" {
 #include 	<sega_gfs.h>
 //#include 	<gfs_def.h>

@@ -610,8 +610,8 @@ struct Resource {
 	LvlBackgroundData _resLvlScreenBackgroundDataTable[kMaxScreens];
 	uint8_t *_resLvlScreenBackgroundDataPtrTable[kMaxScreens];
 
-	LvlObject _resLvlScreenObjectDataTable[104];
-//	LvlObject *_resLvlScreenObjectDataTable;//[104];
+//	LvlObject _resLvlScreenObjectDataTable[104];
+	LvlObject *_resLvlScreenObjectDataTable;//[104];
 	LvlObject _dummyObject; // (LvlObject *)0xFFFFFFFF
 #ifdef SOUND
 	ResStruct<SssInfo> _sssInfosData;

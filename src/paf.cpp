@@ -1,4 +1,4 @@
-//#pragma GCC optimize ("O0")
+#pragma GCC optimize ("Os")
 //#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite

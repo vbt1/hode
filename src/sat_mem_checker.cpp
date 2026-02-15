@@ -94,8 +94,9 @@ emu_printf("2hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x600
 emu_printf("3hwram used %d lwram used %d cs1 used %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 //emu_printf("hwram ptr %p\n", hwram_work);
 //		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
-		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
+//		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 //		cs1ram += SAT_ALIGN(alignedSize);
+		dst = (uint8_t *)0x22600000-SAT_ALIGN(alignedSize);
 //emu_printf("cs1ram %d type %d\n", alignedSize, type);
 /*
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)

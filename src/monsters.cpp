@@ -809,11 +809,14 @@ void Game::resetMstCode() {
 	for (int i = 0; i < kMaxMonsterObjects2; ++i) {
 		mstMonster2ResetData(&_monsterObjects2Table[i]);
 	}
+emu_printf("clearLvlObjectsList1\n");
 	clearLvlObjectsList1();
 	for (int i = 0; i < _res->_mstHdr.screenAreaDataCount; ++i) {
 		_res->_mstScreenAreaData[i].unk0x1D = 1;
 	}
+emu_printf("initMstTable\n");
 	_rnd.initMstTable();
+emu_printf("initMstTable\n");
 	_rnd.initTable();
 	for (int i = 0; i < _res->_mstHdr.movingBoundsDataCount; ++i) {
 		const int count = _res->_mstMovingBoundsData[i].indexDataCount;

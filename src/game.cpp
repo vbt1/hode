@@ -2,6 +2,7 @@
 #define PAF 1
 #define LOAD_SPRITE 1
 #define LOAD_MONSTER 1
+//#define USE_LESS_RAM 1
 //#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
@@ -996,15 +997,18 @@ endDir:
 }
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
+emu_printf("preloadLevelScreenData\n");
 	if(num == kNoScreen)
 		return;
 
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
+emu_printf("isLvlBackgroundDataLoaded(prev) %p\n", _res->_resLevelData0x2B88SizeTable[prev]);
 		_res->unloadLvlScreenBackgroundData(prev);
 	}
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
+emu_printf("isLvlBackgroundDataLoaded(num) %p\n", _res->_resLevelData0x2B88SizeTable[num]);
 		_res->unloadLvlScreenBackgroundData(num);
 	}
 	_res->loadLvlScreenBackgroundData(num);
@@ -2210,7 +2214,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-//_mstDisabled = true; // vbt : ajout pour test
+_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2218,7 +2222,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	const int rounds = _playDemo ? _res->_dem.randRounds : ((g_system->getTimeStamp() & 15) + 1);
 	_rnd.initTable(rounds);
 	const int screenNum = _level->getCheckpointData(checkpoint)->screenNum;
-#if 1
+#ifndef USE_LESS_RAM
 	if (_mstDisabled) {
 		_specialAnimMask = 0;
 		_mstCurrentAnim = 0;
@@ -2232,7 +2236,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	memset(_level->_screenCounterTable, 0, sizeof(_level->_screenCounterTable));
 //emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
-#if 1
+#ifndef USE_LESS_RAM
  // vbt : à remettre !!!
 	initLvlObjects();
 
@@ -2263,7 +2267,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	}
 #endif
 
-#if 1
+#ifdef USE_LESS_RAM
 // vbt : voir comment restaurer hwram_work correctement
 //	hwram_work = _video->_shadowScreenMaskBuffer + (256 * 192 * 2 + 256 * 4);
  // vbt : à remettre !!!
@@ -4466,18 +4470,21 @@ void Game::initLvlObjects() {
 		_screenLvlObjectsList[index] = ptr;
 		switch (ptr->type) {
 		case 0:
+emu_printf("case 0 _animBackgroundDataCount %d < kMaxBackgroundAnims %d - %d\n", _animBackgroundDataCount, kMaxBackgroundAnims, _res->_lvlHdr.staticLvlObjectsCount);
 			assert(_animBackgroundDataCount < kMaxBackgroundAnims);
 			ptr->dataPtr = &_animBackgroundDataTable[_animBackgroundDataCount++];
 			memset(ptr->dataPtr, 0, sizeof(AnimBackgroundData));
 			break;
 		case 1:
+emu_printf("case 1 %d\n", _res->_lvlHdr.staticLvlObjectsCount);
 			if (ptr->dataPtr) {
-				//emu_printf("Trying to free _resLvlScreenBackgroundDataTable.backgroundSoundTable (i=%d index=%d)\n", i, index);
+				emu_printf("Trying to free _resLvlScreenBackgroundDataTable.backgroundSoundTable (i=%d index=%d)\n", i, index);
 			}
 			ptr->xPos = 0;
 			ptr->yPos = 0;
 			break;
 		case 2:
+emu_printf("case 2 %d\n", _res->_lvlHdr.staticLvlObjectsCount);
 			if (prevLvlObj == &_res->_dummyObject) {
 				prevLvlObj = 0;
 				ptr->childPtr = ptr->nextPtr;
@@ -4493,6 +4500,7 @@ void Game::initLvlObjects() {
 //	_declaredLvlObjectsList = (LvlObject *)allocate_memory(TYPE_MONSTER, kMaxLvlObjects*sizeof(LvlObject));//[kMaxLvlObjects];
 
 	for (int i = _res->_lvlHdr.staticLvlObjectsCount; i < _res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount; ++i) {
+emu_printf("lvlObjectTypeInit %d/%d\n", _res->_lvlHdr.otherLvlObjectsCount);
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];
 		lvlObjectTypeInit(ptr);
 	}

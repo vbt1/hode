@@ -115,7 +115,7 @@ emu_printf("Resource\n");
 	memset(_resLvlScreenBackgroundDataTable, 0, sizeof(_resLvlScreenBackgroundDataTable));
 	memset(_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_resLvlScreenBackgroundDataPtrTable));
 	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
-//	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(TYPE_MONSTER, 104 * sizeof(LvlObject));//[104];
+	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(TYPE_MONSTER2, 104 * sizeof(LvlObject));//[104];
 	memset(_resLvlScreenObjectDataTable, 0, 104 * sizeof(LvlObject));
 //	memset(_resLvlScreenObjectDataTable, 0, sizeof(_resLvlScreenObjectDataTable));
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
@@ -678,7 +678,7 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	_lvlHdr.staticLvlObjectsCount = _lvlFile->readByte();
 	_lvlHdr.otherLvlObjectsCount = _lvlFile->readByte();
 	_lvlHdr.spritesCount = _lvlFile->readByte();
-	//emu_printf("Resource::loadLvlData() %d %d %d %d\n", _lvlHdr.screensCount, _lvlHdr.staticLvlObjectsCount, _lvlHdr.otherLvlObjectsCount, _lvlHdr.spritesCount);
+	emu_printf("Resource::loadLvlData() %d %d %d %d\n", _lvlHdr.screensCount, _lvlHdr.staticLvlObjectsCount, _lvlHdr.otherLvlObjectsCount, _lvlHdr.spritesCount);
 
 	_lvlFile->seekAlign(0x8);
 	for (int i = 0; i < _lvlHdr.screensCount; ++i) {
@@ -872,7 +872,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
-//emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
+emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert((unsigned int)num < kMaxScreens);
 	cs1ram_bg = cs1ram;
 
@@ -890,8 +890,9 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 		return;
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
+emu_printf("loadLvlScreenBackgroundData assert\n");
 	assert(readSize <= size);
-////emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
+emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = allocate_memory (TYPE_BGLVL, size);
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
@@ -925,7 +926,8 @@ emu_printf("unloadLvlScreenBackgroundData %p\n", cs1ram_bg);
 //			free(dat->backgroundLvlObjectDataTable[i]);
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
-		cs1ram = cs1ram_bg;
+		if(cs1ram_bg!=0)
+			cs1ram = cs1ram_bg;
 		memset(dat, 0, sizeof(LvlBackgroundData));
 	}
 }
