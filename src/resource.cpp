@@ -66,9 +66,9 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 
 static void closeDat(FileSystem *fs, File *f) {
 emu_printf("closeDat ");
-Sint32 fileid, fsize;
-GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
-emu_printf("------ filename %s\n", GFS_IdToName(fileid));
+//Sint32 fileid, fsize;
+//GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
+//emu_printf("------ filename %s\n", GFS_IdToName(fileid));
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -141,7 +141,7 @@ emu_printf("Resource\n");
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[16];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
-emu_printf("filename %s here\n", filename);
+//emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
 //emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
@@ -186,8 +186,10 @@ emu_printf("filename %s here\n", filename);
 	_menuBuffer0 = 0;
 	_menuBuffer1 = 0;
 //	current_lwram = (Uint8 *)VBT_L_START;
+#ifdef DEMO
 	memset(&_dem, 0, sizeof(_dem));
 	_demOffset = 0;
+#endif
 }
 
 Resource::~Resource() {
@@ -911,6 +913,7 @@ emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ra
 		return;
 
 	_resLvlScreenBackgroundDataPtrTable[num] = ptr;
+emu_printf("_resLevelData0x2B88SizeTable[%d]=%d\n", num,size);
 	_resLevelData0x2B88SizeTable[num] = size;
 }
 

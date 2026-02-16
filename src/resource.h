@@ -584,10 +584,10 @@ struct Resource {
 	uint8_t *_menuBuffer0;
 	uint8_t *_menuBuffer1;
 	uint32_t _menuBuffersOffset;
-
+#ifdef DEMO
 	Dem _dem;
 	uint32_t _demOffset;
-
+#endif
 	uint8_t _currentScreenResourceNum;
 
 	uint8_t _screensGrid[kMaxScreens][4];

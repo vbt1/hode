@@ -194,7 +194,7 @@ emu_printf("unload paf w %p wp %p src %p\n", hwram_work, hwram_work_paf, hwram_s
 
 emu_printf("video %p _shadow %p _back %p\n", _video, _video->_shadowScreenMaskBuffer, _video->_backgroundLayer);
 
-emu_printf("unload w %p \n", hwram_work);
+//emu_printf("unload w %p \n", hwram_work);
 
 	if (_videoNum < 0) {
 		return;
