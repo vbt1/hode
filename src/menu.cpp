@@ -1537,7 +1537,7 @@ void Menu::drawSoundScreen() {
 	}
 	refreshScreen();
 }
-
+#ifdef SOUND
 void Menu::handleSoundScreen(int num) {
 	_volumeState = 0;
 	++_soundCounter;
@@ -1545,9 +1545,9 @@ void Menu::handleSoundScreen(int num) {
 	num = data[5];
 	if (num == kCursor_Select) {
 		if (_soundNum == kSoundNum_Confirm) {
-#ifdef SOUND
+
 			playSound(kSound_0x78);
-#endif
+
 			_config->players[_config->currentPlayer].volume = _g->_snd_masterVolume;
 			_condMask = 0x80;
 		} else if (_soundNum == kSoundNum_Test) {
@@ -1587,65 +1587,48 @@ void Menu::handleSoundScreen(int num) {
 #endif
 			_soundTestSpriteNum = 24;
 		} else if (_soundNum == kSoundNum_Cancel) {
-#ifdef SOUND
 			playSound(kSound_0x80);
-#endif
 			_config->players[_config->currentPlayer].volume = _g->_snd_masterVolume = _soundVolume;
 			_condMask = 0x80;
 		} else if (_soundNum == kSoundNum_Reset) {
-#ifdef SOUND
 			playSound(kSound_0x88);
-#endif
 			_config->players[_config->currentPlayer].volume = _g->_snd_masterVolume = Game::kDefaultSoundVolume;
 		}
 	} else if (num == kCursor_Left) {
 		if (_soundNum == kSoundNum_Volume) {
 			if (_g->_snd_masterVolume > 0) {
-#ifdef SOUND
 				playSound(kSound_0x90);
-#endif
 				--_g->_snd_masterVolume;
 				_config->players[_config->currentPlayer].volume = _g->_snd_masterVolume;
 				_volumeState = 1;
 				_condMask = 8;
 			}
 		} else if (_soundNum == kSoundNum_Test) {
-#ifdef SOUND
 			playSound(kSound_0x70);
-#endif
 			_soundNum = kSoundNum_Cancel;
 		} else if (_soundNum == kSoundNum_Cancel) {
-#ifdef SOUND
 			playSound(kSound_0x70);
-#endif
 			_soundNum = kSoundNum_Confirm;
 		}
 	} else if (num == kCursor_Right) {
 		if (_soundNum == kSoundNum_Volume) {
 			if (_g->_snd_masterVolume < 128) {
-#ifdef SOUND
 				playSound(kSound_0x90);
-#endif
 				++_g->_snd_masterVolume;
 				_config->players[_config->currentPlayer].volume = _g->_snd_masterVolume;
 				_volumeState = 2;
 				_condMask = 8;
 			}
 		} else if (_soundNum == 2) {
-#ifdef SOUND
 			playSound(kSound_0x70);
-#endif
 			_soundNum = kSoundNum_Cancel;
 		} else if (_soundNum == 4) {
-#ifdef SOUND
 			if (_g->_snd_masterVolume != 0) {
 				playSound(kSound_0x70);
 			}
-#endif
 			_soundNum = kSoundNum_Test;
 		}
 	} else if (num == kCursor_Up) {
-#ifdef SOUND
 		if (_soundNum != kSoundNum_Volume) {
 			playSound(kSound_0x70);
 		}
@@ -1654,9 +1637,7 @@ void Menu::handleSoundScreen(int num) {
 		} else if (_soundNum == kSoundNum_Reset) {
 			_soundNum = kSoundNum_Cancel;
 		}
-#endif
 	} else if (num == kCursor_Down) {
-#ifdef SOUND
 		if (_soundNum != kSoundNum_Reset) {
 			playSound(kSound_0x70);
 		}
@@ -1667,13 +1648,13 @@ void Menu::handleSoundScreen(int num) {
 		} else if (_soundNum >= 2 && _soundNum <= 4) {
 			_soundNum = 5;
 		}
-#endif
 	} else {
 		_soundCounter = 0;
 	}
 	drawSoundScreen();
 	g_system->sleep(kDelayMs);
 }
+#endif
 
 void Menu::changeToOption(int num) {
 	const uint8_t *data = &_optionData[num * 8];
@@ -2081,7 +2062,9 @@ bool Menu::handleOptions() {
 				_soundNum = kSoundNum_Confirm;
 				_soundCounter = 0;
 			}
+#ifdef SOUND
 			handleSoundScreen(num);
+#endif
 			break;
 		case 6:
 #ifdef SOUND		
@@ -2099,7 +2082,7 @@ bool Menu::handleOptions() {
 			changeToOption(num);
 			break;
 		case 9:
-#if 0		
+#if 0	
 			handleLoadCutscene(num);
 #endif
 			break;

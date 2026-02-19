@@ -2,7 +2,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
- #pragma GCC optimize ("Os")
+#pragma GCC optimize ("Os")
  extern "C" {
 #include 	<sega_gfs.h>
 //#include 	<gfs_def.h>
@@ -31,7 +31,7 @@ static const bool kSeekAbsolutePosition = false;
 
 File::File()
 	: _fp(0) {
-		emu_printf("File\n");
+//		emu_printf("File\n");
 }
 
 File::~File() {
@@ -58,9 +58,10 @@ void File::seek(int pos, int whence) {
 			pos += sat_ftell(_fp);
 			whence = SEEK_SET;
 		}
-//	//emu_printf("sat_fseek\n");
+//emu_printf("sat_fseek\n");
 		sat_fseek(_fp, pos, whence);
 	}
+//emu_printf("sat_fseek done\n");
 }
 /*
 void File::batchSeek()
@@ -151,7 +152,7 @@ int File::asynchWait(uint8_t *ptr, Sint32 len) {
 }
 
 int File::read(uint8_t *ptr, int size) {
-////emu_printf("sat_fread %d\n", size);
+//emu_printf("sat_fread %d\n", size);
 	return sat_fread(ptr, 1, size, _fp);
 }
 

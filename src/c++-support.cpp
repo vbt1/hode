@@ -8,6 +8,10 @@ void 	free(void *ptr);
 void	*malloc(size_t);
 void emu_printf(const char *format, ...);
 extern uint8_t *hwram_work;
+extern uint8_t *hwram;
+extern uint8_t *current_lwram;
+extern uint8_t *cs2ram;
+extern uint8_t *cs1ram;
 }
 
 extern "C"
@@ -17,20 +21,32 @@ void __cxa_pure_virtual(void) {
 }
 
 void* operator new(size_t size) {
-	emu_printf("--- allocate2 %d\n", size);
-	if(size==4148|| size==51736)
+	if(size==4148 || size==40096 || size==8)
 	{
-		
-		void *ptr = (void *)hwram_work;
-		hwram_work +=size;
+	emu_printf("--- allocate2 %d\n", size);	
+//		void *ptr = (void *)hwram_work;
+//		hwram_work +=size;
+		void *ptr = (void *)current_lwram;
+		current_lwram +=size;
 		return ptr;
 	}
-    return malloc(size);
+#if 0
+	else if(/*size==4148 ||*/ size==10164 || size==8 )
+	{
+	emu_printf("--- allocate2b %d %d\n", size, (hwram_work<hwram)?1:0);
+		void *ptr = (void *)hwram_work;
+		hwram_work +=size;
+		return ptr;	
+	}
+#endif
+    void *ptr = malloc(size);
+	emu_printf("allocate3 %p xx%dxx\n",ptr, size);
+	return ptr;
 }
 
 void* operator new[](size_t size) {
-	emu_printf("--- allocate %d\n", size);
-	if(size==4148|| size==51736 || size==20168)
+//	emu_printf("--- allocate %d\n", size);
+	if(size==4148 || size==40096 || size==20168 || size == 60948)
 	{
 		
 		void *ptr = (void *)hwram_work;
@@ -41,12 +57,12 @@ void* operator new[](size_t size) {
 }
 
 void operator delete(void* ptr) {
-	emu_printf("--- delete1 %p\n", ptr);
+//	emu_printf("--- delete1 %p\n", ptr);
     free(ptr);
 }
 
 void operator delete[](void* ptr) {
-	emu_printf("--- delete2 %p\n", ptr);
+//	emu_printf("--- delete2 %p\n", ptr);
     free(ptr);
 }
 

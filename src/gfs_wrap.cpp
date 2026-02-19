@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #include "util.h"
 extern "C" {
 
@@ -143,6 +143,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 */
 	GfsHn fid = NULL;
 	// OPEN FILE
+//emu_printf("satpath %s fileid %d\n",satpath, GFS_NameToId((Sint8*)satpath));
 	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
 	
 	if(fid != NULL) { // Opened!
@@ -268,7 +269,7 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	return 0;
 	}
 	tot_bytes = (nmemb * size) + skip_bytes;
-////emu_printf("start_sector %d stream->f_seek_pos %d\n",start_sector,stream->f_seek_pos);
+//emu_printf("start_sector %d stream->f_seek_pos %d\n",start_sector,stream->f_seek_pos);
 //	tot_sectors = GFS_ByteToSct(stream->fid, tot_bytes);
 	tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
 	if(tot_sectors < 0) return 0;

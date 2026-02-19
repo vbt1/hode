@@ -584,10 +584,10 @@ struct Resource {
 	uint8_t *_menuBuffer0;
 	uint8_t *_menuBuffer1;
 	uint32_t _menuBuffersOffset;
-
+#ifdef DEMO
 	Dem _dem;
 	uint32_t _demOffset;
-
+#endif
 	uint8_t _currentScreenResourceNum;
 
 	uint8_t _screensGrid[kMaxScreens][4];
@@ -607,11 +607,12 @@ struct Resource {
 	LvlObjectData *_resLevelData0x2988PtrTable[kMaxSpriteTypes];
 	uint8_t *_resLvlSpriteDataPtrTable[kMaxSpriteTypes];
 	uint32_t _resLevelData0x2B88SizeTable[kMaxScreens]; // backgrounds
+//	uint32_t *_resLevelData0x2B88SizeTable;//[kMaxScreens]; // backgrounds
 	LvlBackgroundData _resLvlScreenBackgroundDataTable[kMaxScreens];
 	uint8_t *_resLvlScreenBackgroundDataPtrTable[kMaxScreens];
 
-	LvlObject _resLvlScreenObjectDataTable[104];
-//	LvlObject *_resLvlScreenObjectDataTable;//[104];
+//	LvlObject _resLvlScreenObjectDataTable[104];
+	LvlObject *_resLvlScreenObjectDataTable;//[104];
 	LvlObject _dummyObject; // (LvlObject *)0xFFFFFFFF
 #ifdef SOUND
 	ResStruct<SssInfo> _sssInfosData;

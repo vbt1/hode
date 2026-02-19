@@ -1,6 +1,6 @@
 #pragma GCC optimize ("Os")
-//#define LOAD_SPRITE 1
-//#define LOAD_MONSTER 1
+#define LOAD_SPRITE 1
+#define LOAD_MONSTER 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -18,20 +18,21 @@ extern "C" {
 uint8_t *cs1ram = (uint8_t *)0x22402000;
 uint8_t *save_cs1ram;
 // load and uncompress .sss pcm on level start
+#ifdef SOUND
 static const bool kPreloadSssPcm = false;
 
 static const bool kPreloadLvlBackgroundData = false;
 
 static const bool kCheckSssBytecode = false;
-
+#endif
 // menu settings and player progress
 //static const char *_setupCfg = "setup.cfg";
 
 static const char *_setupDat = "SETUP.DAT";
 //static const char *_setupDax = "SETUP.DAX";
-
+#ifdef DEMO
 static const char *_hodDem = "HOD.DEM";
-
+#endif
 static const char *_prefixes[] = {
 	"ROCK",
 	"FORT",
@@ -65,9 +66,9 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 }
 
 static void closeDat(FileSystem *fs, File *f) {
-//emu_printf("closeDat ");
-Sint32 fileid, fsize;
-GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
+emu_printf("closeDat ");
+//Sint32 fileid, fsize;
+//GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
 //emu_printf("------ filename %s\n", GFS_IdToName(fileid));
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
@@ -91,7 +92,7 @@ static int readBytesAlign(File *f, uint8_t *buf, int len) {
 
 Resource::Resource(FileSystem *fs)
 	: _fs(fs), _isPsx(false), /*_isDemo(false),*/ _version(V1_1) {
-emu_printf("Resource\n");
+//emu_printf("Resource\n");
 
 	memset(_screensGrid, 0, sizeof(_screensGrid));
 	memset(_screensBasePos, 0, sizeof(_screensBasePos));
@@ -114,8 +115,10 @@ emu_printf("Resource\n");
 	// backgrounds
 	memset(_resLvlScreenBackgroundDataTable, 0, sizeof(_resLvlScreenBackgroundDataTable));
 	memset(_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_resLvlScreenBackgroundDataPtrTable));
-	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
-//	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(TYPE_MONSTER, 104 * sizeof(LvlObject));//[104];
+//	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
+//	_resLevelData0x2B88SizeTable = (uint32_t *)allocate_memory(TYPE_SPRITE, 4 * kMaxScreens);
+	memset(_resLevelData0x2B88SizeTable, 0, 4 * kMaxScreens);
+	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(TYPE_MONSTER2, 104 * sizeof(LvlObject));//[104];
 	memset(_resLvlScreenObjectDataTable, 0, 104 * sizeof(LvlObject));
 //	memset(_resLvlScreenObjectDataTable, 0, sizeof(_resLvlScreenObjectDataTable));
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
@@ -186,8 +189,10 @@ emu_printf("Resource\n");
 	_menuBuffer0 = 0;
 	_menuBuffer1 = 0;
 //	current_lwram = (Uint8 *)VBT_L_START;
+#ifdef DEMO
 	memset(&_dem, 0, sizeof(_dem));
 	_demOffset = 0;
+#endif
 }
 
 Resource::~Resource() {
@@ -317,7 +322,7 @@ void Resource::loadSetupDat() {
 	}
 	_menuBuffersOffset = _datHdr.hintsImageOffsetTable[_datHdr.yesNoQuitImage + 2];
 }
-
+#if 0
 bool Resource::loadDatHintImage(int num, uint8_t *dst, uint8_t *pal) {
 	const int size = _datHdr.hintsImageSizeTable[num];
 	if (size == 0) {
@@ -335,7 +340,7 @@ bool Resource::loadDatHintImage(int num, uint8_t *dst, uint8_t *pal) {
 	}
 	return true;
 }
-
+#endif
 bool Resource::loadDatLoadingImage(uint8_t *dst, uint8_t *pal) {
 //emu_printf("loadDatLoadingImage\n");
 //	assert(!_isPsx);
@@ -394,7 +399,7 @@ void Resource::loadLevelData(int levelNum) {
 
 	closeDat(_fs, _lvlFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
-//emu_printf("filename %s\n",filename);
+emu_printf("vbt filename %s\n",filename);
 
 	if (openDat(_fs, filename, _lvlFile)) {
 		loadLvlData(_lvlFile);
@@ -659,7 +664,7 @@ uint8_t *cs1ram_res = NULL;
 uint8_t *lwram_res  = NULL;
 
 void Resource::loadLvlData(File *fp) {
-//emu_printf("loadLvlData\n");
+emu_printf("loadLvlData %p\n", _lvlFile);
 //	assert(fp == _lvlFile);
 	if(lwram_res==NULL)
 	{
@@ -669,7 +674,7 @@ void Resource::loadLvlData(File *fp) {
 	unloadLvlData();
 	const uint32_t tag = _lvlFile->readUint32();
 	if (tag != _lvlTag) {
-		//emu_printf("Unhandled .lvl tag 0x%x\n", tag);
+		emu_printf("Unhandled .lvl tag 0x%x\n", tag);
 		closeDat(_fs, _lvlFile);
 		return;
 	}
@@ -678,7 +683,7 @@ void Resource::loadLvlData(File *fp) {
 	_lvlHdr.staticLvlObjectsCount = _lvlFile->readByte();
 	_lvlHdr.otherLvlObjectsCount = _lvlFile->readByte();
 	_lvlHdr.spritesCount = _lvlFile->readByte();
-	//emu_printf("Resource::loadLvlData() %d %d %d %d\n", _lvlHdr.screensCount, _lvlHdr.staticLvlObjectsCount, _lvlHdr.otherLvlObjectsCount, _lvlHdr.spritesCount);
+//	emu_printf("Resource::loadLvlData() %d %d %d %d\n", _lvlHdr.screensCount, _lvlHdr.staticLvlObjectsCount, _lvlHdr.otherLvlObjectsCount, _lvlHdr.spritesCount);
 
 	_lvlFile->seekAlign(0x8);
 	for (int i = 0; i < _lvlHdr.screensCount; ++i) {
@@ -724,7 +729,8 @@ void Resource::loadLvlData(File *fp) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}
 #endif
-	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
+//	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
+	memset(_resLevelData0x2B88SizeTable, 0, 4*kMaxScreens);
 #if 0 // vbt : pas besoin de réactiver
 	if (kPreloadLvlBackgroundData) {
 		_lvlFile->seekAlign(_lvlBackgroundsOffset);
@@ -743,7 +749,7 @@ void Resource::loadLvlSprite(int levelNum)
 	const char *levelName = _prefixes[levelNum];
 Sint32 fileid, fsize;
 	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
-//emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
+emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
 	
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
@@ -840,7 +846,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		dat->backgroundMaskTable[i] = (offs != 0) ? ptr + offs : 0;
-		//emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
+		emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
 		
 	}
 	for (int i = 0; i < 4; ++i) {
@@ -872,26 +878,31 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
-//emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
+emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert((unsigned int)num < kMaxScreens);
 	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
-//emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
+emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
+emu_printf("seekAlign\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
+emu_printf("read(header\n");
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
+emu_printf("read(header %p\n", buf);
 	}
 	const uint32_t offset = READ_LE_UINT32(&buf[0]);
 	const uint32_t size = READ_LE_UINT32(&buf[4]);
 	if (size == 0) {
+//emu_printf("return 0\n");
 		return;
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
+//emu_printf("loadLvlScreenBackgroundData\n");
 	assert(readSize <= size);
-////emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
+//emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	uint8_t *ptr = allocate_memory (TYPE_BGLVL, size);
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
@@ -908,8 +919,8 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //	assert(allocatedOffsetsSize == readOffsetsSize);
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;
-
 	_resLvlScreenBackgroundDataPtrTable[num] = ptr;
+//emu_printf("_resLevelData0x2B88SizeTable[%d]=%d\n", num,size);
 	_resLevelData0x2B88SizeTable[num] = size;
 }
 
@@ -925,7 +936,8 @@ emu_printf("unloadLvlScreenBackgroundData %p\n", cs1ram_bg);
 //			free(dat->backgroundLvlObjectDataTable[i]);
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
-		cs1ram = cs1ram_bg;
+		if(cs1ram_bg!=0)
+			cs1ram = cs1ram_bg;
 		memset(dat, 0, sizeof(LvlBackgroundData));
 	}
 }
@@ -2243,44 +2255,37 @@ enum {
 	kModeSave,
 	kModeLoad
 };
+#if 0
 
 static uint8_t _checksum;
 
 static void persistUint8(GFS_FILE *fp, const uint8_t &val) {
-#if 0
 	fputc(val, fp);
 	_checksum ^= val;
-#endif
 }
 
 static void persistUint8(GFS_FILE *fp, uint8_t &val) {
-#if 0
 	val = fgetc(fp);
 	_checksum ^= val;
-#endif
 }
 
 static void persistUint32(GFS_FILE *fp, const uint32_t &val) {
-#if 0
+
 	for (int i = 0; i < 4; ++i) {
 		const uint8_t b = (val >> (i * 8)) & 0xFF;
 		fputc(b, fp);
 		_checksum ^= b;
 	}
-#endif
 }
 
 static void persistUint32(GFS_FILE *fp, uint32_t &val) {
-#if 0
 	val = 0;
 	for (int i = 0; i < 4; ++i) {
 		const uint8_t b = fgetc(fp);
 		val |= b << (i * 8);
 		_checksum ^= b;
 	}
-#endif
 }
-#if 0
 template <int M, typename T>
 static void persistSetupCfg(GFS_FILE *fp, T *config) {
 	_checksum = 0;

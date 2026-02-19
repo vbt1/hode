@@ -194,7 +194,7 @@ emu_printf("unload paf w %p wp %p src %p\n", hwram_work, hwram_work_paf, hwram_s
 
 emu_printf("video %p _shadow %p _back %p\n", _video, _video->_shadowScreenMaskBuffer, _video->_backgroundLayer);
 
-emu_printf("unload w %p \n", hwram_work);
+//emu_printf("unload w %p \n", hwram_work);
 
 	if (_videoNum < 0) {
 		return;
@@ -1018,7 +1018,7 @@ if(result>0)
 		}
 		_video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-//	//emu_printf("fps %d\n", frame_z);
+//emu_printf("fps %d\n", frame_z);
 #endif
 
 unsigned int e3 = g_system->getTimeStamp();
@@ -1223,7 +1223,7 @@ void PafPlayer::mainLoop() {
         }
         _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-//        //emu_printf("fps %d\n", frame_z);
+//emu_printf("fps %d\n", frame_z);
 #endif
 
         // Quit check
