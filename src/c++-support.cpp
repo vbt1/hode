@@ -32,8 +32,9 @@ emu_printf("--- allocateX %d\n", size);
 		return ptr;
 	}
 #if 0
-	else if(size==4148 || size==10164 || size==8 
-//	|| size==920 || size ==1044 || size == 1284
+	else if(//size==4148 || size==10164 || size==8 
+//	|| 
+		size==920 || size ==1044 || size == 1284
 	)
 	{
 	emu_printf("--- allocate2b %d %d\n", size, (hwram_work<hwram)?1:0);
