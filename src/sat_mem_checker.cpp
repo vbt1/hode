@@ -118,15 +118,22 @@ emu_printf("3hwram %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, ((int)cur
 //emu_printf("TYPE_BGLVL %p size %d\n", dst, alignedSize);
 		return dst;
 	}
-
+/*
 	if(type == TYPE_RES)
 	{
 		dst = current_lwram;
 		current_lwram += SAT_ALIGN(alignedSize);
 		return dst;
 	}
+*/	
+	if(type == TYPE_MOVBOUND || type == TYPE_MONSTER2 || type == TYPE_RES)
+	{	
+		dst = cs2ram;
+		cs2ram += SAT_ALIGN(alignedSize);			
+		return dst;		
+	}
 
-	if(type == TYPE_SPRITE || type == TYPE_MOVBOUND || type == TYPE_MONSTER2)
+	if(type == TYPE_SPRITE)
 	{
 emu_printf("4hwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 

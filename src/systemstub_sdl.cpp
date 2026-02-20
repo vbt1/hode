@@ -207,6 +207,7 @@ static const int BLUR_TEX_H = 16;
 
 static uint16_t __attribute__((aligned(16))) _clut[256];
 System *SystemStub_SDL_create() {
+	emu_printf("System\n");
 	return new SystemStub_SDL();
 }
 
@@ -845,7 +846,7 @@ inline void timeTick() {
 }
 
 void vblIn (void) {
-////emu_printf("vblIn\n");
+//emu_printf("vblIn\n");
 	// Process input
 
 //	if(!loadingMap)
@@ -864,8 +865,11 @@ void vblIn (void) {
 #endif
 //		system_saturn.updateScreen(0);
 	}
+//emu_printf("processEvents\n");
 	g_system->processEvents();
+//emu_printf("timeTick\n");
 	timeTick();
+//emu_printf("vblIn end\n");
 }
 
 uint8 isNTSC (void) {
