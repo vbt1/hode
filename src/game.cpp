@@ -41,13 +41,13 @@ emu_printf("Game\n");
 //emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
 
 	_level = 0;
-//	emu_printf("Before Resource\n");
+	emu_printf("\nResource\n");
 	_res = new Resource(&_fs);
 	_rnd.setSeed();
-//	emu_printf("Before Video\n");
+	emu_printf("Video\n");
 	_video = new Video();
 #ifdef PAF
-//	emu_printf("Before PafPlayer\n");
+	emu_printf("PafPlayer\n");
 	_paf = new PafPlayer(&_fs, _video);
 #endif
 	_cheats = cheats;
@@ -569,7 +569,7 @@ emu_printf("--- setupScreenMask _screenMaskBuffer\n");
 }
 
 void Game::resetScreenMask() {
-emu_printf("resetScreenMask\n");
+//emu_printf("resetScreenMask\n");
 //	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
 	if(_screenMaskBuffer == 0)
 		_screenMaskBuffer = allocate_memory(TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
@@ -997,7 +997,7 @@ endDir:
 }
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
-emu_printf("preloadLevelScreenData\n");
+emu_printf("preloadLevelScreenData num\n", num);
 	if(num == kNoScreen)
 		return;
 
@@ -1233,7 +1233,7 @@ void Game::setupScreenLvlObjects(int num) {
 		case 1: {
 				uint8_t *data =  _res->_resLvlScreenBackgroundDataTable[num].backgroundSoundTable[ptr->dataNum];
 				if (!data) {
-					emu_printf("No backgroundSoundData num %d screen %d\n", ptr->dataNum, num);
+//					emu_printf("No backgroundSoundData num %d screen %d\n", ptr->dataNum, num);
 					break;
 				}
 				ptr->currentSound = READ_LE_UINT16(data); data += 2;
@@ -1447,7 +1447,7 @@ void Game::playAndyFallingCutscene(int type) {
 	}
 #endif
 	if (type != 0 && play) {
-emu_printf("restartlevel!!!\n");
+//emu_printf("restartlevel!!!\n");
 		restartLevel();
 	}
 }
@@ -2208,7 +2208,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #ifdef SOUND
 	_mix._lock(1);
 #endif
-//emu_printf("loadLevelData %d\n", _currentLevel);
+emu_printf("loadLevelData %d\n", _currentLevel);
 	_res->loadLevelData(_currentLevel);
 #ifdef SOUND
 	clearSoundObjects();
@@ -3049,9 +3049,11 @@ void Game::levelMainLoop() {
 //	g_system->processEvents();
 
 	if (g_system->inp.keyPressed(SYS_INP_ESC)) {
+#if 0
 		if (displayHintScreen(-1, 0)) { // pause/exit screen
 			g_system->inp.quit = true;
 		}
+#endif
 	} else {
 		// displayHintScreen(1, 0);
 		_video->updateScreen();
@@ -3143,7 +3145,7 @@ void Game::displayLoadingScreen() {
 		}
 	}
 }
-
+#if 0
 int Game::displayHintScreen(int num, int pause) {
 	static const int kQuitYes = 0;
 	static const int kQuitNo = 1;
@@ -3207,7 +3209,7 @@ int Game::displayHintScreen(int num, int pause) {
 #endif
 	return confirmQuit && quit == kQuitYes;
 }
-
+#endif
 
 void Game::removeLvlObjectFromList(LvlObject **list, LvlObject *ptr) {
 	LvlObject *current = *list;
