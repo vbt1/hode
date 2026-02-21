@@ -539,7 +539,7 @@ void Game::setupScreenPosTable(uint8_t num) {
 }
 
 void Game::setupScreenMask(uint8_t num) {
-emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroundDataTable[num].currentMaskId);
+//emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroundDataTable[num].currentMaskId);
 	if (num == kNoScreen) {
 		return;
 	}
@@ -555,7 +555,7 @@ emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroun
 		} else {
 			memset(_screenTempMaskBuffer, 0, 32 * 24);
 		}
-emu_printf("--- setupScreenMask _screenMaskBuffer\n");
+//emu_printf("--- setupScreenMask _screenMaskBuffer\n");
 		uint8_t *p = _screenMaskBuffer + screenMaskOffset(_res->_screensBasePos[num].u, _res->_screensBasePos[num].v);
 		for (int i = 0; i < 24; ++i) {
 			memcpy(p, _screenTempMaskBuffer + i * 32, 32);
@@ -997,18 +997,18 @@ endDir:
 }
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
-emu_printf("preloadLevelScreenData num\n", num);
+//emu_printf("preloadLevelScreenData num\n", num);
 	if(num == kNoScreen)
 		return;
 
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
-emu_printf("isLvlBackgroundDataLoaded(prev) %d %p\n", _res->_resLevelData0x2B88SizeTable[prev], _res->_resLevelData0x2B88SizeTable);
+//emu_printf("isLvlBackgroundDataLoaded(prev) %d %p\n", _res->_resLevelData0x2B88SizeTable[prev], _res->_resLevelData0x2B88SizeTable);
 		_res->unloadLvlScreenBackgroundData(prev);
 	}
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
-emu_printf("isLvlBackgroundDataLoaded(num) %d\n", _res->_resLevelData0x2B88SizeTable[num]);
+//emu_printf("isLvlBackgroundDataLoaded(num) %d\n", _res->_resLevelData0x2B88SizeTable[num]);
 		_res->unloadLvlScreenBackgroundData(num);
 	}
 	_res->loadLvlScreenBackgroundData(num);
