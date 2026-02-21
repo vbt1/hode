@@ -20,7 +20,7 @@ Uint32 ioskip_bytes;
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
-static const bool kCheckSectorFileCrc = false;
+//static const bool kCheckSectorFileCrc = false;
 
 #ifdef PSP
 static const bool kSeekAbsolutePosition = true;
@@ -176,12 +176,12 @@ uint32_t File::readUint32() {
 	read(buf, 4);
 	return READ_LE_UINT32(buf);
 }
-
+#ifdef SECTOR_ALIGNED
 SectorFile::SectorFile() {
 	memset(_buf, 0, sizeof(_buf));
 	_bufPos = 2044;
 }
-
+#endif
 int fioAlignSizeTo2048(int size) {
 	return ((size + 2043) / 2044) * 2048;
 }
@@ -194,6 +194,7 @@ uint32_t fioUpdateCRC(uint32_t sum, const uint8_t *buf, uint32_t size) {
 	return sum;
 }
 */
+#ifdef SECTOR_ALIGNED
 void SectorFile::refillBuffer(uint8_t *ptr) {
 //emu_printf("SectorFile::refillBuffer %p\n", ptr);
 	if (ptr) {
@@ -309,3 +310,4 @@ int SectorFile::read(uint8_t *ptr, int size) {
 	}
 	return 0;
 }
+#endif

@@ -1,6 +1,7 @@
 #pragma GCC optimize ("Os")
 #define LOAD_SPRITE 1
 #define LOAD_MONSTER 1
+//#define SECTOR_ALIGNED 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -122,7 +123,7 @@ Resource::Resource(FileSystem *fs)
 	memset(_resLvlScreenObjectDataTable, 0, 104 * sizeof(LvlObject));
 //	memset(_resLvlScreenObjectDataTable, 0, sizeof(_resLvlScreenObjectDataTable));
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
-
+#ifdef SECTOR_ALIGNED
 	if (sectorAlignedGameData()) {
 ////emu_printf("_version = V1_2\n");
 		_datFile = new SectorFile;
@@ -133,7 +134,10 @@ Resource::Resource(FileSystem *fs)
 #endif
 		// from v1.2, game data files are 'sector aligned'
 		_version = V1_2;
-	} else {
+	} 
+	else 
+#endif
+	{
 ////emu_printf("_version NOT V1_2\n");
 		_datFile = new File;
 		_lvlFile = new File;
@@ -205,6 +209,7 @@ Resource::~Resource() {
 #endif
 }
 
+#ifdef SECTOR_ALIGNED
 bool Resource::sectorAlignedGameData() {
 ////emu_printf("sectorAlignedGameData %s\n", _setupDat);
 	GFS_FILE *fp = _fs->openAssetFile(_setupDat);
@@ -229,7 +234,7 @@ bool Resource::sectorAlignedGameData() {
 ////emu_printf("sectorAlignedGameData true ? %d\n", ret);
 	return ret;
 }
-
+#endif
 void Resource::loadSetupDat() {
 ////emu_printf("loadSetupDat\n");
 #if 0

@@ -25,7 +25,7 @@ extern Uint8 *hwram_work_paf;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-//	emu_printf("alloctype %d size %d \n", type, alignedSize);
+	emu_printf("alloctype %d size %d \n", type, alignedSize);
     uint8_t* dst;
 	
 	if( type == TYPE_LDIMG || type == TYPE_FONT)
