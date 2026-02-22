@@ -1,7 +1,5 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
-//#define LOAD_SPRITE 1
-//#define LOAD_MONSTER 1
 #define USE_LESS_RAM 1
 //#define DEBUG 1
 /*
@@ -4501,7 +4499,7 @@ void Game::initLvlObjects() {
 			break;
 		}
 	}
-#ifndef LOAD_SPRITE
+#ifdef USE_LESS_RAM
 	_res->loadLvlSprite(_currentLevel);
 #endif	
 //	_declaredLvlObjectsList = (LvlObject *)allocate_memory(TYPE_MONSTER, kMaxLvlObjects*sizeof(LvlObject));//[kMaxLvlObjects];
@@ -4511,7 +4509,7 @@ void Game::initLvlObjects() {
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];
 		lvlObjectTypeInit(ptr);
 	}
-#ifndef LOAD_MONSTER
+#ifdef USE_LESS_RAM
 	_res->loadLvlMst(_currentLevel);
 #endif
 }

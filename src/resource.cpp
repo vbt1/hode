@@ -1,6 +1,5 @@
 #pragma GCC optimize ("Os")
-//#define LOAD_SPRITE 1
-//#define LOAD_MONSTER 1
+#define USE_LESS_RAM 1
 //#define SECTOR_ALIGNED 1
 /*
  * Heart of Darkness engine rewrite
@@ -107,7 +106,7 @@ Resource::Resource(FileSystem *fs)
 	_lvlSssOffset = 0;
 #endif
 	// sprites
-#ifdef LOAD_SPRITE
+#ifndef USE_LESS_RAM
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
@@ -413,7 +412,7 @@ emu_printf("vbt filename %s\n",filename);
 		//emu_printf("Unable to open '%s'\n", filename);
 	}
 
-#ifdef LOAD_MONSTER
+#ifndef USE_LESS_RAM
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
@@ -722,7 +721,7 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	}
 //emu_printf("loadLvlScreenMaskData\n");
 	loadLvlScreenMaskData();
-#ifdef LOAD_SPRITE
+#ifndef USE_LESS_RAM
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 
@@ -749,7 +748,7 @@ emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes
 	}
 #endif
 }
-#ifndef LOAD_SPRITE
+#ifdef USE_LESS_RAM
 void Resource::loadLvlSprite(int levelNum)
 {
 emu_printf("loadLvlSprite %d\n", levelNum);
@@ -771,9 +770,7 @@ emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->
 		loadLvlSpriteData(i, spr + i * 16);
 	}	
 }
-#endif
 
-#ifndef LOAD_MONSTER
 void Resource::loadLvlMst(int levelNum)
 {
 	const char *levelName = _prefixes[levelNum];
@@ -805,7 +802,7 @@ void Resource::unloadLvlData() {
 	}
 #endif
 
-#ifdef LOAD_SPRITE
+#ifdef USE_LESS_RAM
 	for (unsigned int i = 0; i < kMaxSpriteTypes; ++i) {
 		LvlObjectData *dat = &_resLevelData0x2988Table[i];
 #ifdef PS1
