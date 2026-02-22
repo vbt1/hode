@@ -853,8 +853,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		dat->backgroundMaskTable[i] = (offs != 0) ? ptr + offs : 0;
-		emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
-		
+//		emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
 	}
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;

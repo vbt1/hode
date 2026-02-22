@@ -141,8 +141,6 @@ void PafPlayer::preload(int num) {
 		return;
 	}
 //	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
-//	hwram_work_paf = hwram_work;
-////emu_printf("hwram_work_paf %p\n", hwram_work_paf);
 	uint8_t *buffer = allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
 
 	if (!buffer) {

@@ -38,7 +38,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	
 	if(type == TYPE_PAF || type == TYPE_PAFBUF)
 	{
-//emu_printf("0hwram %d hwrampaf %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000,  ((int)hwram_work_paf)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+emu_printf("0hwram %d hwrampaf %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000,  ((int)hwram_work_paf)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 		dst = hwram_work_paf;
 		hwram_work_paf += SAT_ALIGN(alignedSize);
 		return dst;
@@ -61,17 +61,6 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 		return dst;
 	}
 
-	if(type == TYPE_PAFHEAD)
-	{
-emu_printf("2hwram %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
-//		dst = current_lwram;
-//		current_lwram += SAT_ALIGN(alignedSize);
-		dst = cs1ram;
-		cs1ram += SAT_ALIGN(alignedSize);
-
-		return dst;
-	}
-	
 	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
 emu_printf("3hwram %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
@@ -83,12 +72,20 @@ emu_printf("3hwram %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, ((int)cur
 		return dst;
 	}
 
-	if(type == TYPE_RES)
+	if(type == TYPE_LAYER || type == TYPE_SHADWLUT) // 246785 octets
+	{
+//emu_printf("3xhwram %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+		dst = hwram_work;
+		hwram_work += alignedSize;
+		return dst;
+	}
+
+	if(type == TYPE_RES || type == TYPE_PAFHEAD)
 	{
 /*		dst = hwram_work;
 		hwram_work += alignedSize;
 */
-emu_printf("3bhwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("3bhwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
 			dst = current_lwram;
@@ -107,7 +104,7 @@ emu_printf("3chwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram
 
 	if(type == TYPE_SPRITE || type == TYPE_MOVBOUND)
 	{
-emu_printf("4hwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("4hwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 		if(alignedSize<170000 && ((int)hwram_work+alignedSize)<(int)hwram)
 		{
 			dst = hwram_work;
@@ -129,8 +126,7 @@ emu_printf("4bhwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
-//emu_printf("lwram bglvl current_lwram %x\n", ((int)current_lwram)+SAT_ALIGN(alignedSize));
-emu_printf("4chwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("4chwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 			dst = current_lwram;
 			current_lwram += SAT_ALIGN(alignedSize);
 			return dst;
