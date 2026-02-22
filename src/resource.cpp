@@ -1,6 +1,6 @@
 #pragma GCC optimize ("Os")
-#define LOAD_SPRITE 1
-#define LOAD_MONSTER 1
+//#define LOAD_SPRITE 1
+//#define LOAD_MONSTER 1
 //#define SECTOR_ALIGNED 1
 /*
  * Heart of Darkness engine rewrite
@@ -620,7 +620,7 @@ emu_printf("!buf\n");
 	if(readSize > size)
 		return;
 //emu_printf("malloc sprite %d\n", size);
-	uint8_t *ptr = allocate_memory (TYPE_MONSTER1, size);
+	uint8_t *ptr = allocate_memory (TYPE_SPRITE1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -730,7 +730,7 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	uint8_t spr[kMaxSpriteTypes * 16];
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
+emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}
@@ -752,6 +752,7 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 #ifndef LOAD_SPRITE
 void Resource::loadLvlSprite(int levelNum)
 {
+emu_printf("loadLvlSprite %d\n", levelNum);
 	const char *levelName = _prefixes[levelNum];
 Sint32 fileid, fsize;
 	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);

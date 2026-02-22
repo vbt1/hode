@@ -125,7 +125,7 @@ emu_printf("4bhwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram
 	if(type == TYPE_MONSTER1 || type == TYPE_MONSTER2 || type == TYPE_MSTAREA 
 	|| type == TYPE_MAP || type == TYPE_SHOOT || type == TYPE_MSTCODE 
 	|| type == TYPE_GFSFILE || type == TYPE_SCRMASK || type == TYPE_SCRMASKBUF
-	|| type == TYPE_BGLVLOBJ || type == TYPE_TASK)
+	|| type == TYPE_BGLVLOBJ || type == TYPE_TASK || type == TYPE_SPRITE1)
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
