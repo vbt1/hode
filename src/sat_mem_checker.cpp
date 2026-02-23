@@ -25,7 +25,7 @@ extern Uint8 *hwram_work_paf;
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-	emu_printf("alloctype %d size %d \n", type, alignedSize);
+//	emu_printf("alloctype %d size %d \n", type, alignedSize);
     uint8_t* dst;
 	
 	if( type == TYPE_LDIMG || type == TYPE_FONT)
@@ -38,7 +38,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	
 	if(type == TYPE_PAF || type == TYPE_PAFBUF)
 	{
-emu_printf("0hwram %d hwrampaf %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000,  ((int)hwram_work_paf)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("0hwram %d hwrampaf %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000,  ((int)hwram_work_paf)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 		dst = hwram_work_paf;
 		hwram_work_paf += SAT_ALIGN(alignedSize);
 		return dst;
@@ -63,7 +63,7 @@ emu_printf("0hwram %d hwrampaf %d lwram %d cs1 %d\n", ((int)hwram_work)-0x600000
 
 	if(type == TYPE_BGLVL) // toujours moins de 500ko?
 	{
-emu_printf("3hwram %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("3hwram %d lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 //		dst = current_lwram; // vbt : on dirait qu'il ne faut pas incrémenter
 		dst = cs1ram; // vbt : on dirait qu'il ne faut pas incrémenter
 		cs1ram += SAT_ALIGN(alignedSize);
@@ -126,7 +126,7 @@ emu_printf("4bhwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram
 	{
 		if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
-emu_printf("4chwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
+//emu_printf("4chwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
 			dst = current_lwram;
 			current_lwram += SAT_ALIGN(alignedSize);
 			return dst;
@@ -134,8 +134,8 @@ emu_printf("4chwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram
 		else
 		{
 emu_printf("4dhwram %d %p lwram %d cs1 %d\n", ((int)hwram_work)-0x6000000, hwram_src, ((int)current_lwram)-0x200000, ((int)cs1ram)-0x22400000);
-			dst = cs2ram;
-			cs2ram += SAT_ALIGN(alignedSize);
+			dst = cs1ram;
+			cs1ram += SAT_ALIGN(alignedSize);
 			return dst;
 		}
 	}

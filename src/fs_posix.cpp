@@ -51,7 +51,7 @@ GFS_FILE *FileSystem::openAssetFile(const char *name) {
 			break;
 		}
 	}*/
-	fp = sat_fopen(name, 0);
+	fp = sat_fopen(name, -1);
 	return fp;
 }
 /*
