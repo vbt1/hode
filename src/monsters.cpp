@@ -835,8 +835,8 @@ emu_printf("initMstTable\n");
 	}
 	_mstOp67_x1 = -256;
 	_mstOp67_x2 = -256;
-//	_monsterObjects1Table = (MonsterObject1*)allocate_memory(TYPE_MONSTER1,sizeof(MonsterObject1)*kMaxMonsterObjects1);
-//	_monsterObjects2Table = (MonsterObject2*)allocate_memory(TYPE_MONSTER2,sizeof(MonsterObject2)*kMaxMonsterObjects2);
+	_monsterObjects1Table = (MonsterObject1*)allocate_memory(TYPE_MONSTER1,sizeof(MonsterObject1)*kMaxMonsterObjects1);
+	_monsterObjects2Table = (MonsterObject2*)allocate_memory(TYPE_MONSTER2,sizeof(MonsterObject2)*kMaxMonsterObjects2);
 //	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
 	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
 	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);

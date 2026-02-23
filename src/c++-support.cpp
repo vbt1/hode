@@ -19,7 +19,7 @@ void __cxa_pure_virtual(void) {
 
 void* operator new(size_t size) {
 	emu_printf("--- allocate2 %d\n", size);
-	if(size==4148 || size==40096 || size==8 || size == 10008)
+	if(size==4148 || size==40096 || size==8)
 	{
 		
 //		void *ptr = (void *)hwram_work;
@@ -28,6 +28,13 @@ void* operator new(size_t size) {
 		current_lwram +=size;
 		return ptr;
 	}
+	if(size == 8480)
+	{
+		void *ptr = (void *)hwram_work;
+		hwram_work +=size;
+		return ptr;
+	}
+
     return malloc(size);
 }
 

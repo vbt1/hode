@@ -1,5 +1,5 @@
 #pragma GCC optimize ("Os")
-#define USE_LESS_RAM 1
+//#define USE_LESS_RAM 1
 //#define SECTOR_ALIGNED 1
 /*
  * Heart of Darkness engine rewrite
@@ -106,12 +106,14 @@ Resource::Resource(FileSystem *fs)
 	_lvlSssOffset = 0;
 #endif
 	// sprites
-#ifndef USE_LESS_RAM
-	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
-	memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
+//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+	_resLevelData0x2988SizeTable = (uint32_t *)allocate_memory(TYPE_SPRITE1, kMaxSpriteTypes * 4);
+	_resLevelData0x2988Table     = (LvlObjectData *)allocate_memory(TYPE_SPRITE1, kMaxSpriteTypes * sizeof(LvlObjectData));
+	memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
+//	memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
+	memset(_resLevelData0x2988Table, 0, kMaxSpriteTypes * sizeof(LvlObjectData));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 	memset(_resLvlSpriteDataPtrTable, 0, sizeof(_resLvlSpriteDataPtrTable));
-#endif
 	// backgrounds
 	memset(_resLvlScreenBackgroundDataTable, 0, sizeof(_resLvlScreenBackgroundDataTable));
 	memset(_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_resLvlScreenBackgroundDataPtrTable));
@@ -722,7 +724,8 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 //emu_printf("loadLvlScreenMaskData\n");
 	loadLvlScreenMaskData();
 #ifndef USE_LESS_RAM
-	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+	memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 
 	_lvlFile->seekAlign(_lvlSpritesOffset);
@@ -758,7 +761,8 @@ Sint32 fileid, fsize;
 emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
 	
-	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+	memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 	_lvlFile->seekAlign(_lvlSpritesOffset);
 	uint8_t spr[kMaxSpriteTypes * 16];
@@ -802,7 +806,7 @@ void Resource::unloadLvlData() {
 	}
 #endif
 
-#ifdef USE_LESS_RAM
+#ifndef USE_LESS_RAM
 	for (unsigned int i = 0; i < kMaxSpriteTypes; ++i) {
 		LvlObjectData *dat = &_resLevelData0x2988Table[i];
 #ifdef PS1

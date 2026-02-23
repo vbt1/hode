@@ -1,6 +1,6 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
-#define USE_LESS_RAM 1
+//#define USE_LESS_RAM 1
 //#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
@@ -2212,7 +2212,7 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-_mstDisabled = true; // vbt : ajout pour test
+//_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
