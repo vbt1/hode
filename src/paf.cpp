@@ -122,7 +122,7 @@ void PafPlayer::preload(int num) {
 	{
 		return;
 	}
-	_bufferBlock = allocate_memory (TYPE_SPRITE, kBufferBlockSize);
+	_bufferBlock = allocate_memory (TYPE_PAF, kBufferBlockSize);
 	
 	if(_file._fp == 0)
 		openPaf(_fs, &_file);

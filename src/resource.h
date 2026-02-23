@@ -602,15 +602,15 @@ struct Resource {
 #ifdef SOUND
 	uint32_t _lvlSssOffset; // .sss offset (PSX)
 #endif
-//	uint32_t _resLevelData0x2988SizeTable[kMaxSpriteTypes]; // sprites
-//	LvlObjectData _resLevelData0x2988Table[kMaxSpriteTypes];
-	uint32_t *_resLevelData0x2988SizeTable; // sprites
-	LvlObjectData *_resLevelData0x2988Table;
+	uint32_t _resLevelData0x2988SizeTable[kMaxSpriteTypes]; // sprites
+	LvlObjectData _resLevelData0x2988Table[kMaxSpriteTypes];
+//	uint32_t *_resLevelData0x2988SizeTable; // sprites
+//	LvlObjectData *_resLevelData0x2988Table;
 
 	LvlObjectData *_resLevelData0x2988PtrTable[kMaxSpriteTypes];
 	uint8_t *_resLvlSpriteDataPtrTable[kMaxSpriteTypes];
-//	uint32_t _resLevelData0x2B88SizeTable[kMaxScreens]; // backgrounds
-	uint32_t *_resLevelData0x2B88SizeTable;//[kMaxScreens]; // backgrounds
+	uint32_t _resLevelData0x2B88SizeTable[kMaxScreens]; // backgrounds
+//	uint32_t *_resLevelData0x2B88SizeTable;//[kMaxScreens]; // backgrounds
 	LvlBackgroundData _resLvlScreenBackgroundDataTable[kMaxScreens];
 	uint8_t *_resLvlScreenBackgroundDataPtrTable[kMaxScreens];
 

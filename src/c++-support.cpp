@@ -28,7 +28,7 @@ void* operator new(size_t size) {
 		current_lwram +=size;
 		return ptr;
 	}
-	if(size == 8480)
+	if(size == 8480 || size == 10008 || size == 10164)
 	{
 		void *ptr = (void *)hwram_work;
 		hwram_work +=size;

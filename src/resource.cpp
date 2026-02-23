@@ -1,5 +1,5 @@
 #pragma GCC optimize ("Os")
-//#define USE_LESS_RAM 1
+#define USE_LESS_RAM 1
 //#define SECTOR_ALIGNED 1
 /*
  * Heart of Darkness engine rewrite
@@ -107,8 +107,8 @@ Resource::Resource(FileSystem *fs)
 #endif
 	// sprites
 //	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
-	_resLevelData0x2988SizeTable = (uint32_t *)allocate_memory(TYPE_SPRITE1, kMaxSpriteTypes * 4);
-	_resLevelData0x2988Table     = (LvlObjectData *)allocate_memory(TYPE_SPRITE1, kMaxSpriteTypes * sizeof(LvlObjectData));
+//	_resLevelData0x2988SizeTable = (uint32_t *)allocate_memory(TYPE_SPRITE1, kMaxSpriteTypes * 4);
+//	_resLevelData0x2988Table     = (LvlObjectData *)allocate_memory(TYPE_SPRITE1, kMaxSpriteTypes * sizeof(LvlObjectData));
 	memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
 //	memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
 	memset(_resLevelData0x2988Table, 0, kMaxSpriteTypes * sizeof(LvlObjectData));
@@ -118,7 +118,7 @@ Resource::Resource(FileSystem *fs)
 	memset(_resLvlScreenBackgroundDataTable, 0, sizeof(_resLvlScreenBackgroundDataTable));
 	memset(_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_resLvlScreenBackgroundDataPtrTable));
 //	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
-	_resLevelData0x2B88SizeTable = (uint32_t *)allocate_memory(TYPE_SPRITE, 4 * kMaxScreens);
+//	_resLevelData0x2B88SizeTable = (uint32_t *)allocate_memory(TYPE_SPRITE1, 4 * kMaxScreens);
 	memset(_resLevelData0x2B88SizeTable, 0, 4 * kMaxScreens);
 	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(TYPE_MONSTER2, 104 * sizeof(LvlObject));//[104];
 	memset(_resLvlScreenObjectDataTable, 0, 104 * sizeof(LvlObject));
@@ -596,11 +596,12 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 }
 
 void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
-//emu_printf("assert %d %d\n", num, kMaxSpriteTypes);
 //	assert((unsigned int)num < kMaxSpriteTypes);
 	if((unsigned int)num >= kMaxSpriteTypes)
+{
+emu_printf("loadLvlSpriteData assert %d %d\n", num, kMaxSpriteTypes);
 		return;
-
+}
 	static const uint32_t baseOffset = _lvlSpritesOffset;
 	
 	uint8_t header[3 * sizeof(uint32_t)];
@@ -617,10 +618,13 @@ emu_printf("!buf\n");
 		return;
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
-//emu_printf("readSize %d %d\n", readSize, size);
+
 	if(readSize > size)
+	{
+		emu_printf("readSize %d %d\n", readSize, size);
 		return;
-//emu_printf("malloc sprite %d\n", size);
+	}
+emu_printf("vbt malloc sprite %d\n", size);
 	uint8_t *ptr = allocate_memory (TYPE_SPRITE1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
