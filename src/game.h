@@ -99,7 +99,9 @@ struct Game {
 	int _difficulty;
 
 	SetupConfig _setupConfig;
+#ifdef DEMO
 	bool _playDemo;
+#endif
 	bool _resumeGame;
 
 	LvlObject *_screenLvlObjectsList[kMaxScreens]; // LvlObject linked list for each screen
@@ -130,8 +132,7 @@ struct Game {
 	LvlObject *_lvlObjectsList3;
 	uint8_t _screenPosTable[5][24 * 32];
 	uint8_t _screenTempMaskBuffer[24 * 32];
-	uint8_t *_screenMaskBuffer = 0;//[(16 * 6) * 24 * 32]; // level screens mask : 16 horizontal screens x 6 vertical screens
-//	uint8_t _screenMaskBuffer[(16 * 6) * 24 * 32]; // level screens mask : 16 horizontal screens x 6 vertical screens
+	uint8_t _screenMaskBuffer[(16 * 6) * 24 * 32]; // level screens mask : 16 horizontal screens x 6 vertical screens
 	int _mstAndyCurrentScreenNum;
 	uint8_t _shakeScreenDuration;
 	const uint8_t *_shakeScreenTable;
@@ -181,7 +182,6 @@ struct Game {
 	int _mstOp56Counter;
 	bool _mstDisabled;
 	LvlObject _declaredLvlObjectsList[kMaxLvlObjects];
-//	LvlObject *_declaredLvlObjectsList;//[kMaxLvlObjects];
 	LvlObject *_declaredLvlObjectsNextPtr; // pointer to the next free entry
 	int _declaredLvlObjectsListCount;
 	AndyLvlObjectData _andyObjectScreenData;
@@ -190,8 +190,7 @@ struct Game {
 	uint8_t _andyActionKeysFlags;
 	int _executeMstLogicCounter;
 	int _executeMstLogicPrevCounter;
-	Task *_tasksTable;//[kMaxTasks];
-//	Task _tasksTable[kMaxTasks];
+	Task _tasksTable[kMaxTasks];
 	Task *_tasksList;
 	Task *_monsterObjects1TasksList;
 	Task *_monsterObjects2TasksList;
@@ -214,10 +213,8 @@ struct Game {
 	int _mstPosXmin, _mstPosXmax;
 	int _mstPosYmin, _mstPosYmax;
 	int _mstTemp_x1, _mstTemp_x2, _mstTemp_y1, _mstTemp_y2;
-//	MonsterObject1 _monsterObjects1Table[kMaxMonsterObjects1];
-	MonsterObject1 *_monsterObjects1Table;
-//	MonsterObject2 _monsterObjects2Table[kMaxMonsterObjects2];
-	MonsterObject2 *_monsterObjects2Table;
+	MonsterObject1 _monsterObjects1Table[kMaxMonsterObjects1];
+	MonsterObject2 _monsterObjects2Table[kMaxMonsterObjects2];
 	int _mstTickDelay;
 	uint8_t _mstCurrentActionKeyMask;
 	int _mstCurrentPosX, _mstCurrentPosY;
@@ -512,17 +509,15 @@ struct Game {
 	int _snd_bufferOffset, _snd_bufferSize;
 	bool _snd_muted;
 	int _snd_masterPanning;
-#endif
 	int _snd_masterVolume;
 
-#ifdef SOUND
 	SssObject _sssObjectsTable[kMaxSssObjects];
 	bool _sssObjectsChanged;
 	int _sssObjectsCount;
 	SssObject *_sssObjectsList1; // playing
 	SssObject *_sssObjectsList2; // paused/idle
 	SssObject *_lowPrioritySssObject;
-#endif
+
 	bool _sssUpdatedObjectsTable[kMaxSssObjects];
 	int _playingSssObjectsMax;
 	int _playingSssObjectsCount;
@@ -532,6 +527,7 @@ struct Game {
 	void resetSound();
 	int getSoundPosition(const SssObject *so);
 	void setSoundPanning(SssObject *so, int panning);
+
 	SssObject *findLowPrioritySoundObject() const;
 	void removeSoundObjectFromList(SssObject *so);
 	void updateSoundObject(SssObject *so);
@@ -553,7 +549,7 @@ struct Game {
 	void expireSoundObjects(uint32_t flags);
 	void mixSoundObjects17640(bool flag);
 	void queueSoundObjectsPcmStride();
-
+#endif
 	// andy.cpp
 	AndyMoveData _andyMoveData;
 	int32_t _andyPosX;

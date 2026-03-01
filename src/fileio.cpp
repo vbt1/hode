@@ -2,10 +2,10 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-#pragma GCC optimize ("Os")
+ #pragma GCC optimize ("O2")
  extern "C" {
 #include 	<sega_gfs.h>
-//#include 	<gfs_def.h>
+#include 	<gfs_def.h>
 #include 	<sl_def.h>
 Sint32		iostat, iondata;
 Sint32		gfsstat;
@@ -20,7 +20,7 @@ Uint32 ioskip_bytes;
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
-//static const bool kCheckSectorFileCrc = false;
+static const bool kCheckSectorFileCrc = false;
 
 #ifdef PSP
 static const bool kSeekAbsolutePosition = true;
@@ -31,7 +31,6 @@ static const bool kSeekAbsolutePosition = false;
 
 File::File()
 	: _fp(0) {
-		emu_printf("File\n");
 }
 
 File::~File() {
@@ -58,10 +57,9 @@ void File::seek(int pos, int whence) {
 			pos += sat_ftell(_fp);
 			whence = SEEK_SET;
 		}
-//emu_printf("sat_fseek\n");
+//	//emu_printf("sat_fseek\n");
 		sat_fseek(_fp, pos, whence);
 	}
-//emu_printf("sat_fseek done\n");
 }
 /*
 void File::batchSeek()
@@ -142,7 +140,7 @@ int File::asynchWait(uint8_t *ptr, Sint32 len) {
     // Just read the full requested amount - no limiting here
     iondata = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
 //emu_printf("2\n");    
-//    GFS_NwStop(_fp->fid);
+    GFS_NwStop(_fp->fid);
 //emu_printf("3\n");    
 
 #endif
@@ -152,7 +150,7 @@ int File::asynchWait(uint8_t *ptr, Sint32 len) {
 }
 
 int File::read(uint8_t *ptr, int size) {
-//emu_printf("sat_fread %d\n", size);
+////emu_printf("sat_fread %d\n", size);
 	return sat_fread(ptr, 1, size, _fp);
 }
 
@@ -176,12 +174,12 @@ uint32_t File::readUint32() {
 	read(buf, 4);
 	return READ_LE_UINT32(buf);
 }
-#ifdef SECTOR_ALIGNED
+
 SectorFile::SectorFile() {
 	memset(_buf, 0, sizeof(_buf));
 	_bufPos = 2044;
 }
-#endif
+
 int fioAlignSizeTo2048(int size) {
 	return ((size + 2043) / 2044) * 2048;
 }
@@ -194,9 +192,8 @@ uint32_t fioUpdateCRC(uint32_t sum, const uint8_t *buf, uint32_t size) {
 	return sum;
 }
 */
-#ifdef SECTOR_ALIGNED
 void SectorFile::refillBuffer(uint8_t *ptr) {
-//emu_printf("SectorFile::refillBuffer %p\n", ptr);
+emu_printf("SectorFile::refillBuffer %p\n", ptr);
 	if (ptr) {
 		static const int kPayloadSize = kFioBufferSize - 4;
 		const int size = sat_fread(ptr, 1, kPayloadSize, _fp);
@@ -249,7 +246,7 @@ void SectorFile::seekAlign(uint32_t pos) {
 }
 
 void SectorFile::seek(int pos, int whence) {
-//emu_printf("SectorFile::seek\n");
+emu_printf("SectorFile::seek\n");
 	if (whence == SEEK_SET) {
 //		assert((pos & 2047) == 0);
 		if((pos & 2047) != 0)
@@ -310,4 +307,3 @@ int SectorFile::read(uint8_t *ptr, int size) {
 	}
 	return 0;
 }
-#endif

@@ -809,7 +809,6 @@ void Game::resetMstCode() {
 	for (int i = 0; i < kMaxMonsterObjects2; ++i) {
 		mstMonster2ResetData(&_monsterObjects2Table[i]);
 	}
-emu_printf("clearLvlObjectsList1\n");
 	clearLvlObjectsList1();
 	for (int i = 0; i < _res->_mstHdr.screenAreaDataCount; ++i) {
 		_res->_mstScreenAreaData[i].unk0x1D = 1;
@@ -833,14 +832,10 @@ emu_printf("clearLvlObjectsList1\n");
 	}
 	_mstOp67_x1 = -256;
 	_mstOp67_x2 = -256;
-	_monsterObjects1Table = (MonsterObject1*)allocate_memory(TYPE_MONSTER1,sizeof(MonsterObject1)*kMaxMonsterObjects1);
-	_monsterObjects2Table = (MonsterObject2*)allocate_memory(TYPE_MONSTER2,sizeof(MonsterObject2)*kMaxMonsterObjects2);
-//	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
-	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
-	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
+	memset(_monsterObjects1Table, 0, sizeof(_monsterObjects1Table));
+	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
 	memset(_mstVars, 0, sizeof(_mstVars));
-	_tasksTable = (Task *)allocate_memory(TYPE_TASK,kMaxTasks*sizeof(Task));
-	memset(_tasksTable, 0, kMaxTasks*sizeof(Task));
+	memset(_tasksTable, 0, sizeof(_tasksTable));
 	_m43Num3 = _m43Num1 = _m43Num2 = _mstActionNum = -1;
 	_mstOp54Counter = 0; // bugfix: not reset in the original, causes uninitialized reads at the beginning of 'fort'
 	_executeMstLogicPrevCounter = _executeMstLogicCounter = 0;

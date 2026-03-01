@@ -1,4 +1,3 @@
-#pragma GCC optimize ("Os")
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -6,9 +5,6 @@
 extern "C" {
 void 	free(void *ptr);
 void	*malloc(size_t);
-void emu_printf(const char *format, ...);
-extern uint8_t *hwram_work;
-extern uint8_t *current_lwram;
 }
 
 extern "C"
@@ -18,45 +14,18 @@ void __cxa_pure_virtual(void) {
 }
 
 void* operator new(size_t size) {
-	emu_printf("--- allocate2 %d\n", size);
-	if(size==4148 || size==40096 || size==8)
-	{
-		
-//		void *ptr = (void *)hwram_work;
-//		hwram_work +=size;
-		void *ptr = (void *)current_lwram;
-		current_lwram +=size;
-		return ptr;
-	}
-	if(size == 8480 || size == 10008 || size == 10164)
-	{
-		void *ptr = (void *)hwram_work;
-		hwram_work +=size;
-		return ptr;
-	}
-
     return malloc(size);
 }
 
 void* operator new[](size_t size) {
-	emu_printf("--- allocate %d\n", size);
-	if(size==4148 || size==40096 || size==20168 || size == 60948)
-	{
-		
-		void *ptr = (void *)hwram_work;
-		hwram_work +=size;
-		return ptr;
-	}
-    return malloc(size);	
+    return malloc(size);
 }
 
 void operator delete(void* ptr) {
-	emu_printf("--- delete1 %p\n", ptr);
     free(ptr);
 }
 
 void operator delete[](void* ptr) {
-	emu_printf("--- delete2 %p\n", ptr);
     free(ptr);
 }
 

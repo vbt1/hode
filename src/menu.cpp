@@ -83,14 +83,14 @@ Menu::Menu(Game *g, PafPlayer *paf, Resource *res, Video *video)
 //emu_printf("new menu\n");
 	_config = &_g->_setupConfig;
 }
-
+#ifdef SOUND
 void Menu::setVolume() {
 	const int volume = _config->players[_config->currentPlayer].volume;
 	if (volume != _g->_snd_masterVolume) {
 		_g->_snd_masterVolume = volume;
 	}
 }
-
+#endif
 static uint32_t readBitmapsGroup(int count, DatBitmapsGroup *bitmapsGroup, uint32_t ptrOffset, int paletteSize) {
 	const uint32_t baseOffset = ptrOffset;
 	for (int i = 0; i < count; ++i) {
@@ -1501,7 +1501,7 @@ void Menu::handleDifficultyScreen(int num) {
 	drawDifficultyScreen();
 	g_system->sleep(kDelayMs);
 }
-
+#ifdef SOUND
 void Menu::drawSoundScreen() {
 	drawBitmap(_optionsBitmapData[_optionNum], _optionsBitmapSize[_optionNum]);
 	drawSprite(&_iconsSprites[0x12], _iconsSpritesData, (_soundNum == kSoundNum_Stereo) ? 1 : 0);
@@ -1512,6 +1512,7 @@ void Menu::drawSoundScreen() {
 	drawSprite(&_iconsSprites[0x12], _iconsSpritesData, (_soundNum == kSoundNum_Reset) ? 11 : 10);
 	// volume bar
 	const int w = (_g->_snd_masterVolume * 96) / 128;
+
 	for (int y = 0; y < 15; ++y) {
 		memset(_video->_frontLayer + 18807 + 256 * y, 0xE0, w);
 	}
@@ -1519,6 +1520,7 @@ void Menu::drawSoundScreen() {
 	if (_soundNum == kSoundNum_Test) {
 		drawSprite(&_iconsSprites[0x12], _iconsSpritesData, _soundTestSpriteNum);
 	}
+
 	if (_g->_snd_masterVolume != 0) {
 		if (_config->players[_config->currentPlayer].stereo) {
 			drawSprite(&_iconsSprites[0x12], _iconsSpritesData, 13);
@@ -1542,7 +1544,7 @@ void Menu::drawSoundScreen() {
 	}
 	refreshScreen();
 }
-#ifdef SOUND
+
 void Menu::handleSoundScreen(int num) {
 	_volumeState = 0;
 	++_soundCounter;

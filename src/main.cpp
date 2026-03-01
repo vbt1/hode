@@ -80,7 +80,7 @@ Sint16 CartRAM_init(Uint8 cs) {
 	return id;
 }
 
-//static const char *_title = "Heart of Darkness";
+static const char *_title = "Heart of Darkness";
 /*
 static const char *_configIni = "hode.ini";
 
@@ -236,8 +236,8 @@ int ss_main() {
 	g_debugMask = 0; //kDebug_GAME | kDebug_RESOURCE | kDebug_SOUND | kDebug_MONSTER;
 	int cheats = 0;
 
-	hwram_work = allocate_memory (TYPE_HWRAM, 588000+93000+72000);//+93000+42000);
-//emu_printf("-0 %p\n", hwram_work);
+	hwram_work = allocate_memory (TYPE_HWRAM, 588000);
+emu_printf("-0 %p\n", hwram_work);
 
 #ifdef WII
 	System_earlyInit();
@@ -334,7 +334,7 @@ int ss_main() {
 	const bool isPsx = false;
 	
 	g_system = SystemStub_SDL_create();
-	g_system->init("", Video::W, Video::H);
+	g_system->init(_title, Video::W, Video::H);
 #if 0
 	setupAudio(g);
 	if (isPsx) {
@@ -376,9 +376,9 @@ int ss_main() {
 			level = g->_currentLevel + 1;
 			checkpoint = 0;
 			levelChanged = true;
-emu_printf("lwram used %d cs1 used %d\n", 0x300000-((int)current_lwram), ((int)cs1ram)-0x22400000);
+//emu_printf("lwram used %d cs1 used %d\n", 0x300000-((int)current_lwram), ((int)cs1ram)-0x22400000);
 			current_lwram = (uint8_t *)save_current_lwram;
-emu_printf("main reset cs1ram\n");
+//emu_printf("main reset cs1ram\n");
 			cs1ram = (uint8_t *)save_cs1ram;
 		}
 	} while (!g_system->inp.quit && resume && !isPsx); // do not return to menu when starting from a specific level checkpoint
