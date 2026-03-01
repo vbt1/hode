@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 //#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
@@ -56,7 +56,7 @@ static const char *_filenames[] = {
 */
 
 static bool openPaf(FileSystem *fs, File *f) {
-////emu_printf("openPaf\n");	
+//////emu_printf("openPaf\n");	
 /*	
 	for (int i = 0; _filenames[i]; ++i) {
 		GFS_FILE *fp = fs->openAssetFile(_filenames[i]);

@@ -1,6 +1,7 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
-//#define DEBUG 1
+#define USE_LESS_RAM 1
+#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
