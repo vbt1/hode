@@ -954,7 +954,6 @@ bool Resource::isLvlBackgroundDataLoaded(int num) const {
 }
 
 void Resource::incLvlSpriteDataRefCounter(LvlObject *ptr) {
-emu_printf("incLvlSpriteDataRefCounter %p %d\n", ptr, ptr->spriteNum);
 	LvlObjectData *dat = _resLevelData0x2988PtrTable[ptr->spriteNum];
 	assert(dat);
 	++dat->refCount;
