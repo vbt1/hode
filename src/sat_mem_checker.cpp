@@ -28,6 +28,10 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
     uint8_t *dst = *ptr;
 //	emu_printf("bump %p\n", ptr);
     *ptr += SAT_ALIGN(size);
+
+    emu_printf("hwram %d %p lwram %d cs1 %p cs2 %p hw %p aft %p\n",
+            ((int)hwram_work) - 0x6000000, hwram_src,
+            ((int)current_lwram) - 0x200000, cs1ram, cs2ram, hwram, ptr);
     return dst;
 }
 
@@ -40,8 +44,8 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
   // plante à la fin des videos
     case TYPE_PAF:
     case TYPE_PAFBUF:
-//        return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
-        return bump(&current_lwram, alignedSize);
+        return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
+//        return bump(&current_lwram, alignedSize);
 
     case TYPE_MENU:
         return current_lwram; // no increment
@@ -69,9 +73,6 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
     case TYPE_PAFHEAD:
         if (((int)current_lwram) + SAT_ALIGN(alignedSize) < 0x300000)
             return bump(&current_lwram, alignedSize);
-        emu_printf("3chwram %d %p lwram %d cs1 %d\n",
-            ((int)hwram_work) - 0x6000000, hwram_src,
-            ((int)current_lwram) - 0x200000, ((int)cs1ram) - 0x22400000);
         return bump(&cs1ram, alignedSize);
 
     case TYPE_MONSTER1:

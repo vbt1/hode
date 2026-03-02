@@ -99,32 +99,31 @@ static const char *_usage =
 //static const bool _runBenchmark = false;
 static bool _runMenu = true;
 static bool _displayLoadingScreen = true;
-
+#ifdef SOUND
 static void lockAudio(int flag) {
-#if 0
+
 	if (flag) {
 		g_system->lockAudio();
 	} else {
 		g_system->unlockAudio();
 	}
-#endif
 }
 
 static void mixAudio(void *userdata, int16_t *buf, int len) {
-#if 0
+
 	((Game *)userdata)->mixAudio(buf, len);
-#endif
+
 }
 
 static void setupAudio(Game *g) {
-#ifdef SOUND
 	g->_mix._lock = lockAudio;
 	AudioCallback cb;
 	cb.proc = mixAudio;
 	cb.userdata = g;
 	g_system->startAudio(cb);
-#endif
 }
+#endif
+
 #if 0
 static const char *_defaultDataPath = ".";
 static const char *_defaultSavePath = ".";
@@ -236,7 +235,7 @@ int ss_main() {
 	g_debugMask = 0; //kDebug_GAME | kDebug_RESOURCE | kDebug_SOUND | kDebug_MONSTER;
 	int cheats = 0;
 
-	hwram_work = allocate_memory (TYPE_HWRAM, 588000+13000);//+93000+42000);
+	hwram_work = allocate_memory (TYPE_HWRAM, 588000+22000);//+93000+42000);
 //emu_printf("-0 %p\n", hwram_work);
 
 #ifdef WII

@@ -897,6 +897,7 @@ void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_
 }
 #if 1
 void Video::drawString(const char *s, int x, int y, uint8_t color, uint8_t *dst) {
+emu_printf("drawString %s col %d x%d y%d\n", s, color, x, y);
 	for (int i = 0; s[i]; ++i) {
 		uint8_t chr = s[i];
 		if (chr != ' ') {

@@ -1,5 +1,5 @@
-#pragma GCC optimize ("Os")
-//#define DEBUG 1
+#pragma GCC optimize ("O2")
+#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -27,9 +27,6 @@ Sint32 GFCD_GetBufSiz(void);
 Sint32  CDC_GetBufSiz(Sint32 *totalsiz, Sint32 *bufnum, Sint32 *freesiz);
 uint8_t *hwram_work_paf;
 }
-
-// Configuration: choose which section runs on slave CPU
-#define V_ON_SLAVE 0  // 1 = V on slave, H on master; 0 = H on slave, V on master
 
 // Keep your exact original structures
 typedef struct {
@@ -763,7 +760,7 @@ unsigned int s1 = g_system->getTimeStamp();
 unsigned int e1 = g_system->getTimeStamp();
 int result = e1-s1;
 if(result>0)
-	////emu_printf("--duration %s : %d\n","read_copy", result);
+	emu_printf("--duration %s : %d\n","read_copy", result);
 			}
 			++currentFrameBlock;
 			--blocksCountForFrame;
@@ -803,7 +800,7 @@ if(result>0)
 unsigned int e3 = g_system->getTimeStamp();
 result = e3-e2;
 if(result>0)
-	//emu_printf("--duration %s : %d\n","copyrect", result);
+	emu_printf("--duration %s : %d\n","copyrect", result);
 
 		g_system->updateScreen(false);
 //		g_system->processEvents();
@@ -1000,9 +997,9 @@ void PafPlayer::mainLoop() {
             buffer[1] = '0' + (frame_z % 10);
             buffer[2] = 0;
         }
-        _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
+//        _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-//emu_printf("fps %d\n", frame_z);
+emu_printf("fps %d\n", frame_z);
 #endif
 
         // Quit check

@@ -132,6 +132,7 @@ struct Game {
 	LvlObject *_lvlObjectsList3;
 	uint8_t _screenPosTable[5][24 * 32];
 	uint8_t _screenTempMaskBuffer[24 * 32];
+//	uint8_t *_screenMaskBuffer = 0;//[(16 * 6) * 24 * 32]; // level screens mask : 16 horizontal screens x 6 vertical screens
 	uint8_t _screenMaskBuffer[(16 * 6) * 24 * 32]; // level screens mask : 16 horizontal screens x 6 vertical screens
 	int _mstAndyCurrentScreenNum;
 	uint8_t _shakeScreenDuration;
@@ -214,7 +215,9 @@ struct Game {
 	int _mstPosYmin, _mstPosYmax;
 	int _mstTemp_x1, _mstTemp_x2, _mstTemp_y1, _mstTemp_y2;
 	MonsterObject1 _monsterObjects1Table[kMaxMonsterObjects1];
+//	MonsterObject1 *_monsterObjects1Table;
 	MonsterObject2 _monsterObjects2Table[kMaxMonsterObjects2];
+//	MonsterObject2 *_monsterObjects2Table;
 	int _mstTickDelay;
 	uint8_t _mstCurrentActionKeyMask;
 	int _mstCurrentPosX, _mstCurrentPosY;

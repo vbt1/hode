@@ -92,8 +92,11 @@ emu_printf("Game\n");
 	memset(_animBackgroundDataTable, 0, sizeof(_animBackgroundDataTable));
 	_animBackgroundDataCount = 0;
 
-	memset(_monsterObjects1Table, 0, sizeof(_monsterObjects1Table));
-	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
+//	_monsterObjects1Table = (MonsterObject1 *)allocate_memory(TYPE_MONSTER1, sizeof(MonsterObject1) * kMaxMonsterObjects1);
+//	_monsterObjects2Table = (MonsterObject2 *)allocate_memory(TYPE_MONSTER2, sizeof(MonsterObject2) * kMaxMonsterObjects2);
+	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
+	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
+//	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
 
 #ifdef SOUND
 	_sssDisabled = true;
@@ -568,7 +571,12 @@ void Game::setupScreenMask(uint8_t num) {
 }
 
 void Game::resetScreenMask() {
-	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
+//emu_printf("resetScreenMask\n");
+//	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
+//	if(_screenMaskBuffer == 0)
+//		_screenMaskBuffer = allocate_memory(TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
+
+	memset(_screenMaskBuffer, 0, (16 * 6) * 24 * 32);
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_res->_screensState[i].s3 = 0xFF;
 		setupScreenMask(i);

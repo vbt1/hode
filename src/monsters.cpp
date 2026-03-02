@@ -832,8 +832,11 @@ void Game::resetMstCode() {
 	}
 	_mstOp67_x1 = -256;
 	_mstOp67_x2 = -256;
-	memset(_monsterObjects1Table, 0, sizeof(_monsterObjects1Table));
-	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
+//	_monsterObjects1Table = (MonsterObject1*)allocate_memory(TYPE_MONSTER1,sizeof(MonsterObject1)*kMaxMonsterObjects1);
+//	_monsterObjects2Table = (MonsterObject2*)allocate_memory(TYPE_MONSTER2,sizeof(MonsterObject2)*kMaxMonsterObjects2);
+//	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
+	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
+	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
 	memset(_mstVars, 0, sizeof(_mstVars));
 	memset(_tasksTable, 0, sizeof(_tasksTable));
 	_m43Num3 = _m43Num1 = _m43Num2 = _mstActionNum = -1;
