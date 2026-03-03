@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-//#define DEBUG 1
+#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -80,7 +80,7 @@ static void closePaf(FileSystem *fs, File *f) {
 }
 
 PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
-	: _fs(fs) {
+	: _fs(fs), _video(vid) {
 //emu_printf("PafPlayer\n");
 	_skipCutscenes = !openPaf(_fs, &_file);
 	_videoNum = -1;
@@ -93,8 +93,7 @@ PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
 	memset(&_pafCb, 0, sizeof(_pafCb));
 	_volume = 128;
 	_frameMs = kFrameDuration;
-	_video = vid;
-
+emu_printf("vid %p\n", _video);
 //	hwram_work_paf = (uint8_t *)hwram_work;
 //	//emu_printf("hwram_work_paf init %p\n", hwram_work);
 }
@@ -730,7 +729,7 @@ void PafPlayer::mainLoop() {
 
 	uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
 #ifdef DEBUG
-	_video->_font = (uint8_t *)0x25e6df94;	// vbt : hardcoded font buffer address vram vdp2
+//	_video->_font = (uint8_t *)0x25e6df94;	// vbt : hardcoded font buffer address vram vdp2
 	static uint8_t last_frame_z = 0xFF;
 	static char buffer[8];
 #endif
@@ -857,7 +856,7 @@ void PafPlayer::mainLoop() {
     uint32_t totalBytes2;
 
 #ifdef DEBUG
-    _video->_font = (uint8_t *)0x25e6df94;
+//    _video->_font = (uint8_t *)0x25e6df94;
     static uint8_t last_frame_z = 0xFF;
     static char buffer[8];
 #endif
@@ -984,23 +983,26 @@ void PafPlayer::mainLoop() {
         decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
         g_system->copyRect(0, 0, kVideoWidth, kVideoHeight, _pageBuffers[_currentPageBuffer], kVideoWidth);
 
+#ifdef DEBUG
+        if (frame_z != last_frame_z) 
+		{
+            last_frame_z = frame_z;
+            buffer[0] = '0' + (frame_z / 10);
+            buffer[1] = '0' + (frame_z % 10);
+            buffer[2] = 0;
+        }
+        _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
+#else
+emu_printf("fps %d\n", frame_z);
+#endif
+
         if (_paletteChanged) {
             _paletteChanged = false;
             g_system->setPalette(_paletteBuffer, 256, 6);
             g_system->updateScreen(false);
         }
 
-#ifdef DEBUG
-        if (frame_z != last_frame_z) {
-            last_frame_z = frame_z;
-            buffer[0] = '0' + (frame_z / 10);
-            buffer[1] = '0' + (frame_z % 10);
-            buffer[2] = 0;
-        }
-//        _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
-#else
-emu_printf("fps %d\n", frame_z);
-#endif
+
 
         // Quit check
         if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) || g_system->inp.keyPressed(SYS_INP_RUN)) {

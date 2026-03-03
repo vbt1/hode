@@ -58,7 +58,8 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
         return hwram_src;
 
     case TYPE_BGLVL:
-        return bump(&cs1ram, alignedSize);
+//        return bump(&current_lwram, alignedSize);
+       return bump(&cs1ram, alignedSize);
 
     case TYPE_LAYER:
     case TYPE_SHADWLUT:
@@ -67,8 +68,11 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
   // retour des bugs sur sprites
     case TYPE_SPRITE1:
     case TYPE_MOVBOUND:
+//		if(alignedSize<170000 && ((int)hwram_work+alignedSize)<(int)hwram)
+//			return bump(&hwram_work, alignedSize);
+	
     	if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
-//    	return bump(&current_lwram, alignedSize);
+			return bump(&current_lwram, alignedSize);
         return bump(&cs2ram, alignedSize);
 
     case TYPE_RES:
