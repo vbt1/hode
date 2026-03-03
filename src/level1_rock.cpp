@@ -79,7 +79,6 @@ struct Level_rock: Level {
 };
 
 Level *Level_rock_create() {
-emu_printf("new rock\n");
 	return new Level_rock;
 }
 
@@ -872,8 +871,10 @@ void Level_rock::initialize() {
 #if PAF
 	if (!_paf->_skipCutscenes) {
 		if (_andyObject->spriteNum == 0) {
+emu_printf("_paf->preload(22)\n");
 			_paf->preload(22);
 		} else {
+emu_printf("_paf->preload(23)\n");
 			_paf->preload(23);
 		}
 	}

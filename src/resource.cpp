@@ -1,6 +1,6 @@
 #pragma GCC optimize ("Os")
-#define LOAD_SPRITE 1
-#define LOAD_MONSTER 1
+#define USE_LESS_RAM 1
+//#define SECTOR_ALIGNED 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -67,9 +67,9 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 
 static void closeDat(FileSystem *fs, File *f) {
 emu_printf("closeDat ");
-//Sint32 fileid, fsize;
-//GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
-//emu_printf("------ filename %s\n", GFS_IdToName(fileid));
+Sint32 fileid, fsize;
+GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
+emu_printf("------ filename %s %d\n", GFS_IdToName(fileid), fileid);
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -92,7 +92,6 @@ static int readBytesAlign(File *f, uint8_t *buf, int len) {
 
 Resource::Resource(FileSystem *fs)
 	: _fs(fs), _isPsx(false), /*_isDemo(false),*/ _version(V1_1) {
-//emu_printf("Resource\n");
 
 	memset(_screensGrid, 0, sizeof(_screensGrid));
 	memset(_screensBasePos, 0, sizeof(_screensBasePos));
@@ -106,23 +105,20 @@ Resource::Resource(FileSystem *fs)
 	_lvlSssOffset = 0;
 #endif
 	// sprites
-#ifdef LOAD_SPRITE
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 	memset(_resLvlSpriteDataPtrTable, 0, sizeof(_resLvlSpriteDataPtrTable));
-#endif
 	// backgrounds
 	memset(_resLvlScreenBackgroundDataTable, 0, sizeof(_resLvlScreenBackgroundDataTable));
 	memset(_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_resLvlScreenBackgroundDataPtrTable));
-//	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
-//	_resLevelData0x2B88SizeTable = (uint32_t *)allocate_memory(TYPE_SPRITE, 4 * kMaxScreens);
-	memset(_resLevelData0x2B88SizeTable, 0, 4 * kMaxScreens);
+	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
+
+//	memset(_resLvlScreenObjectDataTable, 0, sizeof(_resLvlScreenObjectDataTable));
 	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(TYPE_MONSTER2, 104 * sizeof(LvlObject));//[104];
 	memset(_resLvlScreenObjectDataTable, 0, 104 * sizeof(LvlObject));
-//	memset(_resLvlScreenObjectDataTable, 0, sizeof(_resLvlScreenObjectDataTable));
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
-
+#ifdef SECTOR_ALIGNED
 	if (sectorAlignedGameData()) {
 ////emu_printf("_version = V1_2\n");
 		_datFile = new SectorFile;
@@ -133,7 +129,10 @@ Resource::Resource(FileSystem *fs)
 #endif
 		// from v1.2, game data files are 'sector aligned'
 		_version = V1_2;
-	} else {
+	} 
+	else 
+#endif
+	{
 ////emu_printf("_version NOT V1_2\n");
 		_datFile = new File;
 		_lvlFile = new File;
@@ -144,27 +143,27 @@ Resource::Resource(FileSystem *fs)
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[16];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
-//emu_printf("filename %s here\n", filename);
+emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
-//emu_printf("seek %s %p\n", filename, _lvlFile);
+emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
-//emu_printf("skipUint32 %s\n", filename);
+emu_printf("skipUint32 %s\n", filename);
 			_lvlFile->skipUint32();
 ////emu_printf("readUint32 %s\n", filename);
 			const int size = _lvlFile->readUint32();
 			if (size == 0) {
 				_version = V1_0;
 			}
-////emu_printf("closeDat %s\n", filename);
+emu_printf("closeDat %s\n", filename);
 			closeDat(_fs, _lvlFile);
-////emu_printf("closeDat %s done\n", filename);
+emu_printf("closeDat %s done\n", filename);
 		}
 	}
 	// detect if this is a demo version by trying to open the second level data files
 	char filename[16];
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
 	if (openDat(_fs, filename, _lvlFile)) {
-////emu_printf("NOT DEMO\n");
+emu_printf("NOT DEMO %s\n", filename);
 		closeDat(_fs, _lvlFile);
 	} else {
 ////emu_printf("DEMO\n");
@@ -181,6 +180,7 @@ Resource::Resource(FileSystem *fs)
 #endif
 	_lvlSpritesOffset = 0x288 + 96 * (_version == V1_0 ? 96 : 104);
 	_lvlBackgroundsOffset = _lvlSpritesOffset + 32 * 16;
+emu_printf("_lvlBackgroundsOffset init %d\n", _lvlBackgroundsOffset);
 	_lvlMasksOffset = _lvlBackgroundsOffset + kMaxScreens * (16 + 160);
 
 	_loadingImageBuffer = 0;
@@ -204,6 +204,7 @@ Resource::~Resource() {
 #endif
 }
 
+#ifdef SECTOR_ALIGNED
 bool Resource::sectorAlignedGameData() {
 ////emu_printf("sectorAlignedGameData %s\n", _setupDat);
 	GFS_FILE *fp = _fs->openAssetFile(_setupDat);
@@ -228,7 +229,7 @@ bool Resource::sectorAlignedGameData() {
 ////emu_printf("sectorAlignedGameData true ? %d\n", ret);
 	return ret;
 }
-
+#endif
 void Resource::loadSetupDat() {
 ////emu_printf("loadSetupDat\n");
 #if 0
@@ -396,7 +397,7 @@ void Resource::loadLevelData(int levelNum) {
 
 	char filename[16];
 	const char *levelName = _prefixes[levelNum];
-
+// vbt : fermeture fichier niveau, inutile si premier niveau
 	closeDat(_fs, _lvlFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
 emu_printf("vbt filename %s\n",filename);
@@ -407,7 +408,7 @@ emu_printf("vbt filename %s\n",filename);
 		//emu_printf("Unable to open '%s'\n", filename);
 	}
 
-#ifdef LOAD_MONSTER
+#ifndef USE_LESS_RAM
 	closeDat(_fs, _mstFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
 	if (openDat(_fs, filename, _mstFile)) {
@@ -589,11 +590,12 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 }
 
 void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
-//emu_printf("assert %d %d\n", num, kMaxSpriteTypes);
 //	assert((unsigned int)num < kMaxSpriteTypes);
 	if((unsigned int)num >= kMaxSpriteTypes)
+{
+emu_printf("loadLvlSpriteData assert %d %d\n", num, kMaxSpriteTypes);
 		return;
-
+}
 	static const uint32_t baseOffset = _lvlSpritesOffset;
 	
 	uint8_t header[3 * sizeof(uint32_t)];
@@ -610,11 +612,14 @@ emu_printf("!buf\n");
 		return;
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
-//emu_printf("readSize %d %d\n", readSize, size);
+
 	if(readSize > size)
+	{
+		emu_printf("readSize %d %d\n", readSize, size);
 		return;
-//emu_printf("malloc sprite %d\n", size);
-	uint8_t *ptr = allocate_memory (TYPE_MONSTER1, size);
+	}
+emu_printf("vbt malloc sprite %d\n", size);
+	uint8_t *ptr = allocate_memory (TYPE_SPRITE1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -716,15 +721,16 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	}
 //emu_printf("loadLvlScreenMaskData\n");
 	loadLvlScreenMaskData();
-#ifdef LOAD_SPRITE
-	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+#ifndef USE_LESS_RAM
+//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+	memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 
 	_lvlFile->seekAlign(_lvlSpritesOffset);
 	uint8_t spr[kMaxSpriteTypes * 16];
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
+emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}
@@ -743,16 +749,18 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	}
 #endif
 }
-#ifndef LOAD_SPRITE
+#ifdef USE_LESS_RAM
 void Resource::loadLvlSprite(int levelNum)
 {
+emu_printf("loadLvlSprite %d\n", levelNum);
 	const char *levelName = _prefixes[levelNum];
 Sint32 fileid, fsize;
 	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
 emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
 	
-	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+	memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 	_lvlFile->seekAlign(_lvlSpritesOffset);
 	uint8_t spr[kMaxSpriteTypes * 16];
@@ -764,9 +772,7 @@ emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->
 		loadLvlSpriteData(i, spr + i * 16);
 	}	
 }
-#endif
 
-#ifndef LOAD_MONSTER
 void Resource::loadLvlMst(int levelNum)
 {
 	const char *levelName = _prefixes[levelNum];
@@ -798,7 +804,7 @@ void Resource::unloadLvlData() {
 	}
 #endif
 
-#ifdef LOAD_SPRITE
+#ifndef USE_LESS_RAM
 	for (unsigned int i = 0; i < kMaxSpriteTypes; ++i) {
 		LvlObjectData *dat = &_resLevelData0x2988Table[i];
 #ifdef PS1
@@ -846,8 +852,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		dat->backgroundMaskTable[i] = (offs != 0) ? ptr + offs : 0;
-		emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
-		
+//		emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
 	}
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
@@ -920,7 +925,7 @@ emu_printf("read(header %p\n", buf);
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;
 	_resLvlScreenBackgroundDataPtrTable[num] = ptr;
-//emu_printf("_resLevelData0x2B88SizeTable[%d]=%d\n", num,size);
+emu_printf("_resLevelData0x2B88SizeTable[%d]=%d\n", num,size);
 	_resLevelData0x2B88SizeTable[num] = size;
 }
 

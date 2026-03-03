@@ -83,14 +83,14 @@ Menu::Menu(Game *g, PafPlayer *paf, Resource *res, Video *video)
 //emu_printf("new menu\n");
 	_config = &_g->_setupConfig;
 }
-
+#ifdef SOUND
 void Menu::setVolume() {
 	const int volume = _config->players[_config->currentPlayer].volume;
 	if (volume != _g->_snd_masterVolume) {
 		_g->_snd_masterVolume = volume;
 	}
 }
-
+#endif
 static uint32_t readBitmapsGroup(int count, DatBitmapsGroup *bitmapsGroup, uint32_t ptrOffset, int paletteSize) {
 	const uint32_t baseOffset = ptrOffset;
 	for (int i = 0; i < count; ++i) {
@@ -242,7 +242,8 @@ int xx = 0;
 			if (_optionsBitmapSize[i] != 0) {
 				_optionsBitmapData[i] = ptr + ptrOffset;
 				ptrOffset += _optionsBitmapSize[i] + paletteSize;
-			} else {
+			} else
+			{
 				_optionsBitmapData[i] = 0;
 			}
 		}
@@ -509,13 +510,15 @@ bool Menu::mainLoop() {
 	loadData();
 	while (!g_system->inp.quit) {
 		const int option = handleTitleScreen();
-		if (option == kTitleScreen_AssignPlayer) {
+/*		if (option == kTitleScreen_AssignPlayer) {
 			handleAssignPlayer();
 			//emu_printf("currentPlayer %d\n", _config->currentPlayer);
 			continue;
-		} else if (option == kTitleScreen_Play) {
+		} else*/ if (option == kTitleScreen_Play) {
 			ret = true;
-		} else if (option == kTitleScreen_Options) {
+		}
+/*
+		else if (option == kTitleScreen_Options) {
 			PafCallback pafCb;
 			pafCb.frameProc = menuPafCallback;
 			pafCb.endProc = 0;
@@ -529,7 +532,9 @@ bool Menu::mainLoop() {
 			_g->resetSound();
 			_paf->setCallback(0);
 #endif
-		} else if (option == kTitleScreen_Quit) {
+		}
+*/
+		else if (option == kTitleScreen_Quit) {
 		}
 		break;
 	}
@@ -667,7 +672,7 @@ void Menu::drawBitmap(const DatBitmapsGroup *bitmapsGroup, const uint8_t *bitmap
 		bitmapData += srcPitch;
 	}
 }
-
+/*
 void Menu::setCurrentPlayer(int num) {
 	//debug(kDebug_MENU, "setCurrentPlayer %d", num);
 	setLevelCheckpoint(num);
@@ -1294,7 +1299,7 @@ void Menu::handleJoystickControlsScreen(int num) {
 	}
 	g_system->sleep(kDelayMs);
 }
-/*
+
 void Menu::drawKeyboardKeyCode(int num) {
 	for (int i = 0; i < 2; ++i) {
 		const uint8_t code = _config->players[_config->currentPlayer].controls[16 + 2 * num + i];
@@ -1496,7 +1501,7 @@ void Menu::handleDifficultyScreen(int num) {
 	drawDifficultyScreen();
 	g_system->sleep(kDelayMs);
 }
-
+#ifdef SOUND
 void Menu::drawSoundScreen() {
 	drawBitmap(_optionsBitmapData[_optionNum], _optionsBitmapSize[_optionNum]);
 	drawSprite(&_iconsSprites[0x12], _iconsSpritesData, (_soundNum == kSoundNum_Stereo) ? 1 : 0);
@@ -1507,6 +1512,7 @@ void Menu::drawSoundScreen() {
 	drawSprite(&_iconsSprites[0x12], _iconsSpritesData, (_soundNum == kSoundNum_Reset) ? 11 : 10);
 	// volume bar
 	const int w = (_g->_snd_masterVolume * 96) / 128;
+
 	for (int y = 0; y < 15; ++y) {
 		memset(_video->_frontLayer + 18807 + 256 * y, 0xE0, w);
 	}
@@ -1514,6 +1520,7 @@ void Menu::drawSoundScreen() {
 	if (_soundNum == kSoundNum_Test) {
 		drawSprite(&_iconsSprites[0x12], _iconsSpritesData, _soundTestSpriteNum);
 	}
+
 	if (_g->_snd_masterVolume != 0) {
 		if (_config->players[_config->currentPlayer].stereo) {
 			drawSprite(&_iconsSprites[0x12], _iconsSpritesData, 13);
@@ -1537,7 +1544,7 @@ void Menu::drawSoundScreen() {
 	}
 	refreshScreen();
 }
-#ifdef SOUND
+
 void Menu::handleSoundScreen(int num) {
 	_volumeState = 0;
 	++_soundCounter;
@@ -1655,7 +1662,7 @@ void Menu::handleSoundScreen(int num) {
 	g_system->sleep(kDelayMs);
 }
 #endif
-
+/*
 void Menu::changeToOption(int num) {
 	const uint8_t *data = &_optionData[num * 8];
 	const int button = data[6];
@@ -1845,7 +1852,7 @@ void Menu::handleLoadCheckpoint(int num) {
 	drawCheckpointScreen();
 	g_system->sleep(kDelayMs);
 }
-#if 0
+
 void Menu::handleLoadCutscene(int num) {
 	const uint8_t *data = &_optionData[num * 8];
 	num = data[5];
@@ -1899,7 +1906,7 @@ void Menu::handleLoadCutscene(int num) {
 	drawCutsceneScreen();
 	g_system->sleep(kDelayMs);
 }
-#endif
+*/
 static bool matchInput(uint8_t type, uint8_t mask, const PlayerInput &inp, uint8_t optionMask) {
 	if (type != 0) {
 		if ((mask & 1) != 0 && inp.keyReleased(SYS_INP_RUN)) {
@@ -1930,7 +1937,7 @@ static bool matchInput(uint8_t type, uint8_t mask, const PlayerInput &inp, uint8
 	}
 	return false;
 }
-
+/*
 bool Menu::handleOptions() {
 	_lastLevelNum = _config->players[_config->currentPlayer].lastLevelNum + 1;
 	if (_lastLevelNum > _res->_datHdr.levelsCount) {
@@ -2107,3 +2114,4 @@ bool Menu::handleOptions() {
 	}
 	return false;
 }
+*/

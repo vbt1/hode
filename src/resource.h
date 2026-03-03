@@ -401,7 +401,7 @@ struct MstOp211Data {
 	uint8_t unkD; // D
 	uint16_t maskVars; // E
 }; // sizeof == 16
-
+#ifdef SOUND
 struct SssHdr {
 	int version;
 	int bufferSize;
@@ -503,7 +503,8 @@ struct SssUnk6 {
 	uint32_t unk0[4]; // 0
 	uint32_t mask; // 10
 };
-
+#endif
+#ifdef DEMO
 struct Dem {
 	uint32_t randSeed;
 	uint32_t keyMaskLen;
@@ -514,7 +515,7 @@ struct Dem {
 	uint8_t *actionKeyMask;
 	uint8_t *directionKeyMask;
 };
-
+#endif
 template <typename T>
 struct ResStruct {
 	T *ptr;
@@ -607,7 +608,6 @@ struct Resource {
 	LvlObjectData *_resLevelData0x2988PtrTable[kMaxSpriteTypes];
 	uint8_t *_resLvlSpriteDataPtrTable[kMaxSpriteTypes];
 	uint32_t _resLevelData0x2B88SizeTable[kMaxScreens]; // backgrounds
-//	uint32_t *_resLevelData0x2B88SizeTable;//[kMaxScreens]; // backgrounds
 	LvlBackgroundData _resLvlScreenBackgroundDataTable[kMaxScreens];
 	uint8_t *_resLvlScreenBackgroundDataPtrTable[kMaxScreens];
 
@@ -693,7 +693,7 @@ struct Resource {
 	const uint8_t *getLvlSpriteFramePtr(LvlObjectData *dat, int frame, uint16_t *w, uint16_t *h) const;
 	const uint8_t *getLvlSpriteCoordPtr(LvlObjectData *dat, int num) const;
 	int findScreenGridIndex(int screenNum) const;
-
+#ifdef SOUND
 	void loadSssData(File *fp, const uint32_t baseOffset = 0);
 	void unloadSssData();
 	void checkSssCode(const uint8_t *buf, int size) const;
@@ -701,7 +701,7 @@ struct Resource {
 	void clearSssGroup3();
 	void resetSssFilters();
 	void preloadSssPcmList(const SssPreloadInfoData *preloadInfoData);
-
+#endif
 	void loadMstData(File *fp);
 	void unloadMstData();
 	const MstScreenArea *findMstCodeForPos(int num, int xPos, int yPos) const;

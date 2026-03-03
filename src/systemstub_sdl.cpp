@@ -1,4 +1,3 @@
-#pragma GCC optimize ("Os")
 /*
  * REminiscence - Flashback interpreter
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
@@ -207,7 +206,6 @@ static const int BLUR_TEX_H = 16;
 
 static uint16_t __attribute__((aligned(16))) _clut[256];
 System *SystemStub_SDL_create() {
-	emu_printf("System\n");
 	return new SystemStub_SDL();
 }
 
@@ -377,12 +375,12 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
 	for (uint16 idx = 0; idx < h; ++idx) {
-//		DMA_ScuMemCopy(dstPtr, srcPtr, w);
-		memcpy(dstPtr, srcPtr, w);
+		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+	//	memcpy(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);
 	}
-//	SCU_DMAWait();
+	SCU_DMAWait();
 #else
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();
@@ -846,7 +844,7 @@ inline void timeTick() {
 }
 
 void vblIn (void) {
-//emu_printf("vblIn\n");
+////emu_printf("vblIn\n");
 	// Process input
 
 //	if(!loadingMap)
@@ -865,11 +863,8 @@ void vblIn (void) {
 #endif
 //		system_saturn.updateScreen(0);
 	}
-//emu_printf("processEvents\n");
 	g_system->processEvents();
-//emu_printf("timeTick\n");
 	timeTick();
-//emu_printf("vblIn end\n");
 }
 
 uint8 isNTSC (void) {

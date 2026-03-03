@@ -1,4 +1,3 @@
-#pragma GCC optimize ("Os")
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -7,11 +6,9 @@ extern "C" {
 void 	free(void *ptr);
 void	*malloc(size_t);
 void emu_printf(const char *format, ...);
+void *sbrk(intptr_t increment);
 extern uint8_t *hwram_work;
-extern uint8_t *hwram;
-extern uint8_t *current_lwram;
-extern uint8_t *cs2ram;
-extern uint8_t *cs1ram;
+int amount=0;
 }
 
 extern "C"
@@ -21,53 +18,26 @@ void __cxa_pure_virtual(void) {
 }
 
 void* operator new(size_t size) {
-emu_printf("--- allocateX %d\n", size);	
-	if(size==4148 || size==40096 || size ==1044 || size==8 || size == 10164)
-	{
-	emu_printf("--- allocate2 %d\n", size);	
-//		void *ptr = (void *)hwram_work;
-//		hwram_work +=size;
-		void *ptr = (void *)current_lwram;
-		current_lwram +=size;
-		return ptr;
-	}
-#if 0
-	else if(//size==4148 || size==10164 || size==8 
-//	|| 
-	/*	size==920 || size ==1044 || size == 1284 ||*/ size == 10164
-	)
-	{
-	emu_printf("--- allocate2b %d %d\n", size, (hwram_work<hwram)?1:0);
-		void *ptr = (void *)hwram_work;
-		hwram_work +=size;
-		return ptr;	
-	}
-#endif
-    void *ptr = malloc(size);
-	emu_printf("allocate3 %p xx%dxx\n",ptr, size);
+//    return malloc(size);
+	void *ptr;
+	ptr = malloc(size);
+	amount+=size;
+//	hwram_work = (uint8_t*)sbrk(0);
+	emu_printf("amount %d\n", amount);
 	return ptr;
+	
 }
 
 void* operator new[](size_t size) {
-//	emu_printf("--- allocate %d\n", size);
-	if(size==4148 || size==40096 || size==20168 || size == 60948)
-	{
-		
-		void *ptr = (void *)hwram_work;
-		hwram_work +=size;
-		return ptr;
-	}
-    return malloc(size);	
+    return malloc(size);
 }
 
 void operator delete(void* ptr) {
-//	emu_printf("--- delete1 %p\n", ptr);
-    free(ptr);
+//    free(ptr);
 }
 
 void operator delete[](void* ptr) {
-//	emu_printf("--- delete2 %p\n", ptr);
-    free(ptr);
+//    free(ptr);
 }
 
 void operator delete[](void*, unsigned int) {

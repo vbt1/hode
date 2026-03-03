@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -29,23 +29,23 @@ Video::Video() {
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
-	hwram_work_paf = hwram_work;
-	_shadowLayer = hwram_work;//allocate_memory (TYPE_LAYER, W * H + 1);
-	_frontLayer = _shadowLayer + W * H + 4;//allocate_memory (TYPE_LAYER, W * H);
-	_backgroundLayer = _frontLayer + W * H;//allocate_memory (TYPE_LAYER, W * H);
-	_shadowScreenMaskBuffer = _backgroundLayer + W * H;
+	hwram_work = allocate_memory (TYPE_HWRAM, 588000+110000);
+	emu_printf("--hwram_work start %p\n", hwram_work);
+	hwram_work_paf   = hwram_work;
+	_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
+	_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
+	_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
+	_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4);
 //emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
 	
 	if (kUseShadowColorLut) {
 //		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
-		_shadowColorLookupTable = _shadowScreenMaskBuffer + (256 * 192 * 2 + 256 * 4);
-//		hwram_work = _shadowColorLookupTable + (256 * 256);
-		//allocate_memory (TYPE_SHADWLUT, 256 * 256);
+		_shadowColorLookupTable = allocate_memory (TYPE_SHADWLUT, 256 * 256);
 	} else {
 		_shadowColorLookupTable = 0;
-//		hwram_work = _shadowScreenMaskBuffer + (256 * 192 * 2 + 256 * 4);
 	}
-	
+emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
+	hwram_work = hwram_work_paf;
 //	_shadowScreenMaskBuffer = (uint8_t *)malloc(256 * 192 * 2 + 256 * 4);
 //	_shadowScreenMaskBuffer = allocate_memory (TYPE_SCRMASKBUF, 256 * 192 * 2 + 256 * 4);
 	for (int i = 144; i < 256; ++i) {
@@ -73,6 +73,7 @@ Video::~Video() {
 	free(_mdec.planes[kOutputPlaneCr].ptr);
 #endif
 }
+
 #ifdef PSX
 void Video::initPsx() {
 	static const int w = (W + 15) & ~15;
@@ -898,6 +899,7 @@ void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_
 }
 #if 1
 void Video::drawString(const char *s, int x, int y, uint8_t color, uint8_t *dst) {
+//emu_printf("drawString %s col %d x%d y%d\n", s, color, x, y);
 	for (int i = 0; s[i]; ++i) {
 		uint8_t chr = s[i];
 		if (chr != ' ') {

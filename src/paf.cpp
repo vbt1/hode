@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 //#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
@@ -27,9 +27,6 @@ Sint32 GFCD_GetBufSiz(void);
 Sint32  CDC_GetBufSiz(Sint32 *totalsiz, Sint32 *bufnum, Sint32 *freesiz);
 uint8_t *hwram_work_paf;
 }
-
-// Configuration: choose which section runs on slave CPU
-#define V_ON_SLAVE 0  // 1 = V on slave, H on master; 0 = H on slave, V on master
 
 // Keep your exact original structures
 typedef struct {
@@ -114,7 +111,7 @@ void PafPlayer::setVolume(int volume) {
 uint8_t *lwram_cut;
 
 void PafPlayer::preload(int num) {
-emu_printf("preload %d\n", num);
+////emu_printf("preload %d\n", num);
 	lwram_cut = current_lwram;
 	
 //	assert(num >= 0 && num < kMaxVideosCount);
@@ -122,7 +119,7 @@ emu_printf("preload %d\n", num);
 	{
 		return;
 	}
-	_bufferBlock = allocate_memory (TYPE_SPRITE, kBufferBlockSize);
+	_bufferBlock = allocate_memory (TYPE_PAF, kBufferBlockSize);
 	
 	if(_file._fp == 0)
 		openPaf(_fs, &_file);
@@ -141,8 +138,6 @@ emu_printf("preload %d\n", num);
 		return;
 	}
 //	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
-//	hwram_work_paf = hwram_work;
-////emu_printf("hwram_work_paf %p\n", hwram_work_paf);
 	uint8_t *buffer = allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
 
 	if (!buffer) {
@@ -173,15 +168,15 @@ emu_printf("preload %d\n", num);
 }
 
 void PafPlayer::play(int num) {
-emu_printf("play %d %d\n", num, _videoNum);
+//	//emu_printf("play %d %d\n", num, _videoNum);
 //	if(num==2)
 //	while(1);
 	if (_videoNum != num) {
-		//emu_printf("preload play\n");
+//		//emu_printf("preload play\n");
 		preload(num);
 	}
 	if (_videoNum == num) {
-		emu_printf("mainloop play\n");
+//		//emu_printf("mainloop play\n");
 		_playedMask |= 1 << num;
 		mainLoop();
 	}
@@ -223,7 +218,7 @@ emu_printf("video %p _shadow %p _back %p\n", _video, _video->_shadowScreenMaskBu
 }
 
 bool PafPlayer::readPafHeader() {
-emu_printf("readPafHeader\n");
+	//////emu_printf("readPafHeader\n");
 	static const char *kSignature = "Packed Animation File V1.0\n(c) 1992-96 Amazing Studio\n";
 	_file.read(_bufferBlock, kBufferBlockSize);
 /*	if (memcmp(_bufferBlock, kSignature, strlen(kSignature)) != 0) {
@@ -264,7 +259,7 @@ uint32_t *PafPlayer::readPafHeaderTable(int count) {
 
 	//(uint32_t *)allocate_memory (TYPE_PAFHEAD, count * sizeof(uint32_t));
 	if (!dst) {
-	emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
+		////emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
 		return 0;
 	}
 	for (int i = 0; i < count; ++i) {
@@ -278,7 +273,6 @@ uint32_t *PafPlayer::readPafHeaderTable(int count) {
 }
 
 void PafPlayer::decodeVideoFrame(const uint8_t *src) {
-emu_printf("decodeVideoFrame\n");
 	const uint8_t *base = src;
 	const int code = *src++;
 	if (code & 0x20) {
@@ -290,7 +284,7 @@ emu_printf("decodeVideoFrame\n");
 		_currentPageBuffer = 0;
 	}
 	if (code & 0x40) {
-emu_printf("code & 0x40 %d -- \n", code & 0xF);
+////emu_printf("code & 0x40 %d -- \n", code & 0xF);
 		const int index = src[0] * 3;
 		const int count = (src[1] + 1) * 3;
 		assert(index + count <= 768);
@@ -766,7 +760,7 @@ unsigned int s1 = g_system->getTimeStamp();
 unsigned int e1 = g_system->getTimeStamp();
 int result = e1-s1;
 if(result>0)
-	////emu_printf("--duration %s : %d\n","read_copy", result);
+	emu_printf("--duration %s : %d\n","read_copy", result);
 			}
 			++currentFrameBlock;
 			--blocksCountForFrame;
@@ -806,7 +800,7 @@ if(result>0)
 unsigned int e3 = g_system->getTimeStamp();
 result = e3-e2;
 if(result>0)
-	//emu_printf("--duration %s : %d\n","copyrect", result);
+	emu_printf("--duration %s : %d\n","copyrect", result);
 
 		g_system->updateScreen(false);
 //		g_system->processEvents();
@@ -1003,9 +997,9 @@ void PafPlayer::mainLoop() {
             buffer[1] = '0' + (frame_z % 10);
             buffer[2] = 0;
         }
-        _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
+//        _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #else
-//emu_printf("fps %d\n", frame_z);
+emu_printf("fps %d\n", frame_z);
 #endif
 
         // Quit check

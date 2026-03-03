@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #include "util.h"
 extern "C" {
 
@@ -143,8 +143,8 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 */
 	GfsHn fid = NULL;
 	// OPEN FILE
-//emu_printf("satpath %s fileid %d\n",satpath, GFS_NameToId((Sint8*)satpath));
 	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
+emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)satpath),fid);
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
@@ -199,6 +199,10 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 }
 
 int sat_fclose(GFS_FILE* fp) {
+Sint32 id, fsize;
+GFS_GetFileInfo(fp->fid, &id, NULL, &fsize, NULL);
+emu_printf("--- sat_fclose fid %d name %s\n",id, GFS_IdToName(id));
+	
 	GFS_Close(fp->fid);
 	return 0; // always ok :-)
 }
@@ -315,7 +319,6 @@ partial_cache:
 
 	if(skip_bytes) {
 //emu_printf("skip bytes %d %d\n", tot_bytes,skip_bytes);
-//		read_buffer = (Uint8*)0x26000000;
 		read_buffer = (Uint8*)cache;
 		readBytes = GFS_Fread(stream->fid, tot_sectors, read_buffer, tot_bytes);
 		memcpy(ptr, read_buffer + skip_bytes, readBytes - skip_bytes);

@@ -1559,7 +1559,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 //		assert(asfh[count].move < dat->movesCount);
 		if(asfh[count].move >= dat->movesCount)
 		{
-//			emu_printf("assert %d %d\n", asfh[count].move , dat->movesCount);
+			emu_printf("assert %d %d\n", asfh[count].move , dat->movesCount);
 			count=0;
 		}
 		
@@ -1600,7 +1600,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 //		assert(count < ash->count);
 		if(count >= ash->count)
 		{
-//			emu_printf("assert2 %d %d\n", count , ash->count);
+			emu_printf("assert2 %d %d\n", count , ash->count);
 			count = 0;
 //			return;
 		}
