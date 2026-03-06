@@ -2,7 +2,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
  extern "C" {
 #include 	<sega_gfs.h>
 //#include 	<gfs_def.h>
@@ -44,12 +44,12 @@ void File::setFp(GFS_FILE *fp) {
 }
 
 void File::seekAlign(uint32_t pos) {
-////emu_printf("File::seekAlign %d\n", pos);
+emu_printf("File::seekAlign %d\n", pos);
 	sat_fseek(_fp, pos, SEEK_SET);
 }
 
 void File::seek(int pos, int whence) {
-//emu_printf("File::seek %d %d\n");
+emu_printf("File::seek %d %d\n");
 	if(_fp)
 	{
 		if (kSeekAbsolutePosition && whence == SEEK_CUR) {
@@ -78,7 +78,7 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 //emu_printf("start %d len %d\n",(_fp->f_seek_pos)/SECTOR_SIZE, len);
 	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
 	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-	while(!GFS_NwIsComplete(_fp->fid));
+//	while(!GFS_NwIsComplete(_fp->fid));
 	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
 	Sint32 tot_bytes = len + skip_bytes;
 	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
@@ -90,10 +90,11 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 //#define NWREAD 1
 
 void File::asynchInit(uint8_t *ptr, uint32_t len) {
+//emu_printf("asynchInit len=%d\n", len);
     Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
 //	GFS_NwStop(_fp->fid);
 	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-	while(!GFS_NwIsComplete(_fp->fid));
+//	while(!GFS_NwIsComplete(_fp->fid));
     ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
     Sint32 tot_bytes = len + ioskip_bytes;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
@@ -129,12 +130,12 @@ void File::asynchRead() {
 
 int File::asynchWait(uint8_t *ptr, Sint32 len) {
 #ifdef NWREAD
-    if(iostat == GFS_SVR_COMPLETED && iostat != -1)
+    if (iostat == GFS_SVR_COMPLETED && iostat != -1)
         return iondata;
     do {
         GFS_NwExecOne(_fp->fid);
-        gfsstat = GFS_NwGetStat(_fp->fid, &iostat, &iondata);
-    } while(gfsstat != GFS_SVR_COMPLETED);
+        GFS_NwGetStat(_fp->fid, &iostat, &iondata);  // résultat dans iostat, pas en retour
+    } while (iostat != GFS_SVR_COMPLETED);
 #else
     Sint32 tot_bytes = len + ioskip_bytes;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);

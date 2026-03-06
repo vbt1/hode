@@ -862,18 +862,24 @@ void PafPlayer::mainLoop() {
 #endif
 
 #define DOUBLE 1
-#define NUM_BUFFERS 7
+#define NUM_BUFFERS 2
 #define FRAMES_PER_READ 6
 
 // FRAMES_PER_READ 4 mini sinon perte de perfs
 #ifdef DOUBLE
 //	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 24576*NUM_BUFFERS);
-	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 400+24576*NUM_BUFFERS);
+//	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 400+24576*NUM_BUFFERS);
+	#define SLOT_SIZE  204800   
+
+	buf = (uint8_t *)allocate_memory(TYPE_PAFBUF, SLOT_SIZE * NUM_BUFFERS);
 //	buf = (uint8_t *)hwram_work_paf;
 //emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
     // Setup buffer array
-    uint8_t* buffers[NUM_BUFFERS] = { buf, buf, buf, buf, buf, buf, buf
-    };
+//    uint8_t* buffers[NUM_BUFFERS] = { buf, buf, buf, buf, buf, buf, buf
+
+uint8_t *buffers[NUM_BUFFERS];
+for (int k = 0; k < NUM_BUFFERS; ++k)
+    buffers[k] = buf + k * SLOT_SIZE;
     
     int currentBuffer = 0;  // Buffer being processed
     int readBuffer = 1;     // Buffer being read into
@@ -882,13 +888,13 @@ void PafPlayer::mainLoop() {
 //    blocksCountForFrame += _pafHdr.frameBlocksCountTable[0];
     uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
 // //emu_printf("first-read %d\n", totalBytes);   
- //   unsigned int s0 = g_system->getTimeStamp();
+//   unsigned int s0 = g_system->getTimeStamp();
 //	_file.batchSeek(_pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
 // vbt : on ne lit plus la partie preload, inutile ?
 //emu_printf("batchRead %d\n", totalBytes);
     int r = _file.batchRead(buf, totalBytes);
     int delta = (r - totalBytes);
-    buffers[readBuffer] = buf+r;
+//    buffers[readBuffer] = buf+r;
 //	memset(buf,0x00, _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
     // Start first async read for frames 1-4 into buffer 1
     if (_pafHdr.framesCount > 1) {
@@ -896,8 +902,8 @@ void PafPlayer::mainLoop() {
         totalBytes = 0;
         
         for (int j = 1; j <= FRAMES_PER_READ && j < (int)_pafHdr.framesCount; j++) {
-            blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[j];
-            totalBytes += _pafHdr.frameBlocksCountTable[j] * _pafHdr.readBufferSize;
+            blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[j-1];
+            totalBytes += _pafHdr.frameBlocksCountTable[j-1] * _pafHdr.readBufferSize;
         }
         
         totalBytes2 = totalBytes;
@@ -961,6 +967,7 @@ void PafPlayer::mainLoop() {
         
         // Use current buffer with delta offset
         uint8_t* currentData = buffers[currentBuffer] + delta;
+//		emu_printf("currentData %p num %d delta %d\n", currentData, currentBuffer, delta);
 #endif
 
         // Process all blocks for current frame
@@ -1021,7 +1028,7 @@ emu_printf("fps %d\n", frame_z);
             g_system->sleep(delay);
 //            //emu_printf("delay %d ms\n", delay);
         } else {
-//            //emu_printf("behind by %d ms!\n", (int)(currentTime - frameTime));
+            emu_printf("behind by %d ms!\n", (int)(currentTime - frameTime));
             frameTime = currentTime;
         }
     }
