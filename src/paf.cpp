@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-#define DEBUG 1
+//#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -28,7 +28,39 @@ Sint32  CDC_GetBufSiz(Sint32 *totalsiz, Sint32 *bufnum, Sint32 *freesiz);
 uint8_t *hwram_work_paf;
 }
 
-// Keep your exact original structures
+// =============================================================================
+// SH-2 safe memory helpers
+// =============================================================================
+
+FORCE_INLINE uint32_t load4_u16(const uint8_t *p) {
+	const uint16_t hi = *(const uint16_t *)p;
+	const uint16_t lo = *(const uint16_t *)(p + 2);
+	return ((uint32_t)hi << 16) | lo;
+}
+
+FORCE_INLINE uint32_t load4_any(const uint8_t *p) {
+	uint32_t v;
+	__builtin_memcpy(&v, p, 4);
+	return v;
+}
+
+FORCE_INLINE void store4_a(uint8_t *p, uint32_t v) {
+	*(uint32_t *)p = v;
+}
+
+FORCE_INLINE void copy4x4_tile(
+	uint8_t *d0, uint8_t *d1, uint8_t *d2, uint8_t *d3,
+	const uint8_t *t0, const uint8_t *t1,
+	const uint8_t *t2, const uint8_t *t3)
+{
+	store4_a(d0, load4_u16(t0));
+	store4_a(d1, load4_u16(t1));
+	store4_a(d2, load4_u16(t2));
+	store4_a(d3, load4_u16(t3));
+}
+
+// =============================================================================
+
 typedef struct {
 	const uint8_t *src;
 	uint8_t *dst;
@@ -42,46 +74,18 @@ typedef struct {
 	uint8_t code;
 } HorizontalParams;
 
-/*
-static const char *_filenames[] = {
-	"HOD.PAF",
-	"HOD_DEMO.PAF",
-	"HOD_DEMO2.PAF",
-	"HOD_OEM.PAF",
-	0
-};
-*/
-
 static bool openPaf(FileSystem *fs, File *f) {
-//////emu_printf("openPaf\n");	
-/*	
-	for (int i = 0; _filenames[i]; ++i) {
-		GFS_FILE *fp = fs->openAssetFile(_filenames[i]);
-		if (fp) {
-			f->setFp(fp);
-			return true;
-		}
-	}
-	return false;
-	*/
 	GFS_FILE *fp = fs->openAssetFile("HOD.PAF");
-	if (fp) {
-		f->setFp(fp);
-		return true;
-	}
-	return false;	
+	if (fp) { f->setFp(fp); return true; }
+	return false;
 }
 
 static void closePaf(FileSystem *fs, File *f) {
-	if (f->_fp) {
-		fs->closeFile(f->_fp);
-		f->_fp = 0;
-	}
+	if (f->_fp) { fs->closeFile(f->_fp); f->_fp = 0; }
 }
 
 PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
 	: _fs(fs), _video(vid) {
-//emu_printf("PafPlayer\n");
 	_skipCutscenes = !openPaf(_fs, &_file);
 	_videoNum = -1;
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
@@ -93,9 +97,7 @@ PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
 	memset(&_pafCb, 0, sizeof(_pafCb));
 	_volume = 128;
 	_frameMs = kFrameDuration;
-emu_printf("vid %p\n", _video);
-//	hwram_work_paf = (uint8_t *)hwram_work;
-//	//emu_printf("hwram_work_paf init %p\n", hwram_work);
+	emu_printf("vid %p\n", _video);
 }
 
 PafPlayer::~PafPlayer() {
@@ -103,56 +105,33 @@ PafPlayer::~PafPlayer() {
 	closePaf(_fs, &_file);
 }
 
-void PafPlayer::setVolume(int volume) {
-	_volume = volume;
-}
+void PafPlayer::setVolume(int volume) { _volume = volume; }
 
 uint8_t *lwram_cut;
 
 void PafPlayer::preload(int num) {
-////emu_printf("preload %d\n", num);
 	lwram_cut = current_lwram;
-	
-//	assert(num >= 0 && num < kMaxVideosCount);
-	if (num < 0 || num >= kMaxVideosCount)
-	{
-		return;
-	}
-	_bufferBlock = allocate_memory (TYPE_PAF, kBufferBlockSize);
-	
-	if(_file._fp == 0)
-		openPaf(_fs, &_file);
-	
-	if (_videoNum != num) {
-		unload(_videoNum);
-		_videoNum = num;
-	}
+	if (num < 0 || num >= kMaxVideosCount) return;
+
+	_bufferBlock = allocate_memory(TYPE_PAF, kBufferBlockSize);
+	if (_file._fp == 0) openPaf(_fs, &_file);
+	if (_videoNum != num) { unload(_videoNum); _videoNum = num; }
+
 	_file.seek(num * 4, SEEK_SET);
 	_videoOffset = _file.readUint32();
 	_file.seek(_videoOffset, SEEK_SET);
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
-	if (!readPafHeader()) {
-		//////emu_printf("unload paf\n");
-		unload();
-		return;
-	}
-//	uint8_t *buffer = (uint8_t *)calloc(kPageBufferSize * 4 + 256 * 4, 1);
-	uint8_t *buffer = allocate_memory (TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
+	if (!readPafHeader()) { unload(); return; }
 
-	if (!buffer) {
-		//////emu_printf("preloadPaf() Unable to allocate page buffers\n");
-		unload(); 
-		return;
-	}
-	
-	for (int i = 0; i < 4; ++i) {
-//		_pageBuffers[i] = (uint8_t *)VDP2_VRAM_A0 + i * kPageBufferSize;
+	uint8_t *buffer = allocate_memory(TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
+	if (!buffer) { unload(); return; }
+	for (int i = 0; i < 4; ++i)
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
-	}
+
 	_demuxVideoFrameBlocks = (uint8_t *)allocate_memory (TYPE_PAF, _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
 
 	_pafHdr.maxAudioFrameBlocksCount = 0; // vbt : on enleve le son
-#if 0
+#ifdef SOUND
 	if (_pafHdr.maxAudioFrameBlocksCount != 0) {
 		_demuxAudioFrameBlocks = (uint8_t *)calloc(_pafHdr.maxAudioFrameBlocksCount, _pafHdr.readBufferSize);
 		_flushAudioSize = (_pafHdr.maxAudioFrameBlocksCount - 1) * _pafHdr.readBufferSize;
@@ -167,48 +146,23 @@ void PafPlayer::preload(int num) {
 }
 
 void PafPlayer::play(int num) {
-//	//emu_printf("play %d %d\n", num, _videoNum);
-//	if(num==2)
-//	while(1);
-	if (_videoNum != num) {
-//		//emu_printf("preload play\n");
-		preload(num);
-	}
-	if (_videoNum == num) {
-//		//emu_printf("mainloop play\n");
-		_playedMask |= 1 << num;
-		mainLoop();
-	}
+	if (_videoNum != num) preload(num);
+	if (_videoNum == num) { _playedMask |= 1 << num; mainLoop(); }
 }
 
 void PafPlayer::unload(int num) {
-emu_printf("unload paf w %p wp %p src %p\n", hwram_work, hwram_work_paf, hwram_src);
-
+	emu_printf("unload paf\n");
 	current_lwram = lwram_cut;
-
-emu_printf("video %p _shadow %p _back %p\n", _video, _video->_shadowScreenMaskBuffer, _video->_backgroundLayer);
-
-//emu_printf("unload w %p \n", hwram_work);
-
-	if (_videoNum < 0) {
-		return;
-	}
-//	free(_pageBuffers[0]);
+	if (_videoNum < 0) return;
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
-//	free(_demuxVideoFrameBlocks);
 	_demuxVideoFrameBlocks = 0;
-//	free(_demuxAudioFrameBlocks);
 	_demuxAudioFrameBlocks = 0;
-//	free(_pafHdr.frameBlocksCountTable);
-//	free(_pafHdr.framesOffsetTable);
-//	free(_pafHdr.frameBlocksOffsetTable);
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
 	_videoNum = -1;
 #ifdef SOUND
 	while (_audioQueue) {
 		PafAudioQueue *next = _audioQueue->next;
-		free(_audioQueue->buffer);
-		free(_audioQueue);
+		free(_audioQueue->buffer); free(_audioQueue);
 		_audioQueue = next;
 	}
 	_audioQueueTail = 0;
@@ -217,115 +171,47 @@ emu_printf("video %p _shadow %p _back %p\n", _video, _video->_shadowScreenMaskBu
 }
 
 bool PafPlayer::readPafHeader() {
-	//////emu_printf("readPafHeader\n");
-	static const char *kSignature = "Packed Animation File V1.0\n(c) 1992-96 Amazing Studio\n";
 	_file.read(_bufferBlock, kBufferBlockSize);
-/*	if (memcmp(_bufferBlock, kSignature, strlen(kSignature)) != 0) {
-		//////emu_printf("readPafHeader() Unexpected signature\n");
-		return false;
-	}
-*/
-	_pafHdr.frameDuration = READ_LE_UINT32(_bufferBlock + 0x88);
-	_pafHdr.startOffset = READ_LE_UINT32(_bufferBlock + 0xA4);
-	_pafHdr.preloadFrameBlocksCount = READ_LE_UINT32(_bufferBlock + 0x9C);
-	_pafHdr.readBufferSize = READ_LE_UINT32(_bufferBlock + 0x98);
+	_pafHdr.frameDuration            = READ_LE_UINT32(_bufferBlock + 0x88);
+	_pafHdr.startOffset              = READ_LE_UINT32(_bufferBlock + 0xA4);
+	_pafHdr.preloadFrameBlocksCount  = READ_LE_UINT32(_bufferBlock + 0x9C);
+	_pafHdr.readBufferSize           = READ_LE_UINT32(_bufferBlock + 0x98);
 	assert(_pafHdr.readBufferSize == kBufferBlockSize);
-	_pafHdr.framesCount = READ_LE_UINT32(_bufferBlock + 0x84);
-	if (_pafHdr.framesCount <= 0) {
-		//////emu_printf("readPafHeader() Invalid number of frames %d\n", _pafHdr.framesCount);
-		return false;
-	}
+	_pafHdr.framesCount              = READ_LE_UINT32(_bufferBlock + 0x84);
+	if (_pafHdr.framesCount <= 0) return false;
 	_pafHdr.maxVideoFrameBlocksCount = READ_LE_UINT32(_bufferBlock + 0xA8);
 	_pafHdr.maxAudioFrameBlocksCount = READ_LE_UINT32(_bufferBlock + 0xAC);
-	_pafHdr.frameBlocksCount = READ_LE_UINT32(_bufferBlock + 0xA0);
-	if (_pafHdr.frameBlocksCount <= 0) {
-		//////emu_printf("readPafHeader() Invalid number of blocks %d\n", _pafHdr.frameBlocksCount);
-		return false;
-	}
-	_pafHdr.frameBlocksCountTable = readPafHeaderTable(_pafHdr.framesCount);
-	_pafHdr.framesOffsetTable = readPafHeaderTable(_pafHdr.framesCount);
+	_pafHdr.frameBlocksCount         = READ_LE_UINT32(_bufferBlock + 0xA0);
+	if (_pafHdr.frameBlocksCount <= 0) return false;
+	_pafHdr.frameBlocksCountTable  = readPafHeaderTable(_pafHdr.framesCount);
+	_pafHdr.framesOffsetTable      = readPafHeaderTable(_pafHdr.framesCount);
 	_pafHdr.frameBlocksOffsetTable = readPafHeaderTable(_pafHdr.frameBlocksCount);
-	return _pafHdr.frameBlocksCountTable != 0 && _pafHdr.framesOffsetTable != 0 && _pafHdr.frameBlocksOffsetTable != 0;
+	return _pafHdr.frameBlocksCountTable != 0
+	    && _pafHdr.framesOffsetTable      != 0
+	    && _pafHdr.frameBlocksOffsetTable != 0;
 }
 
 uint32_t *PafPlayer::readPafHeaderTable(int count) {
-//	uint32_t *dst = (uint32_t *)malloc(count * sizeof(uint32_t));
-	uint32_t *dst = (uint32_t *)allocate_memory (TYPE_PAFHEAD, count * sizeof(uint32_t));
-//	uint32_t *dst = (uint32_t *)hwram_work_paf;
-//	//emu_printf("hwram_work_paf bef %p\n", hwram_work_paf);
-//	hwram_work_paf += count * sizeof(uint32_t);
-//	//emu_printf("hwram_work_paf aft %p\n", hwram_work_paf);
-
-	//(uint32_t *)allocate_memory (TYPE_PAFHEAD, count * sizeof(uint32_t));
-	if (!dst) {
-		////emu_printf("readPafHeaderTable() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
-		return 0;
-	}
-	for (int i = 0; i < count; ++i) {
-		dst[i] = _file.readUint32();
-	}
+	uint32_t *dst = (uint32_t *)allocate_memory(TYPE_PAFHEAD, count * sizeof(uint32_t));
+	if (!dst) return 0;
+	for (int i = 0; i < count; ++i) dst[i] = _file.readUint32();
 	const int align = (count * 4) & 0x7FF;
-	if (align != 0) {
-		_file.seek(0x800 - align, SEEK_CUR);
-	}
+	if (align != 0) _file.seek(0x800 - align, SEEK_CUR);
 	return dst;
 }
 
-void PafPlayer::decodeVideoFrame(const uint8_t *src) {
-	const uint8_t *base = src;
-	const int code = *src++;
-	if (code & 0x20) {
-		for (int i = 0; i < 4; ++i) {
-			memset(_pageBuffers[i], 0, kPageBufferSize);
-		}
-		memset(_paletteBuffer, 0, sizeof(_paletteBuffer));
-		_paletteChanged = true;
-		_currentPageBuffer = 0;
-	}
-	if (code & 0x40) {
-////emu_printf("code & 0x40 %d -- \n", code & 0xF);
-		const int index = src[0] * 3;
-		const int count = (src[1] + 1) * 3;
-		assert(index + count <= 768);
-		src += 2;
-		memcpy(_paletteBuffer + index, src, count);
-		_paletteChanged = true;
-		src += count;
-	}
-////emu_printf("decode %d -- \n", code & 0xF);	
-	
-	switch (code & 0xF) {
-	case 0:
-		decodeVideoFrameOp0(base, src, code);
-		break;
-	case 1:
-		decodeVideoFrameOp1(src);
-		break;
-	case 2:
-		decodeVideoFrameOp2(src);
-		break;
-	case 4:
-		decodeVideoFrameOp4(src);
-		break;
-	}
-}
-/*
-FORCE_INLINE void pafCopy4x4h(uint8_t *dst, const uint8_t *src) {
-	memcpy(dst, src, 4);
-	memcpy(dst + 256, src + 4, 4);
-	memcpy(dst + 512, src + 8, 4);
-	memcpy(dst + 768, src + 12, 4);
-}
-*/
+// =============================================================================
+// Helpers mask
+// =============================================================================
+
 FORCE_INLINE void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
-	memcpy(dst, src, 4);
-	memcpy(dst + 256, src + 256, 4);
-	memcpy(dst + 512, src + 512, 4);
-	memcpy(dst + 768, src + 768, 4);
+	store4_a(dst,       load4_u16(src));
+	store4_a(dst + 256, load4_u16(src + 256));
+	store4_a(dst + 512, load4_u16(src + 512));
+	store4_a(dst + 768, load4_u16(src + 768));
 }
 
 static void pafCopySrcMask(uint8_t mask, uint8_t *dst, const uint8_t *src) {
-
 	if (mask & 0x8) dst[0] = src[0];
 	if (mask & 0x4) dst[1] = src[1];
 	if (mask & 0x2) dst[2] = src[2];
@@ -333,14 +219,11 @@ static void pafCopySrcMask(uint8_t mask, uint8_t *dst, const uint8_t *src) {
 }
 
 static void pafCopySrcMask2(uint8_t mask, uint8_t *dst, const uint8_t *src) {
-	// High nibble (first row)
 	dst[0] = (mask & 0x80) ? src[0] : dst[0];
 	dst[1] = (mask & 0x40) ? src[1] : dst[1];
 	dst[2] = (mask & 0x20) ? src[2] : dst[2];
 	dst[3] = (mask & 0x10) ? src[3] : dst[3];
-	// Low nibble (second row)
-	dst += 256;
-	src += 256;
+	dst += 256; src += 256;
 	dst[0] = (mask & 0x08) ? src[0] : dst[0];
 	dst[1] = (mask & 0x04) ? src[1] : dst[1];
 	dst[2] = (mask & 0x02) ? src[2] : dst[2];
@@ -355,15 +238,15 @@ static void pafCopyColorMask(uint8_t mask, uint8_t *dst, uint8_t color) {
 }
 
 static void pafCopyColorMask2(uint8_t mask, uint8_t *dst, uint8_t color) {
-    dst[0] = (mask & 0x80) ? color : dst[0];
-    dst[1] = (mask & 0x40) ? color : dst[1];
-    dst[2] = (mask & 0x20) ? color : dst[2];
-    dst[3] = (mask & 0x10) ? color : dst[3];
-    dst += 256;
-    dst[0] = (mask & 0x08) ? color : dst[0];
-    dst[1] = (mask & 0x04) ? color : dst[1];
-    dst[2] = (mask & 0x02) ? color : dst[2];
-    dst[3] = (mask & 0x01) ? color : dst[3];
+	dst[0] = (mask & 0x80) ? color : dst[0];
+	dst[1] = (mask & 0x40) ? color : dst[1];
+	dst[2] = (mask & 0x20) ? color : dst[2];
+	dst[3] = (mask & 0x10) ? color : dst[3];
+	dst += 256;
+	dst[0] = (mask & 0x08) ? color : dst[0];
+	dst[1] = (mask & 0x04) ? color : dst[1];
+	dst[2] = (mask & 0x02) ? color : dst[2];
+	dst[3] = (mask & 0x01) ? color : dst[3];
 }
 
 static const char *updateSequences[] = {
@@ -384,201 +267,171 @@ static const char *updateSequences[] = {
 	"\x02\x04\x06",
 	"\x02\x04\x05\x07\x05\x07"
 };
-/*
-inline uint8_t *PafPlayer::getVideoPageOffset(uint16_t val) {
-	const int x = val & 0x7F; val >>= 7;
-	const int y = val & 0x7F; val >>= 7;
-	return _pageBuffers[val] + (y * kVideoWidth + x) * 2;
-}
-*/
+
 FORCE_INLINE uint8_t *fastOffset(uint8_t **pages, const uint8_t *src) {
-    const int x = src[1] & 0x7F;
-    const int page = src[0] >> 6;
-    const int y = ((src[0] << 1) | (src[1] >> 7)) & 0x7F;
-//    return pages[page] + (y << 9) + (x << 1);
+	const int x    =  src[1] & 0x7F;
+	const int page =  src[0] >> 6;
+	const int y    = ((src[0] << 1) | (src[1] >> 7)) & 0x7F;
 	return pages[page] + (((y << 8) + x) << 1);
 }
 
 extern "C" {
-    void free(void *ptr);
-    void *malloc(size_t);
-//    void *calloc(size_t nmemb, size_t size);
-    extern unsigned char frame_x;
-    extern unsigned char frame_z;
-    extern Uint8 *cs2ram;
-    extern Sint32 iondata;
+	void free(void *ptr);
+	void *malloc(size_t);
+	extern unsigned char frame_x;
+	extern unsigned char frame_z;
+	extern Uint8 *cs2ram;
+	extern Sint32 iondata;
 }
 
-#include <stdint.h>  // For uint32_t, uint16_t, etc.
-
+#include <stdint.h>
 #define READ_LE_UINT16(p) ((uint16_t)((p)[0] | ((p)[1] << 8)))
-/*
-FORCE_INLINE void pafCopy4x4h(uint8_t *d, const uint8_t *s) {
-    // Fully unrolled with <<8 instead of *256
-    d[0]          = s[0];  d[1]          = s[1];  d[2]          = s[2];  d[3]          = s[3];
-    d[1<<8]       = s[4];  d[(1<<8)+1]   = s[5];  d[(1<<8)+2]   = s[6];  d[(1<<8)+3]   = s[7];
-    d[2<<8]       = s[8];  d[(2<<8)+1]   = s[9];  d[(2<<8)+2]   = s[10]; d[(2<<8)+3]   = s[11];
-    d[3<<8]       = s[12]; d[(3<<8)+1]   = s[13]; d[(3<<8)+2]   = s[14]; d[(3<<8)+3]   = s[15];
-    // Alternative (even smaller assembly on SH-2):
-    // uint32_t *dst = (uint32_t*)d;
-   // const uint32_t *src = (const uint32_t*)s;
-    // dst[0] = src[0]; dst[64] = src[1]; dst[128] = src[2]; dst[192] = src[3];
+
+// =============================================================================
+// decodeVideoFrame — dispatch
+// =============================================================================
+
+void PafPlayer::decodeVideoFrame(const uint8_t *src) {
+	const uint8_t *base = src;
+	const int code = *src++;
+	if (code & 0x20) {
+		for (int i = 0; i < 4; ++i)
+			memset(_pageBuffers[i], 0, kPageBufferSize);
+		memset(_paletteBuffer, 0, sizeof(_paletteBuffer));
+		_paletteChanged = true;
+		_currentPageBuffer = 0;
+	}
+	if (code & 0x40) {
+		const int index = src[0] * 3;
+		const int count = (src[1] + 1) * 3;
+		assert(index + count <= 768);
+		src += 2;
+		memcpy(_paletteBuffer + index, src, count);
+		_paletteChanged = true;
+		src += count;
+	}
+	switch (code & 0xF) {
+	case 0: decodeVideoFrameOp0(base, src, code); break;
+	case 1: decodeVideoFrameOp1(src);             break;
+	case 2: decodeVideoFrameOp2(src);             break;
+	case 4: decodeVideoFrameOp4(src);             break;
+	}
 }
-*/
+
+// =============================================================================
+// Op0
+// =============================================================================
+
 void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code) {
-    uint32_t t0 = g_system->getTimeStamp();
+	uint8_t **p = _pageBuffers;
 
-    // === Skip horizontal section ===
-    const uint8_t *v = src;
-    int n = *v++;
-    if (n) {
-        if (code & 0x10) {
-            int a = (v - base) & 3;
-            if (a) v += 4 - a;
-        }
-        for (int i = 0; i < n; ++i) {
-            uint32_t o = (v[1] & 0x7F) << 1;
-            uint32_t e = READ_LE_UINT16(v + 2) + o;
-            v += 4;
-            while (o < e) {
-                v += 16;
-                ++o;
-            }
-        }
-    }
-//    uint32_t t1 = g_system->getTimeStamp();
+	uint32_t ta = g_system->getTimeStamp();
 
-	// === Decode horizontal (optimized) ===
-	{
-		int n = *src;
-		if (n) {
-			const uint8_t *s = src + 1;
-			if (code & 0x10) {
-				int a = (s - base) & 3;
-				if (a) s += 4 - a;
-			}
+	// ── 1. HORIZONTAL ─────────────────────────────────────────────────────────
+	const uint8_t *v = src;
+	int n = *v++;
 
-			uint8_t **p = _pageBuffers;
+	if (n) {
+		if (code & 0x10) {
+			int a = (v - base) & 3;
+			if (a) v += 4 - a;
+		}
+		for (int i = 0; i < n; ++i) {
+			const uint8_t  hi  = v[0];
+			const uint8_t  lo  = v[1];
+			const uint8_t  idx = hi >> 6;
+			const uint32_t off = (((((hi << 1) | (lo >> 7)) & 0x7F) << 8)
+			                       | (lo & 0x7F)) << 1;
+			uint8_t *db = p[idx] + off;
+			uint32_t o  = (lo & 0x7F) << 1;
+			uint32_t e  = READ_LE_UINT16(v + 2) + o;
+			v += 4;
 
-			for (int i = 0; i < n; ++i) {
-				// Precompute common bitfield parts
-				uint8_t hi = s[0];
-				uint8_t lo = s[1];
-				uint8_t idx = hi >> 6;
-				uint32_t temp = ((hi << 1) | (lo >> 7)) & 0x7F;
-				uint32_t offset = (temp << 8 | (lo & 0x7F)) << 1;
+			uint8_t *d0 = db;
+			uint8_t *d1 = db + 256;
+			uint8_t *d2 = db + 512;
+			uint8_t *d3 = db + 768;
 
-				uint8_t *d_base = p[idx] + offset;
-
-				uint32_t o = (lo & 0x7F) << 1;
-				uint32_t e = READ_LE_UINT16(s + 2) + o;
-				s += 4;
-
-				// Precompute row destinations (only 3 shifts total!)
-				uint8_t *d0 = d_base;
-				uint8_t *d1 = d_base + (1 << 8);
-				uint8_t *d2 = d_base + (2 << 8);
-				uint8_t *d3 = d_base + (3 << 8);
-
-				while (o < e) {
-					// Source rows (stride 16 bytes per row in source block)
-					const uint8_t *s0 = s;
-					const uint8_t *s1 = s + 4;
-					const uint8_t *s2 = s + 8;
-					const uint8_t *s3 = s + 12;
-
-					// Fast 4x4 copy using row pointers — no repeated shifts
-					d0[0] = s0[0]; d0[1] = s0[1]; d0[2] = s0[2]; d0[3] = s0[3];
-					d1[0] = s1[0]; d1[1] = s1[1]; d1[2] = s1[2]; d1[3] = s1[3];
-					d2[0] = s2[0]; d2[1] = s2[1]; d2[2] = s2[2]; d2[3] = s2[3];
-					d3[0] = s3[0]; d3[1] = s3[1]; d3[2] = s3[2]; d3[3] = s3[3];
-
-					s += 16;
-					d_base += 4;
-					d0 += 4; d1 += 4; d2 += 4; d3 += 4;
-
-					if ((++o & 0x3F) == 0) {
-						d_base += 768;
-						d0 += 768; d1 += 768; d2 += 768; d3 += 768;
-					}
+			while (o < e) {
+				store4_a(d0, load4_any(v));
+				store4_a(d1, load4_any(v +  4));
+				store4_a(d2, load4_any(v +  8));
+				store4_a(d3, load4_any(v + 12));
+				v += 16;
+				d0 += 4; d1 += 4; d2 += 4; d3 += 4;
+				if ((++o & 0x3F) == 0) {
+					d0 += 768; d1 += 768; d2 += 768; d3 += 768;
 				}
 			}
 		}
 	}
 
-//    uint32_t t2 = g_system->getTimeStamp();
+	uint32_t tb = g_system->getTimeStamp();
 
-    // === Decode vertical (uses <<8 instead of *256) ===
-    {
-		uint8_t *d = _pageBuffers[_currentPageBuffer];
-		uint8_t **p = _pageBuffers;
+	// ── 2. VERTICAL ───────────────────────────────────────────────────────────
+	{
+		uint8_t       *d = _pageBuffers[_currentPageBuffer];
 		const uint8_t *s = v;
-
 		for (int y = 0; y < 192; y += 4, d += 768) {
 			for (int x = 0; x < 256; x += 4, d += 4, s += 2) {
-				uint8_t idx = s[0] >> 6;
-				uint32_t offset = (((((s[0] << 1) | (s[1] >> 7)) & 0x7F) << 8) | (s[1] & 0x7F)) << 1;
-				const uint8_t *t = p[idx] + offset;
-
-				// Precompute row pointers — only 4 shifts per tile
-				uint8_t       *d0 = d;
-				uint8_t       *d1 = d + (1 << 8);
-				uint8_t       *d2 = d + (2 << 8);
-				uint8_t       *d3 = d + (3 << 8);
-
-				const uint8_t *t0 = t;
-				const uint8_t *t1 = t + (1 << 8);
-				const uint8_t *t2 = t + (2 << 8);
-				const uint8_t *t3 = t + (3 << 8);
-
-				// Fully unrolled 4×4 copy — pure ASCII, no hidden characters
-				d0[0] = t0[0]; d0[1] = t0[1]; d0[2] = t0[2]; d0[3] = t0[3];
-				d1[0] = t1[0]; d1[1] = t1[1]; d1[2] = t1[2]; d1[3] = t1[3];
-				d2[0] = t2[0]; d2[1] = t2[1]; d2[2] = t2[2]; d2[3] = t2[3];
-				d3[0] = t3[0]; d3[1] = t3[1]; d3[2] = t3[2]; d3[3] = t3[3];
+				const uint8_t  b0  = s[0], b1 = s[1];
+				const uint8_t  idx = b0 >> 6;
+				const uint32_t off = (((((b0 << 1) | (b1 >> 7)) & 0x7F) << 8)
+				                       | (b1 & 0x7F)) << 1;
+				const uint8_t *t = p[idx] + off;
+				copy4x4_tile(
+					d,       d + 256, d + 512, d + 768,
+					t,       t + 256, t + 512, t + 768);
 			}
 		}
-    }
-//    uint32_t t3 = g_system->getTimeStamp();
+	}
 
-    // === OP section (mask operations) ===
-    const uint8_t *op = v + 6144;
-    uint32_t sz = READ_LE_UINT16(op);
-    op += 4;
-    uint8_t *d = _pageBuffers[_currentPageBuffer];
-    const uint8_t *src2 = op + sz;
+	uint32_t tc = g_system->getTimeStamp();
 
-    for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
-        for (int x = 0; x < kVideoWidth; x += 4, d += 4) {
-            const char *q = updateSequences[(x & 4) ? (*op++ & 15) : (*op >> 4)];
-            uint8_t k;
-            while ((k = *q++)) {
-                uint8_t *d0 = d + 512, *d1;  // 512 is intentional (half-page offset)
-                const uint8_t *s2;
-                uint8_t m, c;
-                switch (k) {
-                    case 2: d0 = d;
-                    case 3: c = *src2++;
-                    case 4: m = *src2++;
-                            d1 = d0 + (1<<8);  // <<8 instead of +256
-                            pafCopyColorMask(m >> 4, d0, c);
-                            pafCopyColorMask(m & 15, d1, c);
-                            break;
-                    case 5: d0 = d;
-                    case 6: s2 = fastOffset(_pageBuffers, src2); src2 += 2;
-                    case 7: m = *src2++;
-                            d1 = d0 + (1<<8);  // <<8 instead of +256
-                            pafCopySrcMask(m >> 4, d0, s2 + (d0 - d));
-                            pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
-                            break;
-                }
-            }
-        }
-    }
-//    uint32_t t5 = g_system->getTimeStamp();
+	// ── 3. OP ─────────────────────────────────────────────────────────────────
+	const uint8_t *op   = v + 6144;
+	uint32_t       sz   = READ_LE_UINT16(op);
+	op += 4;
+	uint8_t       *d    = _pageBuffers[_currentPageBuffer];
+	const uint8_t *src2 = op + sz;
 
-//    //emu_printf("Times: Skip=%u H=%u V=%u Prep=0 OP=%u\n", t1-t0, t2-t1, t3-t2, t5-t3);
+	for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
+		for (int x = 0; x < kVideoWidth; x += 4, d += 4) {
+			const char *q = updateSequences[(x & 4) ? (*op++ & 15) : (*op >> 4)];
+			uint8_t k;
+			while ((k = *q++)) {
+				uint8_t *d0 = d + 512, *d1;
+				const uint8_t *s2;
+				uint8_t m, c;
+				switch (k) {
+					case 2: d0 = d;
+					case 3: c  = *src2++;
+					case 4: m  = *src2++;
+					        d1 = d0 + 256;
+					        pafCopyColorMask(m >> 4, d0, c);
+					        pafCopyColorMask(m & 15, d1, c);
+					        break;
+					case 5: d0 = d;
+					case 6: s2 = fastOffset(_pageBuffers, src2); src2 += 2;
+					case 7: m  = *src2++;
+					        d1 = d0 + 256;
+					        pafCopySrcMask(m >> 4, d0, s2 + (d0 - d));
+					        pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+					        break;
+				}
+			}
+		}
+	}
+
+	uint32_t td = g_system->getTimeStamp();
+
+	// Un seul %u par appel — buffer 128 octets suffisant
+	emu_printf("H=%u V=%u OP=%u\n",  tb - ta,  tc - tb, td - tc);
 }
+
+// =============================================================================
+// Op1 / Op2 / Op4
+// =============================================================================
 
 FORCE_INLINE void PafPlayer::decodeVideoFrameOp1(const uint8_t *src) {
 	memcpy(_pageBuffers[_currentPageBuffer], src + 2, kVideoWidth * kVideoHeight);
@@ -586,38 +439,47 @@ FORCE_INLINE void PafPlayer::decodeVideoFrameOp1(const uint8_t *src) {
 
 FORCE_INLINE void PafPlayer::decodeVideoFrameOp2(const uint8_t *src) {
 	const int page = *src++;
-	if (page != _currentPageBuffer) {
+	if (page != _currentPageBuffer)
 		memcpy(_pageBuffers[_currentPageBuffer], _pageBuffers[page], kVideoWidth * kVideoHeight);
-	}
 }
 
 void PafPlayer::decodeVideoFrameOp4(const uint8_t *src) {
-	uint8_t *dst = _pageBuffers[_currentPageBuffer];
-	src += 2; // compressed size
+	uint8_t       *dst = _pageBuffers[_currentPageBuffer];
+	src += 2;
 	const uint8_t *end = dst + (kVideoWidth * kVideoHeight);
-	
+
 	while (dst < end) {
-		const int8_t code = *src++;
+		const int8_t code = (int8_t)*src++;
 		if (code < 0) {
-			// RLE: repeat color
-			int count = 1 - code;
-			const uint8_t color = *src++;
-			do {
-				*dst++ = color;
-			} while (--count);
+			int            count   = 1 - code;
+			const uint8_t  color   = *src++;
+			const uint32_t color32 = (uint32_t)color
+			                       | ((uint32_t)color <<  8)
+			                       | ((uint32_t)color << 16)
+			                       | ((uint32_t)color << 24);
+			while (((uintptr_t)dst & 3) && count > 0) { *dst++ = color; --count; }
+			while (count >= 4) { store4_a(dst, color32); dst += 4; count -= 4; }
+			while (count > 0)  { *dst++ = color; --count; }
 		} else {
-			// Literal copy
 			int count = code + 1;
-			do {
-				*dst++ = *src++;
-			} while (--count);
+			while (((uintptr_t)dst & 3) && count > 0) { *dst++ = *src++; --count; }
+			while (count >= 4) {
+				store4_a(dst, load4_any(src));
+				dst += 4; src += 4; count -= 4;
+			}
+			while (count > 0) { *dst++ = *src++; --count; }
 		}
 	}
 }
+
+// =============================================================================
+// Audio
+// =============================================================================
+
 #ifdef SOUND
 static void decodeAudioFrame2205(const uint8_t *src, int len, int16_t *dst, int volume) {
 	static const int offset = 256 * sizeof(int16_t);
-	for (int i = 0; i < len * 2; ++i) { // stereo
+	for (int i = 0; i < len * 2; ++i) {
 		const int16_t sample = READ_LE_UINT16(src + src[offset + i] * sizeof(int16_t));
 		dst[i] = CLIP((sample * volume + 64) >> 7, -32768, 32767);
 	}
@@ -625,47 +487,32 @@ static void decodeAudioFrame2205(const uint8_t *src, int len, int16_t *dst, int 
 
 void PafPlayer::decodeAudioFrame(const uint8_t *src, uint32_t offset, uint32_t size) {
 	assert(size == _pafHdr.readBufferSize);
-
-	// copy should be sequential
 	if (offset != _audioBufferOffsetWr) {
-		//////emu_printf("Unexpected offset 0x%x wr 0x%x rd 0x%x num %d\n", offset, _audioBufferOffsetWr, _audioBufferOffsetRd, _videoNum);
 		assert(offset == 0);
-		// this happens in paf #3 of Italian release, there is a flush at 0x16800 instead of 0x1f000
 		_audioBufferOffsetWr = 0;
 		_audioBufferOffsetRd = 0;
 	}
-
 	_audioBufferOffsetWr = offset + size;
-
 	const int count = (_audioBufferOffsetWr - _audioBufferOffsetRd) / kAudioStrideSize;
 	if (count != 0) {
 		PafAudioQueue *sq = (PafAudioQueue *)malloc(sizeof(PafAudioQueue));
 		if (sq) {
 			sq->offset = 0;
-			sq->size = count * kAudioSamples * 2;
+			sq->size   = count * kAudioSamples * 2;
 			sq->buffer = (int16_t *)malloc(sq->size * sizeof(int16_t));
 			if (sq->buffer) {
-				for (int i = 0; i < count; ++i) {
-					decodeAudioFrame2205(src + _audioBufferOffsetRd + i * kAudioStrideSize, kAudioSamples, sq->buffer + i * kAudioSamples * 2, _volume);
-				}
+				for (int i = 0; i < count; ++i)
+					decodeAudioFrame2205(src + _audioBufferOffsetRd + i * kAudioStrideSize,
+					                     kAudioSamples,
+					                     sq->buffer + i * kAudioSamples * 2, _volume);
 			}
 			sq->next = 0;
-
 			g_system->lockAudio();
-			if (_audioQueueTail) {
-				_audioQueueTail->next = sq;
-			} else {
-				assert(!_audioQueue);
-				_audioQueue = sq;
-			}
+			if (_audioQueueTail) _audioQueueTail->next = sq;
+			else { assert(!_audioQueue); _audioQueue = sq; }
 			_audioQueueTail = sq;
 			g_system->unlockAudio();
 		}
-		else
-		{
-			//////emu_printf("PafAudioQueue() Unable to allocate %d bytes\n", count * sizeof(uint32_t));
-		}
-
 		_audioBufferOffsetRd += count * kAudioStrideSize;
 	}
 	if (_audioBufferOffsetWr == _flushAudioSize) {
@@ -684,18 +531,12 @@ void PafPlayer::mix(int16_t *buf, int samples) {
 		if (_audioQueue->offset >= _audioQueue->size) {
 			assert(_audioQueue->offset == _audioQueue->size);
 			PafAudioQueue *next = _audioQueue->next;
-			free(_audioQueue->buffer);
-			free(_audioQueue);
+			free(_audioQueue->buffer); free(_audioQueue);
 			_audioQueue = next;
 		}
 		samples -= count;
 	}
-	if (!_audioQueue) {
-		_audioQueueTail = 0;
-	}
-	if (samples > 0) {
-		debug(kDebug_PAF, "audioQueue underrun %d", samples);
-	}
+	if (!_audioQueue) _audioQueueTail = 0;
 }
 
 static void mixAudio(void *userdata, int16_t *buf, int len) {
@@ -703,345 +544,200 @@ static void mixAudio(void *userdata, int16_t *buf, int len) {
 }
 #endif
 
-#if 0
+// =============================================================================
+// mainLoop
+// =============================================================================
+
 void PafPlayer::mainLoop() {
-//////emu_printf("mainLoop paf\n");
+uint8_t *buf = NULL;
+uint8_t *buf2 = NULL;
 	_file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
-	for (int i = 0; i < 4; ++i) {
+
+	for (int i = 0; i < 4; ++i)
 		memset(_pageBuffers[i], 0, kPageBufferSize);
-	}
 	memset(_paletteBuffer, 0, sizeof(_paletteBuffer));
-	_paletteChanged = true;
+	_paletteChanged    = true;
 	_currentPageBuffer = 0;
 	int currentFrameBlock = 0;
-#ifdef SOUND
-	AudioCallback prevAudioCb;
-	if (_demuxAudioFrameBlocks) {
-		AudioCallback audioCb;
-		audioCb.proc = mixAudio;
-		audioCb.userdata = this;
-		prevAudioCb = g_system->setAudioCallback(audioCb);
-	}
-#endif
-	// keep original frame rate for audio
-	const uint32_t frameMs = (_demuxAudioFrameBlocks != 0) ? _pafHdr.frameDuration : (_pafHdr.frameDuration * _frameMs / kFrameDuration);
-	uint32_t frameTime = g_system->getTimeStamp() + frameMs;
 
-	uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
+	uint32_t blocksCountForFrame  = _pafHdr.preloadFrameBlocksCount;
+	uint32_t blocksCountForFrame2 = 0;
+	uint32_t totalBytes2          = 0;
+
 #ifdef DEBUG
-//	_video->_font = (uint8_t *)0x25e6df94;	// vbt : hardcoded font buffer address vram vdp2
 	static uint8_t last_frame_z = 0xFF;
-	static char buffer[8];
+	static char dbgbuf[8];
 #endif
-////emu_printf("framesCount %d %d\n", _pafHdr.framesCount, _pafHdr.readBufferSize);
+
+#define DOUBLE          1
+#define NUM_BUFFERS     2
+#define FRAMES_PER_READ 6
+#define SLOT_SIZE       ((24576 * FRAMES_PER_READ) + 200)
+
+#ifdef DOUBLE
+//	buf = (uint8_t *)allocate_memory(TYPE_PAFBUF, SLOT_SIZE * NUM_BUFFERS);
+	buf = (uint8_t *)allocate_memory(TYPE_PAFBUF, SLOT_SIZE);
+	buf2 = (uint8_t *)allocate_memory(TYPE_MENU, SLOT_SIZE);
+
+	uint8_t *buffers[NUM_BUFFERS];
+//	for (int k = 0; k < NUM_BUFFERS; ++k)
+//		buffers[k] = buf + k * SLOT_SIZE;
+//		buffers[k] = buf + k * SLOT_SIZE;
+		buffers[0] = buf;
+		buffers[1] = current_lwram;
+
+	int currentBuffer = 0;
+	int readBuffer    = 1 % NUM_BUFFERS;
+
+	uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
+	emu_printf("batchRead %d\n", totalBytes);
+	int r     = _file.batchRead(buffers[0], totalBytes);
+	int delta = (r - (int)totalBytes);
+
+	bool asyncReadActive = (_pafHdr.framesCount > 1);
+	if (asyncReadActive) {
+		blocksCountForFrame2 = 0;
+		totalBytes = 0;
+		for (int j = 1; j <= FRAMES_PER_READ && j < (int)_pafHdr.framesCount; j++) {
+			blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[j];
+			totalBytes           += _pafHdr.frameBlocksCountTable[j] * _pafHdr.readBufferSize;
+		}
+		totalBytes2 = totalBytes;
+		_file.asynchInit(buffers[readBuffer], totalBytes2);
+	}
+
+	int nextWaitFrame = 1;
+#endif
+
+	// Accumulateurs — remis à zéro toutes les 10 frames
+	uint32_t t_async    = 0;
+	uint32_t t_memcpy   = 0;
+	uint32_t t_decode   = 0;
+	uint32_t t_copyrect = 0;
+	uint32_t t_pal      = 0;
+
+	const uint32_t frameMs   = 100;
+	uint32_t       frameTime = g_system->getTimeStamp();
+
 	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
-		// read buffering blocks
-		blocksCountForFrame += _pafHdr.frameBlocksCountTable[i];
-		while (blocksCountForFrame != 0) {
-unsigned int s1 = g_system->getTimeStamp();
-			_file.read(_bufferBlock, _pafHdr.readBufferSize);
-			const uint32_t dstOffset = _pafHdr.frameBlocksOffsetTable[currentFrameBlock] & ~(1 << 31);
-			if (_pafHdr.frameBlocksOffsetTable[currentFrameBlock] & (1 << 31)) {
-#ifdef SOUND
-				assert(dstOffset + _pafHdr.readBufferSize <= _pafHdr.maxAudioFrameBlocksCount * _pafHdr.readBufferSize);
-				memcpy(_demuxAudioFrameBlocks + dstOffset, _bufferBlock, _pafHdr.readBufferSize);
-				decodeAudioFrame(_demuxAudioFrameBlocks, dstOffset, _pafHdr.readBufferSize);
-#endif
-			} else {
-//				assert(dstOffset + _pafHdr.readBufferSize <= _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
 
-				if (dstOffset + _pafHdr.readBufferSize >
-					_pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize) {
-					break;
+		uint32_t t0 = g_system->getTimeStamp();
+
+#ifdef DOUBLE
+		if (i == nextWaitFrame && asyncReadActive) {
+			r             = _file.asynchWait(buffers[readBuffer], totalBytes2);
+			currentBuffer = readBuffer;
+			delta         = r - (int)totalBytes2;
+
+			blocksCountForFrame = blocksCountForFrame2;
+			readBuffer = (readBuffer + 1) % NUM_BUFFERS;
+
+			int nextFrameStart = nextWaitFrame + FRAMES_PER_READ;
+			if (nextFrameStart < (int)_pafHdr.framesCount) {
+				blocksCountForFrame2 = 0;
+				totalBytes = 0;
+				for (int j = 0; j < FRAMES_PER_READ && (nextFrameStart + j) < (int)_pafHdr.framesCount; j++) {
+					blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[nextFrameStart + j];
+					totalBytes           += _pafHdr.frameBlocksCountTable[nextFrameStart + j] * _pafHdr.readBufferSize;
 				}
-				memcpy(_demuxVideoFrameBlocks + dstOffset, _bufferBlock, _pafHdr.readBufferSize);
+				totalBytes2   = totalBytes;
+				nextWaitFrame = nextFrameStart;
+				_file.asynchInit(buffers[readBuffer], totalBytes2);
+			} else {
+				asyncReadActive = false;
+			}
+		}
+		uint8_t *currentData = buffers[currentBuffer] + delta;
+#endif
 
-unsigned int e1 = g_system->getTimeStamp();
-int result = e1-s1;
-if(result>0)
-	emu_printf("--duration %s : %d\n","read_copy", result);
+		uint32_t t1 = g_system->getTimeStamp();
+		t_async += t1 - t0;
+
+		// memcpy blocs
+		uint32_t tempBlocksCount = blocksCountForFrame;
+		while (tempBlocksCount > 0) {
+			const uint32_t dstOffset = _pafHdr.frameBlocksOffsetTable[currentFrameBlock] & ~(1u << 31);
+			if (!(_pafHdr.frameBlocksOffsetTable[currentFrameBlock] & (1u << 31))) {
+				if (dstOffset + _pafHdr.readBufferSize > _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize)
+					break;
+				memcpy(_demuxVideoFrameBlocks + dstOffset, currentData, _pafHdr.readBufferSize);
 			}
 			++currentFrameBlock;
-			--blocksCountForFrame;
+			--tempBlocksCount;
+			currentData += _pafHdr.readBufferSize;
 		}
-		// decode video data
+		blocksCountForFrame = tempBlocksCount;
 
-unsigned int s2 = g_system->getTimeStamp();
+		uint32_t t2 = g_system->getTimeStamp();
+		t_memcpy += t2 - t1;
+
+		// décodage
 		decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
-unsigned int e2 = g_system->getTimeStamp();
-/*
-int result = e2-s2;
-if(result>0)
-	////emu_printf("--duration %s : %d\n","decodeframe", result);
-		if (_pafCb.frameProc) {
-			_pafCb.frameProc(_pafCb.userdata, i, _pageBuffers[_currentPageBuffer]);
-		} else {
-*/
-			g_system->copyRect((int)0, (int)0, (int)kVideoWidth, (int)kVideoHeight, _pageBuffers[_currentPageBuffer], (int)kVideoWidth);
-//		}
+
+		uint32_t t3 = g_system->getTimeStamp();
+		t_decode += t3 - t2;
+
+		// copie écran
+		g_system->copyRect(0, 0, kVideoWidth, kVideoHeight,
+		                   _pageBuffers[_currentPageBuffer], kVideoWidth);
+
+		uint32_t t4 = g_system->getTimeStamp();
+		t_copyrect += t4 - t3;
+
+		// palette
 		if (_paletteChanged) {
 			_paletteChanged = false;
 			g_system->setPalette(_paletteBuffer, 256, 6);
+			g_system->updateScreen(false);
 		}
+
+		uint32_t t5 = g_system->getTimeStamp();
+		t_pal += t5 - t4;
+
+		// Log toutes les 10 frames — un %u par appel
+		if ((i % 10) == 9) {
+			emu_printf("f=%d as=%u mc=%u de=%u cr=%u pa=%u\n",
+			i,  t_async    / 10,  t_memcpy   / 10,  t_decode   / 10,  t_copyrect / 10
+			,  t_pal      / 10);
+			t_async = t_memcpy = t_decode = t_copyrect = t_pal = 0;
+		}
+
 #ifdef DEBUG
 		if (frame_z != last_frame_z) {
 			last_frame_z = frame_z;
-
-			buffer[0] = '0' + (frame_z / 10);
-			buffer[1] = '0' + (frame_z % 10);
-			buffer[2] = 0;
+			dbgbuf[0] = '0' + (frame_z / 10);
+			dbgbuf[1] = '0' + (frame_z % 10);
+			dbgbuf[2] = 0;
 		}
-		_video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
-#else
-//emu_printf("fps %d\n", frame_z);
+		_video->drawString(dbgbuf, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #endif
 
-unsigned int e3 = g_system->getTimeStamp();
-result = e3-e2;
-if(result>0)
-	emu_printf("--duration %s : %d\n","copyrect", result);
-
-		g_system->updateScreen(false);
-//		g_system->processEvents();
-		if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) || g_system->inp.keyPressed(SYS_INP_RUN)) {
+		if (g_system->inp.quit
+		 || g_system->inp.keyPressed(SYS_INP_ESC)
+		 || g_system->inp.keyPressed(SYS_INP_RUN))
 			break;
-		}
 
-		const int delay = MAX<int>(10, frameTime - g_system->getTimeStamp());
-//		g_system->sleep(delay);
 		frame_x++;
-		// set next decoding video page
 		++_currentPageBuffer;
 		_currentPageBuffer &= 3;
-	}
-#ifdef SOUND
-	if (_pafCb.endProc) {
-		_pafCb.endProc(_pafCb.userdata);
+
+		frameTime += frameMs;
+		uint32_t currentTime = g_system->getTimeStamp();
+		if (frameTime > currentTime)
+			g_system->sleep(frameTime - currentTime);
+		else {
+			emu_printf("behind=%d\n", (int)(currentTime - frameTime));
+			frameTime = currentTime;
+		}
 	}
 
-	// restore audio callback
-	if (_demuxAudioFrameBlocks) {
-		g_system->setAudioCallback(prevAudioCb);
-	}
-#endif
 	unload();
-}
-#else
-uint8_t *buf = NULL;
-//__attribute__((optimize(0))) 
-void PafPlayer::mainLoop() {
-////emu_printf("mainLoop\n");
-    _file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
-    
-    for (int i = 0; i < 4; ++i) {
-        memset(_pageBuffers[i], 0, kPageBufferSize);
-    }
-    memset(_paletteBuffer, 0, sizeof(_paletteBuffer));
-    _paletteChanged = true;
-    _currentPageBuffer = 0;
-    int currentFrameBlock = 0;
-
-#ifdef SOUND
-    AudioCallback prevAudioCb;
-    if (_demuxAudioFrameBlocks) {
-        AudioCallback audioCb;
-        audioCb.proc = mixAudio;
-        audioCb.userdata = this;
-        prevAudioCb = g_system->setAudioCallback(audioCb);
-    }
-#endif
-
-    uint32_t blocksCountForFrame = _pafHdr.preloadFrameBlocksCount;
-    uint32_t blocksCountForFrame2;
-    uint32_t totalBytes2;
-
-#ifdef DEBUG
-//    _video->_font = (uint8_t *)0x25e6df94;
-    static uint8_t last_frame_z = 0xFF;
-    static char buffer[8];
-#endif
-
-#define DOUBLE 1
-#define NUM_BUFFERS 2
-#define FRAMES_PER_READ 6
-
-// FRAMES_PER_READ 4 mini sinon perte de perfs
-#ifdef DOUBLE
-//	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 24576*NUM_BUFFERS);
-//	buf = (uint8_t *)allocate_memory (TYPE_PAFBUF, 400+24576*NUM_BUFFERS);
-	#define SLOT_SIZE  204800   
-
-	buf = (uint8_t *)allocate_memory(TYPE_PAFBUF, SLOT_SIZE * NUM_BUFFERS);
-//	buf = (uint8_t *)hwram_work_paf;
-//emu_printf("TYPE_PAFBUF %p %d\n", hwram_work, 24576*NUM_BUFFERS);
-    // Setup buffer array
-//    uint8_t* buffers[NUM_BUFFERS] = { buf, buf, buf, buf, buf, buf, buf
-
-uint8_t *buffers[NUM_BUFFERS];
-for (int k = 0; k < NUM_BUFFERS; ++k)
-    buffers[k] = buf + k * SLOT_SIZE;
-    
-    int currentBuffer = 0;  // Buffer being processed
-    int readBuffer = 1;     // Buffer being read into
-    
-    // First batch read (preload + first frame) into buffer 0
-//    blocksCountForFrame += _pafHdr.frameBlocksCountTable[0];
-    uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
-// //emu_printf("first-read %d\n", totalBytes);   
-//   unsigned int s0 = g_system->getTimeStamp();
-//	_file.batchSeek(_pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
-// vbt : on ne lit plus la partie preload, inutile ?
-//emu_printf("batchRead %d\n", totalBytes);
-    int r = _file.batchRead(buf, totalBytes);
-    int delta = (r - totalBytes);
-//    buffers[readBuffer] = buf+r;
-//	memset(buf,0x00, _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize);
-    // Start first async read for frames 1-4 into buffer 1
-    if (_pafHdr.framesCount > 1) {
-        blocksCountForFrame2 = 0;
-        totalBytes = 0;
-        
-        for (int j = 1; j <= FRAMES_PER_READ && j < (int)_pafHdr.framesCount; j++) {
-            blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[j-1];
-            totalBytes += _pafHdr.frameBlocksCountTable[j-1] * _pafHdr.readBufferSize;
-        }
-        
-        totalBytes2 = totalBytes;
-//emu_printf("asynchInit %d\n", totalBytes);
-        _file.asynchInit(buffers[readBuffer], totalBytes);
-    }
-    
-    bool asyncReadActive = (_pafHdr.framesCount > 1);
-#endif
-
-    // Force 10fps = 100ms per frame
-    const uint32_t frameMs = 100;
-    uint32_t frameTime = g_system->getTimeStamp();
-//emu_printf("framesCount %d\n", (int)_pafHdr.framesCount);
-    for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
-#ifndef DOUBLE
-        unsigned int s0 = g_system->getTimeStamp();
-        blocksCountForFrame += _pafHdr.frameBlocksCountTable[i];
-        uint32_t totalBytes = (blocksCountForFrame * _pafHdr.readBufferSize);
-        uint8_t* readBuffer = buf;
-        
-        int r = _file.batchRead(readBuffer, totalBytes);
-        readBuffer += (r - totalBytes);
-#else
-        // Wait and start next read every 4th frame (1, 5, 9, 13...)
-        if (i % FRAMES_PER_READ == 1 && asyncReadActive) {
-			//emu_printf("asynchWait2 %d\n", totalBytes2);
-            // Wait for async read to complete
-//    uint32_t a = g_system->getTimeStamp();
-            int r = _file.asynchWait(buffers[readBuffer], totalBytes2);
-			//emu_printf("asynchWait2 end\n");
-            // Switch to the buffer that just finished reading
-            currentBuffer = readBuffer;
-            delta = (r - totalBytes2);
-//uint32_t b = g_system->getTimeStamp();           
-////emu_printf("chunk %d duration %d\n", totalBytes2, b-a);
-
-            blocksCountForFrame = blocksCountForFrame2;
-            
-            // Move to next buffer for next async read
-            readBuffer = (readBuffer + 1) % NUM_BUFFERS;
-            
-            // IMMEDIATELY start next async read
-            int nextFrameStart = i + FRAMES_PER_READ;
-            if (nextFrameStart < (int)_pafHdr.framesCount) {
-                blocksCountForFrame2 = 0;
-                totalBytes = 0;
-                
-                for (int j = 0; j < FRAMES_PER_READ && (nextFrameStart + j) < (int)_pafHdr.framesCount; j++) {
-                    blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[nextFrameStart + j];
-                    totalBytes += _pafHdr.frameBlocksCountTable[nextFrameStart + j] * _pafHdr.readBufferSize;
-                }
-                
-                totalBytes2 = totalBytes;
-			//emu_printf("asynchInit3 %d\n", totalBytes);
-                _file.asynchInit(buffers[readBuffer], totalBytes);
-            } else {
-                asyncReadActive = false;
-            }
-        }
-        
-        // Use current buffer with delta offset
-        uint8_t* currentData = buffers[currentBuffer] + delta;
-//		emu_printf("currentData %p num %d delta %d\n", currentData, currentBuffer, delta);
-#endif
-
-        // Process all blocks for current frame
-        uint32_t tempBlocksCount = blocksCountForFrame;
-        while (tempBlocksCount > 0) {
-            const uint32_t dstOffset = _pafHdr.frameBlocksOffsetTable[currentFrameBlock] & ~(1 << 31);
-            if (!(_pafHdr.frameBlocksOffsetTable[currentFrameBlock] & (1 << 31))) {
-                if (dstOffset + _pafHdr.readBufferSize > _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize) {
-                    break;
-                }
-                memcpy(_demuxVideoFrameBlocks + dstOffset, currentData, _pafHdr.readBufferSize);
-            }
-            ++currentFrameBlock;
-            --tempBlocksCount;
-            currentData += _pafHdr.readBufferSize;
-        }
-        
-        blocksCountForFrame = tempBlocksCount;
-////emu_printf("decode\n");
-        decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
-        g_system->copyRect(0, 0, kVideoWidth, kVideoHeight, _pageBuffers[_currentPageBuffer], kVideoWidth);
-
-#ifdef DEBUG
-        if (frame_z != last_frame_z) 
-		{
-            last_frame_z = frame_z;
-            buffer[0] = '0' + (frame_z / 10);
-            buffer[1] = '0' + (frame_z % 10);
-            buffer[2] = 0;
-        }
-        _video->drawString(buffer, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
-#else
-emu_printf("fps %d\n", frame_z);
-#endif
-
-        if (_paletteChanged) {
-            _paletteChanged = false;
-            g_system->setPalette(_paletteBuffer, 256, 6);
-            g_system->updateScreen(false);
-        }
-
-
-
-        // Quit check
-        if (g_system->inp.quit || g_system->inp.keyPressed(SYS_INP_ESC) || g_system->inp.keyPressed(SYS_INP_RUN)) {
-            break;
-        }
-
-        frame_x++;
-        ++_currentPageBuffer;
-        _currentPageBuffer &= 3;
-
-        // Frame rate synchronization - 10fps = 100ms per frame
-        frameTime += frameMs;
-        uint32_t currentTime = g_system->getTimeStamp();
-        if (frameTime > currentTime) {
-            const int delay = frameTime - currentTime;
-            g_system->sleep(delay);
-//            //emu_printf("delay %d ms\n", delay);
-        } else {
-            emu_printf("behind by %d ms!\n", (int)(currentTime - frameTime));
-            frameTime = currentTime;
-        }
-    }
-
-    unload();
-// vbt : on force la fermeture du fichier video !
 	closePaf(_fs, &_file);
 }
-#endif
+
+// =============================================================================
+
 void PafPlayer::setCallback(const PafCallback *pafCb) {
-	if (pafCb) {
-		_pafCb = *pafCb;
-	} else {
-		memset(&_pafCb, 0, sizeof(_pafCb));
-	}
+	if (pafCb) _pafCb = *pafCb;
+	else memset(&_pafCb, 0, sizeof(_pafCb));
 }
