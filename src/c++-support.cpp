@@ -8,6 +8,7 @@ void	*malloc(size_t);
 void emu_printf(const char *format, ...);
 void *sbrk(intptr_t increment);
 extern uint8_t *hwram_work;
+extern uint8_t *current_lwram;
 int amount=0;
 }
 
@@ -20,12 +21,19 @@ void __cxa_pure_virtual(void) {
 void* operator new(size_t size) {
 //    return malloc(size);
 	void *ptr;
+	if(size!=8)
+	{
 	ptr = malloc(size);
 	amount+=size;
 //	hwram_work = (uint8_t*)sbrk(0);
 	emu_printf("amount %d\n", amount);
+	}
+	else
+	{
+		ptr = (void *)current_lwram;
+		current_lwram +=size;
+	}
 	return ptr;
-	
 }
 
 void* operator new[](size_t size) {

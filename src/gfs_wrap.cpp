@@ -26,6 +26,7 @@ void CSH_Purge(void *adrs, Uint32 P_size);
 #define GFS_FILE_USED(file)     ((file)->used)
 #define MNG_FILE(mng)           ((mng)->file)
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
+#define TOT_SECTOR 8
 #define CACHE_SIZE (SECTOR_SIZE * TOT_SECTOR)
 
 static char satpath[25];
@@ -33,6 +34,11 @@ static char satpath[25];
 static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
 
 static Uint32 cache_offset = 0;
+
+// Pool statique pour GFS_FILE - hors d'atteinte de allocate_memory
+static GFS_FILE gfs_file_pool[OPEN_MAX];
+static bool gfs_file_used[OPEN_MAX] = {false};
+
 // Used for initialization and such
 #ifdef DEBUG_GFS
 void errGfsFunc(void *obj, int ec)
@@ -49,22 +55,22 @@ void errGfsFunc(void *obj, int ec)
 
 #define GFS_LOCAL
 #define GFCD_ERR_OK             0       /* æ­£å¸¸çµ‚äº† */
-#define GFCD_ERR_WAIT           -1      /* å‡¦ç†å¾…ã¡ */
-#define GFCD_ERR_NOCDBLK        -2      /* CDãƒ–ãƒ­ãƒƒã‚¯ãŒæŽ¥ç¶šã•ã‚Œã¦ã„ãªã„ */
-#define GFCD_ERR_NOFILT         -3      /* ç©ºãçµžã‚ŠãŒãªã„ */
-#define GFCD_ERR_NOBUF          -4      /* ç©ºãåŒºç”»ãŒãªã„ */
-#define GFCD_ERR_INUSE          -5      /* æŒ‡å®šã•ã‚ŒãŸè³‡æºãŒä½¿ç”¨ä¸­ */
-#define GFCD_ERR_RANGE          -6      /* å¼•æ•°ãŒç¯„å›²å¤– */
-#define GFCD_ERR_UNUSE          -7      /* æœªç¢ºä¿ã®ã‚‚ã®ã‚’æ“ä½œã—ã‚ˆã†ã¨ã—ãŸ */
-#define GFCD_ERR_QFULL          -8      /* ã‚³ãƒžãƒ³ãƒ‰ã‚­ãƒ¥ãƒ¼ãŒã„ã£ã±ã„ */
-#define GFCD_ERR_NOTOWNER       -9      /* éžæ‰€æœ‰è€…ãŒè³‡æºã‚’æ“ä½œã—ã‚ˆã†ã¨ã—ãŸ */
-#define GFCD_ERR_CDC            -10     /* CDCã‹ã‚‰ã®ã‚¨ãƒ©ãƒ¼ */
+#define GFCD_ERR_WAIT           -1      /* å‡¦ç†å¾…ã¡ */
+#define GFCD_ERR_NOCDBLK        -2      /* CDãƒ–ãƒ­ãƒƒã‚¯ãŒæŽ¥ç¶šã•ã‚Œã¦ã„ãªã„ */
+#define GFCD_ERR_NOFILT         -3      /* ç©ºãçµžã‚ŠãŒãªã„ */
+#define GFCD_ERR_NOBUF          -4      /* ç©ºãåŒºç"»ãŒãªã„ */
+#define GFCD_ERR_INUSE          -5      /* æŒ‡å®šã•ã‚ŒãŸè³‡æºãŒä½¿ç"¨ä¸­ */
+#define GFCD_ERR_RANGE          -6      /* å¼•æ•°ãŒç¯„å›²å¤– */
+#define GFCD_ERR_UNUSE          -7      /* æœªç¢ºä¿ã®ã‚‚ã®ã‚'æ"ä½œã—ã‚ˆã†ã¨ã—ãŸ */
+#define GFCD_ERR_QFULL          -8      /* ã‚³ãƒžãƒ³ãƒ‰ã‚­ãƒ¥ãƒ¼ãŒã„ã£ã±ã„ */
+#define GFCD_ERR_NOTOWNER       -9      /* éžæ‰€æœ‰è€…ãŒè³‡æºã‚'æ"ä½œã—ã‚ˆã†ã¨ã—ãŸ */
+#define GFCD_ERR_CDC            -10     /* CDCã‹ã‚‰ã®ã‚¨ãƒ©ãƒ¼ */
 #define GFCD_ERR_CDBFS          -11     /* CDãƒ–ãƒ­ãƒƒã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚·ã‚¹ãƒ†ãƒ ã‚¨ãƒ©ãƒ¼ */
 #define GFCD_ERR_TMOUT          -12     /* ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ */
-#define GFCD_ERR_OPEN           -13     /* ãƒˆãƒ¬ã‚¤ãŒé–‹ã„ã¦ã„ã‚‹ */
-#define GFCD_ERR_NODISC         -14     /* ãƒ‡ã‚£ã‚¹ã‚¯ãŒå…¥ã£ã¦ã„ãªã„ */
-#define GFCD_ERR_CDROM          -15     /* CD-ROMã§ãªã„ãƒ‡ã‚£ã‚¹ã‚¯ãŒå…¥ã£ã¦ã„ã‚‹ */
-#define GFCD_ERR_FATAL          -16     /* ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒFATAL */
+#define GFCD_ERR_OPEN           -13     /* ãƒˆãƒ¬ã‚¤ãŒé–‹ã„ã¦ã„ã‚‹ */
+#define GFCD_ERR_NODISC         -14     /* ãƒ‡ã‚£ã‚¹ã‚¯ãŒå…¥ã£ã¦ã„ãªã„ */
+#define GFCD_ERR_CDROM          -15     /* CD-ROMã§ãªã„ãƒ‡ã‚£ã‚¹ã‚¯ãŒå…¥ã£ã¦ã„ã‚‹ */
+#define GFCD_ERR_FATAL          -16     /* ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒFATAL */
 
 #define MNG_ERROR(mng)          ((mng)->error)
 
@@ -118,6 +124,7 @@ void init_GFS() { //Initialize GFS system
 	GFS_SetErrFunc((GfsErrFunc)errGfsFunc, NULL );
 #endif
 	memset(cache, 0, CACHE_SIZE);
+	memset(gfs_file_used, 0, sizeof(gfs_file_used));
 }
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
@@ -134,13 +141,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 
 	Uint16 path_len = strlen(path);
 	strncpy(satpath, path, path_len + 1);
-/*
-	char *path_token = (char*)strtok(satpath, "/");
-//emu_printf("name %s\n",path_token);
-	for (idx = 0; idx < strlen(satpath); idx++)
-		satpath[idx] = toupper(satpath[idx]);
-//emu_printf("name %s\n",path_token);
-*/
+
 	GfsHn fid = NULL;
 	// OPEN FILE
 	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
@@ -148,15 +149,21 @@ emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)sat
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
-		// Encapsulate the file data
-//		fp = (GFS_FILE*)malloc(sizeof(GFS_FILE));
-		fp = (GFS_FILE*)allocate_memory (TYPE_GFSFILE, sizeof(GFS_FILE));
+
+		// Allouer depuis le pool statique
+		fp = NULL;
+		for (int i = 0; i < OPEN_MAX; i++) {
+			if (!gfs_file_used[i]) {
+				gfs_file_used[i] = true;
+				fp = &gfs_file_pool[i];
+				break;
+			}
+		}
 
 		if (fp == NULL) {return NULL;}
 		fp->fid = fid;
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 		fp->f_size = fsize;
-//		//emu_printf("position %d %p fsize %d\n", position, fp->fid, fsize);
 
 		Sint32 tot_sectors = TOT_SECTOR;
 		
@@ -193,17 +200,24 @@ emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)sat
 //		//emu_printf("no fid!!!\n");	
 	}
 
-	// Now... get back to the roots!
-	//back_to_root();
 	return fp;
 }
 
 int sat_fclose(GFS_FILE* fp) {
-Sint32 id, fsize;
-GFS_GetFileInfo(fp->fid, &id, NULL, &fsize, NULL);
-emu_printf("--- sat_fclose fid %d name %s\n",id, GFS_IdToName(id));
+//Sint32 id, fsize;
+//GFS_GetFileInfo(fp->fid, &id, NULL, &fsize, NULL);
+//emu_printf("--- sat_fclose fid %d name %s\n",id, GFS_IdToName(id));
 	
 	GFS_Close(fp->fid);
+
+	// Libérer le slot dans le pool
+	for (int i = 0; i < OPEN_MAX; i++) {
+		if (&gfs_file_pool[i] == fp) {
+			gfs_file_used[i] = false;
+			break;
+		}
+	}
+
 	return 0; // always ok :-)
 }
 
@@ -262,6 +276,11 @@ size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
 	Sint32 tot_bytes; // Total bytes to read
 	Sint32 tot_sectors;
 	Uint32 readBytes;
+
+//Sint32 id, fsize;
+//GFS_GetFileInfo(stream->fid, &id, NULL, &fsize, NULL);
+//emu_printf("--- sat_fread fid %d name %s\n",id, GFS_IdToName(id));
+
 
 	Uint32 start_sector = (stream->f_seek_pos)/SECTOR_SIZE;
 //	Uint32 skip_bytes = (stream->f_seek_pos)%SECTOR_SIZE; // Bytes to skip at the beginning of sector

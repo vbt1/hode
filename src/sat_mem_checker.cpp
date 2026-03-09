@@ -44,8 +44,11 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
         return bump(&vdp2ram, alignedSize);
   // plante à la fin des videos
     case TYPE_PAF:
+//		return bump(&cs1ram, alignedSize);
 //        return bump(&hwram_work_paf, alignedSize);
     case TYPE_PAFBUF:
+//        return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
+//        return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
         return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
 //        return bump(&current_lwram, alignedSize);
 

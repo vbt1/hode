@@ -44,12 +44,15 @@ void File::setFp(GFS_FILE *fp) {
 }
 
 void File::seekAlign(uint32_t pos) {
-emu_printf("File::seekAlign %d\n", pos);
+//emu_printf("File::seekAlign %d\n", pos);
 	sat_fseek(_fp, pos, SEEK_SET);
 }
 
 void File::seek(int pos, int whence) {
-emu_printf("File::seek %d %d\n");
+//emu_printf("File::seek %d %d\n", pos, whence);
+//Sint32 id, fsize;
+//GFS_GetFileInfo(_fp->fid, &id, NULL, &fsize, NULL);
+//emu_printf("--- seek fid %d name %s\n",id, GFS_IdToName(id));
 	if(_fp)
 	{
 		if (kSeekAbsolutePosition && whence == SEEK_CUR) {
@@ -90,8 +93,8 @@ Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 //#define NWREAD 1
 
 void File::asynchInit(uint8_t *ptr, uint32_t len) {
-//emu_printf("asynchInit len=%d\n", len);
     Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
+emu_printf("asynchInit len=%d sector %d\n", len, start_sector);
 //	GFS_NwStop(_fp->fid);
 	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
 //	while(!GFS_NwIsComplete(_fp->fid));
@@ -172,9 +175,10 @@ uint16_t File::readUint16() {
 }
 
 uint32_t File::readUint32() {
-////emu_printf("readUint32\n");
+//("readUint32\n");
 	uint8_t buf[4];
 	read(buf, 4);
+//emu_printf("readUint32 end\n");
 	return READ_LE_UINT32(buf);
 }
 #ifdef SECTOR_ALIGNED

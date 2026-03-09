@@ -14,7 +14,6 @@ extern "C" {
 struct File {
 
 	GFS_FILE *_fp;
-
 	File();
 	virtual ~File();
 
