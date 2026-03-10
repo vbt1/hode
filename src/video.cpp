@@ -36,8 +36,9 @@ Video::Video() {
 	_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
 	_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
 	_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4);
+	_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256);
 //emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
-	
+
 	if (kUseShadowColorLut) {
 //		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
 		_shadowColorLookupTable = allocate_memory (TYPE_SHADWLUT, 256 * 256);
@@ -51,7 +52,7 @@ emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwr
 	for (int i = 144; i < 256; ++i) {
 		_shadowColorLut[i] = i;
 	}
-	_transformShadowBuffer = 0;
+//	_transformShadowBuffer = 0;
 	_transformShadowLayerDelta = 0;
 #ifdef PSX
 	memset(&_mdec, 0, sizeof(_mdec));

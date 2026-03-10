@@ -94,11 +94,10 @@ PafPlayer::~PafPlayer() {
 
 void PafPlayer::setVolume(int volume) { _volume = volume; }
 
-uint8_t *lwram_cut;
+uint8_t *lwram_cut = 0;
 
 void PafPlayer::preload(int num) {
-//emu_printf("preload paf\n");
-	lwram_cut = current_lwram;
+emu_printf("preload paf %p\n", current_lwram);
 	if (num < 0 || num >= kMaxVideosCount) return;
 
 	_bufferBlock = allocate_memory(TYPE_PAF, kBufferBlockSize);
@@ -149,12 +148,14 @@ emu_printf("no openPaf!!!\n");
 }
 
 void PafPlayer::play(int num) {
+	lwram_cut = current_lwram;
 	if (_videoNum != num) preload(num);
 	if (_videoNum == num) { _playedMask |= 1 << num; mainLoop(); }
 }
 
 void PafPlayer::unload(int num) {
-	current_lwram = lwram_cut;
+	if (lwram_cut)
+		current_lwram = lwram_cut;
 	hwram_work_paf = _video->_shadowLayer;
 	if (_videoNum < 0) return;
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
@@ -173,6 +174,8 @@ void PafPlayer::unload(int num) {
 }
 
 bool PafPlayer::readPafHeader() {
+emu_printf("readPafHeader%p\n", current_lwram);
+//	lwram_cut = current_lwram;
 	_file.read(_bufferBlock, kBufferBlockSize);
 	_pafHdr.frameDuration            = READ_LE_UINT32(_bufferBlock + 0x88);
 	_pafHdr.startOffset              = READ_LE_UINT32(_bufferBlock + 0xA4);
@@ -552,10 +555,10 @@ void PafPlayer::mainLoop() {
 
 #define NUM_BUFFERS     2
 #define FRAMES_PER_READ 6
-#define SLOT_SIZE      ((24576 * FRAMES_PER_READ) + 200)
+#define SLOT_SIZE      ((24576 * FRAMES_PER_READ) + 200) + 24576
 
-	buf  = (uint8_t *)allocate_memory(TYPE_PAFBUF, SLOT_SIZE);
-	buf2 = (uint8_t *)allocate_memory(TYPE_MENU,   SLOT_SIZE);
+	buf2  = (uint8_t *)hwram_work_paf;
+	buf = (uint8_t *)buf2+24576;
 //	buf2 = (uint8_t *)((uintptr_t)buf2 | 0x20000000);
 
 emu_printf("buf=%p\n",  buf);

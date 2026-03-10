@@ -289,9 +289,10 @@ void Game::transformShadowLayer(int delta) {
 }
 
 void Game::loadTransformLayerData(const uint8_t *data) {
+	emu_printf("xxxxx loadTransformLayerData\n");
 	assert(!_video->_transformShadowBuffer);
 //	_video->_transformShadowBuffer = (uint8_t *)malloc(256 * 192 + 256);
-	_video->_transformShadowBuffer = allocate_memory (TYPE_SHADWBUF, 256 * 192 + 256);
+//	_video->_transformShadowBuffer = allocate_memory (TYPE_SHADWBUF, 256 * 192 + 256);
 	const int size = decodeLZW(data, _video->_transformShadowBuffer);
 //	assert(size == 256 * 192);
 	if(size != 256 * 192)
