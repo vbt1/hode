@@ -38,7 +38,7 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-emu_printf("type %d size %d\n", type, alignedSize);
+//emu_printf("type %d size %d\n", type, alignedSize);
     switch (type) {	
     case TYPE_LDIMG:
     case TYPE_FONT:
@@ -91,17 +91,17 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_MAP:
     case TYPE_SHOOT:
     case TYPE_MSTCODE:
-    case TYPE_GFSFILE:
+//    case TYPE_GFSFILE:
     case TYPE_SCRMASK:
     case TYPE_SCRMASKBUF:
     case TYPE_BGLVLOBJ:
-    case TYPE_TASK:
+//    case TYPE_TASK:
 //	case TYPE_SHADWBUF:
         if (((int)current_lwram) + SAT_ALIGN(alignedSize) < 0x300000)
             return bump(&current_lwram, alignedSize);
-        emu_printf("lwram %d %p lwram %d cs1 %d\n",
-            ((int)hwram_work) - 0x6000000, hwram_src,
-            ((int)current_lwram) - 0x200000, ((int)cs1ram) - 0x22400000);
+//        emu_printf("lwram %d %p lwram %d cs1 %d\n",
+//            ((int)hwram_work) - 0x6000000, hwram_src,
+//            ((int)current_lwram) - 0x200000, ((int)cs1ram) - 0x22400000);
         return bump(&cs1ram, alignedSize);
 
     default:

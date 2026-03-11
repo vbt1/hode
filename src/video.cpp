@@ -30,7 +30,7 @@ Video::Video() {
 	_drawLine.y2 = H - 1;
 #if 1
 	hwram_work = allocate_memory (TYPE_HWRAM, 588000+114000);
-	emu_printf("--hwram_work start %p\n", hwram_work);
+//	emu_printf("--hwram_work start %p\n", hwram_work);
 	hwram_work_paf   = hwram_work;
 	_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
 	_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
@@ -45,7 +45,7 @@ Video::Video() {
 	} else {
 		_shadowColorLookupTable = 0;
 	}
-emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
+//emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
 	hwram_work = hwram_work_paf;
 //	_shadowScreenMaskBuffer = (uint8_t *)malloc(256 * 192 * 2 + 256 * 4);
 //	_shadowScreenMaskBuffer = allocate_memory (TYPE_SCRMASKBUF, 256 * 192 * 2 + 256 * 4);

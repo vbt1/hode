@@ -289,7 +289,7 @@ void Game::transformShadowLayer(int delta) {
 }
 
 void Game::loadTransformLayerData(const uint8_t *data) {
-	emu_printf("xxxxx loadTransformLayerData\n");
+//	emu_printf("xxxxx loadTransformLayerData\n");
 	assert(!_video->_transformShadowBuffer);
 //	_video->_transformShadowBuffer = (uint8_t *)malloc(256 * 192 + 256);
 //	_video->_transformShadowBuffer = allocate_memory (TYPE_SHADWBUF, 256 * 192 + 256);
@@ -572,7 +572,7 @@ void Game::setupScreenMask(uint8_t num) {
 }
 
 void Game::resetScreenMask() {
-emu_printf("resetScreenMask\n");
+//emu_printf("resetScreenMask\n");
 //	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
 	if(_screenMaskBuffer == 0)
 		_screenMaskBuffer = allocate_memory(TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
@@ -2207,7 +2207,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #ifdef SOUND
 	_mix._lock(1);
 #endif
-emu_printf("loadLevelData %d\n", _currentLevel);
+//emu_printf("loadLevelData %d\n", _currentLevel);
 	_res->loadLevelData(_currentLevel);
 #ifdef SOUND
 	clearSoundObjects();
@@ -2275,9 +2275,9 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 // vbt : voir comment restaurer hwram_work correctement
 //	hwram_work = _video->_shadowScreenMaskBuffer + (256 * 192 * 2 + 256 * 4);
  // vbt : à remettre !!!
- emu_printf("initLvlObjects\n");
+// emu_printf("initLvlObjects\n");
 	initLvlObjects();
- emu_printf("initLvlObjects done\n");
+ //emu_printf("initLvlObjects done\n");
 	if (_mstDisabled) {
 		_specialAnimMask = 0;
 		_mstCurrentAnim = 0;
@@ -2285,11 +2285,11 @@ emu_printf("loadLevelData %d\n", _currentLevel);
 		_mstOriginPosY = Video::H / 2;
 	} else {
 		_currentScreen = screenNum; // bugfix: clear previous level screen number
-emu_printf("initMstCode\n");
+//emu_printf("initMstCode\n");
 		initMstCode();
 	}
 
-emu_printf("resetPlasmaCannonState\n");
+//emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_res->_screensState[i].s2 = 0;

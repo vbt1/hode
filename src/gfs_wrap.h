@@ -14,7 +14,6 @@
 
 
 #define SECTOR_SIZE 2048 // Bytes for each sector
-#define TOT_SECTOR 8
 
 #define FNAME_SIZE 15
 

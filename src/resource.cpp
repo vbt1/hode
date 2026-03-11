@@ -143,20 +143,20 @@ Resource::Resource(FileSystem *fs)
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[16];
 		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
-emu_printf("filename %s here\n", filename);
+//emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
-emu_printf("seek %s %p\n", filename, _lvlFile);
+//emu_printf("seek %s %p\n", filename, _lvlFile);
 			_lvlFile->seek(0x2B88, SEEK_SET);
-emu_printf("skipUint32 %s\n", filename);
+//emu_printf("skipUint32 %s\n", filename);
 			_lvlFile->skipUint32();
 ////emu_printf("readUint32 %s\n", filename);
 			const int size = _lvlFile->readUint32();
 			if (size == 0) {
 				_version = V1_0;
 			}
-emu_printf("closeDat %s\n", filename);
+//emu_printf("closeDat %s\n", filename);
 			closeDat(_fs, _lvlFile);
-emu_printf("closeDat %s done\n", filename);
+//emu_printf("closeDat %s done\n", filename);
 		}
 	}
 	// detect if this is a demo version by trying to open the second level data files
@@ -180,7 +180,7 @@ emu_printf("NOT DEMO %s\n", filename);
 #endif
 	_lvlSpritesOffset = 0x288 + 96 * (_version == V1_0 ? 96 : 104);
 	_lvlBackgroundsOffset = _lvlSpritesOffset + 32 * 16;
-emu_printf("_lvlBackgroundsOffset init %d\n", _lvlBackgroundsOffset);
+//emu_printf("_lvlBackgroundsOffset init %d\n", _lvlBackgroundsOffset);
 	_lvlMasksOffset = _lvlBackgroundsOffset + kMaxScreens * (16 + 160);
 
 	_loadingImageBuffer = 0;
@@ -366,7 +366,7 @@ void Resource::loadDatMenuBuffers() {
 #endif
 	const uint32_t baseOffset = _menuBuffersOffset;
 	_datFile->seek(baseOffset, SEEK_SET);
-emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
+//emu_printf("malloc(_datHdr.bufferSize1) %d\n", _datHdr.bufferSize1);
 //	_menuBuffer1 = (uint8_t *)malloc(_datHdr.bufferSize1);
 	_menuBuffer1 = allocate_memory (TYPE_MENU, _datHdr.bufferSize1);
 	
@@ -400,7 +400,7 @@ void Resource::loadLevelData(int levelNum) {
 // vbt : fermeture fichier niveau, inutile si premier niveau
 	closeDat(_fs, _lvlFile);
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
-emu_printf("vbt filename %s\n",filename);
+//emu_printf("vbt filename %s\n",filename);
 
 	if (openDat(_fs, filename, _lvlFile)) {
 		loadLvlData(_lvlFile);
@@ -593,7 +593,7 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 //	assert((unsigned int)num < kMaxSpriteTypes);
 	if((unsigned int)num >= kMaxSpriteTypes)
 {
-emu_printf("loadLvlSpriteData assert %d %d\n", num, kMaxSpriteTypes);
+//emu_printf("loadLvlSpriteData assert %d %d\n", num, kMaxSpriteTypes);
 		return;
 }
 	static const uint32_t baseOffset = _lvlSpritesOffset;
@@ -601,7 +601,7 @@ emu_printf("loadLvlSpriteData assert %d %d\n", num, kMaxSpriteTypes);
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) 
 	{
-emu_printf("!buf\n");
+//emu_printf("!buf\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
@@ -615,10 +615,10 @@ emu_printf("!buf\n");
 
 	if(readSize > size)
 	{
-		emu_printf("readSize %d %d\n", readSize, size);
+//		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
-emu_printf("vbt malloc sprite %d\n", size);
+//emu_printf("vbt malloc sprite %d\n", size);
 	uint8_t *ptr = allocate_memory (TYPE_SPRITE1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
@@ -752,11 +752,11 @@ emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes
 #ifdef USE_LESS_RAM
 void Resource::loadLvlSprite(int levelNum)
 {
-emu_printf("loadLvlSprite %d\n", levelNum);
-	const char *levelName = _prefixes[levelNum];
-Sint32 fileid, fsize;
-	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
-emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
+//emu_printf("loadLvlSprite %d\n", levelNum);
+//	const char *levelName = _prefixes[levelNum];
+//Sint32 fileid, fsize;
+//	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
+//emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
 	
 //	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
@@ -883,7 +883,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
-emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
+//emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	assert((unsigned int)num < kMaxScreens);
 //	if(cs1ram_bg==0)
 	cs1ram_bg = cs1ram;
@@ -892,12 +892,9 @@ emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 //emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
-emu_printf("seekAlign\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
-emu_printf("read(header\n");
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
-emu_printf("read(header %p\n", buf);
 	}
 	const uint32_t offset = READ_LE_UINT32(&buf[0]);
 	const uint32_t size = READ_LE_UINT32(&buf[4]);
