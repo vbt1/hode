@@ -1000,7 +1000,7 @@ endDir:
 }
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
-//emu_printf("preloadLevelScreenData num\n", num);
+emu_printf("preloadLevelScreenData num\n", num);
 	if(num == kNoScreen)
 		return;
 
@@ -1380,7 +1380,8 @@ void Game::resetScreen() {
 }
 
 void Game::restartLevel() {
-//emu_printf("restartLevel\n");
+emu_printf("restartLevel\n");
+
 //emu_printf("setupAndyLvlObject\n");
 	setupAndyLvlObject();
 //emu_printf("clearLvlObjectsList2\n");

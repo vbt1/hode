@@ -15,7 +15,7 @@ Uint32 ioskip_bytes;
 #include <sys/param.h>
 #include "fileio.h"
 #include "util.h"
-
+//#define SECTOR_ALIGNED 1
 
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))

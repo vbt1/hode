@@ -120,7 +120,7 @@ Resource::Resource(FileSystem *fs)
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
 #ifdef SECTOR_ALIGNED
 	if (sectorAlignedGameData()) {
-////emu_printf("_version = V1_2\n");
+emu_printf("_version = V1_2\n");
 		_datFile = new SectorFile;
 		_lvlFile = new SectorFile;
 		_mstFile = new SectorFile;
@@ -133,7 +133,7 @@ Resource::Resource(FileSystem *fs)
 	else 
 #endif
 	{
-////emu_printf("_version NOT V1_2\n");
+emu_printf("_version NOT V1_2\n");
 		_datFile = new File;
 		_lvlFile = new File;
 		_mstFile = new File;
@@ -207,8 +207,8 @@ Resource::~Resource() {
 #ifdef SECTOR_ALIGNED
 bool Resource::sectorAlignedGameData() {
 ////emu_printf("sectorAlignedGameData %s\n", _setupDat);
-	GFS_FILE *fp = _fs->openAssetFile(_setupDat);
-	/*
+	/*	GFS_FILE *fp = _fs->openAssetFile(_setupDat);
+
 	if (!fp) {
 		fp = _fs->openAssetFile(_setupDax);
 		if (!fp) {
@@ -217,15 +217,15 @@ bool Resource::sectorAlignedGameData() {
 		}
 	}*/
 	bool ret = false;
-	uint8_t buf[2048];
+/*	uint8_t buf[2048];
 	int sz = sat_fread(buf, 1, sizeof(buf), fp);
 	
 //	//emu_printf("aligned sz %d buf sz %d\n", sz, sizeof(buf));
-	/*
+	
 	if (sz == sizeof(buf)) {
 		ret = fioUpdateCRC(0, buf, sizeof(buf)) == 0;
-	}*/
-	_fs->closeFile(fp);
+	}
+	_fs->closeFile(fp);*/
 ////emu_printf("sectorAlignedGameData true ? %d\n", ret);
 	return ret;
 }
