@@ -3,18 +3,21 @@
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
 #pragma GCC optimize ("O2")
- extern "C" {
-#include 	<sega_gfs.h>
-//#include 	<gfs_def.h>
-#include 	<sl_def.h>
-Sint32		iostat, iondata;
-Sint32		gfsstat;
-Uint32 ioskip_bytes;
-}
-
 #include <sys/param.h>
 #include "fileio.h"
 #include "util.h"
+#include "gfs_wrap.h"
+ extern "C" {
+#include 	<sega_gfs.h>
+//#include 	<gfs_def.h>
+Sint32		iostat, iondata;
+Sint32		gfsstat;
+Uint32 ioskip_bytes;
+//extern Uint8 _sector_buf[SECTOR_SIZE];
+extern Uint8 *_sector_buf_ptr;
+}
+
+//#define NOSEEK 1
 //#define SECTOR_ALIGNED 1
 
 #define GFS_BYTE_SCT(byte, sctsiz)  \
@@ -79,37 +82,77 @@ void File::batchSeek()
 
 Uint32 File::batchRead(uint8_t *ptr, uint32_t len) {
 //emu_printf("start %d len %d\n",(_fp->f_seek_pos)/SECTOR_SIZE, len);
-	Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-//	while(!GFS_NwIsComplete(_fp->fid));
-	Uint32 skip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
-	Sint32 tot_bytes = len + skip_bytes;
-	Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+    Uint32 start_sector = _fp->f_seek_pos / SECTOR_SIZE;
+    GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+    Uint32 skip_bytes   = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+    Sint32 tot_bytes    = len + skip_bytes;
+    Sint32 tot_sectors  = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+#ifdef NOSEEK
+    GFS_Fread(_fp->fid, tot_sectors, ptr, tot_sectors * SECTOR_SIZE);  // lire complet
+    _fp->f_seek_pos += len;
+	_sector_buf_ptr = ptr + (tot_sectors - 1) * SECTOR_SIZE;
+//	emu_printf("secteur en cache : %d _fp->f_seek_pos-1 %d\n", tot_sectors - 1, _fp->f_seek_pos-1 );
+    return tot_bytes;  // retourner tot_bytes pour que delta = skip_bytes
+#else
 	Uint32 readBytes = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
 	_fp->f_seek_pos += (readBytes - skip_bytes);
 	return readBytes;
+#endif
 }
 
-//#define NWREAD 1
-
+#ifdef NOSEEK
 void File::asynchInit(uint8_t *ptr, uint32_t len) {
-    Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;
-emu_printf("asynchInit len=%d sector %d\n", len, start_sector);
-//	GFS_NwStop(_fp->fid);
-	GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
-//	while(!GFS_NwIsComplete(_fp->fid));
+Uint32 start_sector = (_fp->f_seek_pos)/SECTOR_SIZE;	
+//emu_printf("asynchInit len=%d sector %d pos %d\n", len, start_sector, GFS_Tell(_fp->fid));
+//    memcpy(ptr, _sector_buf, SECTOR_SIZE);
     ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
-    Sint32 tot_bytes = len + ioskip_bytes;
+    Sint32 tot_bytes   = len + ioskip_bytes - SECTOR_SIZE;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
-#ifdef NWREAD
-    GFS_NwFread(_fp->fid, tot_sectors, ptr, tot_bytes);
-	GFS_NwExecOne(_fp->fid);
-#else
-	GFS_NwCdRead(_fp->fid, tot_sectors);
-	GFS_NwExecOne(_fp->fid);
-#endif
+    GFS_NwCdRead(_fp->fid, tot_sectors);
+    GFS_NwExecOne(_fp->fid);
+
+	const uint32_t *src = (const uint32_t *)_sector_buf_ptr;
+	uint32_t       *dst = (uint32_t *)ptr;
+	for (int i = 0; i < SECTOR_SIZE / 4; i++)
+		dst[i] = src[i];
+//	slTransferEntry((void*)_sector_buf_ptr, (void*)ptr, (Uint16)2048); ne compile pas sans raison
     iostat = -1;
 }
+
+int File::asynchWait(uint8_t *ptr, Sint32 len) {
+    Sint32 tot_bytes   = len + ioskip_bytes - SECTOR_SIZE;
+    Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+    iondata = GFS_Fread(_fp->fid, tot_sectors, ptr + SECTOR_SIZE, tot_sectors * SECTOR_SIZE);  // ← complet
+//    memcpy(_sector_buf, ptr + SECTOR_SIZE + (tot_sectors - 1) * SECTOR_SIZE, SECTOR_SIZE);
+	_sector_buf_ptr = ptr + SECTOR_SIZE + (tot_sectors - 1) * SECTOR_SIZE;
+
+	_fp->f_seek_pos += len;
+    iostat = -1;
+    return len + ioskip_bytes;
+}
+#else
+void File::asynchInit(uint8_t *ptr, uint32_t len) {
+    Uint32 start_sector = _fp->f_seek_pos / SECTOR_SIZE;
+//emu_printf("asynchInit len=%d sector %d pos %d\n", len, start_sector, GFS_Tell(_fp->fid));
+    GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+    ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
+    Sint32 tot_bytes   = len + ioskip_bytes;
+    Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+    GFS_NwCdRead(_fp->fid, tot_sectors);
+    GFS_NwExecOne(_fp->fid);
+    iostat = -1;
+}
+
+int File::asynchWait(uint8_t *ptr, Sint32 len) {
+    Sint32 tot_bytes   = len + ioskip_bytes;
+    Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
+    iondata = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
+    _fp->f_seek_pos += (iondata - ioskip_bytes);
+    iostat = -1;
+    return iondata;
+}	
+#endif
+
 /*
 void File::asynchRead() {
 //emu_printf("asynchRead\n");
@@ -130,30 +173,6 @@ void File::asynchRead() {
     // Don't update _fp->f_seek_pos here - let asynchWait() handle it
 }
 */
-
-int File::asynchWait(uint8_t *ptr, Sint32 len) {
-#ifdef NWREAD
-    if (iostat == GFS_SVR_COMPLETED && iostat != -1)
-        return iondata;
-    do {
-        GFS_NwExecOne(_fp->fid);
-        GFS_NwGetStat(_fp->fid, &iostat, &iondata);  // résultat dans iostat, pas en retour
-    } while (iostat != GFS_SVR_COMPLETED);
-#else
-    Sint32 tot_bytes = len + ioskip_bytes;
-    Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);
-//emu_printf("1 %d %p %d\n", tot_sectors, ptr, tot_bytes);    
-    // Just read the full requested amount - no limiting here
-    iondata = GFS_Fread(_fp->fid, tot_sectors, ptr, tot_bytes);
-//emu_printf("2\n");    
-//    GFS_NwStop(_fp->fid);
-//emu_printf("3\n");    
-
-#endif
-    _fp->f_seek_pos += (iondata - ioskip_bytes);
-    iostat = -1;
-    return iondata;
-}
 
 int File::read(uint8_t *ptr, int size) {
 //emu_printf("sat_fread %d\n", size);

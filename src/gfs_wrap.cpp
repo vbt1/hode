@@ -7,6 +7,15 @@ extern "C" {
 #include <ctype.h>
 #include "gfs_wrap.h"
 #include "sat_mem_checker.h"
+
+#define MNG_SVR(mng)            ((mng)->svr)
+#define SVR_NFILE(svr)          ((svr)->nfile)
+#define GFS_FILE_USED(file)     ((file)->used)
+#define MNG_FILE(mng)           ((mng)->file)
+//#define CACHE_SIZE (SECTOR_SIZE * 20)
+#define TOT_SECTOR 6
+#define CACHE_SIZE (SECTOR_SIZE * TOT_SECTOR)
+
 Uint8 *current_lwram = (Uint8 *)VBT_L_START;
 Uint8 *save_current_lwram;
 char 	*strtok (char *__restrict, const char *__restrict);
@@ -15,25 +24,19 @@ GfsDirTbl gfsDirTbl;
 GfsDirName gfsDirName[DIR_MAX];
 Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];     
 Sint32 gfsDirN;
+
+static char satpath[25];
+
+static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
+//uint8_t _sector_buf[SECTOR_SIZE] __attribute__((aligned(4)));
+static Uint32 cache_offset = 0;
+
+Uint8 *_sector_buf_ptr = NULL;
 extern Sint32  gfcd_fatal_err;
 extern GfsMng   *gfs_mng_ptr;
 void	*malloc(size_t);
 void CSH_Purge(void *adrs, Uint32 P_size);
 }
-
-#define MNG_SVR(mng)            ((mng)->svr)
-#define SVR_NFILE(svr)          ((svr)->nfile)
-#define GFS_FILE_USED(file)     ((file)->used)
-#define MNG_FILE(mng)           ((mng)->file)
-//#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define TOT_SECTOR 8
-#define CACHE_SIZE (SECTOR_SIZE * TOT_SECTOR)
-
-static char satpath[25];
-
-static Uint8 cache[CACHE_SIZE] __attribute__ ((aligned (4)));
-
-static Uint32 cache_offset = 0;
 
 // Pool statique pour GFS_FILE - hors d'atteinte de allocate_memory
 static GFS_FILE gfs_file_pool[OPEN_MAX];
@@ -267,7 +270,7 @@ int sat_ftell(GFS_FILE *stream)
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
 size_t sat_fread(void *ptr, size_t size, size_t nmemb, GFS_FILE *stream) {
-////emu_printf("sat_fread ptr %p size %d pos %d stream->fid %d\n", ptr, size, stream->f_seek_pos, stream->f_size);	
+//emu_printf("sat_fread ptr %p size %d pos %d stream->fid %d\n", ptr, size, stream->f_seek_pos, stream->f_size);	
 
 	if (ptr == NULL || stream == NULL) return 0; // nothing to do then
 	if (size == 0 || nmemb == 0) return 0;

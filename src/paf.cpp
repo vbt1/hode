@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-#define DEBUG 1
+//#define DEBUG 1
 //#define DEBUG2 1
 /*
  * Heart of Darkness engine rewrite
@@ -345,10 +345,10 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 
 	// ── 3. OP ─────────────────────────────────────────────────────────────────
 	const uint8_t *op = v + 6144;
-	if (op >= _demuxVideoFrameBlocks + (_pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize)) {
+	/*if (op >= _demuxVideoFrameBlocks + (_pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize)) {
 		emu_printf("OP OOB!\n");
 		return;
-	}
+	}*/
 	uint32_t sz = READ_LE_UINT16(op);
 	op += 4;
 	uint8_t       *d    = _pageBuffers[_currentPageBuffer];
@@ -526,23 +526,26 @@ void PafPlayer::mainLoop() {
 
 #define NUM_BUFFERS     2
 #define FRAMES_PER_READ 6
-#define SLOT_SIZE      ((24576 * FRAMES_PER_READ) + 1400) + 24576
+//#define SLOT_SIZE      ((24576 * FRAMES_PER_READ) + 2048) 
+#define SLOT_SIZE      ((24576 * FRAMES_PER_READ) + 1400) //+ 24576
 
-	buf2 = (uint8_t *)cs1ram;   // 2MB cartouche CS1 — non-chevauchant
-	buf  = (uint8_t *)cs2ram;   // 2MB cartouche CS2 — non-chevauchant
+	buf2 = (uint8_t *)hwram_work_paf+24576+2048;   // 2MB cartouche CS1 — non-chevauchant
+	buf  = (uint8_t *)hwram_work_paf;   // 2MB cartouche CS2 — non-chevauchant
+
+//buf  = (uint8_t *)cs2ram;   // 0x22600000
+//buf2 = (uint8_t *)cs1ram;   // 0x22402000
 
 	uint8_t *buffers[NUM_BUFFERS];
 	buffers[0] = buf;
 	buffers[1] = buf2;
 
-	int currentBuffer = 0;
 	int readBuffer    = 1;
 
 	// ── Lecture synchrone du batch 0 ─────────────────────────────────────────
 	uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
 	int r     = _file.batchRead(buffers[0], totalBytes);
 	int delta = r - (int)totalBytes;
-
+//emu_printf("batch done\n");
 	uint8_t *currentData = buffers[0] + delta;
 
 	// ── asynchInit batch 1 ────────────────────────────────────────────────────
@@ -556,19 +559,21 @@ void PafPlayer::mainLoop() {
 			totalBytes           += _pafHdr.frameBlocksCountTable[j] * _pafHdr.readBufferSize;
 		}
 		totalBytes2 = totalBytes;
-		if (totalBytes2 > SLOT_SIZE)
-			emu_printf("OVERFLOW tb2=%d\n", (int)totalBytes2);
+//		if (totalBytes2 > SLOT_SIZE)
+//			emu_printf("OVERFLOW tb2=%d\n", (int)totalBytes2);
+
+//emu_printf("asynchInit1 \n");
 		if (totalBytes2 > 0)
 			_file.asynchInit(buffers[readBuffer], totalBytes2);
 		else
 			asyncReadActive = false;
 	}
-
+/*
 	emu_printf("fc=%d pre=%d nwf=%d\n",
 		(int)_pafHdr.framesCount,
 		(int)_pafHdr.preloadFrameBlocksCount,
 		nextWaitFrame);
-
+*/
 #ifdef DEBUG2
 	uint32_t t_async    = 0;
 	uint32_t t_memcpy   = 0;
@@ -577,8 +582,8 @@ void PafPlayer::mainLoop() {
 	uint32_t t_pal      = 0;
 #endif
 
-//	const uint32_t frameMs   = 100;
-	const uint32_t frameMs   = _pafHdr.frameDuration;
+	const uint32_t frameMs   = 100;
+//	const uint32_t frameMs   = _pafHdr.frameDuration;
 	uint32_t       frameTime = g_system->getTimeStamp();
 	
 	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
@@ -589,11 +594,11 @@ void PafPlayer::mainLoop() {
 		if (i == nextWaitFrame && asyncReadActive) {
 			r = _file.asynchWait(buffers[readBuffer], totalBytes2);
 
-			currentBuffer       = readBuffer;
+//			currentBuffer       = readBuffer;
 			delta               = r - (int)totalBytes2;
+			currentData         = buffers[readBuffer] + delta;
 			blocksCountForFrame = blocksCountForFrame2;
 			readBuffer          = 1 - readBuffer;
-			currentData         = buffers[currentBuffer] + delta;
 
 			int nextFrameStart = nextWaitFrame + FRAMES_PER_READ;
 			if (nextFrameStart < (int)_pafHdr.framesCount) {
@@ -606,16 +611,16 @@ void PafPlayer::mainLoop() {
 				}
 				totalBytes2   = totalBytes;
 				nextWaitFrame = nextFrameStart;
-				if (totalBytes2 > SLOT_SIZE)
-				emu_printf("OVERFLOW nwf=%d tb2=%d\n", nextWaitFrame, (int)totalBytes2);
+//				if (totalBytes2 > SLOT_SIZE)
+//				emu_printf("OVERFLOW nwf=%d tb2=%d\n", nextWaitFrame, (int)totalBytes2);
 			if (totalBytes2 == 0) {
 				asyncReadActive = false;
 			} else {
 				_file.asynchInit(buffers[readBuffer], totalBytes2);
 			}
-			emu_printf ("nextFrameStart1 %d < (int)_pafHdr.framesCount %d\n",nextFrameStart, (int)_pafHdr.framesCount);	
+//			emu_printf ("nextFrameStart1 %d < (int)_pafHdr.framesCount %d\n",nextFrameStart, (int)_pafHdr.framesCount);	
 			} else {
-emu_printf ("nextFrameStart2 %d < (int)_pafHdr.framesCount %d\n",nextFrameStart, (int)_pafHdr.framesCount);	
+//emu_printf ("nextFrameStart2 %d < (int)_pafHdr.framesCount %d\n",nextFrameStart, (int)_pafHdr.framesCount);	
 				asyncReadActive = false;
 			}
 		}
@@ -646,19 +651,19 @@ emu_printf ("nextFrameStart2 %d < (int)_pafHdr.framesCount %d\n",nextFrameStart,
 		t_memcpy += t2 - t1;
 #endif
 
-		const uint32_t frameOff = _pafHdr.framesOffsetTable[i];
-		const uint32_t maxOff   = _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize;
+//		const uint32_t frameOff = _pafHdr.framesOffsetTable[i];
+//		const uint32_t maxOff   = _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize;
 		
 		
-		if (frameOff < maxOff) {
-emu_printf("frameOff1 i %d %d maxOff %d\n", i, frameOff, maxOff);	
-			decodeVideoFrame(_demuxVideoFrameBlocks + frameOff);
-		}
-		else
-		{
+//		if (frameOff < maxOff) {
+//emu_printf("frameOff1 i %d %d maxOff %d\n", i, frameOff, maxOff);	
+			decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
+//		}
+//		else
+//		{
 //emu_printf ("nextFrameStart %d < (int)_pafHdr.framesCount %d\n",nextFrameStart, (int)_pafHdr.framesCount);	
-emu_printf("frameOff2 i %d %d maxOff %d\n", i, frameOff, maxOff);	
-		}
+//emu_printf("frameOff2 i %d %d maxOff %d\n", i, frameOff, maxOff);	
+//		}
 
 
 #ifdef DEBUG2
