@@ -13,7 +13,7 @@ extern "C" {
 #define GFS_FILE_USED(file)     ((file)->used)
 #define MNG_FILE(mng)           ((mng)->file)
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
-#define TOT_SECTOR 6
+#define TOT_SECTOR 8
 #define CACHE_SIZE (SECTOR_SIZE * TOT_SECTOR)
 
 Uint8 *current_lwram = (Uint8 *)VBT_L_START;

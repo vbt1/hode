@@ -70,7 +70,12 @@ static bool openPaf(FileSystem *fs, File *f) {
 }
 
 static void closePaf(FileSystem *fs, File *f) {
-	if (f->_fp) { fs->closeFile(f->_fp); f->_fp = 0; }
+	if (f->_fp) 
+	{ 
+		GFS_NwStop(f->_fp->fid);
+		fs->closeFile(f->_fp); 
+		f->_fp = 0; 
+	}
 }
 
 PafPlayer::PafPlayer(FileSystem *fs, Video *vid)

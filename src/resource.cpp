@@ -884,7 +884,9 @@ uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
-	assert((unsigned int)num < kMaxScreens);
+//	assert((unsigned int)num < kMaxScreens);
+	if((unsigned int)num >= kMaxScreens)
+		return;
 //	if(cs1ram_bg==0)
 	cs1ram_bg = cs1ram;
 
@@ -904,7 +906,9 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 //emu_printf("loadLvlScreenBackgroundData\n");
-	assert(readSize <= size);
+//	assert(readSize <= size);
+	if(readSize > size)
+		return;
 //emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	
