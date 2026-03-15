@@ -248,10 +248,6 @@ FORCE_INLINE uint8_t *fastOffset(uint8_t **pages, const uint8_t *src) {
 #include <stdint.h>
 #define READ_LE_UINT16(p) ((uint16_t)((p)[0] | ((p)[1] << 8)))
 
-// =============================================================================
-// decodeVideoFrame — dispatch
-// =============================================================================
-
 void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 	const uint8_t *base = src;
 	const int code = *src++;
@@ -498,82 +494,125 @@ static void mixAudio(void *userdata, int16_t *buf, int len) {
 }
 #endif
 
-// =============================================================================
-// mainLoop
-// =============================================================================
-void PafPlayer::mainLoop() {
-	uint8_t *buf  = NULL;
-	uint8_t *buf2 = NULL;
+//#define SLOT_SIZE      262144   // taille _demuxVideoFrameBlocks = 128 × 2048
+//#define ASYNCH_MAX     145408   //
+#define FRAMES_PER_READ 6
+#define NUM_BUFFERS     2
+#define ASYNCH_MAX     24576 * FRAMES_PER_READ    // cap empirique asynchInit
+#define BUFFER_SIZE    (ASYNCH_MAX + SECTOR_SIZE)  // +2048 pour le secteur en cache
 
+static uint32_t calcBatch(const PafHeader &hdr, int start,
+                           uint32_t &blocksCount, int &framesBatchCount) {
+	blocksCount      = 0;
+	framesBatchCount = 0;
+	uint32_t total   = 0;
+	for (int j = start; j < (int)hdr.framesCount && framesBatchCount < FRAMES_PER_READ; j++) {
+		if (j > start && hdr.framesOffsetTable[j] == 0) break;        // wrap circulaire
+		uint32_t needed = hdr.frameBlocksCountTable[j] * hdr.readBufferSize;
+		if (total + needed > ASYNCH_MAX) break;                        // cap asynchInit
+//		if (hdr.framesOffsetTable[j] + 6144 >= SLOT_SIZE) break;      // OP OOB
+		blocksCount      += hdr.frameBlocksCountTable[j];
+		total            += needed;
+		framesBatchCount++;
+	}
+	return total;
+}
+
+struct PafAsyncCtx {
+	uint8_t  *buffers[NUM_BUFFERS];
+	int       readBuf;
+	int       nextWaitFrame;
+	uint32_t  totalBytes;
+	uint32_t  blocksCount;
+	uint32_t  nextBlocksCount;
+	uint8_t  *data;
+	bool      active;
+};
+
+FORCE_INLINE uint32_t calcNextBatch(const PafHeader &hdr, int start,
+                               uint32_t &blocksOut) {
+	blocksOut = 0;
+	uint32_t total = 0;
+	for (int j = 0; j < FRAMES_PER_READ && (start + j) < (int)hdr.framesCount; j++) {
+		blocksOut += hdr.frameBlocksCountTable[start + j];
+		total     += hdr.frameBlocksCountTable[start + j] * hdr.readBufferSize;
+	}
+	return total;
+}
+
+static void pafSwapBatch(PafAsyncCtx &ctx, File &file, const PafHeader &hdr) {
+	int r = file.asynchWait(ctx.buffers[ctx.readBuf], (Sint32)ctx.totalBytes);
+	ctx.data       = ctx.buffers[ctx.readBuf] + (r - (int)ctx.totalBytes);
+	ctx.blocksCount = ctx.nextBlocksCount;  // blocs du batch qu'on vient de recevoir
+	ctx.readBuf    = 1 - ctx.readBuf;
+
+	int next = ctx.nextWaitFrame + FRAMES_PER_READ;
+	if (next < (int)hdr.framesCount) {
+		uint32_t nextBC = 0;
+		ctx.totalBytes    = calcNextBatch(hdr, next, nextBC);
+		ctx.nextBlocksCount = nextBC;
+		ctx.nextWaitFrame  = next;
+		file.asynchInit(ctx.buffers[ctx.readBuf], ctx.totalBytes);
+	} else {
+		ctx.active = false;
+	}
+}
+
+static void pafDemuxBlocks(PafAsyncCtx &ctx, const PafHeader &hdr,
+                            uint8_t *demux, int &currentFrameBlock) {
+	uint32_t count = ctx.blocksCount;
+	while (count > 0) {
+		const uint32_t entry     = hdr.frameBlocksOffsetTable[currentFrameBlock];
+		const uint32_t dstOffset = entry & ~(1u << 31);
+		if (!(entry & (1u << 31))) {
+			if (dstOffset + hdr.readBufferSize <= hdr.maxVideoFrameBlocksCount * hdr.readBufferSize)
+				memcpy(demux + dstOffset, ctx.data, hdr.readBufferSize);
+		}
+		++currentFrameBlock;
+		--count;
+		ctx.data += hdr.readBufferSize;
+	}
+	ctx.blocksCount = 0;
+}
+
+void PafPlayer::mainLoop() {
 	_file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
 
 	for (int i = 0; i < 4; ++i)
 		memset(_pageBuffers[i], 0, kPageBufferSize);
 	memset(_paletteBuffer, 0, sizeof(_paletteBuffer));
-	_paletteChanged    = true;
 	g_system->setPalette(_paletteBuffer, 256, 6);
+	_paletteChanged    = true;
 	_currentPageBuffer = 0;
 	int currentFrameBlock = 0;
 
-	uint32_t blocksCountForFrame  = _pafHdr.preloadFrameBlocksCount;
-	uint32_t blocksCountForFrame2 = 0;
-	uint32_t totalBytes2          = 0;
+	PafAsyncCtx ctx;
+	ctx.buffers[0] = (uint8_t *)hwram_work_paf;
+//	ctx.buffers[1] = (uint8_t *)hwram_work_paf+24576+2048;
+	ctx.buffers[1] = (uint8_t *)current_lwram;
+/*
+	ctx.buffers[0] = (uint8_t *)cs1ram;
+	ctx.buffers[1] = (uint8_t *)cs2ram;
+*/
+	ctx.readBuf    = 1;
+	ctx.active     = (_pafHdr.framesCount > 1);
+
+	uint32_t preloadBytes = _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize;
+	int r = _file.batchRead(ctx.buffers[0], preloadBytes);
+	ctx.data        = ctx.buffers[0] + (r - (int)preloadBytes);
+	ctx.blocksCount = _pafHdr.preloadFrameBlocksCount;
+
+	ctx.nextWaitFrame = 1;
+	if (ctx.active) {
+		ctx.totalBytes = calcNextBatch(_pafHdr, 1, ctx.nextBlocksCount);
+		_file.asynchInit(ctx.buffers[ctx.readBuf], ctx.totalBytes);
+	}
 
 #ifdef DEBUG
 	static uint8_t last_frame_z = 0xFF;
 	static char dbgbuf[8];
 #endif
 
-#define NUM_BUFFERS     2
-#define FRAMES_PER_READ 6
-//#define SLOT_SIZE      ((24576 * FRAMES_PER_READ) + 2048) 
-#define SLOT_SIZE      ((24576 * FRAMES_PER_READ) + 1400) //+ 24576
-
-	buf2 = (uint8_t *)hwram_work_paf+24576+2048;   // 2MB cartouche CS1 — non-chevauchant
-	buf  = (uint8_t *)hwram_work_paf;   // 2MB cartouche CS2 — non-chevauchant
-
-//buf  = (uint8_t *)cs2ram;   // 0x22600000
-//buf2 = (uint8_t *)cs1ram;   // 0x22402000
-
-	uint8_t *buffers[NUM_BUFFERS];
-	buffers[0] = buf;
-	buffers[1] = buf2;
-
-	int readBuffer    = 1;
-
-	// ── Lecture synchrone du batch 0 ─────────────────────────────────────────
-	uint32_t totalBytes = blocksCountForFrame * _pafHdr.readBufferSize;
-	int r     = _file.batchRead(buffers[0], totalBytes);
-	int delta = r - (int)totalBytes;
-//emu_printf("batch done\n");
-	uint8_t *currentData = buffers[0] + delta;
-
-	// ── asynchInit batch 1 ────────────────────────────────────────────────────
-	bool asyncReadActive = (_pafHdr.framesCount > 1);
-	int nextWaitFrame = 1;
-	if (asyncReadActive) {
-		blocksCountForFrame2 = 0;
-		totalBytes = 0;
-		for (int j = 1; j <= FRAMES_PER_READ && j < (int)_pafHdr.framesCount; j++) {
-			blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[j];
-			totalBytes           += _pafHdr.frameBlocksCountTable[j] * _pafHdr.readBufferSize;
-		}
-		totalBytes2 = totalBytes;
-//		if (totalBytes2 > SLOT_SIZE)
-//			emu_printf("OVERFLOW tb2=%d\n", (int)totalBytes2);
-
-//emu_printf("asynchInit1 \n");
-		if (totalBytes2 > 0)
-			_file.asynchInit(buffers[readBuffer], totalBytes2);
-		else
-			asyncReadActive = false;
-	}
-/*
-	emu_printf("fc=%d pre=%d nwf=%d\n",
-		(int)_pafHdr.framesCount,
-		(int)_pafHdr.preloadFrameBlocksCount,
-		nextWaitFrame);
-*/
 #ifdef DEBUG2
 	uint32_t t_async    = 0;
 	uint32_t t_memcpy   = 0;
@@ -581,120 +620,47 @@ void PafPlayer::mainLoop() {
 	uint32_t t_copyrect = 0;
 	uint32_t t_pal      = 0;
 #endif
-
 	const uint32_t frameMs   = 100;
-//	const uint32_t frameMs   = _pafHdr.frameDuration;
 	uint32_t       frameTime = g_system->getTimeStamp();
-	
+
 	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
 #ifdef DEBUG2
 		uint32_t t0 = g_system->getTimeStamp();
 #endif
-		// ── Changement de batch ───────────────────────────────────────────────
-		if (i == nextWaitFrame && asyncReadActive) {
-			r = _file.asynchWait(buffers[readBuffer], totalBytes2);
-
-//			currentBuffer       = readBuffer;
-			delta               = r - (int)totalBytes2;
-			currentData         = buffers[readBuffer] + delta;
-			blocksCountForFrame = blocksCountForFrame2;
-			readBuffer          = 1 - readBuffer;
-
-			int nextFrameStart = nextWaitFrame + FRAMES_PER_READ;
-			if (nextFrameStart < (int)_pafHdr.framesCount) {
-				blocksCountForFrame2 = 0;
-				totalBytes = 0;
-				for (int j = 0;
-				     j < FRAMES_PER_READ && (nextFrameStart + j) < (int)_pafHdr.framesCount; j++) {
-					blocksCountForFrame2 += _pafHdr.frameBlocksCountTable[nextFrameStart + j];
-					totalBytes           += _pafHdr.frameBlocksCountTable[nextFrameStart + j] * _pafHdr.readBufferSize;
-				}
-				totalBytes2   = totalBytes;
-				nextWaitFrame = nextFrameStart;
-//				if (totalBytes2 > SLOT_SIZE)
-//				emu_printf("OVERFLOW nwf=%d tb2=%d\n", nextWaitFrame, (int)totalBytes2);
-			if (totalBytes2 == 0) {
-				asyncReadActive = false;
-			} else {
-				_file.asynchInit(buffers[readBuffer], totalBytes2);
-			}
-//			emu_printf ("nextFrameStart1 %d < (int)_pafHdr.framesCount %d\n",nextFrameStart, (int)_pafHdr.framesCount);	
-			} else {
-//emu_printf ("nextFrameStart2 %d < (int)_pafHdr.framesCount %d\n",nextFrameStart, (int)_pafHdr.framesCount);	
-				asyncReadActive = false;
-			}
-		}
-
+		if (i == ctx.nextWaitFrame && ctx.active)
+			pafSwapBatch(ctx, _file, _pafHdr);
 #ifdef DEBUG2
 		uint32_t t1 = g_system->getTimeStamp();
 		t_async += t1 - t0;
 #endif
-
-		// ── Démux blocs ───────────────────────────────────────────────────────
-		uint32_t tempBlocksCount = blocksCountForFrame;
-		while (tempBlocksCount > 0) {
-			const uint32_t dstOffset = _pafHdr.frameBlocksOffsetTable[currentFrameBlock] & ~(1u << 31);
-			if (!(_pafHdr.frameBlocksOffsetTable[currentFrameBlock] & (1u << 31))) {
-				if (dstOffset + _pafHdr.readBufferSize <=
-				    _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize) {
-					memcpy(_demuxVideoFrameBlocks + dstOffset, currentData, _pafHdr.readBufferSize);
-				}
-			}
-			++currentFrameBlock;
-			--tempBlocksCount;
-			currentData += _pafHdr.readBufferSize;
-		}
-		blocksCountForFrame = tempBlocksCount;
-
+		pafDemuxBlocks(ctx, _pafHdr, _demuxVideoFrameBlocks, currentFrameBlock);
 #ifdef DEBUG2
 		uint32_t t2 = g_system->getTimeStamp();
 		t_memcpy += t2 - t1;
 #endif
-
-//		const uint32_t frameOff = _pafHdr.framesOffsetTable[i];
-//		const uint32_t maxOff   = _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize;
-		
-		
-//		if (frameOff < maxOff) {
-//emu_printf("frameOff1 i %d %d maxOff %d\n", i, frameOff, maxOff);	
-			decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
-//		}
-//		else
-//		{
-//emu_printf ("nextFrameStart %d < (int)_pafHdr.framesCount %d\n",nextFrameStart, (int)_pafHdr.framesCount);	
-//emu_printf("frameOff2 i %d %d maxOff %d\n", i, frameOff, maxOff);	
-//		}
-
-
+		decodeVideoFrame(_demuxVideoFrameBlocks + _pafHdr.framesOffsetTable[i]);
 #ifdef DEBUG2
 		uint32_t t3 = g_system->getTimeStamp();
 		t_decode += t3 - t2;
 #endif
-
 		g_system->copyRect(0, 0, kVideoWidth, kVideoHeight,
 		                   _pageBuffers[_currentPageBuffer], kVideoWidth);
-
 #ifdef DEBUG2
 		uint32_t t4 = g_system->getTimeStamp();
 		t_copyrect += t4 - t3;
 #endif
-
 		if (_paletteChanged) {
 			_paletteChanged = false;
 			g_system->setPalette(_paletteBuffer, 256, 6);
 			g_system->updateScreen(false);
 		}
 
+
 #ifdef DEBUG2
 		uint32_t t5 = g_system->getTimeStamp();
 		t_pal += t5 - t4;
 		if ((i % 10) == 9) {
-			emu_printf("f=%d\n",  i);
-			emu_printf("as=%u\n", t_async    / 10);
-			emu_printf("mc=%u\n", t_memcpy   / 10);
-			emu_printf("de=%u\n", t_decode   / 10);
-			emu_printf("cr=%u\n", t_copyrect / 10);
-			emu_printf("pa=%u\n", t_pal      / 10);
+			emu_printf("f=%d as=%u mc=%u de=%u cr=%u pa=%u\n", i, t_async/10, t_memcpy / 10, t_decode / 10, t_copyrect / 10, t_pal / 10);
 			t_async = t_memcpy = t_decode = t_copyrect = t_pal = 0;
 		}
 #endif
@@ -720,25 +686,22 @@ void PafPlayer::mainLoop() {
 		_currentPageBuffer &= 3;
 
 		frameTime += frameMs;
-		uint32_t currentTime = g_system->getTimeStamp();
-		if (frameTime > currentTime)
-			g_system->sleep(frameTime - currentTime);
+		uint32_t now = g_system->getTimeStamp();
+		if (frameTime > now)
+			g_system->sleep(frameTime - now);
 		else {
-			emu_printf("behind=%d\n", (int)(currentTime - frameTime));
-			frameTime = currentTime;
+#ifdef DEBUG2
+			emu_printf("behind=%d\n", (int)(now - frameTime));
+#endif
+			frameTime = now;
 		}
 	}
-	
-/*	
-if (asyncReadActive) {
-    _file.asynchWait(buffers[readBuffer], totalBytes2);
-}	
-*/	
-	
+	if (ctx.active)
+		_file.asynchWait(ctx.buffers[ctx.readBuf], (Sint32)ctx.totalBytes);
+
 	unload();
 	closePaf(_fs, &_file);
 }
-// =============================================================================
 
 void PafPlayer::setCallback(const PafCallback *pafCb) {
 	if (pafCb) _pafCb = *pafCb;

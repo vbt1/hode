@@ -17,7 +17,7 @@ Uint32 ioskip_bytes;
 extern Uint8 *_sector_buf_ptr;
 }
 
-//#define NOSEEK 1
+#define NOSEEK 1
 //#define SECTOR_ALIGNED 1
 
 #define GFS_BYTE_SCT(byte, sctsiz)  \
@@ -135,6 +135,7 @@ void File::asynchInit(uint8_t *ptr, uint32_t len) {
     Uint32 start_sector = _fp->f_seek_pos / SECTOR_SIZE;
 //emu_printf("asynchInit len=%d sector %d pos %d\n", len, start_sector, GFS_Tell(_fp->fid));
     GFS_Seek(_fp->fid, start_sector, GFS_SEEK_SET);
+//	GFS_SetGmode(_fp->fid, GFS_GMODE_RESIDENT);
     ioskip_bytes = _fp->f_seek_pos & (SECTOR_SIZE - 1);
     Sint32 tot_bytes   = len + ioskip_bytes;
     Sint32 tot_sectors = GFS_BYTE_SCT(tot_bytes, SECTOR_SIZE);

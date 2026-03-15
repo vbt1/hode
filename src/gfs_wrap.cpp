@@ -176,7 +176,7 @@ emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)sat
 			cache_offset = 0;
 			if(position!=-1)
 			{
-				GFS_SetTmode(fid, GFS_TMODE_SDMA1);
+//				GFS_SetTmode(fid, GFS_TMODE_SDMA1);
 				GFS_Seek(fp->fid, 0, GFS_SEEK_SET);
 				while(!GFS_NwIsComplete(fp->fid));
 				
@@ -192,7 +192,7 @@ emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)sat
 		}
 		else
 		{
-			GFS_SetTmode(fid, GFS_TMODE_SDMA1);
+//			GFS_SetTmode(fid, GFS_TMODE_SDMA1);
 			GFS_Seek(fp->fid, position, GFS_SEEK_SET);
 			while(!GFS_NwIsComplete(fp->fid));
 			GFS_Fread(fp->fid, tot_sectors, (Uint8*)cache, CACHE_SIZE);
@@ -260,12 +260,12 @@ int sat_fseek(GFS_FILE *stream, long offset, int whence) {
 
 	return 0;
 }
-
+/*
 int sat_ftell(GFS_FILE *stream)
 {
 	return (stream ? GFS_Tell(stream->fid) : 0);
 }
-
+*/
 #define GFS_BYTE_SCT(byte, sctsiz)  \
     ((Sint32)(((Uint32)(byte)) + ((Uint32)(sctsiz)) - 1) / ((Uint32)(sctsiz)))
 
