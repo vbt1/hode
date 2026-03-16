@@ -2263,7 +2263,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 // vbt: ne joue pas la video de fin du premier niveau
 	if (!_paf->_skipCutscenes && _level->_checkpoint == 0 /*&& !levelChanged*/) {
 		const uint8_t num = _cutscenes[_currentLevel];
-		_paf->preload(num);
+//		_paf->preload(num); // vbt : pas utile
 		_paf->play(num);
 		_paf->unload(num);
 		if (g_system->inp.quit) {
@@ -3072,10 +3072,10 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
-/*	case 1:
+	case 1:
 		_level = Level_fort_create();
 		break;
-	case 2:
+/*	case 2:
 		_level = Level_pwr1_create();
 		break;
 
