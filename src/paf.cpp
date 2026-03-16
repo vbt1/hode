@@ -602,10 +602,22 @@ void PafPlayer::mainLoop() {
 	ctx.readBuf    = 1;
 	ctx.active     = (_pafHdr.framesCount > 1);
 
-	uint32_t preloadBytes = _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize;
-	int r = _file.batchRead(ctx.buffers[0], preloadBytes);
-	ctx.data        = ctx.buffers[0] + (r - (int)preloadBytes);
-	ctx.blocksCount = _pafHdr.preloadFrameBlocksCount;
+	if(_pafHdr.framesCount !=41)
+	{
+		uint32_t preloadBytes = _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize;
+		int r = _file.batchRead(ctx.buffers[0], preloadBytes);
+		ctx.data        = ctx.buffers[0] + (r - (int)preloadBytes);
+		ctx.blocksCount = _pafHdr.preloadFrameBlocksCount;
+	}
+	else
+	{
+		uint32_t preloadBlocks = _pafHdr.preloadFrameBlocksCount + _pafHdr.frameBlocksCountTable[0];
+
+		uint32_t preloadBytes  = preloadBlocks * _pafHdr.readBufferSize;
+		int r = _file.batchRead(ctx.buffers[0], preloadBytes);
+		ctx.data        = ctx.buffers[0] + (r - (int)preloadBytes);
+		ctx.blocksCount = preloadBlocks;
+	}
 
 	ctx.nextWaitFrame = 1;
 	if (ctx.active) {
