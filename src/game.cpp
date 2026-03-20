@@ -411,7 +411,7 @@ void Game::setupBackgroundBitmap() {
 	}
 //lvl->shadowCount = 1;
 	if (lvl->shadowCount != 0) {
-emu_printf("decodeShadowScreenMask\n");
+//emu_printf("decodeShadowScreenMask\n");
 #if 1
 		decodeShadowScreenMask(lvl);
 #endif
@@ -430,6 +430,8 @@ void Game::addToSpriteList(Sprite *spr) {
 }
 
 void Game::addToSpriteList(LvlObject *ptr) {
+//	emu_printf("ptr->spriteNum %d\n", ptr->spriteNum);
+	
 	Sprite *spr = _spritesNextPtr;
 	if (spr) {
 		const uint8_t num = _res->_currentScreenResourceNum;
@@ -1204,7 +1206,8 @@ void Game::setupAndyLvlObject() {
 void Game::setupScreenLvlObjects(int num) {
 	_res->_screensState[num].s2 = 1;
 	for (LvlObject *ptr = _screenLvlObjectsList[num]; ptr; ptr = ptr->nextPtr) {
-//emu_printf("ptr->type %d addr %p\n", ptr->type, ptr);
+emu_printf("ptr->type %d ptr->spriteNum; %d\n", ptr->type, ptr->spriteNum);
+//vbt : animation des bgs
 		switch (ptr->type) {
 		case 0: {
 				AnimBackgroundData *p = (AnimBackgroundData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAnimBackgroundData);
@@ -1240,7 +1243,7 @@ void Game::setupScreenLvlObjects(int num) {
 			}
 			break;
 		case 2:
-//emu_printf("setupScreenLvlObjects %p\n", _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum]);
+emu_printf("setupScreenLvlObjects %p ennemmy ???\n", _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum]);
 			ptr->levelData0x2988 = _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum];
 			if (!ptr->levelData0x2988) {
 				emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
@@ -3060,6 +3063,7 @@ void Game::levelMainLoop() {
 }
 
 void Game::callLevel_postScreenUpdate(int num) {
+//	return;
 	_level->postScreenUpdate(num);
 }
 
@@ -3265,7 +3269,7 @@ void Game::lvlObjectType0Init(LvlObject *ptr) {
 	if (_currentLevel == kLvl_rock && _level->_checkpoint >= 5) {
 		num = 2; // sprite without 'plasma cannon'
 	}
-//emu_printf("declareLvlObject\n");
+emu_printf("declareLvlObject andy num %d\n", num);
 	_andyObject = declareLvlObject(ptr->type, num);
 //emu_printf("assert(_andyObject)\n");
 	assert(_andyObject);

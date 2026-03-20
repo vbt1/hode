@@ -606,7 +606,7 @@ struct Resource {
 	uint32_t _resLevelData0x2988SizeTable[kMaxSpriteTypes]; // sprites
 	LvlObjectData _resLevelData0x2988Table[kMaxSpriteTypes];
 	LvlObjectData *_resLevelData0x2988PtrTable[kMaxSpriteTypes];
-	uint8_t *_resLvlSpriteDataPtrTable[kMaxSpriteTypes];
+//	uint8_t *_resLvlSpriteDataPtrTable[kMaxSpriteTypes]; : VBT : pas utilisé !!!
 	uint32_t _resLevelData0x2B88SizeTable[kMaxScreens]; // backgrounds
 	LvlBackgroundData _resLvlScreenBackgroundDataTable[kMaxScreens];
 	uint8_t *_resLvlScreenBackgroundDataPtrTable[kMaxScreens];

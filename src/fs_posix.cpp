@@ -6,7 +6,7 @@
 #include <sys/unistd.h>
 #include "fs.h"
 #include "util.h"
-
+/*
 static const char *_suffixes[] = {
 	"HOD.DEM",
 	"SETUP.DAT",
@@ -17,7 +17,7 @@ static const char *_suffixes[] = {
 	"_HOD.MST",
 	0
 };
-/*
+
 static bool matchGameData(const char *path) {
 	const int len = strlen(path);
 	for (int i = 0; _suffixes[i]; ++i) {

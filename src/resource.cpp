@@ -108,7 +108,7 @@ Resource::Resource(FileSystem *fs)
 	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
 	memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
-	memset(_resLvlSpriteDataPtrTable, 0, sizeof(_resLvlSpriteDataPtrTable));
+//	memset(_resLvlSpriteDataPtrTable, 0, sizeof(_resLvlSpriteDataPtrTable));
 	// backgrounds
 	memset(_resLvlScreenBackgroundDataTable, 0, sizeof(_resLvlScreenBackgroundDataTable));
 	memset(_resLvlScreenBackgroundDataPtrTable, 0, sizeof(_resLvlScreenBackgroundDataPtrTable));
@@ -627,11 +627,14 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 	LvlObjectData *dat = &_resLevelData0x2988Table[num];
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat, _isPsx);
 	const uint32_t allocatedOffsetsSize = size - readSize;
-	assert(allocatedOffsetsSize == readOffsetsSize);
+	if(allocatedOffsetsSize != readOffsetsSize)
+		return;
 
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
-	_resLvlSpriteDataPtrTable[num] = ptr;
+//	_resLevelData0x2988PtrTable[dat->spriteNum] = 0;
+//	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
+//	_resLevelData0x2988SizeTable[num] = 0;
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
@@ -883,7 +886,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
-//emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
+emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 //	assert((unsigned int)num < kMaxScreens);
 	if((unsigned int)num >= kMaxScreens)
 		return;
