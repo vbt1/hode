@@ -68,7 +68,7 @@ void *malloc(size_t);
 		TYPE_LDIMG,
 		TYPE_FONT,
 		TYPE_MENU,   //5
-		TYPE_SPRITE,
+		TYPE_ANDY,
 		TYPE_SPRITE1,
 		TYPE_SCRMASK,
 		TYPE_SCRMASKBUF,

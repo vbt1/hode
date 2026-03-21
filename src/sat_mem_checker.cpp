@@ -38,7 +38,7 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-if(alignedSize>1000)
+if(alignedSize>8000)
 emu_printf("type %d size %d\n", type, alignedSize);
     switch (type) {	
     case TYPE_LDIMG:
@@ -49,7 +49,6 @@ emu_printf("type %d size %d\n", type, alignedSize);
 //		return bump(&cs1ram, alignedSize);
 //        return bump(&hwram_work_paf, alignedSize);
     case TYPE_PAFBUF:
-//        return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
 //        return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
         return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
 //        return bump(&current_lwram, alignedSize);
@@ -63,6 +62,7 @@ emu_printf("type %d size %d\n", type, alignedSize);
         return hwram_src;
 
     case TYPE_BGLVL:
+    case TYPE_ANDY:
 //        return bump(&current_lwram, alignedSize);
        return bump(&cs1ram, alignedSize);
 

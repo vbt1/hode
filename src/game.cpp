@@ -309,13 +309,13 @@ void Game::unloadTransformLayerData() {
 void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 	uint8_t *dst = _video->_shadowScreenMaskBuffer;
 	for (int i = lvl->currentShadowId; i < lvl->shadowCount; ++i) {
-emu_printf("backMaskTable %d %p dst %p\n", i, lvl->backgroundMaskTable[i], _video->_shadowScreenMaskBuffer);
+//emu_printf("backMaskTable %d %p dst %p\n", i, lvl->backgroundMaskTable[i], _video->_shadowScreenMaskBuffer);
 		const uint8_t *src = lvl->backgroundMaskTable[i];
 		if (src) {
 			const int decodedSize = decodeLZW(src + 2, dst);
 
 			_shadowScreenMasksTable[i].dataSize = READ_LE_UINT32(dst);
-emu_printf("vbt _shadow src %p %d sz %d\n", src, _shadowScreenMasksTable[i].dataSize, decodedSize);
+//emu_printf("vbt _shadow src %p %d sz %d\n", src, _shadowScreenMasksTable[i].dataSize, decodedSize);
 			// header : 20 bytes
 			// projectionData : w * h * sizeof(uint16_t) - for a given (x, y) returns the casted (x, y)
 			// paletteData : 256 (only the first 144 bytes are read)
@@ -1192,6 +1192,9 @@ void Game::setupAndyLvlObject() {
 	_currentScreen = dat->screenNum;
 	_currentLeftScreen = _res->_screensGrid[_currentScreen][kPosLeftScreen];
 	_currentRightScreen = _res->_screensGrid[_currentScreen][kPosRightScreen];
+
+emu_printf("init current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
+
 	ptr->frame = 0;
 	setupLvlObjectBitmap(ptr);
 	AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
@@ -1206,7 +1209,7 @@ void Game::setupAndyLvlObject() {
 void Game::setupScreenLvlObjects(int num) {
 	_res->_screensState[num].s2 = 1;
 	for (LvlObject *ptr = _screenLvlObjectsList[num]; ptr; ptr = ptr->nextPtr) {
-emu_printf("ptr->type %d ptr->spriteNum; %d\n", ptr->type, ptr->spriteNum);
+//emu_printf("ptr->type %d ptr->spriteNum; %d\n", ptr->type, ptr->spriteNum);
 //vbt : animation des bgs
 		switch (ptr->type) {
 		case 0: {
@@ -1285,7 +1288,7 @@ emu_printf("setupScreenLvlObjects %p ennemmy ???\n", _res->_resLvlScreenBackgrou
 					break;
 				}
 			}
-//emu_printf("setupLvlObjectBitmap %p\n", ptr);
+emu_printf("setupLvlObjectBitmap %p\n", ptr);
 			setupLvlObjectBitmap(ptr);
 			break;
 		}
@@ -1487,18 +1490,20 @@ int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
 			ptr->yPos = yPosPrev;
 			ret = -1;
 		} else if (ptr->screenNum != num) {
-			//debug(kDebug_GAME, "Changing screen from %d to %d, pos=%d,%d", num, ptr->screenNum, xPos, yPos);
+			emu_printf("Changing screen from %d to %d, pos=%d,%d\n", num, ptr->screenNum, xPos, yPos);
 			ret = 1;
 			AndyLvlObjectData *data = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 			data->boundingBox.x1 = ptr->xPos;
 			data->boundingBox.x2 = ptr->xPos + ptr->width - 1;
 			data->boundingBox.y1 = ptr->yPos;
 			data->boundingBox.y2 = ptr->yPos + ptr->height - 1;
+
+			_currentScreen = ptr->screenNum;
+			_currentLeftScreen = _res->_screensGrid[_currentScreen][kPosLeftScreen];
+			_currentRightScreen = _res->_screensGrid[_currentScreen][kPosRightScreen];
+			emu_printf("current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 		}
 	}
-	_currentScreen = ptr->screenNum;
-	_currentLeftScreen = _res->_screensGrid[_currentScreen][kPosLeftScreen];
-	_currentRightScreen = _res->_screensGrid[_currentScreen][kPosRightScreen];
 	return ret;
 }
 
@@ -3269,11 +3274,10 @@ void Game::lvlObjectType0Init(LvlObject *ptr) {
 	if (_currentLevel == kLvl_rock && _level->_checkpoint >= 5) {
 		num = 2; // sprite without 'plasma cannon'
 	}
-emu_printf("declareLvlObject andy num %d\n", num);
+//emu_printf("declareLvlObject andy num %d\n", num);
 	_andyObject = declareLvlObject(ptr->type, num);
-//emu_printf("assert(_andyObject)\n");
-	assert(_andyObject);
-//emu_printf("assert(_andyObject) done\n");
+	if(!_andyObject)
+		return;
 	_andyObject->xPos = ptr->xPos;
 	_andyObject->yPos = ptr->yPos;
 	_andyObject->screenNum = ptr->screenNum;
@@ -4436,7 +4440,9 @@ int Game::setLvlObjectPosInScreenGrid(LvlObject *o, int pos) {
 
 LvlObject *Game::declareLvlObject(uint8_t type, uint8_t num) {
 	if ((type != 8 || _res->_resLevelData0x2988PtrTable[num] != 0) && _declaredLvlObjectsListCount < kMaxLvlObjects) {
-		assert(_declaredLvlObjectsNextPtr);
+//		assert(_declaredLvlObjectsNextPtr);
+		if(!_declaredLvlObjectsNextPtr)
+			return (LvlObject *)0;
 		LvlObject *ptr = _declaredLvlObjectsNextPtr;
 		_declaredLvlObjectsNextPtr = _declaredLvlObjectsNextPtr->nextPtr;
 		++_declaredLvlObjectsListCount;

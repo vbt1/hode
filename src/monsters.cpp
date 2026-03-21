@@ -1016,9 +1016,11 @@ void Game::executeMstCode() {
 	}
 	const MstScreenArea *msac;
 	while ((msac = _res->findMstCodeForPos(_currentScreen, _mstAndyLevelPosX, _mstAndyLevelPosY)) != 0) {
-//		debug(kDebug_MONSTER, "trigger for %d,%d", _mstAndyLevelPosX, _mstAndyLevelPosY);
+//		emu_printf("trigger for %d,%d\n", _mstAndyLevelPosX, _mstAndyLevelPosY);
 		_res->flagMstCodeForPos(msac->unk0x1C, 0);
-		assert(msac->codeData != kNone);
+		if (msac->codeData == kNone) {
+			break;
+		}
 		createTask(_res->_mstCodeData + msac->codeData * 4);
 	}
 	if (_mstAndyCurrentScreenNum != _currentScreen) {
