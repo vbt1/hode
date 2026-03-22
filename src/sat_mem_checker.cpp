@@ -30,15 +30,15 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
 //	emu_printf("bump %p\n", ptr);
     *ptr += SAT_ALIGN(size);
 
-//    emu_printf("hwram %d ptr %p lwram %d cs1 %p cs2 %p hw %p aft %p sz %d p %p\n",
-//            ((int)hwram_work) - 0x6000000, hwram_work,
-//            ((int)current_lwram) - 0x200000, cs1ram, cs2ram, hwram, ptr, size, sbrk(0));
+    emu_printf("hwram %d ptr %p lwram %d cs1 %p cs2 %p hw %p aft %p sz %d p %p\n",
+            ((int)hwram_work) - 0x6000000, hwram_work,
+            ((int)current_lwram) - 0x200000, cs1ram, cs2ram, hwram, ptr, size, sbrk(0));
     return dst;
 }
 
 uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize) 
 {
-if(alignedSize>8000)
+//if(alignedSize>8000)
 emu_printf("type %d size %d\n", type, alignedSize);
     switch (type) {	
     case TYPE_LDIMG:

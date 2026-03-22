@@ -34,7 +34,7 @@ Video::Video() {
 	hwram_work_paf   = hwram_work;
 	_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
 	_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
-	_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
+	_backgroundLayer = allocate_memory (TYPE_LDIMG, W * H);
 	_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4);
 	_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256);
 //emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);

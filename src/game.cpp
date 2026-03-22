@@ -2088,7 +2088,7 @@ int nbspr=0;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
-	for (int i = 0; i < dat->shadowCount; ++i) {
+/*	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
 			_shadowScreenMasksTable[i].w,
@@ -2099,7 +2099,7 @@ int nbspr=0;
 			_video->_frontLayer,
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
-	}
+	}*/
 #ifdef DEBUG
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
