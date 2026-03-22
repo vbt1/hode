@@ -346,7 +346,7 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 	int y = 0;
 //	//emu_printf("copyRect %d %d\n",w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
-	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
+	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A1 + (y * (pitch*2)) + x);
 
 	for (uint16 idx = 0; idx < h; ++idx) {
 //		DMA_ScuMemCopy(dstPtr, srcPtr, w);
@@ -692,7 +692,8 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	void SystemStub_SDL::shakeScreen(int dx, int dy) 
 	{
 ////emu_printf("shake %d %d\n", dx, dy);
-		slScrPosNbg1(toFIXED(dx), toFIXED(dy-16));
+		slScrPosNbg0(toFIXED(dx+1), toFIXED(dy-16));
+		slScrPosNbg1(toFIXED(dx+1), toFIXED(dy-16));
 	}
 
 	void SystemStub_SDL::clearPalette() 

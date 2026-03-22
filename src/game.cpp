@@ -1978,7 +1978,8 @@ int nbspr=0;
 #endif
 
 	memcpy(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
-//	memset4_fast(_video->_frontLayer, 0x00, Video::W * Video::H);
+	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+//	memset(_video->_frontLayer, 0x00, Video::W * Video::H);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
@@ -2088,7 +2089,8 @@ int nbspr=0;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
-/*	for (int i = 0; i < dat->shadowCount; ++i) {
+
+	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
 			_shadowScreenMasksTable[i].w,
@@ -2097,9 +2099,11 @@ int nbspr=0;
 			_shadowScreenMasksTable[i].w,
 			_video->_shadowLayer,
 			_video->_frontLayer,
+//			_video->_backgroundLayer,
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
-	}*/
+	}
+
 #ifdef DEBUG
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
@@ -3010,7 +3014,7 @@ void Game::levelMainLoop() {
 	if(result>0)
 		emu_printf("--duration %s : %d\n","updateGamePalette", result);
 #endif
-//emu_printf("copyRectWidescreen\n");
+emu_printf("copyRectWidescreen _backgroundLayer\n");
 		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG
 	unsigned int e8 = g_system->getTimeStamp();
@@ -3144,8 +3148,8 @@ void Game::displayLoadingScreen() {
 	} else 
 #endif
 	{
-//			slScrAutoDisp(NBG0ON|NBG1ON); 
-			slScrAutoDisp(NBG1ON); 
+			slScrAutoDisp(NBG0ON|NBG1ON); 
+//			slScrAutoDisp(NBG1ON); 
 		if (_res->loadDatLoadingImage(_video->_frontLayer, _video->_palette)) {
 			g_system->setPalette(_video->_palette, 256, 6);
 			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (int)256);
