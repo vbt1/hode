@@ -29,7 +29,7 @@ Video::Video() {
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
-	hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000);
+	hwram_work = allocate_memory (TYPE_HWRAM, 588000+117000);
 //	emu_printf("--hwram_work start %p\n", hwram_work);
 	hwram_work_paf   = hwram_work;
 	_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);

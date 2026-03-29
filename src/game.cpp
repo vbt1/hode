@@ -1,7 +1,8 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
 #define USE_LESS_RAM 1
-//#define DEBUG 1
+#define USE_SPRITE 1
+#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -176,23 +177,25 @@ void Game::setShakeScreen(int type, int counter) {
 
 void Game::fadeScreenPalette() {
 	if (!_fadePalette) {
-		assert(_levelRestartCounter != 0);
+//		assert(_levelRestartCounter != 0);
+		if(_levelRestartCounter == 0)
+			return;
 		for (int i = 0; i < 256 * 3; ++i) {
 			_video->_fadePaletteBuffer[i] = _video->_displayPaletteBuffer[i] / _levelRestartCounter;
 		}
 		_fadePalette = true;
 	} 
-#ifdef SOUND	
 	else {
+#ifdef SOUND
 		if (_levelRestartCounter != 0) {
 			_snd_masterVolume -= _snd_masterVolume / _levelRestartCounter;
 			if (_snd_masterVolume < 0) {
 				_snd_masterVolume = 0;
 			}
 		}
+#endif
 		--_levelRestartCounter;
 	}
-#endif
 	for (int i = 0; i < 256 * 3; ++i) {
 		int color = _video->_displayPaletteBuffer[i] - _video->_fadePaletteBuffer[i];
 		if (color < 0) {
@@ -1992,12 +1995,6 @@ int nbspr=0;
 #ifdef PSX
 	_video->copyYuvBackBuffer();
 #endif
-#ifdef DEBUG
-	unsigned int e2 = g_system->getTimeStamp();
-	result = e2-e1;
-	if(result>0)
-		emu_printf("--duration %s : %d\n","copyYuvBackBuffer", result);
-#endif
 	// redraw background animation sprites
 	LvlBackgroundData *dat = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 #ifdef PSX
@@ -2020,7 +2017,7 @@ int nbspr=0;
 	}
 #ifdef DEBUG
 	unsigned int e3 = g_system->getTimeStamp();
-	result = e3-e2;
+	result = e3-e1;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","decodeSPR1", result);
 #endif
@@ -2354,7 +2351,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 			buffer[2] = 0;
 		}
 		_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
-
+//		slSynch();
 		g_system->sleep(delay);
 		frame_x++;
 	}
@@ -3036,7 +3033,7 @@ void Game::levelMainLoop() {
 #endif
 //emu_printf("drawScreen\n");
 	drawScreen();
-#ifdef DEBUG
+#ifdef DEBUG2
 	unsigned int e7 = g_system->getTimeStamp();
 	result = e7-e6c;
 	if(result>0)
