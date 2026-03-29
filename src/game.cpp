@@ -3156,13 +3156,15 @@ void Game::displayLoadingScreen() {
 	} else 
 #endif
 	{
-			slScrAutoDisp(NBG0ON|NBG1ON); 
-//			slScrAutoDisp(NBG1ON); 
+		memset(_video->_backgroundLayer, 0, Video::W * Video::H);
+		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+
 		if (_res->loadDatLoadingImage(_video->_frontLayer, _video->_palette)) {
 			g_system->setPalette(_video->_palette, 256, 6);
 			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (int)256);
 			g_system->updateScreen(false);
 		}
+		slScrAutoDisp(NBG0ON|NBG1ON);
 	}
 }
 #if 0

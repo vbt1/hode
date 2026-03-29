@@ -142,6 +142,7 @@ void PafPlayer::preload(int num) {
 }
 
 void PafPlayer::play(int num) {
+	slScrAutoDisp(NBG1ON);
 	lwram_cut = current_lwram;
 //	num=kPafAnimation_CanyonAndyFallingCannon;
 	if (_videoNum != num) preload(num);
@@ -166,6 +167,9 @@ void PafPlayer::unload(int num) {
 	}
 	_audioQueueTail = 0;
 #endif
+	memset(_video->_backgroundLayer, 0, Video::W * Video::H);
+	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+	slScrAutoDisp(NBG0ON|NBG1ON);
 }
 
 bool PafPlayer::readPafHeader() {
