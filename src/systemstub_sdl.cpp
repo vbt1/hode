@@ -375,7 +375,14 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
 
 	for (uint16 idx = 0; idx < h; ++idx) {
-		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+//		DMA_ScuMemCopy(dstPtr, srcPtr, w);
+		for(int x=0;x<pitch;x++)
+		{
+			if(srcPtr[x]==0)
+				dstPtr[x]=0;
+			else
+				dstPtr[x]=srcPtr[x];
+		}
 	//	memcpy(dstPtr, srcPtr, w);
 		srcPtr += pitch;
 		dstPtr += (pitch*2);

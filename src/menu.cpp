@@ -422,7 +422,7 @@ void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
 		}
 	}
 }
-
+#if 0
 void Menu::drawSprite(const DatSpritesGroup *spriteGroup, const uint8_t *ptr, uint32_t num, int x, int y) {
 	ptr += spriteGroup->firstFrameOffset;
 	//emu_printf("drawSprite %p %p num %p %d %d\n",spriteGroup,ptr+8,num, x,y);
@@ -478,12 +478,12 @@ void Menu::drawSpriteAnim(DatSpritesGroup *spriteGroup, const uint8_t *ptr, uint
 		spriteGroup[num].currentFrameOffset = spriteGroup[num].firstFrameOffset;
 	}
 }
-
+#endif
 void Menu::refreshScreen() {
 	_video->updateGameDisplay(_video->_frontLayer);
 	g_system->updateScreen(false);
 }
-
+#if 0
 void Menu::pafCallback(int frameNum, const uint8_t *frameData) {
 #ifdef SOUND
 	if (_currentOptionButtonSound != 0) {
@@ -499,7 +499,7 @@ void Menu::pafCallback(int frameNum, const uint8_t *frameData) {
 	}
 	g_system->copyRect(0, 0, Video::W, Video::H, _video->_frontLayer, Video::W);
 }
-
+#endif
 static void menuPafCallback(void *userdata, int frame, const uint8_t *buffer) {
 	((Menu *)userdata)->pafCallback(frame, buffer);
 }
@@ -1463,6 +1463,7 @@ void Menu::handleKeyboardControlsScreen(int num) {
 	g_system->sleep(kDelayMs);
 }
 */
+#if 0
 void Menu::drawDifficultyScreen() {
 	drawBitmap(_optionsBitmapData[_optionNum], _optionsBitmapSize[_optionNum]);
 	for (int i = 0; i < 3; ++i) {
@@ -1501,6 +1502,7 @@ void Menu::handleDifficultyScreen(int num) {
 	drawDifficultyScreen();
 	g_system->sleep(kDelayMs);
 }
+#endif
 #ifdef SOUND
 void Menu::drawSoundScreen() {
 	drawBitmap(_optionsBitmapData[_optionNum], _optionsBitmapSize[_optionNum]);

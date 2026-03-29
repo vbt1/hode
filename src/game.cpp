@@ -376,6 +376,7 @@ void Game::removeSound(LvlObject *ptr) {
 #endif
 
 void Game::setupBackgroundBitmap() {
+emu_printf("setupBackgroundBitmap\n");
 	LvlBackgroundData *lvl = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 	const int num = lvl->currentBackgroundId;
 	const uint8_t *pal = lvl->backgroundPaletteTable[num];
@@ -401,7 +402,7 @@ void Game::setupBackgroundBitmap() {
 	unsigned int s1 = g_system->getTimeStamp();
 #endif	
 //	for(int i=0;i<10;i++)
-	decodeLZW(bmp, _video->_backgroundLayer);
+	decodeLZW(bmp, _video->_backgroundLayer2);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
@@ -1977,9 +1978,11 @@ int nbspr=0;
 	unsigned int s1 = g_system->getTimeStamp();
 #endif
 
-	memcpy(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
-	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
-//	memset(_video->_frontLayer, 0x00, Video::W * Video::H);
+//	memcpy(_video->_frontLayer, _video->_backgroundLayer, Video::W * Video::H);
+//	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+
+	memcpy(_video->_backgroundLayer, _video->_backgroundLayer2, Video::W * Video::H);
+	memset(_video->_frontLayer, 0x00, Video::W * Video::H);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
@@ -2010,7 +2013,7 @@ int nbspr=0;
 		{
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1F) == 0) {
-				_video->decodeBG(spr->bitmapBits, _video->_backgroundLayer, spr->xPos, spr->yPos, 0, spr->w, spr->h);
+				_video->decodeBG(spr->bitmapBits, _video->_backgroundLayer2, spr->xPos, spr->yPos, 0, spr->w, spr->h);
 				nbspr++;
 			}
 		}
@@ -2025,7 +2028,7 @@ int nbspr=0;
 	for (int i = 1; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
 		}
@@ -2039,7 +2042,7 @@ int nbspr=0;
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
 		}
@@ -2064,7 +2067,7 @@ int nbspr=0;
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 					nbspr++;
 			}
 		}
@@ -2078,7 +2081,7 @@ int nbspr=0;
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
 		}
@@ -2089,7 +2092,7 @@ int nbspr=0;
 	if(result>0)
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
-
+/* // vbt : à remettre
 	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
@@ -2103,7 +2106,7 @@ int nbspr=0;
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
-
+*/
 #ifdef DEBUG
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
@@ -2113,11 +2116,13 @@ int nbspr=0;
 	for (int i = 1; i < 12; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+//				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
 		}
 	}
+
 #ifdef DEBUG
 	unsigned int e10 = g_system->getTimeStamp();
 	result = e10-e9;
@@ -2138,11 +2143,14 @@ int nbspr=0;
 	for (int i = 12; i <= 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+//				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
 		}
 	}
+	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+
 #ifdef DEBUG
 	unsigned int e12 = g_system->getTimeStamp();
 //	result = e12-e11;
@@ -3014,8 +3022,8 @@ void Game::levelMainLoop() {
 	if(result>0)
 		emu_printf("--duration %s : %d\n","updateGamePalette", result);
 #endif
-emu_printf("copyRectWidescreen _backgroundLayer\n");
-		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+//emu_printf("copyRectWidescreen _backgroundLayer\n");
+//		g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG
 	unsigned int e8 = g_system->getTimeStamp();
 	result = e8-e7;
