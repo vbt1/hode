@@ -34,7 +34,7 @@ Video::Video() {
 	hwram_work_paf   = hwram_work;
 	_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
 	_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
-	_backgroundLayer = allocate_memory (TYPE_LDIMG, W * H);
+	_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
 	_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
 	_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4);
 	_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256);
@@ -916,9 +916,11 @@ static uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 
 void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
 // vbt comparer les 2 versions
-	
-	assert(dst1 == _shadowLayer);
-	assert(dst2 == _frontLayer);
+	if(dst1 != _shadowLayer)
+		return;
+//	if(dst2 != _frontLayer)
+	if(dst2 != _backgroundLayer)
+		return;
 	
 	dst2 += y * dst_pitch + x;
 	
@@ -943,7 +945,6 @@ void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch,
 			uint16_t offset = READ_LE_UINT16(src1); src1 += 2;
 			dst2[i] = lookupColor(dst1[offset], dst2[i], _shadowColorLut);
 		}
-		
 		dst2 += dst_pitch;
 	}
 /*
@@ -982,8 +983,11 @@ static inline uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 }
 
 void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
-    assert(dst1 == _shadowLayer);
-    assert(dst2 == _frontLayer);
+    if(dst1 != _shadowLayer)
+		return;
+//    if(dst2 != _frontLayer)
+    if(dst2 != _backgroundLayer)
+		return;
     
     dst2 += y * dst_pitch + x;
     const uint8_t * const lut = _shadowColorLut;
