@@ -434,7 +434,7 @@ void Game::addToSpriteList(Sprite *spr) {
 }
 
 void Game::addToSpriteList(LvlObject *ptr) {
-//	emu_printf("ptr->spriteNum %d\n", ptr->spriteNum);
+	emu_printf("ptr->spriteNum %d\n", ptr->spriteNum);
 	
 	Sprite *spr = _spritesNextPtr;
 	if (spr) {
@@ -2039,6 +2039,7 @@ int nbspr=0;
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
+emu_printf("spr->bitmapBits0 %p %d\n", spr->bitmapBits, i);
 				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
@@ -2064,6 +2065,7 @@ int nbspr=0;
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
+emu_printf("spr->bitmapBits1 %p %d\n", spr->bitmapBits, i);
 				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 					nbspr++;
 			}
@@ -2078,6 +2080,7 @@ int nbspr=0;
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
+emu_printf("spr->bitmapBits2 %p %d\n", spr->bitmapBits, i);
 				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
@@ -2113,6 +2116,7 @@ int nbspr=0;
 	for (int i = 1; i < 12; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
+emu_printf("spr->bitmapBits3 %p %d\n", spr->bitmapBits, i);
 //				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
@@ -2140,6 +2144,8 @@ int nbspr=0;
 	for (int i = 12; i <= 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
+emu_printf("spr->bitmapBits4 %p %d num %d w %d h %d rnum %d\n", 
+spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
 //				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
