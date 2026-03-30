@@ -29,7 +29,7 @@ Video::Video() {
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
-	hwram_work = allocate_memory (TYPE_HWRAM, 588000+117000);
+	hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000);
 //	emu_printf("--hwram_work start %p\n", hwram_work);
 	hwram_work_paf   = hwram_work;
 	_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
@@ -708,6 +708,167 @@ void Video::decodeSPR(const uint8_t *src, uint8_t *bg, uint8_t *dst,
 						if (bg && code == 0)
 							bg[y * W + (x + i)] = 0;
 					}
+				x += count;
+			}
+#else
+			if (!hFlip) {
+				memset(p2, code, count);
+				ix2 += count;
+			} else {
+				for (int i = 0; i < count; ++i)
+					p2[-i] = code;
+				ix2 -= count;
+			}
+#endif
+			break;
+		/* ---------- SKIP X ---------- */
+		case 2:
+			if (count == 0) count = *src++;
+#ifdef USE_SPRITE
+			ix2 += hFlip ? -count : count;
+#else
+			x   += hFlip ? -count : count;
+#endif
+			break;
+		/* ---------- NEW LINE ---------- */
+		case 3:
+			if (count == 0) {
+				count = *src++;
+				if (count == 0) return;
+			}
+#ifdef USE_SPRITE
+			iy2 += vFlip ? -count : count;
+#else
+			y   += vFlip ? -count : count;
+#endif
+			uint8_t dx = *src++;
+#ifdef USE_SPRITE
+			ix2 = hFlip ? (ix2Orig - dx) : (ix2Orig + dx);
+#else
+			x   = hFlip ? (xOrig - dx) : (xOrig + dx);
+#endif
+			break;
+		}
+	}
+}
+
+void Video::decodeSPR(const uint8_t *src, uint8_t *dst,
+                      int x, int y, uint8_t flags,
+                      uint16_t spr_w, uint16_t spr_h)
+{
+	if (y >= H) return;
+	else if (y < 0) flags |= kSprClipTop;
+	const int y2 = y + spr_h - 1;
+	if (y2 < 0) return;
+	else if (y2 >= H) flags |= kSprClipBottom;
+	if (x >= W) return;
+	else if (x < 0) flags |= kSprClipLeft;
+	const int x2 = x + spr_w - 1;
+	if (x2 < 0) return;
+	else if (x2 >= W) flags |= kSprClipRight;
+#ifdef USE_SPRITE
+	const int xAnchor = x;
+	const int yAnchor = y;
+#endif
+
+	if (flags & kSprHorizFlip) x = x2;
+	if (flags & kSprVertFlip)  y = y2;
+#ifdef USE_SPRITE
+	const uint16_t w_raw = spr_w;
+	const uint16_t w     = (w_raw + 7) & ~7;
+	const uint16_t h     = spr_h;
+	const uint16_t size  = w * h;
+	if (position_vram + size >= 0x79000)
+		position_vram = 0;
+	TEXTURE tx = TEXDEF(w, h, position_vram);
+	uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+	position_vram += size;
+	SPRITE user_sprite;
+	user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
+	user_sprite.COLR = 0;
+	user_sprite.SIZE = (w / 8) << 8 | h;
+	user_sprite.CTRL = (FUNC_Sprite | _ZmLT);
+	user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
+	user_sprite.YA   = yAnchor - 112 + 16;
+	user_sprite.XB   = (w * 5) >> 1;
+	user_sprite.YB   = spr_h;
+	user_sprite.GRDA = 0;
+	user_sprite.SRCA = tx.CGadr;
+	slSetSprite(&user_sprite, toFIXED2(240));
+	memset(dst2, 0x00, size);
+	int ix2 = (flags & kSprHorizFlip) ? (w_raw - 1) : 0;
+	int iy2 = (flags & kSprVertFlip)  ? (h - 1) : 0;
+	const int ix2Orig = ix2;
+#endif
+	const int xOrig = x;
+
+	const bool hFlip = (flags & kSprHorizFlip) != 0;
+	const bool vFlip = (flags & kSprVertFlip) != 0;
+#ifndef USE_SPRITE
+	const uint8_t clipFlags = flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight);
+#endif
+	while (1) {
+#ifndef USE_SPRITE
+		uint8_t *p = dst + y * W + x;
+#else
+		uint8_t *p2 = dst2 + iy2 * w + ix2;
+#endif
+		int code  = *src++;
+		int count = code & 0x3F;
+#ifndef USE_SPRITE
+		int clippedCount = count;
+		if (y < 0 || y >= H)
+			clippedCount = 0;
+#endif
+		switch (code >> 6) {
+		/* ---------- COPY ---------- */
+		case 0:
+#ifndef USE_SPRITE
+			if (clipFlags == 0) {
+				for (int i = 0; i < clippedCount; ++i)
+					p[i] = (src[i] == 0) ? 255 : src[i];
+				x += count;
+			} else if (hFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W)
+						p[-i] = (src[i] == 0) ? 255 : src[i];
+				x -= count;
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W)
+						p[i] = (src[i] == 0) ? 255 : src[i];
+				x += count;
+			}
+#else
+			if (!hFlip) {
+				memcpy(p2, src, count);
+				ix2 += count;
+			} else {
+				for (int i = 0; i < count; ++i)
+					p2[-i] = src[i];
+				ix2 -= count;
+			}
+#endif
+			src += count;
+			break;
+		/* ---------- FILL ---------- */
+		case 1:
+			code = *src++;
+#ifndef USE_SPRITE
+			if (clipFlags == 0) {
+				memset(p, (code == 0) ? 255 : code, clippedCount);
+				x += count;
+			} else if (hFlip) {
+				const uint8_t val = (code == 0) ? 255 : code;
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W)
+						p[-i] = val;
+				x -= count;
+			} else {
+				const uint8_t val = (code == 0) ? 255 : code;
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W)
+						p[i] = val;
 				x += count;
 			}
 #else

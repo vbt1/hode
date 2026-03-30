@@ -2,7 +2,7 @@
 #define PAF 1
 #define USE_LESS_RAM 1
 #define USE_SPRITE 1
-#define DEBUG 1
+//#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -2039,8 +2039,9 @@ int nbspr=0;
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-emu_printf("spr->bitmapBits0 %p %d\n", spr->bitmapBits, i);
-				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+emu_printf("spr->bitmapBits0 %p %d num %d w %d h %d rnum %d\n", 
+spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
+				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
 		}
@@ -2065,8 +2066,9 @@ emu_printf("spr->bitmapBits0 %p %d\n", spr->bitmapBits, i);
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-emu_printf("spr->bitmapBits1 %p %d\n", spr->bitmapBits, i);
-				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+emu_printf("spr->bitmapBits1 %p %d num %d w %d h %d rnum %d\n", 
+spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
+				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 					nbspr++;
 			}
 		}
@@ -2080,7 +2082,8 @@ emu_printf("spr->bitmapBits1 %p %d\n", spr->bitmapBits, i);
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-emu_printf("spr->bitmapBits2 %p %d\n", spr->bitmapBits, i);
+emu_printf("spr->bitmapBits2 %p %d num %d w %d h %d rnum %d\n", 
+spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
 				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
@@ -2118,7 +2121,7 @@ emu_printf("spr->bitmapBits2 %p %d\n", spr->bitmapBits, i);
 			if ((spr->num & 0x1000) != 0) {
 emu_printf("spr->bitmapBits3 %p %d\n", spr->bitmapBits, i);
 //				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
 		}
@@ -2147,7 +2150,7 @@ emu_printf("spr->bitmapBits3 %p %d\n", spr->bitmapBits, i);
 emu_printf("spr->bitmapBits4 %p %d num %d w %d h %d rnum %d\n", 
 spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
 //				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
+				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
 				nbspr++;
 			}
 		}
