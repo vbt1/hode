@@ -106,7 +106,6 @@ int	main( void )
 	slScrPosNbg1(0, toFIXED(-16));
 	slScrPosNbg0(0, toFIXED(-16));
 	slPriorityNbg0(2);
-//	slPriorityNbg1(6);
 //	slPrioritySpr0(7);
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
 

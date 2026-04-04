@@ -234,7 +234,9 @@ struct Sprite {
 	const uint8_t *bitmapBits;
 	Sprite *nextPtr;
 	uint16_t num;
-	uint16_t w, h;
+	uint16_t w;
+	uint8_t h;
+	uint8_t type;
 };
 
 struct BoundingBox {

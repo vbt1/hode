@@ -1,7 +1,7 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
 #define USE_LESS_RAM 1
-#define USE_SPRITE 1
+//#define USE_SPRITE 1
 //#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
@@ -379,7 +379,7 @@ void Game::removeSound(LvlObject *ptr) {
 #endif
 
 void Game::setupBackgroundBitmap() {
-emu_printf("setupBackgroundBitmap\n");
+//emu_printf("setupBackgroundBitmap\n");
 	LvlBackgroundData *lvl = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 	const int num = lvl->currentBackgroundId;
 	const uint8_t *pal = lvl->backgroundPaletteTable[num];
@@ -427,6 +427,7 @@ emu_printf("setupBackgroundBitmap\n");
 }
 
 void Game::addToSpriteList(Sprite *spr) {
+//	emu_printf("ptr->spriteNum %d type %d w %d h %d\n", spr->num & 0x1F, spr->type, spr->w, spr->h);
 	_spritesNextPtr = spr->nextPtr;
 	const int index = spr->num & 0x1F;
 	spr->nextPtr = _typeSpritesList[index];
@@ -434,8 +435,7 @@ void Game::addToSpriteList(Sprite *spr) {
 }
 
 void Game::addToSpriteList(LvlObject *ptr) {
-	emu_printf("ptr->spriteNum %d\n", ptr->spriteNum);
-	
+//	emu_printf("ptr->spriteNum0 %d type %d w %d h %d\n", ptr->spriteNum, ptr->type, ptr->width, ptr->height);
 	Sprite *spr = _spritesNextPtr;
 	if (spr) {
 		const uint8_t num = _res->_currentScreenResourceNum;
@@ -475,6 +475,7 @@ void Game::addToSpriteList(LvlObject *ptr) {
 			spr->w = ptr->width;
 			spr->h = ptr->height;
 			spr->bitmapBits = ptr->bitmapBits;
+			spr->type = kObjectDataTypeAndy;
 			addToSpriteList(spr);
 		}
 	}
@@ -1250,7 +1251,6 @@ void Game::setupScreenLvlObjects(int num) {
 			}
 			break;
 		case 2:
-emu_printf("setupScreenLvlObjects %p ennemmy ???\n", _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum]);
 			ptr->levelData0x2988 = _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum];
 			if (!ptr->levelData0x2988) {
 				emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
@@ -1292,7 +1292,7 @@ emu_printf("setupScreenLvlObjects %p ennemmy ???\n", _res->_resLvlScreenBackgrou
 					break;
 				}
 			}
-emu_printf("setupLvlObjectBitmap %p\n", ptr);
+//emu_printf("setupLvlObjectBitmap %p\n", ptr);
 			setupLvlObjectBitmap(ptr);
 			break;
 		}
@@ -1922,6 +1922,7 @@ int Game::updateAndyLvlObject() {
 			_plasmaExplosionObject->screenNum = _andyObject->screenNum;
 			lvlObjectType1Callback(_plasmaExplosionObject);
 			if (_andyObject->actionKeyMask & 4) {
+				_plasmaExplosionObject->type = kObjectDataTypeShoot;
 				addToSpriteList(_plasmaExplosionObject);
 			}
 		} else if (_andyObject->spriteNum == 0) {
@@ -2011,7 +2012,6 @@ int nbspr=0;
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1F) == 0) {
 				_video->decodeBG(spr->bitmapBits, _video->_backgroundLayer2, spr->xPos, spr->yPos, 0, spr->w, spr->h);
-				nbspr++;
 			}
 		}
 	}
@@ -2025,8 +2025,7 @@ int nbspr=0;
 	for (int i = 1; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				nbspr++;
+				_video->decodeSPR(spr, _video->_backgroundLayer, _video->_shadowLayer);
 			}
 		}
 	}
@@ -2039,10 +2038,7 @@ int nbspr=0;
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-emu_printf("spr->bitmapBits0 %p %d num %d w %d h %d rnum %d\n", 
-spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				nbspr++;
+				_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
 	}
@@ -2066,10 +2062,7 @@ spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-emu_printf("spr->bitmapBits1 %p %d num %d w %d h %d rnum %d\n", 
-spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-					nbspr++;
+				_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
 	}
@@ -2082,10 +2075,7 @@ spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-emu_printf("spr->bitmapBits2 %p %d num %d w %d h %d rnum %d\n", 
-spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
-				_video->decodeSPR(spr->bitmapBits, _video->_backgroundLayer, _video->_shadowLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				nbspr++;
+				_video->decodeSPR(spr, _video->_backgroundLayer, _video->_shadowLayer);
 			}
 		}
 	}
@@ -2119,10 +2109,7 @@ spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
 	for (int i = 1; i < 12; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-emu_printf("spr->bitmapBits3 %p %d\n", spr->bitmapBits, i);
-//				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				nbspr++;
+				_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
 	}
@@ -2147,11 +2134,7 @@ emu_printf("spr->bitmapBits3 %p %d\n", spr->bitmapBits, i);
 	for (int i = 12; i <= 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-emu_printf("spr->bitmapBits4 %p %d num %d w %d h %d rnum %d\n", 
-spr->bitmapBits, i, spr->num, spr->w, spr->h, (spr->num >> 0xE) & 3);
-//				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				_video->decodeSPR(spr->bitmapBits, _video->_frontLayer, spr->xPos, spr->yPos, (spr->num >> 0xE) & 3, spr->w, spr->h);
-				nbspr++;
+				_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
 	}
@@ -2360,7 +2343,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 			buffer[2] = 0;
 		}
 		_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
-//		slSynch();
+		slSynch();
 		g_system->sleep(delay);
 		frame_x++;
 	}
@@ -2477,6 +2460,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 				spr->bitmapBits = data + 8;
 			}
 			spr->num = ptr->flags2;
+			spr->type = kObjectDataTypeAndy;
 			addToSpriteList(spr);
 		}
 	}
@@ -2544,6 +2528,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 					spr->xPos = data[0];
 					spr->yPos = data[1];
 				}
+				spr->type = kObjectDataTypeAndy;
 				spr->num = ptr->flags2;
 				addToSpriteList(spr);
 			}
@@ -2606,6 +2591,8 @@ LvlObject *Game::updateAnimatedLvlObjectType1(LvlObject *ptr) {
 				spr->xPos = data[0];
 				spr->yPos = data[1];
 				spr->num = ptr->flags2;
+				spr->type = kObjectDataTypeLvlBackgroundSound;
+//				emu_printf("updateAnimatedLvlObjectType1 currentSprite %d dataNum %d ", ptr->currentSprite, ptr->dataNum);
 				addToSpriteList(spr);
 			}
 		}
@@ -2659,6 +2646,7 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 			spr->h = ptr->height;
 			spr->bitmapBits = bitmap;
 			spr->num = num;
+			spr->type = kObjectDataTypeAnimBackgroundData;
 			addToSpriteList(spr);
 		}
 	}
@@ -2806,6 +2794,7 @@ void Game::updatePlasmaCannonExplosionLvlObject(LvlObject *ptr) {
 	}
 	updateAndyObject(ptr);
 	ptr->screenNum = _andyObject->screenNum;
+	ptr->type = kObjectDataTypeAndy;
 	ptr->flags2 = merge_bits(ptr->flags2, _andyObject->flags2, 0x18);
 	ptr->flags2 = merge_bits(ptr->flags2, _andyObject->flags2 + 1, 7);
 	addToSpriteList(ptr);
@@ -2999,6 +2988,7 @@ void Game::levelMainLoop() {
 		emu_printf("--duration %s : %d\n","updateAndyMonster", result);
 #endif
 	if (!_hideAndyObjectFlag) {
+		_andyObject->type = kObjectDataTypeAndy;
 		addToSpriteList(_andyObject);
 	}
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dxPos = 0;
@@ -3955,6 +3945,7 @@ int Game::lvlObjectType8Callback(LvlObject *ptr) {
 			o->directionKeyMask = ptr->directionKeyMask;
 			updateAndyObject(o);
 			setLvlObjectPosRelativeToObject(ptr, 6, o, 6);
+			o->type = kObjectDataTypeAndy;
 			addToSpriteList(o);
 			setLvlObjectPosInScreenGrid(o, 7);
 		}
@@ -3982,6 +3973,7 @@ int Game::lvlObjectList3Callback(LvlObject *o) {
 		removeLvlObjectFromList(&_lvlObjectsList3, o);
 		destroyLvlObject(o);
 	} else {
+		o->type = kObjectDataTypeAndy;
 		updateAndyObject(o);
 		o->actionKeyMask = 0;
 		o->directionKeyMask = 0;
