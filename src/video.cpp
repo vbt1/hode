@@ -284,50 +284,41 @@ void Video::SAT_cleanSprites()
 }
 
 void Video::decodeNBG(const Sprite *spr, uint8_t *dst) {
-    const uint8_t  *src   = spr->bitmapBits;
-    int       x     = spr->xPos;
-    int       y     = spr->yPos;
-    const uint16_t spr_w = spr->w;
-    const uint8_t  spr_h = spr->h;
-	const int xOrig = x;
+    const uint8_t *src   = spr->bitmapBits;
+    int            x     = spr->xPos;
+    int            y     = spr->yPos;
+    const int      xOrig = x;
 
-	while (1) {
-		uint8_t *p = dst + y * W + x;
-		int code = *src++;
-		int count = code & 0x3F;
-		int clippedCount = count;
-		if (y < 0 || y >= H) {
-			clippedCount = 0;
-		}
-		switch (code >> 6) {
-		case 0:
-			memcpy(p, src, clippedCount);
-			x += count;
-			src += count;
-			break;
-		case 1:
-			code = *src++;
-			memset(p, code, clippedCount);
-			x += count;
-			break;
-		case 2:
-			if (count == 0) {
-				count = *src++;
-			}
-			x += count;
-			break;
-		case 3:
-			if (count == 0) {
-				count = *src++;
-				if (count == 0) {
-					return;
-				}
-			}
-			y += count;
-			x = xOrig + *src++;
-			break;
-		}
-	}
+    while (1) {
+        const int code  = *src++;
+        const int count = code & 0x3F;
+        // Use & 0xC0 instead of >> 6 — avoids ___ashiftrt_r4_6 JSR every iteration
+        const int op    = code & 0xC0;
+
+        uint8_t *p           = dst + y * W + x;
+        const int clippedCount = ((unsigned)y < (unsigned)H) ? count : 0;
+
+        if (op == 0x00) {
+            memcpy(p, src, clippedCount);
+            x   += count;
+            src += count;
+        } else if (op == 0x40) {
+            const int val = *src++;
+            memset(p, val, clippedCount);
+            x += count;
+        } else if (op == 0x80) {
+            x += count ? count : *src++;
+        } else {
+            if (count == 0) {
+                const int n = *src++;
+                if (n == 0) return;
+                y += n;
+            } else {
+                y += count;
+            }
+            x = xOrig + *src++;
+        }
+    }
 }
 
 void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
@@ -518,165 +509,81 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 
 void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 {
-    const uint8_t  *src   = spr->bitmapBits;
-    int       x     = spr->xPos;
-    int       y     = spr->yPos;
-    uint8_t   flags = (spr->num >> 0xE) & 3;
-    const uint16_t  spr_w = spr->w;
-    const uint8_t  spr_h = spr->h;
-	const uint8_t   type = spr->type;
+    const uint8_t  *src     = spr->bitmapBits;
+    int             x       = 0;
+    int             y       = 0;
+    uint8_t         flags   = ((uint16_t)spr->num >> 14) & 3; // logical shift
+    const uint16_t  spr_w   = spr->w;
+    const uint8_t   spr_h   = spr->h;
+    const int       xAnchor = spr->xPos;
+    const int       yAnchor = spr->yPos;
+    const bool      hFlip   = (flags & kSprHorizFlip) != 0;
+    const bool      vFlip   = (flags & kSprVertFlip)  != 0;
+    const uint16_t  w       = (spr_w + 7) & ~7;
 
-	if (y >= H) return;
-	else if (y < 0) flags |= kSprClipTop;
-	const int y2 = y + spr_h - 1;
-	if (y2 < 0) return;
-	else if (y2 >= H) flags |= kSprClipBottom;
-	if (x >= W) return;
-	else if (x < 0) flags |= kSprClipLeft;
-	const int x2 = x + spr_w - 1;
-	if (x2 < 0) return;
-	else if (x2 >= W) flags |= kSprClipRight;
+    const uint16_t size = w * spr_h;
+    if (position_vram + size >= 0x79000)
+        position_vram = 0;
+    TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
+    uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+    position_vram += size;
 
-	const int xAnchor = x;
-	const int yAnchor = y;
+    SPRITE user_sprite;
+    user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
+    user_sprite.COLR = 0;
+    user_sprite.SIZE = (w / 8) << 8 | spr_h;
+    user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
+    user_sprite.YA   = yAnchor - 112 + 16;
+    user_sprite.XB   = ((w * 5) >> 1);
+    user_sprite.YB   = spr_h;
+    user_sprite.GRDA = 0;
+    user_sprite.SRCA = tx.CGadr;
+    user_sprite.CTRL = FUNC_Sprite | _ZmLT;
+    if (hFlip) {
+        user_sprite.CTRL |= (1 << 4);
+        user_sprite.XA   -= spr_w - 2;
+    }
+    if (vFlip) {
+        user_sprite.CTRL |= (1 << 5);
+        user_sprite.YA   -= spr_h - 1;
+    }
 
-	if (flags & kSprHorizFlip) x = x2;
-	if (flags & kSprVertFlip)  y = y2;
+    slSetSprite(&user_sprite, toFIXED2(240));
+    memset(dst2, 0x00, size);
 
-	// USE_SPRITE path variables
-	uint8_t  *dst2    = nullptr;
-	uint16_t  w_raw   = 0, w = 0, h = 0;
+    uint8_t *rowBase = dst2; // hoisted: only updated in case 3
 
-	if (type != kObjectDataTypeLvlBackgroundSound) {
-		w_raw = spr_w;
-		w     = (w_raw + 7) & ~7;
-		h     = spr_h;
-		const uint16_t size = w * h;
-		if (position_vram + size >= 0x79000)
-			position_vram = 0;
-		TEXTURE tx = TEXDEF(w, h, position_vram);
-		dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
-		position_vram += size;
-		SPRITE user_sprite;
-		user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
-		user_sprite.COLR = 0;
-		user_sprite.SIZE = (w / 8) << 8 | h;
-		user_sprite.CTRL = (FUNC_Sprite | _ZmLT);
-		user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
-		user_sprite.YA   = yAnchor - 112 + 16;
-		user_sprite.XB   = (w * 5) >> 1;
-		user_sprite.YB   = spr_h;
-		user_sprite.GRDA = 0;
-		user_sprite.SRCA = tx.CGadr;
-		slSetSprite(&user_sprite, toFIXED2(240));
-		memset(dst2, 0x00, size);
-		x     = (flags & kSprHorizFlip) ? (w_raw - 1) : 0;
-		y     = (flags & kSprVertFlip)  ? (h - 1)     : 0;
-	}
+    while (1) {
+        const int code  = *src++;
+        const int count = code & 0x3F;
+        const int op    = code & 0xC0;   // no JSR
+        uint8_t  *p     = rowBase + x;
 
-	const int xOrig = x;
-
-	const bool hFlip = (flags & kSprHorizFlip) != 0;
-	const bool vFlip = (flags & kSprVertFlip)  != 0;
-
-	// non-USE_SPRITE path variable
-	uint8_t clipFlags = 0;
-	if (type == kObjectDataTypeLvlBackgroundSound)
-		clipFlags = flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight);
-
-	while (1) {
-		uint8_t *p  = dst + y * W + x;
-		uint8_t *p2 = dst2 + y * w + x;
-
-		int code  = *src++;
-		int count = code & 0x3F;
-
-		int clippedCount = count;
-		if (type == kObjectDataTypeLvlBackgroundSound) {
-			if (y < 0 || y >= H)
-				clippedCount = 0;
-		}
-
-		switch (code >> 6) {
-		/* ---------- COPY ---------- */
-		case 0:
-			if (type == kObjectDataTypeLvlBackgroundSound) {
-				if (clipFlags == 0) {
-					for (int i = 0; i < clippedCount; ++i)
-						p[i] = (src[i] == 0) ? 255 : src[i];
-					x += count;
-				} else if (hFlip) {
-					for (int i = 0; i < clippedCount; ++i)
-						if (x - i >= 0 && x - i < W)
-							p[-i] = (src[i] == 0) ? 255 : src[i];
-					x -= count;
-				} else {
-					for (int i = 0; i < clippedCount; ++i)
-						if (x + i >= 0 && x + i < W)
-							p[i] = (src[i] == 0) ? 255 : src[i];
-					x += count;
-				}
-			} else {
-				if (!hFlip) {
-					memcpy(p2, src, count);
-					x += count;
-				} else {
-					for (int i = 0; i < count; ++i)
-						p2[-i] = src[i];
-					x -= count;
-				}
-			}
-			src += count;
-			break;
-		/* ---------- FILL ---------- */
-		case 1:
-			code = *src++;
-			if (type == kObjectDataTypeLvlBackgroundSound) {
-				if (clipFlags == 0) {
-					memset(p, (code == 0) ? 255 : code, clippedCount);
-					x += count;
-				} else if (hFlip) {
-					const uint8_t val = (code == 0) ? 255 : code;
-					for (int i = 0; i < clippedCount; ++i)
-						if (x - i >= 0 && x - i < W)
-							p[-i] = val;
-					x -= count;
-				} else {
-					const uint8_t val = (code == 0) ? 255 : code;
-					for (int i = 0; i < clippedCount; ++i)
-						if (x + i >= 0 && x + i < W)
-							p[i] = val;
-					x += count;
-				}
-			} else {
-				if (!hFlip) {
-					memset(p2, code, count);
-					x += count;
-				} else {
-					for (int i = 0; i < count; ++i)
-						p2[-i] = code;
-					x -= count;
-				}
-			}
-			break;
-		/* ---------- SKIP X ---------- */
-		case 2:
-			if (count == 0) count = *src++;
-				x += hFlip ? -count : count;
-			break;
-		/* ---------- NEW LINE ---------- */
-		case 3:
-			if (count == 0) {
-				count = *src++;
-				if (count == 0) return;
-			}
-
-			uint8_t dx = *src++;
-				y += vFlip ? -count : count;
-				x  = hFlip ? (xOrig - dx)   : (xOrig + dx);
-			break;
-		}
-	}
+        if (op == 0x00) {                // copy
+            for (int i = 0; i < count; ++i) {
+                uint8_t val = src[i];
+                p[i] = val - (val == 0); // branchless 0→255
+            }
+            x   += count;
+            src += count;
+        } else if (op == 0x40) {         // fill
+            const uint8_t val = *src++;
+            memset(p, val == 0 ? 255 : val, count);
+            x += count;
+        } else if (op == 0x80) {         // skip x
+            x += count ? count : *src++;
+        } else {                         // new line
+            if (count == 0) {
+                const int n = *src++;
+                if (n == 0) return;
+                y += n;
+            } else {
+                y += count;
+            }
+            x        = *src++;
+            rowBase  = dst2 + y * w;     // multiply only here
+        }
+    }
 }
 
 void Video::decodeRLE(const uint8_t *src, uint8_t *dst, int size) {

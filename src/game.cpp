@@ -32,21 +32,15 @@ extern Uint32 position_vram;
 
 // starting level cutscene number
 static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
+static uint8_t redraw_fg = 255;
 
 Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(dataPath, savePath)
 	{
-emu_printf("Game\n");
-
-//emu_printf("dataPath %s savePath %s\n",dataPath, savePath);
-
 	_level = 0;
-	emu_printf("\nResource\n");
 	_res = new Resource(&_fs);
 	_rnd.setSeed();
-	emu_printf("Video\n");
 	_video = new Video();
 #ifdef PAF
-	emu_printf("PafPlayer\n");
 	_paf = new PafPlayer(&_fs, _video);
 #endif
 	_cheats = cheats;
@@ -1985,7 +1979,8 @@ void Game::drawScreen() {
 //	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 
 	memcpy(_video->_backgroundLayer, _video->_backgroundLayer2, Video::W * Video::H);
-	memset(_video->_frontLayer, 0x00, Video::W * Video::H);
+	if(_currentScreen != redraw_fg)
+		memset(_video->_frontLayer, 0x00, Video::W * Video::H);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
@@ -2133,17 +2128,21 @@ void Game::drawScreen() {
 	for (int i = 12; i <= 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-emu_printf("type %d\n", spr->type);
-				if(spr->type==0)
+//				spr->type = kObjectDataTypeLvlBackgroundSound;
+				if(spr->type != kObjectDataTypeLvlBackgroundSound)
 					_video->decodeSPR(spr, _video->_frontLayer);
 				else
-					_video->decodeNBG(spr, _video->_frontLayer);
+				{
+					if(_currentScreen != redraw_fg)
+					{
+						_video->decodeNBG(spr, _video->_frontLayer);
+					}
+				}
 			}
 		}
 	}
-
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
-
+	redraw_fg = _currentScreen;
 #ifdef DEBUG
 	unsigned int e12 = g_system->getTimeStamp();
 //	result = e12-e11;
