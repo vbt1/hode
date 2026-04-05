@@ -69,11 +69,9 @@ struct Video {
 	void SAT_cleanSprites();
 	static void SAT_decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h);
 	static void decodeRLE(const uint8_t *src, uint8_t *dst, int size);
-//	static void decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h);
 	static void decodeSPR(const Sprite *spr, uint8_t *dst);
 	static void decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst);
-//	static void decodeSPR2(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h);
-	static void decodeBG(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h);
+	static void decodeNBG(const Sprite *spr, uint8_t *dst);
 	int computeLineOutCode(int x, int y);
 	bool clipLineCoords(int &x1, int &y1, int &x2, int &y2);
 	void drawLine(int x1, int y1, int x2, int y2, uint8_t color);

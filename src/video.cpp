@@ -283,8 +283,14 @@ void Video::SAT_cleanSprites()
 	slSynch(); // vbt à remettre
 }
 
-void Video::decodeBG(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
+void Video::decodeNBG(const Sprite *spr, uint8_t *dst) {
+    const uint8_t  *src   = spr->bitmapBits;
+    int       x     = spr->xPos;
+    int       y     = spr->yPos;
+    const uint16_t spr_w = spr->w;
+    const uint8_t  spr_h = spr->h;
 	const int xOrig = x;
+
 	while (1) {
 		uint8_t *p = dst + y * W + x;
 		int code = *src++;

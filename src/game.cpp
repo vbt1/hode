@@ -2010,7 +2010,7 @@ void Game::drawScreen() {
 		{
 		for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1F) == 0) {
-				_video->decodeBG(spr->bitmapBits, _video->_backgroundLayer2, spr->xPos, spr->yPos, 0, spr->w, spr->h);
+				_video->decodeNBG(spr, _video->_backgroundLayer2);
 			}
 		}
 	}
@@ -2133,7 +2133,11 @@ void Game::drawScreen() {
 	for (int i = 12; i <= 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-				_video->decodeSPR(spr, _video->_frontLayer);
+emu_printf("type %d\n", spr->type);
+				if(spr->type==0)
+					_video->decodeSPR(spr, _video->_frontLayer);
+				else
+					_video->decodeNBG(spr, _video->_frontLayer);
 			}
 		}
 	}
