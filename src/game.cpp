@@ -1976,7 +1976,6 @@ void Game::updateBackgroundPsx(int num) {
 }
 #endif
 void Game::drawScreen() {
-int nbspr=0;
 #ifdef DEBUG
 //	//emu_printf("------drawScreen\n");
 	unsigned int s1 = g_system->getTimeStamp();
@@ -2138,6 +2137,7 @@ int nbspr=0;
 			}
 		}
 	}
+
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 
 #ifdef DEBUG

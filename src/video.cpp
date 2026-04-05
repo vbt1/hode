@@ -284,36 +284,6 @@ void Video::SAT_cleanSprites()
 }
 
 void Video::decodeBG(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
-	if (y >= H) {
-		return;
-	} else if (y < 0) {
-		flags |= kSprClipTop;
-	}
-	const int y2 = y + spr_h - 1;
-	if (y2 < 0) {
-		return;
-	} else if (y2 >= H) {
-		flags |= kSprClipBottom;
-	}
-
-	if (x >= W) {
-		return;
-	} else if (x < 0) {
-		flags |= kSprClipLeft;
-	}
-	const int x2 = x + spr_w - 1;
-	if (x2 < 0) {
-		return;
-	} else if (x2 >= W) {
-		flags |= kSprClipRight;
-	}
-
-	if (flags & kSprHorizFlip) {
-		x = x2;
-	}
-	if (flags & kSprVertFlip) {
-		y = y2;
-	}
 	const int xOrig = x;
 	while (1) {
 		uint8_t *p = dst + y * W + x;
@@ -325,56 +295,20 @@ void Video::decodeBG(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t fla
 		}
 		switch (code >> 6) {
 		case 0:
-			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
-				memcpy(p, src, clippedCount);
-				x += count;
-			} else if (flags & kSprHorizFlip) {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x - i >= 0 && x - i < W) {
-						p[-i] = src[i];
-					}
-				}
-				x -= count;
-			} else {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x + i >= 0 && x + i < W) {
-						p[i] = src[i];
-					}
-				}
-				x += count;
-			}
+			memcpy(p, src, clippedCount);
+			x += count;
 			src += count;
 			break;
 		case 1:
 			code = *src++;
-			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
-				memset(p, code, clippedCount);
-				x += count;
-			} else if (flags & kSprHorizFlip) {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x - i >= 0 && x - i < W) {
-						p[-i] = code;
-					}
-				}
-				x -= count;
-			} else {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x + i >= 0 && x + i < W) {
-						p[i] = code;
-					}
-				}
-				x += count;
-			}
+			memset(p, code, clippedCount);
+			x += count;
 			break;
 		case 2:
 			if (count == 0) {
 				count = *src++;
 			}
-			if (flags & kSprHorizFlip) {
-				x -= count;
-			} else {
-				x += count;
-			}
+			x += count;
 			break;
 		case 3:
 			if (count == 0) {
@@ -383,16 +317,8 @@ void Video::decodeBG(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t fla
 					return;
 				}
 			}
-			if (flags & kSprVertFlip) {
-				y -= count;
-			} else {
-				y += count;
-			}
-			if (flags & kSprHorizFlip) {
-				x = xOrig - *src++;
-			} else {
-				x = xOrig + *src++;
-			}
+			y += count;
+			x = xOrig + *src++;
 			break;
 		}
 	}
