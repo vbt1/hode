@@ -685,114 +685,58 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 #endif
 }
 
-#if 0
 static uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 	return (a >= 144 && b < 144) ? lut[b] : b;
 }
 
 void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
-// vbt comparer les 2 versions
-	if(dst1 != _shadowLayer)
-		return;
-//	if(dst2 != _frontLayer)
-	if(dst2 != _backgroundLayer)
-		return;
-	
+	if (dst1 != _shadowLayer)     return;
+	if (dst2 != _backgroundLayer) return;
+
 	dst2 += y * dst_pitch + x;
-	
+	const uint8_t * const lut = _shadowColorLut;
+
 	for (int j = 0; j < src_h; ++j) {
-		// Simple 2x unroll - reduces loop overhead without complexity
+		const uint16_t *offsets = (const uint16_t *)src1;
+		uint8_t *out = dst2;
 		int i = 0;
-		for (; i < (src_w & ~1); i += 2) {
-			uint16_t offset0 = READ_LE_UINT16(src1); src1 += 2;
-			uint16_t offset1 = READ_LE_UINT16(src1); src1 += 2;
-			
-			uint8_t a0 = dst1[offset0];
-			uint8_t b0 = dst2[i];
-			uint8_t a1 = dst1[offset1];
-			uint8_t b1 = dst2[i + 1];
-			
-			dst2[i] = (a0 >= 144 && b0 < 144) ? _shadowColorLut[b0] : b0;
-			dst2[i + 1] = (a1 >= 144 && b1 < 144) ? _shadowColorLut[b1] : b1;
+
+		// 4x unroll - load offsets ahead to hide random-access latency on SH-2
+		for (; i <= src_w - 4; i += 4) {
+			const uint16_t o0 = offsets[i+0];
+			const uint16_t o1 = offsets[i+1];
+			const uint16_t o2 = offsets[i+2];
+			const uint16_t o3 = offsets[i+3];
+
+			const uint8_t s0 = dst1[o0];
+			const uint8_t s1 = dst1[o1];
+			const uint8_t s2 = dst1[o2];
+			const uint8_t s3 = dst1[o3];
+
+			const uint8_t f0 = out[0];
+			const uint8_t f1 = out[1];
+			const uint8_t f2 = out[2];
+			const uint8_t f3 = out[3];
+
+			out[0] = (s0 >= 144 && f0 < 144) ? lut[f0] : f0;
+			out[1] = (s1 >= 144 && f1 < 144) ? lut[f1] : f1;
+			out[2] = (s2 >= 144 && f2 < 144) ? lut[f2] : f2;
+			out[3] = (s3 >= 144 && f3 < 144) ? lut[f3] : f3;
+			out += 4;
 		}
-		
-		// Handle odd pixel
-		if (i < src_w) {
-			uint16_t offset = READ_LE_UINT16(src1); src1 += 2;
-			dst2[i] = lookupColor(dst1[offset], dst2[i], _shadowColorLut);
+
+		// tail
+		for (; i < src_w; ++i) {
+			const uint8_t s = dst1[offsets[i]];
+			const uint8_t f = *out;
+			if (s >= 144 && f < 144) *out = lut[f];
+			out++;
 		}
+
+		src1 += src_w * 2;
 		dst2 += dst_pitch;
 	}
-/*
-	assert(dst1 == _shadowLayer);
-	assert(dst2 == _frontLayer);
-	// src1 == projectionData
-	// src2 == shadowPalette
-
-	dst2 += y * dst_pitch + x;
-	for (int j = 0; j < src_h; ++j) {
-		for (int i = 0; i < src_w; ++i) {
-			int offset = READ_LE_UINT16(src1); src1 += 2;
-			assert(offset <= W * H);
-			if (kUseShadowColorLut) {
-				// build lookup offset
-				//   msb : _shadowLayer[ _projectionData[ (x, y) ] ]
-				//   lsb : _frontLayer[ (x, y) ]
-				offset = (dst1[offset] << 8) | dst2[i];
-
-				// lookup color matrix
-				//   if msb < 144 : _frontLayer.color
-				//   if msb >= 144 : if _frontLayer.color < 144 ? shadowPalette[ _frontLayer.color ] : _frontLayer.color
-				dst2[i] = _shadowColorLookupTable[offset];
-			} else {
-				dst2[i] = lookupColor(_shadowLayer[offset], dst2[i], _shadowColorLut);
-			}
-		}
-		dst2 += dst_pitch;
-	}
-*/
 }
-#else
-
-static inline uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
-	return (a >= 144 && b < 144) ? lut[b] : b;
-}
-
-void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
-    if(dst1 != _shadowLayer)
-		return;
-//    if(dst2 != _frontLayer)
-    if(dst2 != _backgroundLayer)
-		return;
-    
-    dst2 += y * dst_pitch + x;
-    const uint8_t * const lut = _shadowColorLut;
-    
-    // Process one scanline at a time
-    for (int j = 0; j < src_h; ++j) {
-        const uint8_t *offsets_ptr = src1;
-        uint8_t *out = dst2;
-        
-        // Just process pixels sequentially - keep it simple
-        for (int i = 0; i < src_w; ++i) {
-            uint16_t offset = READ_LE_UINT16(offsets_ptr);
-            offsets_ptr += 2;
-            
-            uint8_t shadow_val = dst1[offset];
-            uint8_t front_val = *out;
-            
-            // Simple condition - let compiler optimize
-            if (shadow_val >= 144 && front_val < 144) {
-                *out = lut[front_val];
-            }
-            out++;
-        }
-        
-        src1 += src_w * 2;
-        dst2 += dst_pitch;
-    }
-}
-#endif
 
 void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 	if (kUseShadowColorLut) {

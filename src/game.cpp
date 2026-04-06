@@ -2,7 +2,7 @@
 #define PAF 1
 #define USE_LESS_RAM 1
 //#define USE_SPRITE 1
-//#define DEBUG 1
+#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -260,7 +260,7 @@ void Game::transformShadowLayer(int delta) {
 		}
 	}
 	uint8_t r = 0;
-#if 0
+#if 0 // vbt: à remettre
 	if (_currentLevel == kLvl_pwr1) {
 		r = _pwr1_screenTransformLut[_res->_currentScreenResourceNum * 2 + 1];
 	} 
@@ -1969,6 +1969,7 @@ void Game::updateBackgroundPsx(int num) {
 	}
 }
 #endif
+/*
 void Game::drawScreen() {
 #ifdef DEBUG
 //	//emu_printf("------drawScreen\n");
@@ -2151,6 +2152,123 @@ void Game::drawScreen() {
 //	emu_printf("slsynch nb %d\n", nbspr);
 //	slSynch();
 }
+*/
+
+void Game::drawScreen() {
+#ifdef DEBUG
+    unsigned int s1 = g_system->getTimeStamp();
+#endif
+    memcpy(_video->_backgroundLayer, _video->_backgroundLayer2, Video::W * Video::H);
+    if (_currentScreen != redraw_fg)
+        memset(_video->_frontLayer, 0x00, Video::W * Video::H);
+#ifdef DEBUG
+    unsigned int e1 = g_system->getTimeStamp();
+    int result = e1 - s1;
+    if (result > 0)
+        emu_printf("--duration %s : %d\n", "memcpyl", result);
+#endif
+#ifdef PSX
+    _video->copyYuvBackBuffer();
+#endif
+    LvlBackgroundData *dat = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
+    memset(_video->_shadowLayer, 0, Video::W * Video::H + 1);
+
+    // background pass - only list 0
+#ifdef PSX
+    if (_res->_isPsx) {
+        for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
+            assert((spr->num & 0x1F) == 0);
+            assert(spr->w == 0xFFFF && spr->h == 0xFFFF);
+            _video->decodeBackgroundOverlayPsx(spr->bitmapBits);
+        }
+    } else
+#endif
+    {
+        for (Sprite *spr = _typeSpritesList[0]; spr; spr = spr->nextPtr) {
+            if ((spr->num & 0x1F) == 0) {
+                _video->decodeNBG(spr, _video->_backgroundLayer2);
+            }
+        }
+    }
+#ifdef DEBUG
+    unsigned int e2 = g_system->getTimeStamp();
+    result = e2 - e1;
+    if (result > 0)
+        emu_printf("--duration %s : %d\n", "decodeBackground", result);
+#endif
+
+    // sprite pass - lists 1..24
+    for (int i = 1; i <= 24; ++i) {
+        for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
+            switch (spr->num & 0x3000) {
+            case 0x3000:
+                _video->decodeSPR(spr, _video->_backgroundLayer, _video->_shadowLayer);
+                // fallthrough
+            case 0x1000:
+                if (spr->type != kObjectDataTypeLvlBackgroundSound) {
+                    _video->decodeSPR(spr, _video->_frontLayer);
+                } else if (_currentScreen != redraw_fg) {
+                    _video->decodeNBG(spr, _video->_frontLayer);
+                }
+                break;
+            case 0x2000:
+                _video->decodeSPR(spr, _video->_backgroundLayer, _video->_shadowLayer);
+                break;
+            case 0x0000:
+                break;
+            }
+        }
+    }
+#ifdef DEBUG
+    unsigned int e3 = g_system->getTimeStamp();
+    result = e3 - e2;
+    if (result > 0)
+        emu_printf("--duration %s : %d\n", "decodeSPR", result);
+#endif
+
+    if (_andyObject->spriteNum == 0) {
+        const int cannon = _andyObject->flags2 & 0x1F;
+        if ((cannon == 4 || cannon == 0xC) && _plasmaCannonFirstIndex < _plasmaCannonLastIndex2) {
+            drawPlasmaCannon();
+        }
+    }
+#ifdef DEBUG
+    unsigned int e4 = g_system->getTimeStamp();
+    result = e4 - e3;
+    if (result > 0)
+        emu_printf("--duration %s : %d\n", "drawPlasmaCannon", result);
+#endif
+
+    for (int i = 0; i < dat->shadowCount; ++i) {
+        _video->applyShadowColors(
+            _shadowScreenMasksTable[i].x,
+            _shadowScreenMasksTable[i].y,
+            _shadowScreenMasksTable[i].w,
+            _shadowScreenMasksTable[i].h,
+            256,
+            _shadowScreenMasksTable[i].w,
+            _video->_shadowLayer,
+            _video->_backgroundLayer,
+            _shadowScreenMasksTable[i].projectionDataPtr,
+            _shadowScreenMasksTable[i].shadowPalettePtr);
+    }
+#ifdef DEBUG
+    unsigned int e5 = g_system->getTimeStamp();
+    result = e5 - e4;
+    if (result > 0)
+        emu_printf("--duration %s : %d\n", "applyShadowColors", result);
+#endif
+
+    g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+#ifdef DEBUG
+    unsigned int e6 = g_system->getTimeStamp();
+    result = e6 - e5;
+    if (result > 0)
+        emu_printf("--duration %s : %d\n", "copyRectWidescreen", result);
+#endif
+}
+
+
 #ifdef SOUND
 static void gamePafCallback(void *userdata) {
 	((Game *)userdata)->resetSound();
@@ -3108,10 +3226,10 @@ Level *Game::createLevel() {
 	case 1:
 		_level = Level_fort_create();
 		break;
-/*	case 2:
+/*
+	case 2:
 		_level = Level_pwr1_create();
 		break;
-
 	case 3:
 		_level = Level_isld_create();
 		break;
