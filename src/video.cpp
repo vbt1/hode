@@ -471,18 +471,17 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
     user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
     user_sprite.COLR = 0;
     user_sprite.SIZE = (w / 8) << 8 | spr_h;
-    user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
+    user_sprite.XA   = ((xAnchor * 5) >> 1) - 319;
     user_sprite.YA   = yAnchor - 112 + 16;
     user_sprite.XB   = ((w * 5) >> 1);
     user_sprite.YB   = spr_h;
     user_sprite.GRDA = 0;
     user_sprite.SRCA = tx.CGadr;
     user_sprite.CTRL = FUNC_Sprite | _ZmLT;
+		int pos = user_sprite.XA - (spr_w - 1 - (w - spr_w));
     if (hFlip) {
         user_sprite.CTRL |= (1 << 4);
-//        user_sprite.XA   -= spr_w - 2;
-        user_sprite.XA -= (spr_w - 1 - (w - spr_w));
-
+		user_sprite.XA = (((xAnchor - (w - spr_w)) * 5) >> 1) - 319;
     }
     if (vFlip) {
         user_sprite.CTRL |= (1 << 5);
