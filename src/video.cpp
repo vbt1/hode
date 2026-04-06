@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -268,7 +268,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
     uint8_t   flags = (spr->num >> 0xE) & 3;
     const uint16_t  spr_w = spr->w;
     const uint8_t  spr_h = spr->h;
-	const uint8_t   type = spr->type;
+//	const uint8_t   type = spr->type;
 
 	if (y >= H) return;
 	else if (y < 0) flags |= kSprClipTop;

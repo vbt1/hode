@@ -421,7 +421,7 @@ void Game::setupBackgroundBitmap() {
 }
 
 void Game::addToSpriteList(Sprite *spr) {
-	emu_printf("ptr->spriteNum %d type %d w %d h %d\n", spr->num & 0x1F, spr->type, spr->w, spr->h);
+//	emu_printf("ptr->spriteNum %d type %d w %d h %d\n", spr->num & 0x1F, spr->type, spr->w, spr->h);
 	_spritesNextPtr = spr->nextPtr;
 	const int index = spr->num & 0x1F;
 	spr->nextPtr = _typeSpritesList[index];
@@ -2998,7 +2998,7 @@ void Game::levelMainLoop() {
 		emu_printf("--duration %s : %d\n","updateAndyMonster", result);
 #endif
 	if (!_hideAndyObjectFlag) {
-		_andyObject->type = kObjectDataTypeAndy;
+//		_andyObject->type = kObjectDataTypeAndy; // vbt : ne pas mettre !!
 		addToSpriteList(_andyObject);
 	}
 	((AndyLvlObjectData *)_andyObject->dataPtr)->dxPos = 0;
@@ -3307,7 +3307,7 @@ void Game::lvlObjectType0Init(LvlObject *ptr) {
 		emu_printf("_andyObject broken num %d\n", num);
 		return;
 	}
-	_andyObject->type = kObjectDataTypeAndy;
+//	_andyObject->type = kObjectDataTypeAndy;  // vbt : ne pas mettre !!!!
 	_andyObject->xPos = ptr->xPos;
 	_andyObject->yPos = ptr->yPos;
 	_andyObject->screenNum = ptr->screenNum;
