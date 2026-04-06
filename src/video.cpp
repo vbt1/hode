@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -29,7 +29,7 @@ Video::Video() {
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
-	hwram_work = allocate_memory (TYPE_HWRAM, 588000+114000);
+	hwram_work = allocate_memory (TYPE_HWRAM, 588000+112000);
 //	emu_printf("--hwram_work start %p\n", hwram_work);
 	hwram_work_paf   = hwram_work;
 	_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
@@ -150,13 +150,11 @@ void Video::SAT_loadTitleSprites(const DatSpritesGroup *spriteGroup, const uint8
 		const uint16_t w_raw = READ_LE_UINT16(ptr + 4);
 		const uint16_t w = (w_raw + 7) & ~7;
 		const uint16_t h = READ_LE_UINT16(ptr + 6);
-////emu_printf("num %d w%d h%d\n", i,w,h);
 		TEXTURE tx = TEXDEF(w, h, position_vram);
 		uint8_t *src = (uint8_t *)ptr+8;
-		uint8_t dst[104*19]; //104 pour demo fr
+		uint8_t *dst = (uint8_t *)(SpriteVRAM + (tx.CGadr << 3));
 		memset(dst,0x00, w*h);
-		SAT_decodeSPR(src, dst, 0, 0, 0, w_raw, h);
-		memcpy((void*)(SpriteVRAM + (tx.CGadr << 3)), (void*)dst, w*h);
+		SAT_decodeSPR(src, dst, w_raw, h);
 		position_vram += w*h;
 
 		_sprData[i].cgaddr = tx.CGadr;
@@ -167,104 +165,46 @@ void Video::SAT_loadTitleSprites(const DatSpritesGroup *spriteGroup, const uint8
 	}
 }
 
-void Video::SAT_decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h) {
-
-	const int y2 = y + spr_h - 1;
-	const int x2 = x + spr_w - 1;
-
-	if (flags & kSprHorizFlip) {
-		x = x2;
-	}
-	if (flags & kSprVertFlip) {
-		y = y2;
-	}
-	const int xOrig = x;
+void Video::SAT_decodeSPR(const uint8_t *src, uint8_t *dst, uint16_t spr_w, uint16_t spr_h) {
+	int x = 0, y = 0;
 	const uint16_t w = (spr_w + 7) & ~7;
+	uint8_t *rowBase = dst;
 
-	while (1) {
-		uint8_t *p = dst + y * w + x;
-		int code = *src++;
-		int count = code & 0x3F;
-		int clippedCount = count;
+    while (1) {
+		const int code = *src++;
+        const int count = code & 0x3F;
+        const int op    = code & 0xC0;
+        uint8_t  *p     = rowBase + x;
 
-		switch (code >> 6) {
-		case 0:
-			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
-				memcpy(p, src, clippedCount);
-				x += count;
-			} else if (flags & kSprHorizFlip) {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x - i >= 0 && x - i < spr_w) {
-						p[-i] = src[i];
-					}
-				}
-				x -= count;
-			} else {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x + i >= 0 && x + i < spr_w) {
-						p[i] = src[i];
-					}
-				}
-				x += count;
-			}
-			src += count;
-			break;
-		case 1:
-			code = *src++;
-			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
-				memset(p, code, clippedCount);
-				x += count;
-			} else if (flags & kSprHorizFlip) {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x - i >= 0 && x - i < spr_w) {
-						p[-i] = code;
-					}
-				}
-				x -= count;
-			} else {
-				for (int i = 0; i < clippedCount; ++i) {
-					if (x + i >= 0 && x + i < spr_w) {
-						p[i] = code;
-					}
-				}
-				x += count;
-			}
-			break;
-		case 2:
-			if (count == 0) {
-				count = *src++;
-			}
-			if (flags & kSprHorizFlip) {
-				x -= count;
-			} else {
-				x += count;
-			}
-			break;
-		case 3:
-			if (count == 0) {
-				count = *src++;
-				if (count == 0) {
-					return;
-				}
-			}
-			if (flags & kSprVertFlip) {
-				y -= count;
-			} else {
-				y += count;
-			}
-			if (flags & kSprHorizFlip) {
-				x = xOrig - *src++;
-			} else {
-				x = xOrig + *src++;
-			}
-			break;
-		}
+        if (op == 0x00) {                // copy
+            for (int i = 0; i < count; ++i) {
+                uint8_t val = src[i];
+                p[i] = val - (val == 0); // branchless 0→255
+            }
+            x   += count;
+            src += count;
+        } else if (op == 0x40) {         // fill
+            const uint8_t val = *src++;
+            memset(p, val, count);
+            x += count;
+        } else if (op == 0x80) {         // skip x
+            x += count ? count : *src++;
+        } else {                         // new line
+            if (count == 0) {
+                const int n = *src++;
+                if (n == 0) return;
+                y += n;
+            } else {
+                y += count;
+            }
+            x        = *src++;
+            rowBase  = dst + y * w;
+        }
 	}
 }
 
 void Video::SAT_cleanSprites()
 {
-//emu_printf("SAT_cleanSprites\n");
 	SPRITE user_sprite;
 	user_sprite.CTRL= FUNC_End;
 	user_sprite.PMOD=0;
@@ -292,7 +232,6 @@ void Video::decodeNBG(const Sprite *spr, uint8_t *dst) {
     while (1) {
         const int code  = *src++;
         const int count = code & 0x3F;
-        // Use & 0xC0 instead of >> 6 — avoids ___ashiftrt_r4_6 JSR every iteration
         const int op    = code & 0xC0;
 
         uint8_t *p           = dst + y * W + x;
@@ -541,7 +480,9 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
     user_sprite.CTRL = FUNC_Sprite | _ZmLT;
     if (hFlip) {
         user_sprite.CTRL |= (1 << 4);
-        user_sprite.XA   -= spr_w - 2;
+//        user_sprite.XA   -= spr_w - 2;
+        user_sprite.XA -= (spr_w - 1 - (w - spr_w));
+
     }
     if (vFlip) {
         user_sprite.CTRL |= (1 << 5);
@@ -551,12 +492,12 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
     slSetSprite(&user_sprite, toFIXED2(240));
     memset(dst2, 0x00, size);
 
-    uint8_t *rowBase = dst2; // hoisted: only updated in case 3
+    uint8_t *rowBase = dst2;
 
     while (1) {
         const int code  = *src++;
         const int count = code & 0x3F;
-        const int op    = code & 0xC0;   // no JSR
+        const int op    = code & 0xC0;
         uint8_t  *p     = rowBase + x;
 
         if (op == 0x00) {                // copy

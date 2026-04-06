@@ -897,7 +897,7 @@ emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, d
 uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
-emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
+//emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 //	assert((unsigned int)num < kMaxScreens);
 	if((unsigned int)num >= kMaxScreens)
 		return;
@@ -905,7 +905,7 @@ emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
-emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
+//emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
 		_lvlFile->seekAlign(baseOffset + num * 16);

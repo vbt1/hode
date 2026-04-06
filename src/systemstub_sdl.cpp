@@ -356,8 +356,8 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 	}
 //	SCU_DMAWait();
 #else
-	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
-	SCU_DMAWait();
+//	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
+//	SCU_DMAWait();
 #endif
 
 //slTransferEntry((void*)buf, (void*)(VDP2_VRAM_A0), 49152);

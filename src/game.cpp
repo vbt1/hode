@@ -421,7 +421,7 @@ void Game::setupBackgroundBitmap() {
 }
 
 void Game::addToSpriteList(Sprite *spr) {
-//	emu_printf("ptr->spriteNum %d type %d w %d h %d\n", spr->num & 0x1F, spr->type, spr->w, spr->h);
+	emu_printf("ptr->spriteNum %d type %d w %d h %d\n", spr->num & 0x1F, spr->type, spr->w, spr->h);
 	_spritesNextPtr = spr->nextPtr;
 	const int index = spr->num & 0x1F;
 	spr->nextPtr = _typeSpritesList[index];
@@ -674,7 +674,7 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	const int h = ptr->height - 1;
 
 	if (ptr->type == 8 && (ptr->spriteNum == 2 || ptr->spriteNum == 0)) {
-//emu_printf("getLvlObjectDataPtr\n");
+//emu_printf("getLvlObjectDataPtr type == 8 && (ptr->spriteNum == 2\n");
 		AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 		dataPtr->boundingBox.x1 = ptr->xPos;
 		dataPtr->boundingBox.y1 = ptr->yPos;
@@ -2142,7 +2142,6 @@ void Game::drawScreen() {
 		}
 	}
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
-	redraw_fg = _currentScreen;
 #ifdef DEBUG
 	unsigned int e12 = g_system->getTimeStamp();
 //	result = e12-e11;
@@ -2344,10 +2343,17 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 			buffer[0] = '0' + (frame_z / 10);
 			buffer[1] = '0' + (frame_z % 10);
 			buffer[2] = 0;
+
+			uint32_t *dst = (uint32_t *)((uint8_t *)VDP2_VRAM_A0 + (Video::W - 24));
+			for (int j = 0; j < 16; ++j) {
+				dst[0] = 0; dst[1] = 0; dst[2] = 0; dst[3] = 0;
+				dst[4] = 0; dst[5] = 0; dst[6] = 0; dst[7] = 0;
+				dst += 128;
+			}
+			_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
 		}
-		_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
-		slSynch();
 		g_system->sleep(delay);
+		slSynch(); // vbt : apres le sleep gagne 3fps
 		frame_x++;
 	}
 	_animBackgroundDataCount = 0;
@@ -2649,7 +2655,8 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 			spr->h = ptr->height;
 			spr->bitmapBits = bitmap;
 			spr->num = num;
-			spr->type = kObjectDataTypeAnimBackgroundData;
+//			spr->type = kObjectDataTypeAnimBackgroundData;
+			spr->type = kObjectDataTypeMonster1;
 			addToSpriteList(spr);
 		}
 	}
@@ -2884,7 +2891,7 @@ void Game::updateInput() {
 		if(_level->_checkpoint < _level->getLastCheckpointNumber())
 		{
 			_level->_checkpoint++;
-			emu_printf("next check point %d\n", _level->_checkpoint);
+//			emu_printf("next check point %d\n", _level->_checkpoint);
 			_level->getCheckpointData(_level->_checkpoint);
 			restartLevel();
 		}
@@ -3058,8 +3065,14 @@ void Game::levelMainLoop() {
 	if (_shakeScreenDuration != 0 || _levelRestartCounter != 0 || _video->_displayShadowLayer) {
 		shakeScreen();
 		_video->updateGameDisplay(_video->_displayShadowLayer ? _video->_shadowLayer : _video->_frontLayer);
-	} else {
+
 		_video->updateGameDisplay(_video->_frontLayer);
+	} else {
+		if(redraw_fg != _currentScreen)
+		{
+			_video->updateGameDisplay(_video->_frontLayer);
+			redraw_fg = _currentScreen;
+		}
 		g_system->shakeScreen(0, 0);
 	}
 	_rnd.update();
@@ -3118,7 +3131,7 @@ Level *Game::createLevel() {
 		_level = Level_dark_create();
 		break;*/
 	}
-emu_printf("createLevel %p\n", _level);
+//emu_printf("createLevel %p\n", _level);
 	return _level;
 }
 
@@ -3290,7 +3303,11 @@ void Game::lvlObjectType0Init(LvlObject *ptr) {
 //emu_printf("declareLvlObject andy num %d\n", num);
 	_andyObject = declareLvlObject(ptr->type, num);
 	if(!_andyObject)
+	{
+		emu_printf("_andyObject broken num %d\n", num);
 		return;
+	}
+	_andyObject->type = kObjectDataTypeAndy;
 	_andyObject->xPos = ptr->xPos;
 	_andyObject->yPos = ptr->yPos;
 	_andyObject->screenNum = ptr->screenNum;
@@ -4464,9 +4481,7 @@ LvlObject *Game::declareLvlObject(uint8_t type, uint8_t num) {
 		ptr->spriteNum = num;
 		ptr->type = type;
 		if (type == 8) {
-//xxxxxxxxxxxxxxxxxxxxx
 			_res->incLvlSpriteDataRefCounter(ptr);
-//xxxxxxxxxxxxxxxxxxx
 			lvlObjectTypeCallback(ptr);
 		}
 		ptr->currentSprite = 0;

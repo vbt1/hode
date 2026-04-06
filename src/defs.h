@@ -173,13 +173,16 @@ struct LvlObject {
 	uint8_t actionKeyMask;
 	uint8_t directionKeyMask;
 	uint16_t currentSprite;
+//#ifdef SOUND
 	uint16_t currentSound; // 24
+//#endif
 	const uint8_t *bitmapBits; // 28
 	int (Game::*callbackFuncPtr)(LvlObject *ptr); // 2C
 	void *dataPtr; // 30
-#ifdef SOUND
-	SssObject *sssObject; // 34
-#endif
+//#ifdef SOUND
+//	SssObject *sssObject; // 34
+	void *sssObject; // 34
+//#endif
 	LvlObjectData *levelData0x2988;
 	Point16_t posTable[8];
 	LvlObject *nextPtr;

@@ -67,7 +67,7 @@ struct Video {
 	void clearPalette();
 	void SAT_loadTitleSprites(const DatSpritesGroup *spriteGroup, const uint8_t *ptr);
 	void SAT_cleanSprites();
-	static void SAT_decodeSPR(const uint8_t *src, uint8_t *dst, int x, int y, uint8_t flags, uint16_t spr_w, uint16_t spr_h);
+	static void SAT_decodeSPR(const uint8_t *src, uint8_t *dst, uint16_t spr_w, uint16_t spr_h);
 	static void decodeRLE(const uint8_t *src, uint8_t *dst, int size);
 	static void decodeSPR(const Sprite *spr, uint8_t *dst);
 	static void decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst);
