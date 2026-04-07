@@ -2,7 +2,8 @@
 #define PAF 1
 #define USE_LESS_RAM 1
 //#define USE_SPRITE 1
-#define DEBUG 1
+//#define OLD_DRAW_SCREEN 1
+//#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1969,7 +1970,8 @@ void Game::updateBackgroundPsx(int num) {
 	}
 }
 #endif
-/*
+
+#ifdef OLD_DRAW_SCREEN
 void Game::drawScreen() {
 #ifdef DEBUG
 //	//emu_printf("------drawScreen\n");
@@ -1980,7 +1982,7 @@ void Game::drawScreen() {
 //	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 
 	memcpy(_video->_backgroundLayer, _video->_backgroundLayer2, Video::W * Video::H);
-	if(_currentScreen != redraw_fg)
+//	if(_currentScreen != redraw_fg)
 		memset(_video->_frontLayer, 0x00, Video::W * Video::H);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
@@ -2152,14 +2154,14 @@ void Game::drawScreen() {
 //	emu_printf("slsynch nb %d\n", nbspr);
 //	slSynch();
 }
-*/
+#else
 
 void Game::drawScreen() {
 #ifdef DEBUG
     unsigned int s1 = g_system->getTimeStamp();
 #endif
     memcpy(_video->_backgroundLayer, _video->_backgroundLayer2, Video::W * Video::H);
-    if (_currentScreen != redraw_fg)
+//    if (_currentScreen != redraw_fg)
         memset(_video->_frontLayer, 0x00, Video::W * Video::H);
 #ifdef DEBUG
     unsigned int e1 = g_system->getTimeStamp();
@@ -2206,8 +2208,29 @@ void Game::drawScreen() {
                 // fallthrough
             case 0x1000:
                 if (spr->type != kObjectDataTypeLvlBackgroundSound) {
+
+#ifdef DISPLAYABDYANIM
+		LvlObjectData *dat = _andyObject->levelData0x2988;
+
+					emu_printf("type %d movesCount %d\n", spr->type, dat->movesCount);
+int sz=0;
+for(int i = 0; i < dat->framesCount;i++)
+{
+		uint16_t w, h;
+		spr->bitmapBits = _res->getLvlSpriteFramePtr(dat, i, &w, &h);
+		spr->w = w;
+		spr->h = h;
+		sz+=(w*h);
+//spr->xPos++;
                     _video->decodeSPR(spr, _video->_frontLayer);
-                } else if (_currentScreen != redraw_fg) {
+					slSynch();
+			g_system->sleep(500);				
+}
+emu_printf("vram %d %x\n", sz, sz);
+#endif
+					_video->decodeSPR(spr, _video->_frontLayer);
+//                } else if (_currentScreen != redraw_fg) {
+                } else {
                     _video->decodeNBG(spr, _video->_frontLayer);
                 }
                 break;
@@ -2267,7 +2290,7 @@ void Game::drawScreen() {
         emu_printf("--duration %s : %d\n", "copyRectWidescreen", result);
 #endif
 }
-
+#endif
 
 #ifdef SOUND
 static void gamePafCallback(void *userdata) {
@@ -3186,10 +3209,10 @@ void Game::levelMainLoop() {
 
 		_video->updateGameDisplay(_video->_frontLayer);
 	} else {
-		if(redraw_fg != _currentScreen)
+//		if(redraw_fg != _currentScreen)
 		{
 			_video->updateGameDisplay(_video->_frontLayer);
-			redraw_fg = _currentScreen;
+//			redraw_fg = _currentScreen;
 		}
 		g_system->shakeScreen(0, 0);
 	}

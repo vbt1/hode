@@ -234,16 +234,16 @@ void Video::decodeNBG(const Sprite *spr, uint8_t *dst) {
         const int count = code & 0x3F;
         const int op    = code & 0xC0;
 
-        uint8_t *p           = dst + y * W + x;
-        const int clippedCount = ((unsigned)y < (unsigned)H) ? count : 0;
+        uint8_t *p      = dst + y * W + x;
+//        const int clippedCount = ((unsigned)y < (unsigned)H) ? count : 0;
 
         if (op == 0x00) {
-            memcpy(p, src, clippedCount);
+            memcpy(p, src, count);
             x   += count;
             src += count;
         } else if (op == 0x40) {
             const int val = *src++;
-            memset(p, val, clippedCount);
+            memset(p, val, count);
             x += count;
         } else if (op == 0x80) {
             x += count ? count : *src++;

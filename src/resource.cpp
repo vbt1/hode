@@ -507,7 +507,9 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 		return 0;
 	}
 
-	assert(src == base + kLvlAnimHdrOffset);
+	if (src != base + kLvlAnimHdrOffset)
+		return 0;
+
 	dat->animsInfoData = base;
 	dat->refCount = 0xFF;
 	dat->framesData = (framesDataOffset == 0) ? 0 : base + framesDataOffset;
@@ -631,6 +633,7 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	_lvlFile->read(ptr, readSize);
 
 	LvlObjectData *dat = &_resLevelData0x2988Table[num];
+	
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
@@ -641,6 +644,8 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 //	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
 //	_resLevelData0x2988SizeTable[num] = 0;
+
+emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount);
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
@@ -993,7 +998,7 @@ const uint8_t *Resource::getLvlSpriteFramePtr(LvlObjectData *dat, int frame, uin
 //	emu_printf("getLvlSpriteFramePtr %d %d\n", frame , dat->framesCount);
 	if(frame >= dat->framesCount)
 		return (uint8_t *)NULL;
-	assert(frame < dat->framesCount);
+//	assert(frame < dat->framesCount);
 	const uint8_t *p = dat->framesData;
 	if (dat->unk0 == 1) {
 		p += frame * 6;
@@ -1692,7 +1697,7 @@ void Resource::loadMstData(File *fp) {
 	_mstScreenAreaByPosIndexData.allocate(_mstHdr.screensCount);
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstScreenAreaByPosIndexData[i] = fp->readUint32();
-emu_printf("_mstScreenAreaByPosIndexData %d value %d\n", i, _mstScreenAreaByPosIndexData[i] );		
+//emu_printf("_mstScreenAreaByPosIndexData %d value %d\n", i, _mstScreenAreaByPosIndexData[i] );		
 		bytesRead += 4;
 	}
 
