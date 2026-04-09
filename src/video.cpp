@@ -29,6 +29,8 @@ Video::Video() {
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
+	if(hwram_work == 0)
+	{
 	hwram_work = allocate_memory (TYPE_HWRAM, 588000+112000);
 //	emu_printf("--hwram_work start %p\n", hwram_work);
 	hwram_work_paf   = hwram_work;
@@ -38,6 +40,7 @@ Video::Video() {
 	_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
 	_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4);
 	_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256);
+	}
 //emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
 
 	if (kUseShadowColorLut) {
@@ -465,6 +468,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
         position_vram = 0;
     TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
     uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
     position_vram += size;
 
     SPRITE user_sprite;

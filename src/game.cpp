@@ -1313,7 +1313,7 @@ void Game::setupScreen(uint8_t num) {
 	}
 	prev = _res->_currentScreenResourceNum;
 	_res->_currentScreenResourceNum = num;
-//emu_printf("setupScreenLvlObjects0 num %d\n", num);
+emu_printf("setupScreenLvlObjects0 num %d\n", num);
 	setupScreenLvlObjects(num);
 //emu_printf("callLevel_preScreenUpdate\n");
 	callLevel_preScreenUpdate(num);
@@ -1332,7 +1332,7 @@ void Game::setupScreen(uint8_t num) {
 	}
 	i = _res->_screensGrid[num][kPosRightScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-//emu_printf("setupScreenLvlObjects1\n");
+emu_printf("setupScreenLvlObjects1 i %d\n", i);
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -1347,7 +1347,7 @@ void Game::setupScreen(uint8_t num) {
 	}
 	i = _res->_screensGrid[num][kPosLeftScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-//emu_printf("setupScreenLvlObjects2\n");
+emu_printf("setupScreenLvlObjects2 %d\n", i);
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -2224,7 +2224,7 @@ for(int i = 0; i < dat->framesCount;i++)
 //spr->xPos++;
                     _video->decodeSPR(spr, _video->_frontLayer);
 					slSynch();
-			g_system->sleep(500);				
+			g_system->sleep(500);
 }
 emu_printf("vram %d %x\n", sz, sz);
 #endif
@@ -2368,7 +2368,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #endif
 //_mstDisabled = true; // vbt : ajout pour test
 #if PAF
-//_paf->_skipCutscenes = true; // vbt : ajout pour test
+_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
 	_mstAndyCurrentScreenNum = -1;
 #ifdef DEMO

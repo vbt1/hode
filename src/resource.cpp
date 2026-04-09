@@ -12,6 +12,7 @@ extern "C" {
 #include "fs.h"
 #include "game.h"
 #include "lzw.h"
+#include "video.h"
 #include "resource.h"
 #include "util.h"
 
@@ -513,6 +514,7 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 	dat->animsInfoData = base;
 	dat->refCount = 0xFF;
 	dat->framesData = (framesDataOffset == 0) ? 0 : base + framesDataOffset;
+emu_printf("dat->spriteNum %d dat->framesData %p offset %d\n", dat->spriteNum, dat->framesData, framesDataOffset);
 	dat->hotspotsData = (hotspotsDataOffset == 0) ? 0 : base + hotspotsDataOffset;
 	dat->movesData = (movesDataOffset == 0) ? 0 : base + movesDataOffset;
 	dat->coordsData = (coordsDataOffset == 0) ? 0 : base + coordsDataOffset;
@@ -626,8 +628,9 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	if(num == 0)
 	ptr = allocate_memory (TYPE_ANDY, size);
 	else
-	
+	{
 	ptr = allocate_memory (TYPE_SPRITE1, size);
+	}
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -635,6 +638,38 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	LvlObjectData *dat = &_resLevelData0x2988Table[num];
 	
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
+
+	if(num == 0)
+	{
+		int sz=0;
+
+emu_printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");		
+		Video *_video = new Video();
+emu_printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");		
+/*
+nouveau bitmap
+    uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
+*/
+
+		for (int i = 0;i<dat->framesCount;i++)	
+		{
+			Sprite spr;
+			uint16_t w, h;
+			spr.bitmapBits = getLvlSpriteFramePtr(dat, i, &w, &h);
+			spr.w = w;
+			spr.h = h;
+			sz+=(w*h);
+			spr.xPos = i;
+			spr.yPos = 0;
+			spr.num = num;
+			spr.type = kObjectDataTypeAndy;
+            _video->decodeSPR(&spr, _video->_frontLayer);
+			slSynch();
+			emu_printf("vram %x\n", sz);
+		}
+		emu_printf("vram %d %x\n", sz, sz);
+	}
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;
@@ -644,7 +679,6 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 //	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
 //	_resLevelData0x2988SizeTable[num] = 0;
-
 emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount);
 }
 
@@ -784,7 +818,6 @@ void Resource::loadLvlSprite(int levelNum)
 emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
 
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
-//	for (int i = 0; i < 1; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}
 }
