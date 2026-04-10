@@ -15,7 +15,7 @@ extern "C" {
 #include "video.h"
 #include "resource.h"
 #include "util.h"
-
+extern Uint32 position_vram;
 uint8_t *cs1ram = (uint8_t *)0x22402000;
 uint8_t *save_cs1ram;
 // load and uncompress .sss pcm on level start
@@ -593,6 +593,59 @@ emu_printf("dat->spriteNum %d dat->framesData %p offset %d\n", dat->spriteNum, d
 	return (dat->framesCount + dat->coordsCount) * sizeof(uint32_t);
 }
 
+void Resource::decodeLvlSpriteData(Sprite *spr)
+{
+    const uint8_t  *src     = spr->bitmapBits;
+    int             x       = 0;
+    int             y       = 0;
+    const uint8_t   spr_h   = spr->h;
+    const uint16_t  w       = (spr->w + 7) & ~7;
+
+    const uint16_t size = w * spr_h;
+    if (position_vram + size >= 0x79000)
+        position_vram = 0;
+    TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
+    uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+	spr->bitmapBits = dst2;
+//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
+    position_vram += size;
+    memset(dst2, 0x00, size);
+
+    uint8_t *rowBase = dst2;
+
+    while (1) {
+        const int code  = *src++;
+        const int count = code & 0x3F;
+        const int op    = code & 0xC0;
+        uint8_t  *p     = rowBase + x;
+
+        if (op == 0x00) {                // copy
+            for (int i = 0; i < count; ++i) {
+                uint8_t val = src[i];
+                p[i] = val - (val == 0); // branchless 0→255
+            }
+            x   += count;
+            src += count;
+        } else if (op == 0x40) {         // fill
+            const uint8_t val = *src++;
+            memset(p, val == 0 ? 255 : val, count);
+            x += count;
+        } else if (op == 0x80) {         // skip x
+            x += count ? count : *src++;
+        } else {                         // new line
+            if (count == 0) {
+                const int n = *src++;
+                if (n == 0) return;
+                y += n;
+            } else {
+                y += count;
+            }
+            x        = *src++;
+            rowBase  = dst2 + y * w;     // multiply only here
+        }
+    }
+}
+
 void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 //	assert((unsigned int)num < kMaxSpriteTypes);
 	if((unsigned int)num >= kMaxSpriteTypes)
@@ -651,7 +704,6 @@ nouveau bitmap
     uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
 	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
 */
-
 		for (int i = 0;i<dat->framesCount;i++)	
 		{
 			Sprite spr;
