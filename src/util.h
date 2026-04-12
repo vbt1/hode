@@ -40,13 +40,14 @@ void warning(const char *msg, ...);
 #define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))
 
 struct __attribute__((__packed__)) SAT_sprite {
-    uint32_t cgaddr : 26;  // 32 bits
-    uint16_t x_flip : 6; 
+    uint16_t cgaddr : 16;  // 32 bits
+//    uint16_t x_flip : 6; 
     uint16_t size : 14;  // 14 bits
 //    int8_t color : 8;  // 8 bits
-    int16_t x : 10;  // 10 bits (values between -512 and +511)
-    int16_t y : 10;  // 10 bits (values between -512 and +511)
-
+    int16_t x : 9;
+    int16_t y : 9;
+    uint8_t w;
+    uint8_t h;
 };
 
 extern "C" {

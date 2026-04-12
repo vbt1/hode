@@ -19,7 +19,7 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_save;
 uint8_t *cs1ram = (uint8_t *)0x22402000;
 uint8_t *save_cs1ram;
-uint16_t andy_vdp2[284];
+SAT_sprite andy_vdp2[284];
 // load and uncompress .sss pcm on level start
 #ifdef SOUND
 static const bool kPreloadSssPcm = false;
@@ -704,7 +704,11 @@ nouveau bitmap
 		{
 			uint16_t w, h;
 			const uint8_t *src = getLvlSpriteFramePtr(dat, i, &w, &h);
-			andy_vdp2[i] = (position_vram/8);
+//			andy_vdp2[i] = (position_vram/8);
+			andy_vdp2[i].cgaddr = (position_vram/8);
+			andy_vdp2[i].w = w;
+			andy_vdp2[i].h = h;
+
 emu_printf("position_vram %x  %d i %d\n", position_vram, position_vram/8, i);
 			decodeLvlSpriteData(src, w, h);
 //            _video->decodeSPR(&spr, _video->_frontLayer);

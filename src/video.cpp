@@ -6,10 +6,6 @@
 //#define USE_SPRITE 1
 extern "C" {
 #include <sl_def.h>
-extern Uint8 *	hwram_work_paf;
-extern Uint32 position_vram;
-extern Uint32 position_vram_save;
-extern Uint16 andy_vdp2[284];
 }
 #include "game.h"
 #include "menu.h"
@@ -19,7 +15,14 @@ extern Uint16 andy_vdp2[284];
 #include "systemstub.h"
 #include "util.h"
 
+extern "C" {
+extern Uint8 *	hwram_work_paf;
+extern Uint32 position_vram;
+extern Uint32 position_vram_save;
+extern SAT_sprite andy_vdp2[284];
 extern SAT_sprite _sprData[4];
+}
+
 static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
@@ -573,7 +576,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 	{
 		emu_printf("it's andy !! num %d w %d h %d type %d\n", 
 		spr->ptr->currentSprite, w, spr_h, spr->type);
-		user_sprite.SRCA = 0x200+andy_vdp2[spr->ptr->currentSprite];
+		user_sprite.SRCA = 0x200+andy_vdp2[spr->ptr->currentSprite].cgaddr;
 		slSetSprite(&user_sprite, toFIXED2(240));
 	}
 	else
