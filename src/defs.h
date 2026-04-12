@@ -240,6 +240,7 @@ struct Sprite {
 	uint16_t w;
 	uint8_t h;
 	uint8_t type;
+	LvlObject *ptr;
 };
 
 struct BoundingBox {

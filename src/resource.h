@@ -681,7 +681,7 @@ struct Resource {
 	void loadLvlData(File *fp);
 	void unloadLvlData();
 	void loadLvlSpriteData(int num, const uint8_t *buf = 0);
-	void decodeLvlSpriteData(Sprite *spr);
+	void decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const uint8_t h);
 	const uint8_t *getLvlScreenMaskDataPtr(int num) const;
 	const uint8_t *getLvlScreenPosDataPtr(int num) const;
 	void loadLvlScreenMaskData();

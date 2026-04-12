@@ -542,6 +542,7 @@ bool Menu::mainLoop() {
 	return ret;
 }
 Uint32 position_vram = 0;
+Uint32 position_vram_save = 0;
 
 void Menu::drawTitleScreen(int option) {
 // vbt : supprimer le redraw permanent

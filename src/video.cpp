@@ -7,6 +7,9 @@
 extern "C" {
 #include <sl_def.h>
 extern Uint8 *	hwram_work_paf;
+extern Uint32 position_vram;
+extern Uint32 position_vram_save;
+extern Uint16 andy_vdp2[284];
 }
 #include "game.h"
 #include "menu.h"
@@ -16,7 +19,6 @@ extern Uint8 *	hwram_work_paf;
 #include "systemstub.h"
 #include "util.h"
 
-extern Uint32 position_vram;
 extern SAT_sprite _sprData[4];
 static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
@@ -29,7 +31,7 @@ Video::Video() {
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
-	if(hwram_work == 0)
+//	if(hwram_work == 0)
 	{
 	hwram_work = allocate_memory (TYPE_HWRAM, 588000+112000);
 //	emu_printf("--hwram_work start %p\n", hwram_work);
@@ -448,7 +450,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 		}
 	}
 }
-
+#if 0
 void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 {
     const uint8_t  *src     = spr->bitmapBits;
@@ -468,7 +470,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
         position_vram = 0;
     TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
     uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
-	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
+//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
     position_vram += size;
 
     SPRITE user_sprite;
@@ -529,7 +531,99 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
         }
     }
 }
+#else
+void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
+{
+    const uint8_t  *src     = spr->bitmapBits;
+    int             x       = 0;
+    int             y       = 0;
+    uint8_t         flags   = ((uint16_t)spr->num >> 14) & 3; // logical shift
+    const uint16_t  spr_w   = spr->w;
+    const uint8_t   spr_h   = spr->h;
+    const int       xAnchor = spr->xPos;
+    const int       yAnchor = spr->yPos;
+    const bool      hFlip   = (flags & kSprHorizFlip) != 0;
+    const bool      vFlip   = (flags & kSprVertFlip)  != 0;
+    const uint16_t  w       = (spr_w + 7) & ~7;
 
+    const uint16_t size = w * spr_h;
+
+
+    SPRITE user_sprite;
+    user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
+    user_sprite.COLR = 0;
+    user_sprite.SIZE = (w / 8) << 8 | spr_h;
+    user_sprite.XA   = ((xAnchor * 5) >> 1) - 319;
+    user_sprite.YA   = yAnchor - 112 + 16;
+    user_sprite.XB   = ((w * 5) >> 1);
+    user_sprite.YB   = spr_h;
+    user_sprite.GRDA = 0;
+    user_sprite.CTRL = FUNC_Sprite | _ZmLT;
+		int pos = user_sprite.XA - (spr_w - 1 - (w - spr_w));
+    if (hFlip) {
+        user_sprite.CTRL |= (1 << 4);
+		user_sprite.XA = (((xAnchor - (w - spr_w)) * 5) >> 1) - 319;
+    }
+    if (vFlip) {
+        user_sprite.CTRL |= (1 << 5);
+        user_sprite.YA   -= spr_h - 1;
+    }
+
+	if(spr->ptr->spriteNum == 0)
+	{
+		emu_printf("it's andy !! num %d\n", spr->ptr->currentSprite);
+		user_sprite.SRCA = 0x200+andy_vdp2[spr->ptr->currentSprite];
+		slSetSprite(&user_sprite, toFIXED2(240));
+	}
+	else
+	{
+		emu_printf("it's not andy !! %d\n",spr->num);
+		if (position_vram + size >= 0x79000)
+			position_vram = position_vram_save;
+		TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
+		user_sprite.SRCA = tx.CGadr;
+	//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
+		position_vram += size;
+		slSetSprite(&user_sprite, toFIXED2(240));
+		uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+		memset(dst2, 0x00, size);
+
+		uint8_t *rowBase = dst2;
+
+		while (1) {
+			const int code  = *src++;
+			const int count = code & 0x3F;
+			const int op    = code & 0xC0;
+			uint8_t  *p     = rowBase + x;
+
+			if (op == 0x00) {                // copy
+				for (int i = 0; i < count; ++i) {
+					uint8_t val = src[i];
+					p[i] = val - (val == 0); // branchless 0→255
+				}
+				x   += count;
+				src += count;
+			} else if (op == 0x40) {         // fill
+				const uint8_t val = *src++;
+				memset(p, val == 0 ? 255 : val, count);
+				x += count;
+			} else if (op == 0x80) {         // skip x
+				x += count ? count : *src++;
+			} else {                         // new line
+				if (count == 0) {
+					const int n = *src++;
+					if (n == 0) return;
+					y += n;
+				} else {
+					y += count;
+				}
+				x        = *src++;
+				rowBase  = dst2 + y * w;     // multiply only here
+			}
+		}
+	}
+}
+#endif
 void Video::decodeRLE(const uint8_t *src, uint8_t *dst, int size) {
 //	emu_printf("decode RLE\n");
 	uint8_t *dstEnd = dst + size;

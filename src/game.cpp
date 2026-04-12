@@ -19,6 +19,7 @@ unsigned char frame_y = 0;
 unsigned char frame_z = 0;
 #endif
 extern Uint32 position_vram;
+extern Uint32 position_vram_save;
 };
 #include "game.h"
 #include "fileio.h"
@@ -440,8 +441,9 @@ void Game::addToSpriteList(LvlObject *ptr) {
 		LvlAnimHeader *ah = (LvlAnimHeader *)(dat->animsInfoData + kLvlAnimHdrOffset) + ptr->anim;
 		LvlAnimSeqHeader *ash = (LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset) + ptr->frame;
 
-		spr->num = (((ash->flags1 ^ ptr->flags1) & 0xFFF0) << 10) | (ptr->flags2 & 0x3FFF);
+		spr->num  = (((ash->flags1 ^ ptr->flags1) & 0xFFF0) << 10) | (ptr->flags2 & 0x3FFF);
 
+		spr->ptr  = ptr;
 		int index = ptr->screenNum;
 		spr->xPos = ptr->xPos;
 		spr->yPos = ptr->yPos;
@@ -2466,7 +2468,7 @@ _paf->_skipCutscenes = true; // vbt : ajout pour test
 	uint8_t last_frame_z = 0xFF;
 	char buffer[8];
 	
-	position_vram = 0;
+	position_vram = position_vram_save;
 
 	while (true) {
 		const int frameTimeStamp = g_system->getTimeStamp() + _frameMs;

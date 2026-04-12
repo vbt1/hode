@@ -16,8 +16,10 @@ extern "C" {
 #include "resource.h"
 #include "util.h"
 extern Uint32 position_vram;
+extern Uint32 position_vram_save;
 uint8_t *cs1ram = (uint8_t *)0x22402000;
 uint8_t *save_cs1ram;
+uint16_t andy_vdp2[284];
 // load and uncompress .sss pcm on level start
 #ifdef SOUND
 static const bool kPreloadSssPcm = false;
@@ -593,25 +595,23 @@ emu_printf("dat->spriteNum %d dat->framesData %p offset %d\n", dat->spriteNum, d
 	return (dat->framesCount + dat->coordsCount) * sizeof(uint32_t);
 }
 
-void Resource::decodeLvlSpriteData(Sprite *spr)
+void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const uint8_t h)
 {
-    const uint8_t  *src     = spr->bitmapBits;
     int             x       = 0;
     int             y       = 0;
-    const uint8_t   spr_h   = spr->h;
-    const uint16_t  w       = (spr->w + 7) & ~7;
+    const uint8_t   spr_h   = h;
+    const uint16_t  spr_w   = (w + 7) & ~7;
 
-    const uint16_t size = w * spr_h;
-    if (position_vram + size >= 0x79000)
-        position_vram = 0;
-    TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
-    uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
-	spr->bitmapBits = dst2;
-//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
+    const uint16_t size = spr_w * spr_h;
+//    if (position_vram + size >= 0x79000)
+//        position_vram = position_vram_save;
+    TEXTURE tx   = TEXDEF(spr_w, spr_h, position_vram);
+    uint8_t *dst = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
+//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst, position_vram);
     position_vram += size;
-    memset(dst2, 0x00, size);
+    memset(dst, 0x00, size);
 
-    uint8_t *rowBase = dst2;
+    uint8_t *rowBase = dst;
 
     while (1) {
         const int code  = *src++;
@@ -641,7 +641,7 @@ void Resource::decodeLvlSpriteData(Sprite *spr)
                 y += count;
             }
             x        = *src++;
-            rowBase  = dst2 + y * w;     // multiply only here
+            rowBase  = dst + y * spr_w;     // multiply only here
         }
     }
 }
@@ -694,33 +694,23 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 
 	if(num == 0)
 	{
-		int sz=0;
-
-emu_printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");		
-		Video *_video = new Video();
-emu_printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");		
 /*
+		Video *_video = new Video();
 nouveau bitmap
     uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
 	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
 */
 		for (int i = 0;i<dat->framesCount;i++)	
 		{
-			Sprite spr;
 			uint16_t w, h;
-			spr.bitmapBits = getLvlSpriteFramePtr(dat, i, &w, &h);
-			spr.w = w;
-			spr.h = h;
-			sz+=(w*h);
-			spr.xPos = i;
-			spr.yPos = 0;
-			spr.num = num;
-			spr.type = kObjectDataTypeAndy;
-            _video->decodeSPR(&spr, _video->_frontLayer);
-			slSynch();
-			emu_printf("vram %x\n", sz);
+			const uint8_t *src = getLvlSpriteFramePtr(dat, i, &w, &h);
+			andy_vdp2[i] = (position_vram/8);
+emu_printf("position_vram %x  %d i %d\n", position_vram, position_vram/8, i);
+			decodeLvlSpriteData(src, w, h);
+//            _video->decodeSPR(&spr, _video->_frontLayer);
 		}
-		emu_printf("vram %d %x\n", sz, sz);
+		position_vram_save = position_vram;
+//		while(1);
 	}
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
@@ -1091,6 +1081,7 @@ const uint8_t *Resource::getLvlSpriteFramePtr(LvlObjectData *dat, int frame, uin
 		*w = READ_LE_UINT16(p + 2);
 		*h = READ_LE_UINT16(p + 4);
 		if (size > 8) {
+//emu_printf("getLvlSpriteFramePtr dat->unk0 == 1\n");
 			return dat->framesData + READ_LE_UINT32(dat->framesOffsetsTable + frame * sizeof(uint32_t));
 		}
 	} else {
@@ -1099,6 +1090,8 @@ const uint8_t *Resource::getLvlSpriteFramePtr(LvlObjectData *dat, int frame, uin
 		*w = READ_LE_UINT16(p + 2);
 		*h = READ_LE_UINT16(p + 4);
 		if (size > 8) {
+//emu_printf("getLvlSpriteFramePtr dat->unk0 != 1\n");
+
 			return p + 6;
 		}
 	}
