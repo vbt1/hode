@@ -569,15 +569,16 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
         user_sprite.YA   -= spr_h - 1;
     }
 
-	if(spr->ptr->spriteNum == 0)
+	if(spr->ptr->spriteNum == 0 && spr->type == 0)
 	{
-		emu_printf("it's andy !! num %d\n", spr->ptr->currentSprite);
+		emu_printf("it's andy !! num %d w %d h %d type %d\n", 
+		spr->ptr->currentSprite, w, spr_h, spr->type);
 		user_sprite.SRCA = 0x200+andy_vdp2[spr->ptr->currentSprite];
 		slSetSprite(&user_sprite, toFIXED2(240));
 	}
 	else
 	{
-		emu_printf("it's not andy !! %d\n",spr->num);
+//		emu_printf("it's not andy !! %d ptr %p\n",spr->num, spr->ptr);
 		if (position_vram + size >= 0x79000)
 			position_vram = position_vram_save;
 		TEXTURE tx   = TEXDEF(w, spr_h, position_vram);

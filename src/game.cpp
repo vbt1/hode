@@ -471,6 +471,7 @@ void Game::addToSpriteList(LvlObject *ptr) {
 		if (ptr->bitmapBits) {
 			spr->w = ptr->width;
 			spr->h = ptr->height;
+			spr->ptr = ptr;
 			spr->bitmapBits = ptr->bitmapBits;
 			spr->type = kObjectDataTypeAndy;
 			addToSpriteList(spr);
@@ -2611,6 +2612,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 				spr->h = READ_LE_UINT16(data + 6);
 				spr->bitmapBits = data + 8;
 			}
+			spr->ptr = ptr;
 			spr->num = ptr->flags2;
 			spr->type = kObjectDataTypeAndy;
 			addToSpriteList(spr);
@@ -2681,6 +2683,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 					spr->yPos = data[1];
 				}
 				spr->type = kObjectDataTypeAndy;
+				spr->ptr = ptr;
 				spr->num = ptr->flags2;
 				addToSpriteList(spr);
 			}
@@ -2742,6 +2745,7 @@ LvlObject *Game::updateAnimatedLvlObjectType1(LvlObject *ptr) {
 				spr->bitmapBits = data + 8;
 				spr->xPos = data[0];
 				spr->yPos = data[1];
+				spr->ptr = ptr;
 				spr->num = ptr->flags2;
 				spr->type = kObjectDataTypeLvlBackgroundSound;
 //				emu_printf("updateAnimatedLvlObjectType1 currentSprite %d dataNum %d ", ptr->currentSprite, ptr->dataNum);
@@ -2792,6 +2796,7 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 		const int num = ((f1 ^ f2) << 14) | ptr->flags2;
 		Sprite *spr = _spritesNextPtr;
 		if (spr && bitmap) {
+			spr->ptr  = ptr;
 			spr->yPos = ptr->yPos;
 			spr->xPos = ptr->xPos;
 			spr->w = ptr->width;
@@ -5209,6 +5214,7 @@ void Game::updateWormHoleSprites() {
 					}
 					if (tmp.bitmapBits) {
 						Sprite *spr = _spritesNextPtr;
+						spr->ptr = &tmp;
 						spr->xPos = tmp.xPos;
 						spr->yPos = tmp.yPos;
 						spr->w = tmp.width;
