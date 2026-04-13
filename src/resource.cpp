@@ -1095,7 +1095,6 @@ const uint8_t *Resource::getLvlSpriteFramePtr(LvlObjectData *dat, int frame, uin
 		*h = READ_LE_UINT16(p + 4);
 		if (size > 8) {
 //emu_printf("getLvlSpriteFramePtr dat->unk0 != 1\n");
-
 			return p + 6;
 		}
 	}

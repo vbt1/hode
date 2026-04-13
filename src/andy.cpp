@@ -1,4 +1,5 @@
 #pragma GCC optimize ("Os")
+#define USE_ANDY_RAM 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -7,7 +8,9 @@
 #include "game.h"
 #include "random.h"
 #include "util.h"
-
+extern "C" {
+extern SAT_sprite andy_vdp2[284];
+}
 // probably rename this to anim.cpp as this updates most LvlObject, not only Andy
 
 static const uint8_t andyOp1LookupTable[] = {
@@ -1545,7 +1548,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 	LvlAnimSeqHeader *ash = ((LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset)) + ptr->frame;
 	LvlAnimSeqFrameHeader *asfh = (LvlAnimSeqFrameHeader *)(dat->animsInfoData + ash->offset);
 	int count = ash->count;
-emu_printf("ash->firstFrame %d\n", ash->firstFrame);
+emu_printf("ash->firstFrame %d sNum %d cnt %d\n", ash->firstFrame, ptr->spriteNum, ah->seqCount);
 	if (count == 0) goto sameAnim;
 //emu_printf("setupAndyObjectMoveData\n");
 	setupAndyObjectMoveData(ptr);
@@ -1614,8 +1617,17 @@ emu_printf("ash->firstFrame %d\n", ash->firstFrame);
 		asfh = &asfh[count];
 
 		uint16_t w, h;
+#ifdef USE_ANDY_RAM
+if(ptr->spriteNum==0)
+{
+		w = andy_vdp2[ash->firstFrame].w;
+		h = andy_vdp2[ash->firstFrame].h;
+}
+else
+#endif
+{
 		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &w, &h);
-
+}
 		ptr->flags1 = ((ptr->flags1 & 0x30) ^ ((asfh->flags & 3) << 4)) | (ptr->flags1 & ~0x30);
 		int type = (ptr->flags1 >> 4) & 3;
 
@@ -1642,8 +1654,17 @@ emu_printf("ash->firstFrame %d\n", ash->firstFrame);
 sameAnim:
 
 		uint16_t frame1_w, frame1_h;
+#ifdef USE_ANDY_RAM
+if(ptr->spriteNum==0 && ptr->type == 8)
+{
+		frame1_w = andy_vdp2[ash->firstFrame].w;
+		frame1_h = andy_vdp2[ash->firstFrame].h;
+}
+else
+#endif
+{
 		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame1_w, &frame1_h);
-
+}
 		++currentAnimFrame;
 		if (currentAnimFrame >= ah->seqCount) {
 			currentAnimFrame = 0;
@@ -1652,8 +1673,17 @@ sameAnim:
 		ash = (LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset) + currentAnimFrame;
 
 		uint16_t frame2_w, frame2_h;
+#ifdef USE_ANDY_RAM
+if(ptr->spriteNum==0 && ptr->type == 8)
+{
+		frame2_w = andy_vdp2[ash->firstFrame].w;
+		frame2_h = andy_vdp2[ash->firstFrame].h;
+}
+else
+#endif
+{
 		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame2_w, &frame2_h);
-
+}
 		int dw = frame2_w - frame1_w;
 		int dh = frame2_h - frame1_h;
 
@@ -1691,7 +1721,20 @@ sameAnim:
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
 //emu_printf("getLvlSpriteFramePtr\n");
+#ifdef USE_ANDY_RAM
+if(ptr->spriteNum==0 && ptr->type == 8)
+{
+//	ptr->bitmapBits = (const uint8_t *)0x99999;
+//	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
+//emu_printf("w %d h %d w2 %d h2 %d tp %d\n", andy_vdp2[ash->firstFrame].w, andy_vdp2[ash->firstFrame].h, ptr->width, ptr->height, ptr->type);
+	ptr->width = andy_vdp2[ash->firstFrame].w;
+	ptr->height = andy_vdp2[ash->firstFrame].h;
+}
+else
+#endif
+{
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
+}
 	LvlSprHotspotData *hs = ((LvlSprHotspotData *)dat->hotspotsData) + ash->firstFrame;
 
 	if (_andyUpdatePositionFlag) {

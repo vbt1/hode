@@ -32,6 +32,9 @@ extern Uint32 position_vram_save;
 #include "util.h"
 #include "video.h"
 
+extern "C" {
+extern SAT_sprite andy_vdp2[284];
+}
 // starting level cutscene number
 static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
 static uint8_t redraw_fg = 255;
@@ -468,10 +471,14 @@ void Game::addToSpriteList(LvlObject *ptr) {
 			AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 			spr->xPos += dataPtr->dxPos;
 		}
-		if (ptr->bitmapBits) {
+//		if (ptr->bitmapBits)
+		if(ptr->spriteNum==0 || ptr->bitmapBits)
+		{
+// vbt : pour le calcul de l'ombre
 			spr->w = ptr->width;
 			spr->h = ptr->height;
 			spr->ptr = ptr;
+// vbt : mettre l'adresse du sprite en vram
 			spr->bitmapBits = ptr->bitmapBits;
 			spr->type = kObjectDataTypeAndy;
 			addToSpriteList(spr);
@@ -671,8 +678,17 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
-emu_printf("getLvlSpriteFramePtr %d\n", ash->firstFrame);
+	
+	if(ptr->spriteNum==0)
+	{
+	ptr->width = andy_vdp2[ash->firstFrame].w;
+	ptr->height = andy_vdp2[ash->firstFrame].h;
+	}
+	else
+	{
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
+	}
+emu_printf("getLvlSpriteFramePtr %d w %d h %d snum %d\n", ash->firstFrame, ptr->width, ptr->height, ptr->spriteNum);
 
 	const int w = ptr->width - 1;
 	const int h = ptr->height - 1;
