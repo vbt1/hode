@@ -1548,7 +1548,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 	LvlAnimSeqHeader *ash = ((LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset)) + ptr->frame;
 	LvlAnimSeqFrameHeader *asfh = (LvlAnimSeqFrameHeader *)(dat->animsInfoData + ash->offset);
 	int count = ash->count;
-emu_printf("ash->firstFrame %d sNum %d cnt %d\n", ash->firstFrame, ptr->spriteNum, ah->seqCount);
+//emu_printf("ash->firstFrame %d sNum %d cnt %d\n", ash->firstFrame, ptr->spriteNum, ah->seqCount);
 	if (count == 0) goto sameAnim;
 //emu_printf("setupAndyObjectMoveData\n");
 	setupAndyObjectMoveData(ptr);

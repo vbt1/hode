@@ -1,6 +1,7 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
 #define USE_LESS_RAM 1
+//#define DISPLAYANDYANIM 1
 //#define USE_SPRITE 1
 //#define OLD_DRAW_SCREEN 1
 //#define DEBUG 1
@@ -688,13 +689,13 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	{
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 	}
-emu_printf("getLvlSpriteFramePtr %d w %d h %d snum %d\n", ash->firstFrame, ptr->width, ptr->height, ptr->spriteNum);
+//emu_printf("getLvlSpriteFramePtr %d w %d h %d snum %d\n", ash->firstFrame, ptr->width, ptr->height, ptr->spriteNum);
 
 	const int w = ptr->width - 1;
 	const int h = ptr->height - 1;
 
 	if (ptr->type == 8 && (ptr->spriteNum == 2 || ptr->spriteNum == 0)) {
-emu_printf("getLvlObjectDataPtr type == 8 && (ptr->spriteNum == 2\n");
+//emu_printf("getLvlObjectDataPtr type == 8 && (ptr->spriteNum == 2\n");
 		AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 		dataPtr->boundingBox.x1 = ptr->xPos;
 		dataPtr->boundingBox.y1 = ptr->yPos;
@@ -1021,7 +1022,7 @@ endDir:
 }
 
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
-emu_printf("preloadLevelScreenData num %d\n", num);
+//emu_printf("preloadLevelScreenData num %d\n", num);
 	if(num == kNoScreen)
 		return;
 
@@ -1212,7 +1213,7 @@ void Game::setupAndyLvlObject() {
 	_currentLeftScreen = _res->_screensGrid[_currentScreen][kPosLeftScreen];
 	_currentRightScreen = _res->_screensGrid[_currentScreen][kPosRightScreen];
 
-emu_printf("init current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
+//emu_printf("init current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 
 	ptr->frame = 0;
 	setupLvlObjectBitmap(ptr);
@@ -1332,7 +1333,7 @@ void Game::setupScreen(uint8_t num) {
 	}
 	prev = _res->_currentScreenResourceNum;
 	_res->_currentScreenResourceNum = num;
-emu_printf("setupScreenLvlObjects0 num %d\n", num);
+//emu_printf("setupScreenLvlObjects0 num %d\n", num);
 	setupScreenLvlObjects(num);
 //emu_printf("callLevel_preScreenUpdate\n");
 	callLevel_preScreenUpdate(num);
@@ -2228,7 +2229,7 @@ void Game::drawScreen() {
             case 0x1000:
                 if (spr->type != kObjectDataTypeLvlBackgroundSound) {
 
-#ifdef DISPLAYABDYANIM
+#ifdef DISPLAYANDYANIM
 		LvlObjectData *dat = _andyObject->levelData0x2988;
 
 					emu_printf("type %d movesCount %d\n", spr->type, dat->movesCount);
@@ -2240,7 +2241,7 @@ for(int i = 0; i < dat->framesCount;i++)
 		spr->w = w;
 		spr->h = h;
 		sz+=(w*h);
-//spr->xPos++;
+spr->xPos++;
                     _video->decodeSPR(spr, _video->_frontLayer);
 					slSynch();
 			g_system->sleep(500);

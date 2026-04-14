@@ -136,7 +136,7 @@ emu_printf("_version = V1_2\n");
 	else 
 #endif
 	{
-emu_printf("_version NOT V1_2\n");
+//emu_printf("_version NOT V1_2\n");
 		_datFile = new File;
 		_lvlFile = new File;
 		_mstFile = new File;
@@ -166,7 +166,7 @@ emu_printf("_version NOT V1_2\n");
 	char filename[16];
 	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
 	if (openDat(_fs, filename, _lvlFile)) {
-emu_printf("NOT DEMO %s\n", filename);
+//emu_printf("NOT DEMO %s\n", filename);
 		closeDat(_fs, _lvlFile);
 	} else {
 ////emu_printf("DEMO\n");
@@ -516,7 +516,7 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 	dat->animsInfoData = base;
 	dat->refCount = 0xFF;
 	dat->framesData = (framesDataOffset == 0) ? 0 : base + framesDataOffset;
-emu_printf("dat->spriteNum %d dat->framesData %p offset %d\n", dat->spriteNum, dat->framesData, framesDataOffset);
+//emu_printf("dat->spriteNum %d dat->framesData %p offset %d\n", dat->spriteNum, dat->framesData, framesDataOffset);
 	dat->hotspotsData = (hotspotsDataOffset == 0) ? 0 : base + hotspotsDataOffset;
 	dat->movesData = (movesDataOffset == 0) ? 0 : base + movesDataOffset;
 	dat->coordsData = (coordsDataOffset == 0) ? 0 : base + coordsDataOffset;
@@ -564,7 +564,7 @@ emu_printf("dat->spriteNum %d dat->framesData %p offset %d\n", dat->spriteNum, d
 	if (dat->unk0 == 1) { // fixed size offset table
 		assert(isPsx);
 	//emu_printf("here\n");
-	while(1);
+
 		dat->framesOffsetsTable = (uint8_t *)malloc(dat->framesCount * sizeof(uint32_t));
 		uint32_t framesOffset = 6 * dat->framesCount;
 		if (READ_LE_UINT16(dat->framesData + framesOffset) == 0) {
@@ -694,12 +694,9 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 
 	if(num == 0)
 	{
-/*
+
 		Video *_video = new Video();
-nouveau bitmap
-    uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
-	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
-*/
+
 		for (int i = 0;i<dat->framesCount;i++)	
 		{
 			uint16_t w, h;
@@ -709,9 +706,20 @@ nouveau bitmap
 			andy_vdp2[i].w = w;
 			andy_vdp2[i].h = h;
 
-emu_printf("position_vram %x  %d i %d\n", position_vram, position_vram/8, i);
+//emu_printf("position_vram %x  %d i %d\n", position_vram, position_vram/8, i);
 			decodeLvlSpriteData(src, w, h);
-//            _video->decodeSPR(&spr, _video->_frontLayer);
+/*
+			LvlObject ptr;
+			Sprite spr;
+			spr.w = w;
+			spr.h = h;
+			spr.ptr->spriteNum = 0;
+			spr.ptr->currentSprite = i;
+			spr.type = 0;
+			spr.ptr = 0;
+			spr.num = 1240;			
+            _video->decodeSPR(&spr, _video->_frontLayer);
+			slSynch();*/
 		}
 		position_vram_save = position_vram;
 //		while(1);
@@ -915,7 +923,7 @@ void Resource::unloadLvlData() {
 }
 
 static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat, bool isPsx) {
-emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
+//emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
 	const uint8_t *start = src;
 
 	dat->backgroundCount = *src++;

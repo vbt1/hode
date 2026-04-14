@@ -34,7 +34,7 @@ Video::Video() {
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
 #if 1
-//	if(hwram_work == 0)
+	if(hwram_work == 0)
 	{
 	hwram_work = allocate_memory (TYPE_HWRAM, 588000+112000);
 //	emu_printf("--hwram_work start %p\n", hwram_work);
@@ -271,81 +271,64 @@ void Video::decodeNBG(const Sprite *spr, uint8_t *dst) {
 void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 {
     const uint8_t  *src   = spr->bitmapBits;
-    int       x     = spr->xPos;
-    int       y     = spr->yPos;
-    uint8_t   flags = (spr->num >> 0xE) & 3;
-    const uint16_t  spr_w = spr->w;
+    const int      xOrig = spr->xPos;
+    const int      yOrig = spr->yPos;
+    uint8_t        flags = (spr->num >> 0xE) & 3;
+    const uint16_t spr_w = spr->w;
     const uint8_t  spr_h = spr->h;
-//	const uint8_t   type = spr->type;
+    const bool     compressed = !(spr->ptr->spriteNum == 0 && spr->type == 0);
 
-	if (y >= H) return;
-	else if (y < 0) flags |= kSprClipTop;
-	const int y2 = y + spr_h - 1;
+	if (yOrig >= H) return;
+	else if (yOrig < 0) flags |= kSprClipTop;
+	const int y2 = yOrig + spr_h - 1;
 	if (y2 < 0) return;
 	else if (y2 >= H) flags |= kSprClipBottom;
-	if (x >= W) return;
-	else if (x < 0) flags |= kSprClipLeft;
-	const int x2 = x + spr_w - 1;
+	if (xOrig >= W) return;
+	else if (xOrig < 0) flags |= kSprClipLeft;
+	const int x2 = xOrig + spr_w - 1;
 	if (x2 < 0) return;
 	else if (x2 >= W) flags |= kSprClipRight;
-#ifdef USE_SPRITE
-	const int xAnchor = x;
-	const int yAnchor = y;
-#endif
-
-	if (flags & kSprHorizFlip) x = x2;
-	if (flags & kSprVertFlip)  y = y2;
-#ifdef USE_SPRITE
-	const uint16_t w_raw = spr_w;
-	const uint16_t w     = (w_raw + 7) & ~7;
-	const uint16_t h     = spr_h;
-	const uint16_t size  = w * h;
-	if (position_vram + size >= 0x79000)
-		position_vram = 0;
-	TEXTURE tx = TEXDEF(w, h, position_vram);
-	uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
-	position_vram += size;
-	SPRITE user_sprite;
-	user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
-	user_sprite.COLR = 0;
-	user_sprite.SIZE = (w / 8) << 8 | h;
-	user_sprite.CTRL = (FUNC_Sprite | _ZmLT);
-	user_sprite.XA   = ((xAnchor * 5) >> 1) - 320;
-	user_sprite.YA   = yAnchor - 112 + 16;
-	user_sprite.XB   = (w * 5) >> 1;
-	user_sprite.YB   = spr_h;
-	user_sprite.GRDA = 0;
-	user_sprite.SRCA = tx.CGadr;
-	slSetSprite(&user_sprite, toFIXED2(240));
-	memset(dst2, 0x00, size);
-	int ix2 = (flags & kSprHorizFlip) ? (w_raw - 1) : 0;
-	int iy2 = (flags & kSprVertFlip)  ? (h - 1) : 0;
-	const int ix2Orig = ix2;
-#endif
-	const int xOrig = x;
 
 	const bool hFlip = (flags & kSprHorizFlip) != 0;
 	const bool vFlip = (flags & kSprVertFlip) != 0;
-#ifndef USE_SPRITE
+
+	if (!compressed) {
+		src = (uint8_t *)SpriteVRAM + (0x200+andy_vdp2[spr->ptr->currentSprite].cgaddr) * 8;
+		const uint16_t spr_w_padded = (spr_w + 7) & ~7;
+		for (int iy = 0; iy < spr_h; ++iy) {
+			const int dstY = vFlip ? (y2 - iy) : (yOrig + iy);
+			for (int ix = 0; ix < spr_w; ++ix) {
+				const int srcX = hFlip ? (spr_w - 1 - ix) : ix;
+				const int dstX = xOrig + ix;
+				const uint8_t pixel = src[iy * spr_w_padded + srcX];
+				if (dstY >= 0 && dstY < H && dstX >= 0 && dstX < W) {
+					dst[dstY * W + dstX] = pixel;
+//					if (bg && pixel == 0)
+//						bg[dstY * W + dstX] = 0;
+				}
+			}
+		}
+		return;
+	}
+
+	/* ---- COMPRESSED ---- */
+	int x = hFlip ? x2 : xOrig;
+	int y = vFlip ? y2 : yOrig;
+	const int xStart = x;
+
 	const uint8_t clipFlags = flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight);
-#endif
+
 	while (1) {
-#ifndef USE_SPRITE
 		uint8_t *p = dst + y * W + x;
-#else
-		uint8_t *p2 = dst2 + iy2 * w + ix2;
-#endif
 		int code  = *src++;
 		int count = code & 0x3F;
-#ifndef USE_SPRITE
 		int clippedCount = count;
 		if (y < 0 || y >= H)
 			clippedCount = 0;
-#endif
+
 		switch (code >> 6) {
-/* ---------- COPY ---------- */
+		/* ---------- COPY ---------- */
 		case 0:
-#ifndef USE_SPRITE
 			if (clipFlags == 0) {
 				memcpy(p, src, clippedCount);
 				if (bg && y >= 0 && y < H) {
@@ -371,22 +354,11 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 					}
 				x += count;
 			}
-#else
-			if (!hFlip) {
-				memcpy(p2, src, count);
-				ix2 += count;
-			} else {
-				for (int i = 0; i < count; ++i)
-					p2[-i] = src[i];
-				ix2 -= count;
-			}
-#endif
 			src += count;
 			break;
-/* ---------- FILL ---------- */
+		/* ---------- FILL ---------- */
 		case 1:
 			code = *src++;
-#ifndef USE_SPRITE
 			if (clipFlags == 0) {
 				memset(p, code, clippedCount);
 				if (bg && code == 0 && y >= 0 && y < H) {
@@ -412,25 +384,11 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 					}
 				x += count;
 			}
-#else
-			if (!hFlip) {
-				memset(p2, code, count);
-				ix2 += count;
-			} else {
-				for (int i = 0; i < count; ++i)
-					p2[-i] = code;
-				ix2 -= count;
-			}
-#endif
 			break;
 		/* ---------- SKIP X ---------- */
 		case 2:
 			if (count == 0) count = *src++;
-#ifdef USE_SPRITE
-			ix2 += hFlip ? -count : count;
-#else
-			x   += hFlip ? -count : count;
-#endif
+			x += hFlip ? -count : count;
 			break;
 		/* ---------- NEW LINE ---------- */
 		case 3:
@@ -438,17 +396,9 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 				count = *src++;
 				if (count == 0) return;
 			}
-#ifdef USE_SPRITE
-			iy2 += vFlip ? -count : count;
-#else
-			y   += vFlip ? -count : count;
-#endif
+			y += vFlip ? -count : count;
 			uint8_t dx = *src++;
-#ifdef USE_SPRITE
-			ix2 = hFlip ? (ix2Orig - dx) : (ix2Orig + dx);
-#else
-			x   = hFlip ? (xOrig - dx) : (xOrig + dx);
-#endif
+			x = hFlip ? (xStart - dx) : (xStart + dx);
 			break;
 		}
 	}
@@ -574,8 +524,8 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 
 	if(spr->ptr->spriteNum == 0 && spr->type == 0)
 	{
-		emu_printf("it's andy !! num %d w %d h %d type %d\n", 
-		spr->ptr->currentSprite, w, spr_h, spr->type);
+//		emu_printf("it's andy !! num %d w %d h %d type %d\n", 
+//		spr->ptr->currentSprite, w, spr_h, spr->type);
 		user_sprite.SRCA = 0x200+andy_vdp2[spr->ptr->currentSprite].cgaddr;
 		slSetSprite(&user_sprite, toFIXED2(240));
 	}

@@ -26,7 +26,7 @@ void* operator new(size_t size) {
 	ptr = malloc(size);
 	amount+=size;
 //	hwram_work = (uint8_t*)sbrk(0);
-	emu_printf("amount %d\n", amount);
+//	emu_printf("amount %d\n", amount);
 	}
 	else
 	{

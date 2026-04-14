@@ -17,6 +17,8 @@ extern "C" {
 void *memset4_fast(void *, long, size_t);
 void 	free(void *ptr);
 void	*malloc(size_t);
+extern Uint32 position_vram;
+extern Uint32 position_vram_save;
 }
 
 #include <ctype.h>
@@ -374,10 +376,11 @@ int ss_main() {
 			level = g->_currentLevel + 1;
 			checkpoint = 0;
 			levelChanged = true;
-emu_printf("lwram used %d cs1 used %d\n", 0x300000-((int)current_lwram), ((int)cs1ram)-0x22400000);
+//emu_printf("lwram used %d cs1 used %d\n", 0x300000-((int)current_lwram), ((int)cs1ram)-0x22400000);
 			current_lwram = (uint8_t *)save_current_lwram;
-emu_printf("main reset cs1ram\n");
+//emu_printf("main reset cs1ram\n");
 			cs1ram = (uint8_t *)save_cs1ram;
+			position_vram = position_vram_save = 0;
 		}
 	} while (!g_system->inp.quit && resume && !isPsx); // do not return to menu when starting from a specific level checkpoint
 

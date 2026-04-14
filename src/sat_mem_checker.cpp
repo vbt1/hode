@@ -61,8 +61,11 @@ emu_printf("type %d size %d\n", type, alignedSize);
         hwram     = hwram_src + alignedSize;
         return hwram_src;
 
-    case TYPE_BGLVL:
     case TYPE_ANDY:
+		return bump (&cs1ram,2048*22);  //sizeof(LvlObjectData)
+//		return bump(&cs1ram, alignedSize);
+
+    case TYPE_BGLVL:
 //        return bump(&current_lwram, alignedSize);
        return bump(&cs1ram, alignedSize);
 
