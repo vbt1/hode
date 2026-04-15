@@ -36,26 +36,28 @@ Video::Video() {
 #if 1
 	if(hwram_work == 0)
 	{
-	hwram_work = allocate_memory (TYPE_HWRAM, 588000+112000);
-//	emu_printf("--hwram_work start %p\n", hwram_work);
-	hwram_work_paf   = hwram_work;
-	_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
-	_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
-	_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
-	_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
-	_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4);
-	_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256);
-	}
-//emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+110000);
+	//	emu_printf("--hwram_work start %p\n", hwram_work);
+		hwram_work_paf   = hwram_work;
+		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
+		_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
+		_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
+		_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
+		_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4);
+		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256);
 
-	if (kUseShadowColorLut) {
-//		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
-		_shadowColorLookupTable = allocate_memory (TYPE_SHADWLUT, 256 * 256);
-	} else {
-		_shadowColorLookupTable = 0;
+	//emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
+
+		if (kUseShadowColorLut) {
+	//		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
+			_shadowColorLookupTable = allocate_memory (TYPE_SHADWLUT, 256 * 256);
+		} else {
+			_shadowColorLookupTable = 0;
+		}
+		emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
+		hwram_work = hwram_work_paf;
 	}
-//emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
-	hwram_work = hwram_work_paf;
+
 //	_shadowScreenMaskBuffer = (uint8_t *)malloc(256 * 192 * 2 + 256 * 4);
 //	_shadowScreenMaskBuffer = allocate_memory (TYPE_SCRMASKBUF, 256 * 192 * 2 + 256 * 4);
 	for (int i = 144; i < 256; ++i) {

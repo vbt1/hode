@@ -3,7 +3,7 @@
 #define USE_LESS_RAM 1
 //#define DISPLAYANDYANIM 1
 //#define USE_SPRITE 1
-//#define OLD_DRAW_SCREEN 1
+#define OLD_DRAW_SCREEN 1
 //#define DEBUG 1
 /*
  * Heart of Darkness engine rewrite
@@ -1509,7 +1509,7 @@ int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
 			ptr->yPos = yPosPrev;
 			ret = -1;
 		} else if (ptr->screenNum != num) {
-			emu_printf("Changing screen from %d to %d, pos=%d,%d\n", num, ptr->screenNum, xPos, yPos);
+//			emu_printf("Changing screen from %d to %d, pos=%d,%d\n", num, ptr->screenNum, xPos, yPos);
 			ret = 1;
 			AndyLvlObjectData *data = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 			data->boundingBox.x1 = ptr->xPos;
@@ -1520,7 +1520,7 @@ int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
 			_currentScreen = ptr->screenNum;
 			_currentLeftScreen = _res->_screensGrid[_currentScreen][kPosLeftScreen];
 			_currentRightScreen = _res->_screensGrid[_currentScreen][kPosRightScreen];
-			emu_printf("current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
+//			emu_printf("current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 		}
 	}
 	return ret;
@@ -2386,7 +2386,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-//_mstDisabled = true; // vbt : ajout pour test
+_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 _paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2497,7 +2497,7 @@ _paf->_skipCutscenes = true; // vbt : ajout pour test
 			break;
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
-
+#ifdef DEBUG
 		if (frame_z != last_frame_z) {
 			last_frame_z = frame_z;
 
@@ -2513,6 +2513,7 @@ _paf->_skipCutscenes = true; // vbt : ajout pour test
 			}
 			_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
 		}
+#endif
 		g_system->sleep(delay);
 		slSynch(); // vbt : apres le sleep gagne 3fps
 		frame_x++;
@@ -3490,7 +3491,9 @@ void Game::lvlObjectType1Init(LvlObject *ptr) {
 		return;
 	}
 	LvlObject *o = declareLvlObject(8, 1);
-	assert(o);
+//	assert(o);
+	if(!o)
+		return;
 	o->xPos = ptr->xPos;
 	o->yPos = ptr->yPos;
 	o->anim = 13;
@@ -3501,7 +3504,6 @@ void Game::lvlObjectType1Init(LvlObject *ptr) {
 	setupLvlObjectBitmap(o);
 	o->nextPtr = _plasmaExplosionObject;
 	_plasmaExplosionObject = o;
-
 	o = declareLvlObject(8, 1);
 	assert(o);
 	dataPtr->shootLvlObject = o;
