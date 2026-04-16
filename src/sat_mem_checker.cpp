@@ -73,19 +73,15 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_RES:
     case TYPE_SHOOT:
     case TYPE_LAYER:
+    case TYPE_MSTCODE:
     case TYPE_SHADWLUT:
-        // Note: no SAT_ALIGN here — matches original
-        { 
-		uint8_t *dst = hwram_work; 
-		hwram_work += alignedSize; 
+		hwram_work += alignedSize; // vbt : ne pas utiliser bump !!!
 
 		if ((int)hwram_work > (int)hwram) {
 			emu_printf("ERROR: hwram_work overflow! Requested: %d bytes\n", alignedSize);
-			return nullptr; // Ou gérer l'erreur
+			return nullptr;
 		}
-
 		return hwram_work; 
-		}
   // retour des bugs sur sprites
     case TYPE_SPRITE1:
     case TYPE_MOVBOUND:
@@ -102,9 +98,8 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_MSTAREA:
 //   case TYPE_MAP:
 //    case TYPE_SHOOT:
-    case TYPE_MSTCODE:
+//    case TYPE_MSTCODE:
 //    case TYPE_GFSFILE:
-
     case TYPE_SCRMASK:
     case TYPE_SCRMASKBUF:
     case TYPE_BGLVLOBJ:
