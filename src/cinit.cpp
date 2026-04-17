@@ -108,7 +108,7 @@ int	main( void )
 	slPriorityNbg0(2);
 //	slPrioritySpr0(7);
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
-
+		slWindow(0 , 32 , 640 , 224 , 241 ,320 , 224);
 #ifdef LINEAR_BITMAP
 
 #define LINE_SCROLL_TBL_ADDR (VDP2_VRAM_A0+0x1f000)

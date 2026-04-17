@@ -558,7 +558,7 @@ void Menu::drawTitleScreen(int option) {
     user_sprite.YA = _sprData[option].y;
 #else
 	user_sprite.CTRL = (FUNC_Sprite | _ZmLT);//FUNC_Sprite | 0x1f00;
-    user_sprite.YA = _sprData[option].y + 16;
+    user_sprite.YA = _sprData[option].y + 15;
 	user_sprite.XA = ((_sprData[option].x * 5) >> 1) -317;
 
 	uint32_t w = (_sprData[option].size >> 8) * 8;  // restore width

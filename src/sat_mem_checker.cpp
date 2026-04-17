@@ -63,7 +63,7 @@ emu_printf("type %d size %d\n", type, alignedSize);
 		return bump (&hwram_work,2048*22);
 //		return bump(&cs1ram, alignedSize);
 //       return bump(&hwram_work, alignedSize);
-	   
+
     case TYPE_BGLVL:
 //        return bump(&current_lwram, alignedSize);
 //        return current_lwram+2000;
@@ -73,8 +73,8 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_RES:
     case TYPE_SHOOT:
     case TYPE_LAYER:
-    case TYPE_MSTCODE:
-    case TYPE_SHADWLUT:
+//    case TYPE_MSTCODE:
+//    case TYPE_SHADWLUT:
 		hwram_work += alignedSize; // vbt : ne pas utiliser bump !!!
 
 		if ((int)hwram_work > (int)hwram) {
@@ -98,7 +98,7 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_MSTAREA:
 //   case TYPE_MAP:
 //    case TYPE_SHOOT:
-//    case TYPE_MSTCODE:
+    case TYPE_MSTCODE:
 //    case TYPE_GFSFILE:
     case TYPE_SCRMASK:
     case TYPE_SCRMASKBUF:

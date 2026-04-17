@@ -433,7 +433,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
     user_sprite.COLR = 0;
     user_sprite.SIZE = (w / 8) << 8 | spr_h;
     user_sprite.XA   = ((xAnchor * 5) >> 1) - 319;
-    user_sprite.YA   = yAnchor - 112 + 16;
+    user_sprite.YA   = yAnchor - 112 + 15;
     user_sprite.XB   = ((w * 5) >> 1);
     user_sprite.YB   = spr_h;
     user_sprite.GRDA = 0;
@@ -509,7 +509,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
     user_sprite.COLR = 0;
     user_sprite.SIZE = (w / 8) << 8 | spr_h;
     user_sprite.XA   = ((xAnchor * 5) >> 1) - 319;
-    user_sprite.YA   = yAnchor - 112 + 16;
+    user_sprite.YA   = yAnchor - 112 + 15;
     user_sprite.XB   = ((w * 5) >> 1);
     user_sprite.YB   = spr_h;
     user_sprite.GRDA = 0;
