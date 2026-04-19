@@ -14,12 +14,14 @@ extern "C" {
 #include "system.h"
 #include "systemstub.h"
 #include "util.h"
-
+//#define PRELOAD_ANDY 1
 extern "C" {
 extern Uint8 *	hwram_work_paf;
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
+#ifdef PRELOAD_ANDY
 extern SAT_sprite andy_vdp2[284];
+#endif
 extern SAT_sprite _sprData[4];
 }
 
@@ -36,7 +38,7 @@ Video::Video() {
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+110000);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000);
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
@@ -278,8 +280,9 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
     uint8_t        flags = (spr->num >> 0xE) & 3;
     const uint16_t spr_w = spr->w;
     const uint8_t  spr_h = spr->h;
+#ifdef PRELOAD_ANDY
     const bool     compressed = !(spr->ptr->spriteNum == 0 && spr->type == 0);
-
+#endif
 	if (yOrig >= H) return;
 	else if (yOrig < 0) flags |= kSprClipTop;
 	const int y2 = yOrig + spr_h - 1;
@@ -293,7 +296,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 
 	const bool hFlip = (flags & kSprHorizFlip) != 0;
 	const bool vFlip = (flags & kSprVertFlip) != 0;
-
+#ifdef PRELOAD_ANDY
 	if (!compressed) {
 		src = (uint8_t *)SpriteVRAM + (0x200+andy_vdp2[spr->ptr->currentSprite].cgaddr) * 8;
 		const uint16_t spr_w_padded = (spr_w + 7) & ~7;
@@ -312,7 +315,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 		}
 		return;
 	}
-
+#endif
 	/* ---- COMPRESSED ---- */
 	int x = hFlip ? x2 : xOrig;
 	int y = vFlip ? y2 : yOrig;
@@ -523,7 +526,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
         user_sprite.CTRL |= (1 << 5);
         user_sprite.YA   -= spr_h - 1;
     }
-
+#ifdef PRELOAD_ANDY
 	if(spr->ptr->spriteNum == 0 && spr->type == 0)
 	{
 //		emu_printf("it's andy !! num %d w %d h %d type %d\n", 
@@ -532,6 +535,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 		slSetSprite(&user_sprite, toFIXED2(240));
 	}
 	else
+#endif
 	{
 //		emu_printf("it's not andy !! %d ptr %p\n",spr->num, spr->ptr);
 		if (position_vram + size >= 0x79000)
@@ -811,6 +815,7 @@ void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 		}
 	}
 	memcpy(_shadowColorLut, src, 144); // indexes 144-256 are not remapped
+/*
 	if (0) {
 		// lookup[a * 256 + b]
 		//
@@ -830,6 +835,7 @@ void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 			}
 		}
 	}
+*/
 }
 
 // returns the font index

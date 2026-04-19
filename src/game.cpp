@@ -33,9 +33,12 @@ extern Uint32 position_vram_save;
 #include "util.h"
 #include "video.h"
 
+//#define PRELOAD_ANDY 1 
+#ifdef PRELOAD_ANDY
 extern "C" {
 extern SAT_sprite andy_vdp2[284];
 }
+#endif
 // starting level cutscene number
 static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
 static uint8_t redraw_fg = 255;
@@ -679,13 +682,14 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
-	
+#ifdef PRELOAD_ANDY	
 	if(ptr->spriteNum==0)
 	{
 	ptr->width = andy_vdp2[ash->firstFrame].w;
 	ptr->height = andy_vdp2[ash->firstFrame].h;
 	}
 	else
+#endif
 	{
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 	}
@@ -728,7 +732,7 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 //emu_printf("setupLvlObjectBitmap end\n");
 }
 
-void Game::randomizeInterpolatePoints(int32_t *pts, int count) {
+void Game::randomizeInterpolatePoints(int16_t *pts, int count) {
 	int32_t rnd = _rnd.update();
 	for (int i = 0; i < count; ++i) {
 		const int index = _pointDstIndexTable[i];
@@ -2386,9 +2390,9 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-_mstDisabled = true; // vbt : ajout pour test
+//_mstDisabled = true; // vbt : ajout pour test
 #if PAF
-_paf->_skipCutscenes = true; // vbt : ajout pour test
+//_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
 	_mstAndyCurrentScreenNum = -1;
 #ifdef DEMO
@@ -3321,6 +3325,7 @@ void Game::callLevel_terminate() {
 }
 
 void Game::displayLoadingScreen() {
+	slSynch(); // vbt : vire les sprites
 //emu_printf("displayLoadingScreen\n");
 #ifdef PSX
 	if (_res->_isPsx) {
@@ -5108,7 +5113,7 @@ int Game::updateSwitchesLar_toggle(bool flag, uint8_t dataNum, int screenNum, in
 	}
 	return ret;
 }
-
+/*
 void Game::dumpSwitchesLar(int switchesCount, const uint8_t *switchesData, const BoundingBox *switchesBoundingBox, int gatesCount, const uint8_t *gatesData) {
 	fprintf(stdout, "_mstAndyVarMask 0x%x _mstLevelGatesMask 0x%x\n", _mstAndyVarMask, _mstLevelGatesMask);
 	for (int i = 0; i < gatesCount; ++i) {
@@ -5121,7 +5126,7 @@ void Game::dumpSwitchesLar(int switchesCount, const uint8_t *switchesData, const
 		fprintf(stdout, "switch %2d: screen %2d (%3d,%3d,%3d,%3d) flags 0x%02x sprite %2d gate %2d\n", i, p[0], b->x1, b->y1, b->x2, b->y2, p[1], (int8_t)p[2], p[3]);
 	}
 }
-
+*/
 void Game::updateScreenMaskLar(uint8_t *p, uint8_t flag) {
 	if (p[1] != flag) {
 		p[1] = flag;

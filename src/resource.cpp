@@ -1,6 +1,7 @@
 #pragma GCC optimize ("Os")
 #define USE_LESS_RAM 1
 //#define SECTOR_ALIGNED 1
+//#define PRELOAD_ANDY 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -19,7 +20,9 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_save;
 uint8_t *cs1ram = (uint8_t *)0x22402000;
 uint8_t *save_cs1ram;
+#ifdef PRELOAD_ANDY
 SAT_sprite andy_vdp2[284];
+#endif
 // load and uncompress .sss pcm on level start
 #ifdef SOUND
 static const bool kPreloadSssPcm = false;
@@ -678,9 +681,11 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 	}
 emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	uint8_t *ptr = 0;
-	if(num == 0)
+	if(num == 0 || num == 3)
 	ptr = allocate_memory (TYPE_ANDY, size);
-	else if(num == 1  || num == 2)
+	else if(num == 1)
+		ptr = allocate_memory (TYPE_SPRITE1, size);
+	else if(num == 2)
 		ptr = allocate_memory (TYPE_SPRITE1, size);
 	else
 	{
@@ -694,7 +699,7 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	LvlObjectData *dat = &_resLevelData0x2988Table[num];
 	
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
-
+#ifdef PRELOAD_ANDY
 	if(num == 0)
 	{
 
@@ -727,6 +732,7 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 		position_vram_save = position_vram;
 //		while(1);
 	}
+#endif
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;

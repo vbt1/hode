@@ -152,12 +152,21 @@ struct Game {
 	uint8_t _actionDirectionKeyMaskIndex;
 	uint8_t _andyActionKeyMaskAnd, _andyActionKeyMaskOr;
 	uint8_t _andyDirectionKeyMaskAnd, _andyDirectionKeyMaskOr;
+/*
 	int32_t _plasmaCannonPosX[129];
 	int32_t _plasmaCannonPosY[129];
 	int32_t _plasmaCannonXPointsTable1[129];
 	int32_t _plasmaCannonYPointsTable1[129];
 	int32_t _plasmaCannonXPointsTable2[127];
 	int32_t _plasmaCannonYPointsTable2[127];
+*/	
+	int16_t _plasmaCannonPosX[129];
+	int16_t _plasmaCannonPosY[129];
+	int16_t _plasmaCannonXPointsTable1[129];
+	int16_t _plasmaCannonYPointsTable1[129];
+	int16_t _plasmaCannonXPointsTable2[127];
+	int16_t _plasmaCannonYPointsTable2[127];
+	
 	ScreenMask _shadowScreenMasksTable[8];
 
 	uint16_t _mstCurrentAnim;
@@ -272,7 +281,7 @@ struct Game {
 	void setScreenMaskRect(int x1, int y1, int x2, int y2, int pos);
 	void updateScreenMaskBuffer(int x, int y, int type);
 	void setupLvlObjectBitmap(LvlObject *ptr);
-	void randomizeInterpolatePoints(int32_t *pts, int count);
+	void randomizeInterpolatePoints(int16_t *pts, int count);
 	int fixPlasmaCannonPointsScreenMask(int num);
 	void setupPlasmaCannonPointsHelper();
 	void destroyLvlObjectPlasmaExplosion(LvlObject *o);

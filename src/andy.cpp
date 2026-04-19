@@ -1,5 +1,5 @@
 #pragma GCC optimize ("Os")
-#define USE_ANDY_RAM 1
+//#define PRELOAD_ANDY 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -8,9 +8,11 @@
 #include "game.h"
 #include "random.h"
 #include "util.h"
+#ifdef PRELOAD_ANDY
 extern "C" {
 extern SAT_sprite andy_vdp2[284];
 }
+#endif
 // probably rename this to anim.cpp as this updates most LvlObject, not only Andy
 
 static const uint8_t andyOp1LookupTable[] = {
@@ -1617,7 +1619,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 		asfh = &asfh[count];
 
 		uint16_t w, h;
-#ifdef USE_ANDY_RAM
+#ifdef PRELOAD_ANDY
 if(ptr->spriteNum==0)
 {
 		w = andy_vdp2[ash->firstFrame].w;
@@ -1654,7 +1656,7 @@ else
 sameAnim:
 
 		uint16_t frame1_w, frame1_h;
-#ifdef USE_ANDY_RAM
+#ifdef PRELOAD_ANDY
 if(ptr->spriteNum==0 && ptr->type == 8)
 {
 		frame1_w = andy_vdp2[ash->firstFrame].w;
@@ -1673,7 +1675,7 @@ else
 		ash = (LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset) + currentAnimFrame;
 
 		uint16_t frame2_w, frame2_h;
-#ifdef USE_ANDY_RAM
+#ifdef PRELOAD_ANDY
 if(ptr->spriteNum==0 && ptr->type == 8)
 {
 		frame2_w = andy_vdp2[ash->firstFrame].w;
@@ -1721,7 +1723,7 @@ else
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
 //emu_printf("getLvlSpriteFramePtr\n");
-#ifdef USE_ANDY_RAM
+#ifdef PRELOAD_ANDY
 if(ptr->spriteNum==0 && ptr->type == 8)
 {
 //	ptr->bitmapBits = (const uint8_t *)0x99999;

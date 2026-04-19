@@ -60,18 +60,18 @@ emu_printf("type %d size %d\n", type, alignedSize);
         return hwram_src;
 
     case TYPE_ANDY:
-		return bump (&hwram_work,2048*22);
-//		return bump(&cs1ram, alignedSize);
+//		return bump (&hwram_work,2048*22);
+		return bump(&cs1ram, alignedSize);
 //       return bump(&hwram_work, alignedSize);
 
     case TYPE_BGLVL:
 //        return bump(&current_lwram, alignedSize);
 //        return current_lwram+2000;
-//       return bump(&cs1ram, alignedSize);
-       return (uint8_t*)0x270000;
-    case TYPE_MAP:
-    case TYPE_RES:
-    case TYPE_SHOOT:
+       return bump(&cs1ram, alignedSize);
+//       return (uint8_t*)0x270000;
+//    case TYPE_MAP:
+//    case TYPE_RES:
+//    case TYPE_SHOOT:
     case TYPE_LAYER:
 //    case TYPE_MSTCODE:
 //    case TYPE_SHADWLUT:
@@ -91,13 +91,16 @@ emu_printf("type %d size %d\n", type, alignedSize);
 		}
         return bump(&cs2ram, alignedSize);
 
-//    case TYPE_RES:
+    case TYPE_RES:
     case TYPE_PAFHEAD:
+        if (((int)current_lwram) + SAT_ALIGN(alignedSize) < 0x300000)
+            return bump(&current_lwram, alignedSize);
+        return bump(&cs1ram, alignedSize);
     case TYPE_MONSTER1:
     case TYPE_MONSTER2:
     case TYPE_MSTAREA:
-//   case TYPE_MAP:
-//    case TYPE_SHOOT:
+   case TYPE_MAP:
+    case TYPE_SHOOT:
     case TYPE_MSTCODE:
 //    case TYPE_GFSFILE:
     case TYPE_SCRMASK:
