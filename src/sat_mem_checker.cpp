@@ -63,8 +63,8 @@ emu_printf("type %d size %d\n", type, alignedSize);
 
     case TYPE_BGLVL:
 //        return bump(&current_lwram, alignedSize);
-       return bump(&cs1ram, alignedSize);
-//		return (uint8_t*)0x2A0000;
+//       return bump(&cs1ram, alignedSize);
+		return (uint8_t*)0x2A8000;
 
     case TYPE_ANDY:
 	{
@@ -73,7 +73,7 @@ emu_printf("type %d size %d\n", type, alignedSize);
 		hwram_work += alignedSize; 
 		return dst;
 */
-		return bump(&hwram_work, alignedSize);		
+		return bump(&current_lwram, alignedSize);		
 	}	
 
     case TYPE_LAYER:

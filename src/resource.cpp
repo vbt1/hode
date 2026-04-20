@@ -685,8 +685,8 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	ptr = allocate_memory (TYPE_ANDY, size);
 	else if(num == 1)
 		ptr = allocate_memory (TYPE_SPRITE1, size);
-//	else if(num == 2)
-//		ptr = allocate_memory (TYPE_SPRITE1, size);
+	else if(num == 2)
+		ptr = allocate_memory (TYPE_SPRITE1, size);
 	else
 	{
 	return;

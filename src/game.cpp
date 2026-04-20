@@ -1223,8 +1223,10 @@ void Game::setupAndyLvlObject() {
 //emu_printf("init current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 
 	ptr->frame = 0;
+emu_printf("init current %p\n", ptr);
 	setupLvlObjectBitmap(ptr);
 	AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
+emu_printf("init current %p\n", dataPtr);
 	dataPtr->unk6 = 0;
 	if (ptr->spriteNum == 2) {
 		removeLvlObject(ptr);
@@ -1414,11 +1416,11 @@ void Game::resetScreen() {
 void Game::restartLevel() {
 emu_printf("restartLevel\n");
 
-//emu_printf("setupAndyLvlObject\n");
+emu_printf("setupAndyLvlObject\n");
 	setupAndyLvlObject();
-//emu_printf("clearLvlObjectsList2\n");
+emu_printf("clearLvlObjectsList2\n");
 	clearLvlObjectsList2();
-//emu_printf("clearLvlObjectsList3\n");
+emu_printf("clearLvlObjectsList3\n");
 	clearLvlObjectsList3();
 	if (!_mstDisabled) {
 		resetMstCode();
@@ -3474,8 +3476,8 @@ void Game::lvlObjectType0Init(LvlObject *ptr) {
 	if (_currentLevel == kLvl_rock && _level->_checkpoint >= 5) {
 		num = 2; // sprite without 'plasma cannon'
 	}
-//emu_printf("declareLvlObject andy num %d\n", num);
 	_andyObject = declareLvlObject(ptr->type, num);
+emu_printf("declareLvlObject andy num %d %p\n", num, _andyObject);
 	if(!_andyObject)
 	{
 		emu_printf("_andyObject broken num %d\n", num);
