@@ -46,10 +46,13 @@ static uint8_t redraw_fg = 255;
 Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(dataPath, savePath)
 	{
 	_level = 0;
+emu_printf("Resource\n");
 	_res = new Resource(&_fs);
 	_rnd.setSeed();
+emu_printf("Video\n");
 	_video = new Video();
 #ifdef PAF
+emu_printf("PafPlayer\n");
 	_paf = new PafPlayer(&_fs, _video);
 #endif
 	_cheats = cheats;
@@ -2390,7 +2393,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-//_mstDisabled = true; // vbt : ajout pour test
+_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif

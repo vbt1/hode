@@ -1,6 +1,6 @@
 #pragma GCC optimize ("O2")
-#define DEBUG 1
-#define DEBUG2 1
+//#define DEBUG 1
+//#define DEBUG2 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -80,13 +80,16 @@ static void closePaf(FileSystem *fs, File *f) {
 
 PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
 	: _fs(fs), _video(vid) {
+emu_printf("PafPlayer\n");
 	_skipCutscenes = !openPaf(_fs, &_file);
 	_videoNum = -1;
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
+/*
 	_demuxAudioFrameBlocks = 0;
 	_demuxVideoFrameBlocks = 0;
 	_audioQueue = _audioQueueTail = 0;
+*/
 	_playedMask = 0;
 	memset(&_pafCb, 0, sizeof(_pafCb));
 	_volume = 128;
@@ -105,13 +108,15 @@ uint8_t *lwram_cut = 0;
 void PafPlayer::preload(int num) {
 	if (num < 0 || num >= kMaxVideosCount) return;
 
-	_bufferBlock = allocate_memory(TYPE_PAF, kBufferBlockSize);
 	if (_file._fp == 0) openPaf(_fs, &_file);
 	else {
 		emu_printf("no openPaf!!!\n");
 	}
 	if (_videoNum != num) { unload(_videoNum); _videoNum = num; }
-
+	
+	_paletteBuffer = allocate_memory(TYPE_PAF, 256 * 3);
+	_bufferBlock = allocate_memory(TYPE_PAF, kBufferBlockSize);
+	
 	_file.seek(num * 4, SEEK_SET);
 	_videoOffset = _file.readUint32();
 	_file.seek(_videoOffset, SEEK_SET);
@@ -153,6 +158,7 @@ void PafPlayer::unload(int num) {
 	if (lwram_cut)
 		current_lwram = lwram_cut;
 	hwram_work_paf = _video->_shadowLayer;
+
 	if (_videoNum < 0) return;
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
 	_demuxVideoFrameBlocks = 0;

@@ -91,16 +91,19 @@ struct PafPlayer {
 	PafHeader _pafHdr;
 	int _currentPageBuffer;
 	uint8_t *_pageBuffers[4];
-	uint8_t _paletteBuffer[256 * 3];
+//	uint8_t _paletteBuffer[256 * 3];
+	uint8_t *_paletteBuffer;
 	bool _paletteChanged;
 	uint8_t *_bufferBlock;//[kBufferBlockSize];
 //	uint8_t *_bufferBlock[kBufferBlockSize];
 	uint8_t *_demuxVideoFrameBlocks;
 	uint8_t *_demuxAudioFrameBlocks;
+/*
 	uint32_t _audioBufferOffsetRd;
 	uint32_t _audioBufferOffsetWr;
 	PafAudioQueue *_audioQueue, *_audioQueueTail;
 	uint32_t _flushAudioSize;
+*/
 	uint32_t _playedMask;
 	PafCallback _pafCb;
 	int _volume;

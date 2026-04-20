@@ -5,7 +5,7 @@
 
 #ifndef UTIL_H__
 #define UTIL_H__
-
+#include "my_assert.h"
 #include "intern.h"
 
 enum {

@@ -79,6 +79,7 @@ struct Level_rock: Level {
 };
 
 Level *Level_rock_create() {
+emu_printf("Level_rock\n");
 	return new Level_rock;
 }
 

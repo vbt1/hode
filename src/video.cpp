@@ -16,7 +16,7 @@ extern "C" {
 #include "util.h"
 //#define PRELOAD_ANDY 1
 extern "C" {
-extern Uint8 *	hwram_work_paf;
+extern Uint8 *hwram_work_paf;
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
 #ifdef PRELOAD_ANDY
@@ -29,7 +29,7 @@ static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
-//emu_printf("video init\n");
+emu_printf("Video\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;
@@ -38,17 +38,17 @@ Video::Video() {
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+16000);
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
 		_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
 		_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
 		_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
-		_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4);
-		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256);
-
-	//emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
+		_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4); //99k
+		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256); //49k
+//		andy			 = allocate_memory (TYPE_LAYER, 197068);
+	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
 
 		if (kUseShadowColorLut) {
 	//		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
@@ -57,7 +57,7 @@ Video::Video() {
 			_shadowColorLookupTable = 0;
 		}
 		emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
-		hwram_work = hwram_work_paf;
+//		hwram_work = hwram_work_paf; // vbt : on ne rend pas la ram !!!
 	}
 
 //	_shadowScreenMaskBuffer = (uint8_t *)malloc(256 * 192 * 2 + 256 * 4);

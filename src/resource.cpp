@@ -98,7 +98,7 @@ static int readBytesAlign(File *f, uint8_t *buf, int len) {
 
 Resource::Resource(FileSystem *fs)
 	: _fs(fs), _isPsx(false), /*_isDemo(false),*/ _version(V1_1) {
-
+emu_printf("Resource\n");
 	memset(_screensGrid, 0, sizeof(_screensGrid));
 	memset(_screensBasePos, 0, sizeof(_screensBasePos));
 	memset(_screensState, 0, sizeof(_screensState));
@@ -681,12 +681,12 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 	}
 emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	uint8_t *ptr = 0;
-	if(num == 0 || num == 3)
+	if(num == 0 /*|| num == 3*/)
 	ptr = allocate_memory (TYPE_ANDY, size);
 	else if(num == 1)
 		ptr = allocate_memory (TYPE_SPRITE1, size);
-	else if(num == 2)
-		ptr = allocate_memory (TYPE_SPRITE1, size);
+//	else if(num == 2)
+//		ptr = allocate_memory (TYPE_SPRITE1, size);
 	else
 	{
 	return;

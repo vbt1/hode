@@ -6,6 +6,7 @@
  */
 #include "intern.h"
 #include "util.h"
+#include "my_assert.h"
 
 #if 0
 extern "C" {
@@ -66,9 +67,11 @@ inline uint32_t LzwDecoder::nextCode(int codeSize) {
 }
 
 int LzwDecoder::decode(uint8_t *dst) {
+emu_printf("lzw decode\n");
 	uint8_t *p = dst;
 //	_stack = (uint8_t *)0x22600000;//hwram_work;
-	_stack = (uint8_t *)hwram_work;
+//	_stack = (uint8_t *)hwram_work;
+	_stack = (uint8_t *)current_lwram;
 //	_prefix = (uint16_t *)_stack + kStackSize;
 	uint8_t * const stackBase = _stack;
 	uint8_t * const stackTop = &_stack[kStackSize - 1];

@@ -80,7 +80,7 @@ static bool isEmptySetupCfg(SetupConfig *config, int num) {
 
 Menu::Menu(Game *g, PafPlayer *paf, Resource *res, Video *video)
 	: _g(g), _paf(paf), _res(res), _video(video) {
-//emu_printf("new menu\n");
+emu_printf("Menu\n");
 	_config = &_g->_setupConfig;
 }
 #ifdef SOUND

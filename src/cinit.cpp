@@ -109,6 +109,7 @@ int	main( void )
 //	slPrioritySpr0(7);
 	slWindow(0 , 32 , 639 , 192 , 241 ,319 , 112);
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
+// vbt : modifier le user clipping !!!!!
 //		
 #ifdef LINEAR_BITMAP
 
