@@ -107,7 +107,18 @@ int	main( void )
 	slScrPosNbg0(0, toFIXED(-16));
 	slPriorityNbg0(2);
 //	slPrioritySpr0(7);
-	slWindow(0 , 32 , 639 , 192 , 241 ,319 , 112);
+
+//	slWindow(0 , 16 , 639 , 192 , 241 ,319 , 112);
+	
+//	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
+//	(*sys_clip).XC = 574;
+
+	slScrWindow0(0 , 16 , 639 , 207 );
+//	slScrWindowModeNbg0(win0_IN);
+//	slScrWindow1(0 , 16 , 639 , 207 );
+	slScrWindowModeNbg1(win0_IN);
+	slScrWindowModeSPR(win0_IN);
+	
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
 // vbt : modifier le user clipping !!!!!
 //		

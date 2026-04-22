@@ -9,19 +9,10 @@
 
 extern "C" {
 void abort(void) {
-    emu_printf("ABORT CALLED : %s:%d\n", __FILE__, __LINE__);
+    emu_printf("ABORT CALLED\n");
     while(1);  // Infinite loop instead of aborting
 }
 }
-
-#pragma GCC optimize ("O2")
-/*
- * Heart of Darkness engine rewrite
- * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
- */
-
-#include "intern.h"
-#include "util.h"
 
 enum {
 	kCodeWidth = 9,
@@ -60,7 +51,7 @@ uint32_t LzwDecoder::nextCode(int codeSize) { // 9 to 12bits
 }
 
 int LzwDecoder::decode(uint8_t *dst) {
-emu_printf("decode %p\n", dst);
+//emu_printf("decode %p\n", dst);
 	uint8_t *p = dst;
 	uint8_t *stackPtr = &_stack[kStackSize - 1];
 	uint32_t previousCode = 0;
@@ -129,7 +120,7 @@ emu_printf("decode %p\n", dst);
 }
 
 int decodeLZW(const uint8_t *src, uint8_t *dst) {
-emu_printf("decodeLZW %p %p\n", src, dst);
+//emu_printf("decodeLZW %p %p\n", src, dst);
 	memset(&_lzw, 0, sizeof(_lzw));
 	_lzw._buf = src;
 	return _lzw.decode(dst);

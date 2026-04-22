@@ -38,7 +38,7 @@ emu_printf("Video\n");
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+16000);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+40000);
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
@@ -56,6 +56,8 @@ emu_printf("Video\n");
 		} else {
 			_shadowColorLookupTable = 0;
 		}
+//		memset(hwram_work,0x11,197068);
+//		hwram_work+=197068;
 		emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
 //		hwram_work = hwram_work_paf; // vbt : on ne rend pas la ram !!!
 	}

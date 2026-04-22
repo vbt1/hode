@@ -46,15 +46,16 @@ static uint8_t redraw_fg = 255;
 Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(dataPath, savePath)
 	{
 	_level = 0;
-emu_printf("Resource\n");
+#ifdef PAF
+//emu_printf("PafPlayer\n");
+	_paf = new PafPlayer(&_fs);
+#endif
+//emu_printf("Resource\n");
 	_res = new Resource(&_fs);
 	_rnd.setSeed();
-emu_printf("Video\n");
+//emu_printf("Video\n");
 	_video = new Video();
-#ifdef PAF
-emu_printf("PafPlayer\n");
-	_paf = new PafPlayer(&_fs, _video);
-#endif
+	_paf->_shadowLayer = _video->_shadowLayer;
 	_cheats = cheats;
 #ifdef DEMO
 	_playDemo = false;
@@ -1223,10 +1224,10 @@ void Game::setupAndyLvlObject() {
 //emu_printf("init current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 
 	ptr->frame = 0;
-emu_printf("init current %p\n", ptr);
+//emu_printf("init currentX %p\n", ptr);
 	setupLvlObjectBitmap(ptr);
 	AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
-emu_printf("init current %p\n", dataPtr);
+//emu_printf("init current %p\n", dataPtr);
 	dataPtr->unk6 = 0;
 	if (ptr->spriteNum == 2) {
 		removeLvlObject(ptr);
@@ -1416,11 +1417,11 @@ void Game::resetScreen() {
 void Game::restartLevel() {
 emu_printf("restartLevel\n");
 
-emu_printf("setupAndyLvlObject\n");
+//emu_printf("setupAndyLvlObject\n");
 	setupAndyLvlObject();
-emu_printf("clearLvlObjectsList2\n");
+//emu_printf("clearLvlObjectsList2\n");
 	clearLvlObjectsList2();
-emu_printf("clearLvlObjectsList3\n");
+//emu_printf("clearLvlObjectsList3\n");
 	clearLvlObjectsList3();
 	if (!_mstDisabled) {
 		resetMstCode();
@@ -2112,6 +2113,7 @@ void Game::drawScreen() {
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
  // vbt : à remettre
+ /*
 	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
@@ -2125,7 +2127,7 @@ void Game::drawScreen() {
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
-
+*/
 #ifdef DEBUG
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
@@ -3280,10 +3282,10 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
+/*
 	case 1:
 		_level = Level_fort_create();
 		break;
-/*
 	case 2:
 		_level = Level_pwr1_create();
 		break;
@@ -3472,6 +3474,7 @@ void *Game::getLvlObjectDataPtr(LvlObject *o, int type) const {
 
 // Andy
 void Game::lvlObjectType0Init(LvlObject *ptr) {
+emu_printf("lvlObjectType0Init\n");
 	uint8_t num = ptr->spriteNum;
 	if (_currentLevel == kLvl_rock && _level->_checkpoint >= 5) {
 		num = 2; // sprite without 'plasma cannon'
@@ -3496,6 +3499,7 @@ emu_printf("declareLvlObject andy num %d %p\n", num, _andyObject);
 
 // Plasma cannon explosion
 void Game::lvlObjectType1Init(LvlObject *ptr) {
+//emu_printf("lvlObjectType1Init\n");
 	AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 	if (dataPtr->shootLvlObject) {
 		return;
@@ -4648,10 +4652,13 @@ int Game::setLvlObjectPosInScreenGrid(LvlObject *o, int pos) {
 }
 
 LvlObject *Game::declareLvlObject(uint8_t type, uint8_t num) {
-	if ((type != 8 || _res->_resLevelData0x2988PtrTable[num] != 0) && _declaredLvlObjectsListCount < kMaxLvlObjects) {
+	if ((type != 8 || _res->_resLevelData0x2988PtrTable[num] != 0) && _declaredLvlObjectsListCount < kMaxLvlObjects)
+	{
 //		assert(_declaredLvlObjectsNextPtr);
 		if(!_declaredLvlObjectsNextPtr)
+		{
 			return (LvlObject *)0;
+		}
 		LvlObject *ptr = _declaredLvlObjectsNextPtr;
 		_declaredLvlObjectsNextPtr = _declaredLvlObjectsNextPtr->nextPtr;
 		++_declaredLvlObjectsListCount;

@@ -84,7 +84,7 @@ struct PafPlayer {
 
 	bool _skipCutscenes;
 	FileSystem *_fs;
-	Video *_video;
+//	Video *_video;
 	File _file;
 	int _videoNum;
 	uint32_t _videoOffset;
@@ -98,6 +98,7 @@ struct PafPlayer {
 //	uint8_t *_bufferBlock[kBufferBlockSize];
 	uint8_t *_demuxVideoFrameBlocks;
 	uint8_t *_demuxAudioFrameBlocks;
+	uint8_t *_shadowLayer;
 /*
 	uint32_t _audioBufferOffsetRd;
 	uint32_t _audioBufferOffsetWr;
@@ -109,7 +110,7 @@ struct PafPlayer {
 	int _volume;
 	int _frameMs;
 
-	PafPlayer(FileSystem *fs, Video *vid);
+	PafPlayer(FileSystem *fs /*, Video *vid*/);
 	~PafPlayer();
 
 	void setVolume(int volume);

@@ -320,6 +320,8 @@ int ss_main() {
 #endif
 	cheats = 0xffff;
 //	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
+	g_system = SystemStub_SDL_create();
+
 emu_printf("Game\n");
 	Game *g = new Game(dataPath, savePath, cheats);
 #if 0
@@ -334,7 +336,7 @@ emu_printf("Game\n");
 	g->_res->loadSetupDat();
 //	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;
-	g_system = SystemStub_SDL_create();
+//	g_system = SystemStub_SDL_create();
 	g_system->init("", Video::W, Video::H);
 #if 0
 	setupAudio(g);

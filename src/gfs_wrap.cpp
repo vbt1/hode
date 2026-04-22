@@ -148,7 +148,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 	GfsHn fid = NULL;
 	// OPEN FILE
 	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
-emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)satpath),fid);
+//emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)satpath),fid);
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;

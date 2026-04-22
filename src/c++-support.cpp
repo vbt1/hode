@@ -1,6 +1,7 @@
 #include "my_assert.h"
 #include <stdint.h>
 #include <stdlib.h>
+#define VDP2_VRAM_B0	0x25e40000
 
 extern "C" {
 void 	free(void *ptr);
@@ -9,7 +10,7 @@ void emu_printf(const char *format, ...);
 void *sbrk(intptr_t increment);
 extern uint8_t *hwram_work;
 extern uint8_t *current_lwram;
-int amount=0;
+//int amount=0;
 }
 
 extern "C"
@@ -19,22 +20,35 @@ void __cxa_pure_virtual(void) {
 }
 
 void* operator new(size_t size) {
+	emu_printf("size %d\n", size);
 //    return malloc(size);
 	void *ptr;
-	if(size!=8)
+/*	if(size!=8)
 	{
 	ptr = malloc(size);
-	amount+=size;
+//	amount+=size;
 //	hwram_work = (uint8_t*)sbrk(0);
-	emu_printf("amount %d\n", amount);
+//	emu_printf("amount %d\n", amount);
 	}
 //	else if(size==66316)
 //		return current_lwram;
-	else
+	else*/ if(size==1284)
+	{
+		return (uint8_t *)VDP2_VRAM_B0;
+	}
+	else if (size==8 || size==136 || size==68 || size==48876)
 	{
 		ptr = (void *)current_lwram;
 		current_lwram +=size;
+		return ptr;
 	}
+	else
+	{
+		ptr = malloc(size);
+	}
+	emu_printf("malloc %p %p sizeZ %d\n",ptr,
+           (ptr + size),
+           size);
 	return ptr;
 }
 
@@ -43,10 +57,12 @@ void* operator new[](size_t size) {
 }
 
 void operator delete(void* ptr) {
+	emu_printf("free %p\n", ptr);
 //    free(ptr);
 }
 
 void operator delete[](void* ptr) {
+	emu_printf("free2 %p\n", ptr);
 //    free(ptr);
 }
 
@@ -64,7 +80,7 @@ void operator delete[](void*, unsigned int) {
  *
  * A memory allocator can use the given size to be more efficient */
 void operator delete(void* ptr, unsigned int) {
-    free(ptr);
+//    free(ptr);
 }
 
 extern "C"

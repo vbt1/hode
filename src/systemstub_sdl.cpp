@@ -206,7 +206,7 @@ static const int BLUR_TEX_H = 16;
 
 static uint16_t __attribute__((aligned(16))) _clut[256];
 System *SystemStub_SDL_create() {
-emu_printf("System\n");
+//emu_printf("System\n");
 	return new SystemStub_SDL();
 }
 

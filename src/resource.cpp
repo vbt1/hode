@@ -72,10 +72,10 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 }
 
 static void closeDat(FileSystem *fs, File *f) {
-emu_printf("closeDat ");
+//emu_printf("closeDat ");
 Sint32 fileid, fsize;
 GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
-emu_printf("------ filename %s %d\n", GFS_IdToName(fileid), fileid);
+//emu_printf("------ filename %s %d\n", GFS_IdToName(fileid), fileid);
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -686,11 +686,11 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	else if(num == 1)
 		ptr = allocate_memory (TYPE_SPRITE1, size);
 	else if(num == 2)
-		ptr = allocate_memory (TYPE_SPRITE1, size);
+		ptr = allocate_memory (TYPE_LAYER, size);
 	else
 	{
 	return;
-	ptr = allocate_memory (TYPE_SPRITE1, size);
+//	ptr = allocate_memory (TYPE_SPRITE1, size);
 	}
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
