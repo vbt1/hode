@@ -36,7 +36,8 @@ void* operator new(size_t size) {
 	{
 		return (uint8_t *)VDP2_VRAM_B0;
 	}
-	else if (size==8 || size==136 || size==68 || size==48876)
+	else if (size==8 || size==136 || size==68 /*|| size==48876*/
+	)
 	{
 		ptr = (void *)current_lwram;
 		current_lwram +=size;

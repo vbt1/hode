@@ -17,7 +17,7 @@ extern Uint8 *cs1ram;
 extern Uint8 *hwram_src;
 Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B0+1284;
 Uint8 *vdp1ram = (Uint8 *)SpriteVRAM+0x20;
-Uint8 *cs2ram = (uint8_t *)0x22600000;
+//Uint8 *cs2ram = (uint8_t *)0x22600000;
 Uint8 *hwram_src;
 Uint8 *hwram_work;
 extern Uint8 *hwram_work_paf;
@@ -30,9 +30,10 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
 //	emu_printf("bump %p\n", ptr);
     *ptr += SAT_ALIGN(size);
 
-    emu_printf("hwram %d ptr %p lwram %d cs1 %p cs2 %p hw %p aft %p sz %d p %p\n",
+    emu_printf("hwram %d ptr %p lwram %d cs1 %p hw %p aft %p sz %d p %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
-            ((int)current_lwram) - 0x200000, cs1ram, cs2ram, hwram, ptr, size, sbrk(0));
+            ((int)current_lwram) - 0x200000, cs1ram, hwram, ptr, size, sbrk(0));
+			memset(hwram_work,0x00,10000);
     return dst;
 }
 
@@ -66,19 +67,21 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_BGLVL:
 //        return bump(&current_lwram, alignedSize);
 //       return bump(&cs1ram, alignedSize);
-		return (uint8_t*)0x270000;
-/*
+		return (uint8_t*)0x280000;
+
     case TYPE_ANDY:
 	{
 
 emu_printf("andy %d %p\n", alignedSize, hwram_work);
 		uint8_t *dst = hwram_work;
-		hwram_work += 2048*22; //alignedSize; 
-		return dst;
+//		hwram_work += 2048*22; //alignedSize; 
+//		hwram_work += alignedSize; 
+return bump(&cs1ram, alignedSize);
+//		return dst;
 
 //		return bump(&current_lwram, alignedSize);		
 	}
-*/	
+	
     case TYPE_LAYER:
 	{
 		uint8_t *dst = hwram_work;
@@ -88,9 +91,13 @@ emu_printf("andy %d %p\n", alignedSize, hwram_work);
 			emu_printf("ERROR: hwram_work overflow! Requested: %d bytes\n", alignedSize);
 			return nullptr;
 		}
+    emu_printf("--hwram %d ptr %p lwram %d cs1 %p hw %p aft %p sz %d p %p\n",
+            ((int)hwram_work) - 0x6000000, hwram_work,
+            ((int)current_lwram) - 0x200000, cs1ram, hwram, hwram_work, alignedSize, sbrk(0));
+			memset(hwram_work,0x00,110000);
 		return dst; 
 	}	
-    case TYPE_ANDY:	
+//    case TYPE_ANDY:	
     case TYPE_SHADWLUT:
     case TYPE_SPRITE1:
     case TYPE_MOVBOUND:
@@ -102,21 +109,21 @@ emu_printf("test failed d\n", ((int)hwram_work+alignedSize)<(int)hwram);
 */
     	if(((int)current_lwram)+SAT_ALIGN(alignedSize)<0x300000)
 		{
-//    emu_printf("hwram %d ptr %p lwram %d cs1 %p cs2 %p hw %p aft %p sz %d p %p\n",
+//    emu_printf("hwram %d ptr %p lwram %d cs1 %p hw %p aft %p sz %d p %p\n",
 //            ((int)hwram_work) - 0x6000000, hwram_work,
-//            ((int)current_lwram) - 0x200000, cs1ram, cs2ram, hwram, current_lwram, alignedSize, sbrk(0));
+//            ((int)current_lwram) - 0x200000, cs1ram, hwram, current_lwram, alignedSize, sbrk(0));
 			
 			return bump(&current_lwram, alignedSize);
 		}
-        return bump(&cs2ram, alignedSize);
+        return bump(&cs1ram, alignedSize);
 /*
     case TYPE_RES:
     case TYPE_PAFHEAD:
         if (((int)current_lwram) + SAT_ALIGN(alignedSize) < 0x300000)
 		{
-//    emu_printf("hwram %d ptr %p lwram %d cs1 %p cs2 %p hw %p aft %p sz %d p %p\n",
+//    emu_printf("hwram %d ptr %p lwram %d cs1 %p hw %p aft %p sz %d p %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
-            ((int)current_lwram) - 0x200000, cs1ram, cs2ram, hwram, ptr, size, sbrk(0));
+            ((int)current_lwram) - 0x200000, cs1ram, hwram, ptr, size, sbrk(0));
 
             return bump(&current_lwram, alignedSize);
 		}

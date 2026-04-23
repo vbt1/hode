@@ -38,7 +38,7 @@ emu_printf("Video\n");
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+40000);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+16000);
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);

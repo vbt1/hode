@@ -19,7 +19,7 @@ enum {
 	kClearCode = 1 << (kCodeWidth - 1),
 	kEndCode = kClearCode + 1,
 	kNewCodes = kEndCode + 1,
-	kStackSize = 8192,
+	kStackSize = 4096,
 	kMaxBits = 12
 };
 
