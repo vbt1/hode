@@ -2388,7 +2388,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-_mstDisabled = true; // vbt : ajout pour test
+//_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2413,13 +2413,10 @@ _mstDisabled = true; // vbt : ajout pour test
 	}
 #endif
 	memset(_level->_screenCounterTable, 0, sizeof(_level->_screenCounterTable));
-//emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
 #ifndef USE_LESS_RAM
  // vbt : à remettre !!!
 	initLvlObjects();
-
-//emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_res->_screensState[i].s2 = 0;
@@ -3273,11 +3270,11 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
-/*
+
 	case 1:
 		_level = Level_fort_create();
 		break;
-	case 2:
+/*	case 2:
 		_level = Level_pwr1_create();
 		break;
 	case 3:
@@ -4730,11 +4727,9 @@ void Game::initLvlObjects() {
 
 void Game::setLvlObjectSprite(LvlObject *ptr, uint8_t type, uint8_t num) {
 	if (ptr->type == 8) {
-		emu_printf("decLvlSpriteDataRefCounter\n");
 		_res->decLvlSpriteDataRefCounter(ptr);
 		ptr->spriteNum = num;
 		ptr->type = type;
-		emu_printf("incLvlSpriteDataRefCounter\n");
 		_res->incLvlSpriteDataRefCounter(ptr);
 	}
 }

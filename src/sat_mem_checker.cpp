@@ -30,7 +30,7 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
     uint8_t *dst = *ptr;
 //	emu_printf("bump %p\n", ptr);
     *ptr += SAT_ALIGN(size);
-
+if(size>8000)
     emu_printf("hwram %d ptr %p lwram %d cs1 %p hw %p aft %p sz %d p %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, cs1ram, hwram, ptr, size, sbrk(0));
@@ -53,9 +53,7 @@ emu_printf("type %d size %d\n", type, alignedSize);
 //		return bump(&cs1ram, alignedSize);
 //        return bump(&hwram_work_paf, alignedSize);
     case TYPE_PAFBUF:
-//      return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
         return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
-//      return bump(&current_lwram, alignedSize);
 
     case TYPE_MENU:
         return current_lwram; // no increment
@@ -72,21 +70,18 @@ emu_printf("type %d size %d\n", type, alignedSize);
 
     case TYPE_ANDY:
 	{
-//		emu_printf("andy %p\n", hwram_work);
 		uint8_t *dst = (uint8_t*)SAT_ALIGN((int)hwram_work);
 		hwram_work = dst+alignedSize; 
 		return dst;
 //		return bump(&current_lwram, alignedSize);		
-	}	
+	}
     
 	case TYPE_ANDY1:
 	{
-//		uint8_t *dst = (uint8_t*)lwram_end-SAT_ALIGN(alignedSize);
-//		hwram_work = dst+alignedSize; 
 		lwram_end-=SAT_ALIGN(alignedSize);
 		return lwram_end;
-//		return bump(&current_lwram, alignedSize);		
 	}
+
     case TYPE_SCRMASKBUF:
     case TYPE_LAYER:
 	{

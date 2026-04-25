@@ -320,7 +320,7 @@ int ss_main() {
 #endif
 	cheats = 0xffff;
 //	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
-emu_printf("Game\n");
+//emu_printf("Game\n");
 	Game *g = new Game(dataPath, savePath, cheats);
 #if 0
 	readConfigIni(_configIni, g);

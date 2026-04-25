@@ -100,7 +100,7 @@ static int readBytesAlign(File *f, uint8_t *buf, int len) {
 
 Resource::Resource(FileSystem *fs)
 	: _fs(fs), _isPsx(false), /*_isDemo(false),*/ _version(V1_1) {
-emu_printf("Resource\n");
+//emu_printf("Resource\n");
 	memset(_screensGrid, 0, sizeof(_screensGrid));
 	memset(_screensBasePos, 0, sizeof(_screensBasePos));
 	memset(_screensState, 0, sizeof(_screensState));
@@ -686,24 +686,8 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 //		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
-emu_printf("vbt malloc sprite %d num %d\n", size, num);
-	uint8_t *ptr = 0;
-	if(num == 0 /*|| num == 3*/)
-		ptr = allocate_memory (TYPE_ANDY1, size);
-	else if(num == 1)
-	{
-		ptr = allocate_memory (TYPE_ANDY1, size); // andy sans arme
-	}
-	else if(num == 2)
-	{
-//		return;
-		ptr = allocate_memory (TYPE_ANDY, size);
-	}
-	else
-	{
-	return;
-	ptr = allocate_memory (TYPE_SPRITE1, size);
-	}
+//emu_printf("vbt malloc sprite %d num %d\n", size, num);
+	uint8_t *ptr = allocate_memory((num == 2 || num == 7) ? TYPE_ANDY : TYPE_ANDY1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -754,7 +738,7 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 //	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
 //	_resLevelData0x2988SizeTable[num] = 0;
-emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount);
+//emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount);
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
@@ -792,7 +776,7 @@ uint8_t *cs1ram_res = NULL;
 uint8_t *lwram_res  = NULL;
 
 void Resource::loadLvlData(File *fp) {
-emu_printf("loadLvlData %p\n", _lvlFile);
+//emu_printf("loadLvlData %p\n", _lvlFile);
 //	assert(fp == _lvlFile);
 	if(lwram_res==NULL)
 	{
@@ -853,7 +837,7 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	uint8_t spr[kMaxSpriteTypes * 16];
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
+//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}
@@ -890,7 +874,7 @@ void Resource::loadLvlSprite(int levelNum)
 	
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
+//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
 
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
