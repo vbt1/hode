@@ -61,6 +61,8 @@ static void stringUpperCase(char *p) {
 	}
 }
 */
+static void make_filename(char *buf, int bufsize, const char *prefix, const char *suffix);
+
 static bool openDat(FileSystem *fs, const char *name, File *f) {
 	GFS_FILE *fp = fs->openAssetFile(name);
 	if (fp) {
@@ -72,10 +74,10 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 }
 
 static void closeDat(FileSystem *fs, File *f) {
-emu_printf("closeDat ");
+//emu_printf("closeDat ");
 Sint32 fileid, fsize;
 GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
-emu_printf("------ filename %s %d\n", GFS_IdToName(fileid), fileid);
+//emu_printf("------ filename %s %d\n", GFS_IdToName(fileid), fileid);
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
 		f->setFp(0);
@@ -148,7 +150,8 @@ emu_printf("_version = V1_2\n");
 #endif
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[16];
-		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
+//		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
+		make_filename(filename, sizeof(filename), _prefixes[0], "_HOD.LVL");
 //emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
 //emu_printf("seek %s %p\n", filename, _lvlFile);
@@ -167,7 +170,8 @@ emu_printf("_version = V1_2\n");
 	}
 	// detect if this is a demo version by trying to open the second level data files
 	char filename[16];
-	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
+//	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
+	make_filename(filename, sizeof(filename), _prefixes[1], "_HOD.LVL");
 	if (openDat(_fs, filename, _lvlFile)) {
 //emu_printf("NOT DEMO %s\n", filename);
 		closeDat(_fs, _lvlFile);
@@ -405,7 +409,8 @@ void Resource::loadLevelData(int levelNum) {
 	const char *levelName = _prefixes[levelNum];
 // vbt : fermeture fichier niveau, inutile si premier niveau
 	closeDat(_fs, _lvlFile);
-	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
+//	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
+	make_filename(filename, sizeof(filename), levelName, "_HOD.LVL");
 //emu_printf("vbt filename %s\n",filename);
 
 	if (openDat(_fs, filename, _lvlFile)) {
@@ -416,7 +421,8 @@ void Resource::loadLevelData(int levelNum) {
 
 #ifndef USE_LESS_RAM
 	closeDat(_fs, _mstFile);
-	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+//	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+	make_filename(filename, sizeof(filename), levelName, "_HOD.MST");
 	if (openDat(_fs, filename, _mstFile)) {
 		loadMstData(_mstFile);
 	} else {
@@ -424,13 +430,15 @@ emu_printf("xxx Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 	}
 #else
-		snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+//		snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+		make_filename(filename, sizeof(filename), levelName, "_HOD.MST");
 		//emu_printf("yyy Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 #endif
 #ifdef SOUND
 	closeDat(_fs, _sssFile);
-	snprintf(filename, sizeof(filename), "%s_HOD.SSS", levelName);
+//	snprintf(filename, sizeof(filename), "%s_HOD.SSS", levelName);
+	make_filename(filename, sizeof(filename), levelName, "_HOD.SSS");
 	if (openDat(_fs, filename, _sssFile)) {
 		loadSssData(_sssFile);
 	} else if (_isPsx) {
@@ -682,11 +690,16 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	uint8_t *ptr = 0;
 	if(num == 0 /*|| num == 3*/)
-	ptr = allocate_memory (TYPE_ANDY, size);
+		ptr = allocate_memory (TYPE_ANDY, size);
 	else if(num == 1)
-		ptr = allocate_memory (TYPE_SPRITE1, size);
+	{
+		ptr = allocate_memory (TYPE_SPRITE1, size); // andy sans arme
+	}
 	else if(num == 2)
+	{
+//		return;
 		ptr = allocate_memory (TYPE_SPRITE1, size);
+	}
 	else
 	{
 	return;
@@ -891,7 +904,8 @@ void Resource::loadLvlMst(int levelNum)
 	char filename[16];
 	
 	closeDat(_fs, _mstFile);
-	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+//	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+	make_filename(filename, sizeof(filename), levelName, "_HOD.MST");
 	if (openDat(_fs, filename, _mstFile)) {
 		loadMstData(_mstFile);
 	} else {
@@ -1078,6 +1092,12 @@ bool Resource::isLvlBackgroundDataLoaded(int num) const {
 
 void Resource::incLvlSpriteDataRefCounter(LvlObject *ptr) {
 	LvlObjectData *dat = _resLevelData0x2988PtrTable[ptr->spriteNum];
+
+	if(dat==0)
+	{
+		emu_printf("dat %p ptr->spriteNum %d\n", dat, ptr->spriteNum);
+//		ptr = allocate_memory (TYPE_ANDY, size);
+	}
 	assert(dat);
 	++dat->refCount;
 	ptr->levelData0x2988 = dat;
@@ -2517,4 +2537,11 @@ void Resource::setDefaultsSetupCfg(SetupConfig *config, int num) {
 	config->players[num].stereo = 1;
 	config->players[num].volume = 128;
 	config->players[num].lastLevelNum = 0;
+}
+
+static void make_filename(char *buf, int bufsize, const char *prefix, const char *suffix) {
+    int i = 0;
+    while (*prefix && i < bufsize - 1) buf[i++] = *prefix++;
+    while (*suffix && i < bufsize - 1) buf[i++] = *suffix++;
+    buf[i] = 0;
 }

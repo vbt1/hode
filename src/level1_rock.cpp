@@ -165,7 +165,7 @@ void Level_rock::postScreenUpdate_rock_screen8() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen9() {
-////emu_printf("postScreenUpdate_rock_screen9\n");
+emu_printf("postScreenUpdate_rock_screen9\n");
 	int xPos;
 	if (_res->_currentScreenResourceNum == 9) {
 		switch (_res->_screensState[9].s0) {

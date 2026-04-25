@@ -880,6 +880,7 @@ void Game::destroyLvlObject(LvlObject *o) {
 		o->sssObject = 0;
 	}
 #endif
+	emu_printf("bitmaps %p type %d w %d h %d sz %d\n", o->bitmapBits, o->type, o->width, o->height, o->width * o->height);
 	o->bitmapBits = 0;
 }
 
@@ -1187,6 +1188,7 @@ void Game::setAndySprite(int num) {
 		_plasmaCannonExplodeFlag = false;
 		_plasmaCannonPointsMask = 0;
 		_plasmaCannonObject = 0;
+		emu_printf("setLvlObjectSprite\n");
 		setLvlObjectSprite(_andyObject, 8, 2);
 		_andyObject->anim = 232;
 		break;
@@ -1205,7 +1207,9 @@ void Game::setupAndyLvlObject() {
 	_actionDirectionKeyMaskIndex = 0;
 	_mstAndyCurrentScreenNum = ptr->screenNum;
 	if (dat->spriteNum != ptr->spriteNum) {
+		emu_printf("setAndySprite %d\n", dat->spriteNum);
 		setAndySprite(dat->spriteNum);
+		emu_printf("setAndySprite %d done\n", dat->spriteNum);
 	}
 	ptr->childPtr = 0;
 	ptr->xPos = dat->xPos;
@@ -3280,10 +3284,10 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
+/*
 	case 1:
 		_level = Level_fort_create();
 		break;
-/*
 	case 2:
 		_level = Level_pwr1_create();
 		break;
@@ -4736,9 +4740,11 @@ void Game::initLvlObjects() {
 
 void Game::setLvlObjectSprite(LvlObject *ptr, uint8_t type, uint8_t num) {
 	if (ptr->type == 8) {
+		emu_printf("decLvlSpriteDataRefCounter\n");
 		_res->decLvlSpriteDataRefCounter(ptr);
 		ptr->spriteNum = num;
 		ptr->type = type;
+		emu_printf("incLvlSpriteDataRefCounter\n");
 		_res->incLvlSpriteDataRefCounter(ptr);
 	}
 }

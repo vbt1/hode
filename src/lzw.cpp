@@ -9,7 +9,7 @@
 
 extern "C" {
 void abort(void) {
-    emu_printf("ABORT CALLED : %s:%d\n", __FILE__, __LINE__);
+    emu_printf("ABORT CALLED\n");
     while(1);  // Infinite loop instead of aborting
 }
 }
@@ -28,7 +28,7 @@ enum {
 	kClearCode = 1 << (kCodeWidth - 1),
 	kEndCode = kClearCode + 1,
 	kNewCodes = kEndCode + 1,
-	kStackSize = 8192,
+	kStackSize = 4096,
 	kMaxBits = 12
 };
 
@@ -60,7 +60,7 @@ uint32_t LzwDecoder::nextCode(int codeSize) { // 9 to 12bits
 }
 
 int LzwDecoder::decode(uint8_t *dst) {
-emu_printf("decode %p\n", dst);
+//emu_printf("decode %p\n", dst);
 	uint8_t *p = dst;
 	uint8_t *stackPtr = &_stack[kStackSize - 1];
 	uint32_t previousCode = 0;
@@ -129,7 +129,7 @@ emu_printf("decode %p\n", dst);
 }
 
 int decodeLZW(const uint8_t *src, uint8_t *dst) {
-emu_printf("decodeLZW %p %p\n", src, dst);
+//emu_printf("decodeLZW %p %p\n", src, dst);
 	memset(&_lzw, 0, sizeof(_lzw));
 	_lzw._buf = src;
 	return _lzw.decode(dst);

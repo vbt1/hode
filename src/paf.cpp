@@ -23,7 +23,7 @@ void CSH_AllClr(void);
 extern unsigned char frame_x;
 extern unsigned char frame_z;
 extern Uint8 *cs1ram;
-extern Uint8 *cs2ram;
+//extern Uint8 *cs2ram;
 extern Sint32 iondata;
 Sint32 GFCD_GetBufSiz(void);
 Sint32  CDC_GetBufSiz(Sint32 *totalsiz, Sint32 *bufnum, Sint32 *freesiz);
@@ -109,9 +109,9 @@ void PafPlayer::preload(int num) {
 	if (num < 0 || num >= kMaxVideosCount) return;
 
 	if (_file._fp == 0) openPaf(_fs, &_file);
-	else {
-		emu_printf("no openPaf!!!\n");
-	}
+//	else {
+//		emu_printf("no openPaf!!!\n");
+//	}
 	if (_videoNum != num) { unload(_videoNum); _videoNum = num; }
 	
 	_paletteBuffer = allocate_memory(TYPE_PAF, 256 * 3);
@@ -605,10 +605,7 @@ void PafPlayer::mainLoop() {
 	ctx.buffers[0] = (uint8_t *)hwram_work_paf;
 //	ctx.buffers[1] = (uint8_t *)hwram_work_paf+24576+2048;
 	ctx.buffers[1] = (uint8_t *)current_lwram;
-/*
-	ctx.buffers[0] = (uint8_t *)cs1ram;
-	ctx.buffers[1] = (uint8_t *)cs2ram;
-*/
+
 	ctx.readBuf    = 1;
 	ctx.active     = (_pafHdr.framesCount > 1);
 

@@ -69,3 +69,8 @@
     EVENT* RemainEvent[MAX_EVENTS] ;
     WORK*  RemainWork[MAX_WORKS] ;
 */	
+
+__attribute__((optimize("Os")))
+int __ashiftrt_r4(int val, int shift) {
+    return val >> shift;
+}
