@@ -498,9 +498,9 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 
 static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObjectData *dat/*, bool isPsx*/) {
 	uint8_t *base = src;
-
 	dat->unk0 = *src++;
 	dat->spriteNum = *src++;
+
 	dat->framesCount = READ_LE_UINT16(src); src += 2;
 	dat->hotspotsCount = READ_LE_UINT16(src); src += 2;
 	dat->movesCount = READ_LE_UINT16(src); src += 2;
@@ -523,7 +523,6 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 
 	if (src != base + kLvlAnimHdrOffset)
 		return 0;
-
 	dat->animsInfoData = base;
 	dat->refCount = 0xFF;
 	dat->framesData = (framesDataOffset == 0) ? 0 : base + framesDataOffset;
@@ -690,15 +689,15 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	uint8_t *ptr = 0;
 	if(num == 0 /*|| num == 3*/)
-		ptr = allocate_memory (TYPE_ANDY, size);
+		ptr = allocate_memory (TYPE_ANDY1, size);
 	else if(num == 1)
 	{
-		ptr = allocate_memory (TYPE_SPRITE1, size); // andy sans arme
+		ptr = allocate_memory (TYPE_ANDY1, size); // andy sans arme
 	}
 	else if(num == 2)
 	{
 //		return;
-		ptr = allocate_memory (TYPE_SPRITE1, size);
+		ptr = allocate_memory (TYPE_ANDY, size);
 	}
 	else
 	{

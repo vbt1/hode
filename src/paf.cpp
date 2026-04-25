@@ -80,7 +80,6 @@ static void closePaf(FileSystem *fs, File *f) {
 
 PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
 	: _fs(fs), _video(vid) {
-emu_printf("PafPlayer\n");
 	_skipCutscenes = !openPaf(_fs, &_file);
 	_videoNum = -1;
 	memset(&_pafHdr, 0, sizeof(_pafHdr));

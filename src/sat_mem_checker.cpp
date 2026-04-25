@@ -22,6 +22,7 @@ Uint8 *hwram_src;
 Uint8 *hwram_work;
 extern Uint8 *hwram_work_paf;
 void *sbrk(intptr_t increment);
+Uint8 *lwram_end=(Uint8 *)0x300000;
 }
 
 // Bump-allocate from a pointer, returning the old value
@@ -41,7 +42,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 {
 	if(alignedSize==0)
 		return (uint8_t*)0;
-//if(alignedSize>8000)
+if(alignedSize>8000)
 emu_printf("type %d size %d\n", type, alignedSize);
     switch (type) {	
     case TYPE_LDIMG:
@@ -67,18 +68,26 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_BGLVL:
 //        return bump(&current_lwram, alignedSize);
 //       return bump(&cs1ram, alignedSize);
-		return (uint8_t*)0x2A8000;
+		return (uint8_t*)0x219400;
 
     case TYPE_ANDY:
 	{
-/*
-		uint8_t *dst = hwram_work;
-		hwram_work += alignedSize; 
+//		emu_printf("andy %p\n", hwram_work);
+		uint8_t *dst = (uint8_t*)SAT_ALIGN((int)hwram_work);
+		hwram_work = dst+alignedSize; 
 		return dst;
-*/
-		return bump(&current_lwram, alignedSize);		
+//		return bump(&current_lwram, alignedSize);		
 	}	
-
+    
+	case TYPE_ANDY1:
+	{
+//		uint8_t *dst = (uint8_t*)lwram_end-SAT_ALIGN(alignedSize);
+//		hwram_work = dst+alignedSize; 
+		lwram_end-=SAT_ALIGN(alignedSize);
+		return lwram_end;
+//		return bump(&current_lwram, alignedSize);		
+	}
+    case TYPE_SCRMASKBUF:
     case TYPE_LAYER:
 	{
 		uint8_t *dst = hwram_work;
@@ -131,7 +140,6 @@ emu_printf("test failed d\n", ((int)hwram_work+alignedSize)<(int)hwram);
     case TYPE_MSTCODE:
 //    case TYPE_GFSFILE:
     case TYPE_SCRMASK:
-    case TYPE_SCRMASKBUF:
     case TYPE_BGLVLOBJ:
 //    case TYPE_TASK:
 //	case TYPE_SHADWBUF:

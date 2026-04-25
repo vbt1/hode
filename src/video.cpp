@@ -47,8 +47,7 @@ emu_printf("Video\n");
 		_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
 		_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4); //99k
 		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256); //49k
-//		andy			 = allocate_memory (TYPE_LAYER, 197068);
-	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
+//	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
 
 		if (kUseShadowColorLut) {
 	//		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);

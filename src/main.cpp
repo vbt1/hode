@@ -349,7 +349,6 @@ emu_printf("Game\n");
 	do {
 		g->loadSetupCfg(resume);
 		if (_runMenu && resume) {
-emu_printf("Menu\n");
 			Menu *m = new Menu(g, g->_paf, g->_res, g->_video);
 			const bool runGame = m->mainLoop();
 			delete m;

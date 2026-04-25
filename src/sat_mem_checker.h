@@ -88,7 +88,8 @@ void *malloc(size_t);
 		TYPE_PAFHEAD,
 		TYPE_PAF,       
 		TYPE_PAFBUF,	//25
-		TYPE_RES
+		TYPE_RES,
+		TYPE_ANDY1
 	};
 
 
