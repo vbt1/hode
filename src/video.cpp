@@ -47,7 +47,8 @@ Video::Video() {
 		_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
 		_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4); //99k
 		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256); //49k
-//	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
+		
+//	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, hwram_work);
 
 		if (kUseShadowColorLut) {
 	//		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
@@ -748,7 +749,7 @@ static uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
 	if (dst1 != _shadowLayer)     return;
 	if (dst2 != _backgroundLayer) return;
-
+#if 0
 	dst2 += y * dst_pitch + x;
 	const uint8_t * const lut = _shadowColorLut;
 
@@ -792,10 +793,25 @@ void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch,
 		src1 += src_w * 2;
 		dst2 += dst_pitch;
 	}
+#else
+	dst2 += y * dst_pitch + x;
+	for (int j = 0; j < src_h; ++j) {
+		for (int i = 0; i < src_w; ++i) {
+			int offset = READ_LE_UINT16(src1); src1 += 2;
+			
+			if (offset > W * H) {
+				continue;
+			}
+
+			dst2[i] = lookupColor(_shadowLayer[offset], dst2[i], _shadowColorLut);
+		}
+		dst2 += dst_pitch;
+	}
+#endif
 }
 
 void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
-	if (kUseShadowColorLut) {
+	/*if (kUseShadowColorLut) {
 		assert(dst == _shadowColorLookupTable);
 		// 256x256
 		//   0..143 : 0..255
@@ -812,7 +828,7 @@ void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 				*dst++ = 144 + j;
 			}
 		}
-	}
+	}*/
 	memcpy(_shadowColorLut, src, 144); // indexes 144-256 are not remapped
 /*
 	if (0) {

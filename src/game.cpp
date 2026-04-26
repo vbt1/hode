@@ -21,6 +21,7 @@ unsigned char frame_z = 0;
 #endif
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
+extern Uint8 *lwram_end;
 };
 #include "game.h"
 #include "fileio.h"
@@ -2103,7 +2104,7 @@ void Game::drawScreen() {
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
  // vbt : à remettre
-/*
+
 	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
@@ -2117,7 +2118,7 @@ void Game::drawScreen() {
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
-*/
+
 #ifdef DEBUG
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
@@ -3266,6 +3267,8 @@ void Game::callLevel_preScreenUpdate(int num) {
 }
 
 Level *Game::createLevel() {
+	lwram_end = (Uint8 *)0x300000;
+		
 	switch (_currentLevel) {
 	case 0:
 		_level = Level_rock_create();

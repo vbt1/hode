@@ -20,9 +20,10 @@ Uint8 *vdp1ram = (Uint8 *)SpriteVRAM+0x20;
 //Uint8 *cs2ram = (uint8_t *)0x22600000;
 Uint8 *hwram_src;
 Uint8 *hwram_work;
+Uint8 *lwram_end=(Uint8 *)0x300000;
+
 extern Uint8 *hwram_work_paf;
 void *sbrk(intptr_t increment);
-Uint8 *lwram_end=(Uint8 *)0x300000;
 }
 
 // Bump-allocate from a pointer, returning the old value
@@ -68,6 +69,7 @@ emu_printf("type %d size %d\n", type, alignedSize);
 //       return bump(&cs1ram, alignedSize);
 		return (uint8_t*)0x219400;
 
+    case TYPE_SCRMASKBUF:
     case TYPE_ANDY:
 	{
 		uint8_t *dst = (uint8_t*)SAT_ALIGN((int)hwram_work);
@@ -82,10 +84,10 @@ emu_printf("type %d size %d\n", type, alignedSize);
 		return lwram_end;
 	}
 
-    case TYPE_SCRMASKBUF:
+
     case TYPE_LAYER:
 	{
-		uint8_t *dst = hwram_work;
+		uint8_t *dst = (uint8_t*)SAT_ALIGN((int)hwram_work);
 
 		if ((int)hwram_work+alignedSize > (int)hwram) {
 			emu_printf("ERROR: hwram_work overflow! Requested: %d bytes\n", alignedSize);

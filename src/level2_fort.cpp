@@ -61,6 +61,7 @@ struct Level_fort: Level {
 };
 
 Level *Level_fort_create() {
+	emu_printf("Level_fort_create\n");
 	return new Level_fort;
 }
 

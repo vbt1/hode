@@ -411,7 +411,7 @@ void Resource::loadLevelData(int levelNum) {
 	closeDat(_fs, _lvlFile);
 //	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
 	make_filename(filename, sizeof(filename), levelName, "_HOD.LVL");
-//emu_printf("vbt filename %s\n",filename);
+emu_printf("vbt filename %s\n",filename);
 
 	if (openDat(_fs, filename, _lvlFile)) {
 		loadLvlData(_lvlFile);
@@ -773,6 +773,7 @@ void Resource::loadLvlScreenMaskData() {
 static const uint32_t _lvlTag = 0x484F4400; // 'HOD\x00'
 
 uint8_t *cs1ram_res = NULL;
+uint8_t *hwram_res  = NULL;
 uint8_t *lwram_res  = NULL;
 
 void Resource::loadLvlData(File *fp) {
@@ -782,6 +783,7 @@ void Resource::loadLvlData(File *fp) {
 	{
 		cs1ram_res = cs1ram;
 		lwram_res = current_lwram;
+		hwram_res = hwram_work;
 	}
 	unloadLvlData();
 	const uint32_t tag = _lvlFile->readUint32();
@@ -903,6 +905,7 @@ void Resource::unloadLvlData() {
 //emu_printf("unloadLvlData reset cs1ram\n");
 	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
+	hwram_work = hwram_res;
 
 	_resLevelData0x470CTable = 0;
 #if 0
