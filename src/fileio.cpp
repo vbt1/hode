@@ -34,7 +34,7 @@ static const bool kSeekAbsolutePosition = false;
 
 File::File()
 	: _fp(0) {
-		emu_printf("File\n");
+//		emu_printf("File\n");
 }
 
 File::~File() {

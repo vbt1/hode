@@ -1,6 +1,20 @@
 #pragma GCC optimize ("Os")
 //#define LINEAR_BITMAP 1
 extern "C" {
+#define NANOPRINTF_IMPLEMENTATION
+
+#define NANOPRINTF_IMPLEMENTATION
+
+#define NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS 0
+#define NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS 0
+#define NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS 0
+#define NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS 0
+#define NANOPRINTF_USE_SMALL_FORMAT_SPECIFIERS 0
+#define NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS 0
+#define NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS 0
+
+#include "nanoprintf.h"
+
 #include 	<sl_def.h>
 #include	<sega_sys.h>
 #include	<sega_spr.h>
@@ -161,7 +175,8 @@ void emu_printf(const char *format, ...)
    va_list args;
 
    va_start(args, format);
-   (void)vsnprintf(emu_printf_buffer, 256, format, args);
+//   (void)vsnprintf(emu_printf_buffer, 256, format, args);
+	npf_vsnprintf(emu_printf_buffer, sizeof(emu_printf_buffer), format, args);
    va_end(args);
 
    while (*s)

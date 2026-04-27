@@ -1,10 +1,11 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define PAF 1
 #define USE_LESS_RAM 1
 //#define DISPLAYANDYANIM 1
 //#define USE_SPRITE 1
 #define OLD_DRAW_SCREEN 1
 //#define DEBUG 1
+#define DEBUG2 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -21,6 +22,7 @@ unsigned char frame_z = 0;
 #endif
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
+extern Uint8 *lwram_end;
 };
 #include "game.h"
 #include "fileio.h"
@@ -46,16 +48,12 @@ static uint8_t redraw_fg = 255;
 Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(dataPath, savePath)
 	{
 	_level = 0;
-#ifdef PAF
-//emu_printf("PafPlayer\n");
-	_paf = new PafPlayer(&_fs);
-#endif
-//emu_printf("Resource\n");
 	_res = new Resource(&_fs);
 	_rnd.setSeed();
-//emu_printf("Video\n");
 	_video = new Video();
-	_paf->_shadowLayer = _video->_shadowLayer;
+#ifdef PAF
+	_paf = new PafPlayer(&_fs, _video);
+#endif
 	_cheats = cheats;
 #ifdef DEMO
 	_playDemo = false;
@@ -1224,10 +1222,8 @@ void Game::setupAndyLvlObject() {
 //emu_printf("init current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 
 	ptr->frame = 0;
-//emu_printf("init currentX %p\n", ptr);
 	setupLvlObjectBitmap(ptr);
 	AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
-//emu_printf("init current %p\n", dataPtr);
 	dataPtr->unk6 = 0;
 	if (ptr->spriteNum == 2) {
 		removeLvlObject(ptr);
@@ -1278,7 +1274,7 @@ void Game::setupScreenLvlObjects(int num) {
 		case 2:
 			ptr->levelData0x2988 = _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum];
 			if (!ptr->levelData0x2988) {
-				emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
+//				emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
 				break;
 			}
 			if (_currentLevel == kLvl_rock) {
@@ -1300,7 +1296,7 @@ void Game::setupScreenLvlObjects(int num) {
 					ptr->callbackFuncPtr = &Game::objectUpdate_rock_case4;
 					break;
 				default:
-					emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
+//					emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
 					break;
 				}
 			} else {
@@ -1313,7 +1309,7 @@ void Game::setupScreenLvlObjects(int num) {
 					ptr->callbackFuncPtr = &Game::objectUpdate_rock_case3;
 					break;
 				default:
-					emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
+//					emu_printf("setupScreenLvlObjects unimplemented for level %d, state %d\n", _currentLevel, ptr->objectUpdateType);
 					break;
 				}
 			}
@@ -1416,12 +1412,8 @@ void Game::resetScreen() {
 
 void Game::restartLevel() {
 emu_printf("restartLevel\n");
-
-//emu_printf("setupAndyLvlObject\n");
 	setupAndyLvlObject();
-//emu_printf("clearLvlObjectsList2\n");
 	clearLvlObjectsList2();
-//emu_printf("clearLvlObjectsList3\n");
 	clearLvlObjectsList3();
 	if (!_mstDisabled) {
 		resetMstCode();
@@ -2113,7 +2105,7 @@ void Game::drawScreen() {
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
  // vbt : à remettre
- /*
+
 	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
@@ -2127,7 +2119,7 @@ void Game::drawScreen() {
 			_shadowScreenMasksTable[i].projectionDataPtr,
 			_shadowScreenMasksTable[i].shadowPalettePtr);
 	}
-*/
+
 #ifdef DEBUG
 	unsigned int e9 = g_system->getTimeStamp();
 	result = e9-e8;
@@ -2292,7 +2284,7 @@ emu_printf("vram %d %x\n", sz, sz);
     if (result > 0)
         emu_printf("--duration %s : %d\n", "drawPlasmaCannon", result);
 #endif
-
+/*
     for (int i = 0; i < dat->shadowCount; ++i) {
         _video->applyShadowColors(
             _shadowScreenMasksTable[i].x,
@@ -2306,6 +2298,7 @@ emu_printf("vram %d %x\n", sz, sz);
             _shadowScreenMasksTable[i].projectionDataPtr,
             _shadowScreenMasksTable[i].shadowPalettePtr);
     }
+*/
 #ifdef DEBUG
     unsigned int e5 = g_system->getTimeStamp();
     result = e5 - e4;
@@ -2397,7 +2390,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	clearSoundObjects();
 	_mix._lock(0);
 #endif
-_mstDisabled = true; // vbt : ajout pour test
+//_mstDisabled = true; // vbt : ajout pour test
 #if PAF
 //_paf->_skipCutscenes = true; // vbt : ajout pour test
 #endif
@@ -2422,13 +2415,10 @@ _mstDisabled = true; // vbt : ajout pour test
 	}
 #endif
 	memset(_level->_screenCounterTable, 0, sizeof(_level->_screenCounterTable));
-//emu_printf("clearDeclaredLvlObjectsList\n");
 	clearDeclaredLvlObjectsList();
 #ifndef USE_LESS_RAM
  // vbt : à remettre !!!
 	initLvlObjects();
-
-//emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_res->_screensState[i].s2 = 0;
@@ -2508,7 +2498,7 @@ _mstDisabled = true; // vbt : ajout pour test
 			break;
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
-#ifdef DEBUG
+#ifdef DEBUG2
 		if (frame_z != last_frame_z) {
 			last_frame_z = frame_z;
 
@@ -2522,8 +2512,8 @@ _mstDisabled = true; // vbt : ajout pour test
 				dst[4] = 0; dst[5] = 0; dst[6] = 0; dst[7] = 0;
 				dst += 128;
 			}
-			_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
 		}
+		_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
 #endif
 		g_system->sleep(delay);
 		slSynch(); // vbt : apres le sleep gagne 3fps
@@ -3219,7 +3209,7 @@ void Game::levelMainLoop() {
 #endif
 //emu_printf("drawScreen\n");
 	drawScreen();
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
 	result = e7-e6c;
 	if(result>0)
@@ -3278,15 +3268,17 @@ void Game::callLevel_preScreenUpdate(int num) {
 }
 
 Level *Game::createLevel() {
+	lwram_end = (Uint8 *)0x300000;
+		
 	switch (_currentLevel) {
 	case 0:
 		_level = Level_rock_create();
 		break;
-/*
+
 	case 1:
 		_level = Level_fort_create();
 		break;
-	case 2:
+/*	case 2:
 		_level = Level_pwr1_create();
 		break;
 	case 3:
@@ -3474,18 +3466,16 @@ void *Game::getLvlObjectDataPtr(LvlObject *o, int type) const {
 
 // Andy
 void Game::lvlObjectType0Init(LvlObject *ptr) {
-emu_printf("lvlObjectType0Init\n");
 	uint8_t num = ptr->spriteNum;
 	if (_currentLevel == kLvl_rock && _level->_checkpoint >= 5) {
 		num = 2; // sprite without 'plasma cannon'
 	}
 	_andyObject = declareLvlObject(ptr->type, num);
-emu_printf("declareLvlObject andy num %d %p\n", num, _andyObject);
 	if(!_andyObject)
 	{
-		emu_printf("_andyObject broken num %d\n", num);
 		return;
 	}
+
 //	_andyObject->type = kObjectDataTypeAndy;  // vbt : ne pas mettre !!!!
 	_andyObject->xPos = ptr->xPos;
 	_andyObject->yPos = ptr->yPos;
@@ -3499,7 +3489,6 @@ emu_printf("declareLvlObject andy num %d %p\n", num, _andyObject);
 
 // Plasma cannon explosion
 void Game::lvlObjectType1Init(LvlObject *ptr) {
-//emu_printf("lvlObjectType1Init\n");
 	AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 	if (dataPtr->shootLvlObject) {
 		return;
@@ -4652,8 +4641,7 @@ int Game::setLvlObjectPosInScreenGrid(LvlObject *o, int pos) {
 }
 
 LvlObject *Game::declareLvlObject(uint8_t type, uint8_t num) {
-	if ((type != 8 || _res->_resLevelData0x2988PtrTable[num] != 0) && _declaredLvlObjectsListCount < kMaxLvlObjects)
-	{
+	if ((type != 8 || _res->_resLevelData0x2988PtrTable[num] != 0) && _declaredLvlObjectsListCount < kMaxLvlObjects) {
 //		assert(_declaredLvlObjectsNextPtr);
 		if(!_declaredLvlObjectsNextPtr)
 		{

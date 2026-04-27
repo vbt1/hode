@@ -61,6 +61,8 @@ static void stringUpperCase(char *p) {
 	}
 }
 */
+static void make_filename(char *buf, int bufsize, const char *prefix, const char *suffix);
+
 static bool openDat(FileSystem *fs, const char *name, File *f) {
 	GFS_FILE *fp = fs->openAssetFile(name);
 	if (fp) {
@@ -98,7 +100,7 @@ static int readBytesAlign(File *f, uint8_t *buf, int len) {
 
 Resource::Resource(FileSystem *fs)
 	: _fs(fs), _isPsx(false), /*_isDemo(false),*/ _version(V1_1) {
-emu_printf("Resource\n");
+//emu_printf("Resource\n");
 	memset(_screensGrid, 0, sizeof(_screensGrid));
 	memset(_screensBasePos, 0, sizeof(_screensBasePos));
 	memset(_screensState, 0, sizeof(_screensState));
@@ -148,7 +150,8 @@ emu_printf("_version = V1_2\n");
 #endif
 		// detect if this is version 1.0 by reading the size of the first screen background using the v1.1 offset
 		char filename[16];
-		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
+//		snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[0]);
+		make_filename(filename, sizeof(filename), _prefixes[0], "_HOD.LVL");
 //emu_printf("filename %s here\n", filename);
 		if (openDat(_fs, filename, _lvlFile)) {
 //emu_printf("seek %s %p\n", filename, _lvlFile);
@@ -167,7 +170,8 @@ emu_printf("_version = V1_2\n");
 	}
 	// detect if this is a demo version by trying to open the second level data files
 	char filename[16];
-	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
+//	snprintf(filename, sizeof(filename), "%s_HOD.LVL", _prefixes[1]);
+	make_filename(filename, sizeof(filename), _prefixes[1], "_HOD.LVL");
 	if (openDat(_fs, filename, _lvlFile)) {
 //emu_printf("NOT DEMO %s\n", filename);
 		closeDat(_fs, _lvlFile);
@@ -405,8 +409,9 @@ void Resource::loadLevelData(int levelNum) {
 	const char *levelName = _prefixes[levelNum];
 // vbt : fermeture fichier niveau, inutile si premier niveau
 	closeDat(_fs, _lvlFile);
-	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
-//emu_printf("vbt filename %s\n",filename);
+//	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
+	make_filename(filename, sizeof(filename), levelName, "_HOD.LVL");
+emu_printf("vbt filename %s\n",filename);
 
 	if (openDat(_fs, filename, _lvlFile)) {
 		loadLvlData(_lvlFile);
@@ -416,7 +421,8 @@ void Resource::loadLevelData(int levelNum) {
 
 #ifndef USE_LESS_RAM
 	closeDat(_fs, _mstFile);
-	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+//	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+	make_filename(filename, sizeof(filename), levelName, "_HOD.MST");
 	if (openDat(_fs, filename, _mstFile)) {
 		loadMstData(_mstFile);
 	} else {
@@ -424,13 +430,15 @@ emu_printf("xxx Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 	}
 #else
-		snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+//		snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+		make_filename(filename, sizeof(filename), levelName, "_HOD.MST");
 		//emu_printf("yyy Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 #endif
 #ifdef SOUND
 	closeDat(_fs, _sssFile);
-	snprintf(filename, sizeof(filename), "%s_HOD.SSS", levelName);
+//	snprintf(filename, sizeof(filename), "%s_HOD.SSS", levelName);
+	make_filename(filename, sizeof(filename), levelName, "_HOD.SSS");
 	if (openDat(_fs, filename, _sssFile)) {
 		loadSssData(_sssFile);
 	} else if (_isPsx) {
@@ -490,9 +498,9 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 
 static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObjectData *dat/*, bool isPsx*/) {
 	uint8_t *base = src;
-
 	dat->unk0 = *src++;
 	dat->spriteNum = *src++;
+
 	dat->framesCount = READ_LE_UINT16(src); src += 2;
 	dat->hotspotsCount = READ_LE_UINT16(src); src += 2;
 	dat->movesCount = READ_LE_UINT16(src); src += 2;
@@ -515,7 +523,6 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 
 	if (src != base + kLvlAnimHdrOffset)
 		return 0;
-
 	dat->animsInfoData = base;
 	dat->refCount = 0xFF;
 	dat->framesData = (framesDataOffset == 0) ? 0 : base + framesDataOffset;
@@ -679,19 +686,8 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 //		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
-emu_printf("vbt malloc sprite %d num %d\n", size, num);
-	uint8_t *ptr = 0;
-	if(num == 0 /*|| num == 3*/)
-	ptr = allocate_memory (TYPE_ANDY, size);
-	else if(num == 1)
-		ptr = allocate_memory (TYPE_SPRITE1, size);
-	else if(num == 2)
-		ptr = allocate_memory (TYPE_SPRITE1, size);
-	else
-	{
-	return;
-//	ptr = allocate_memory (TYPE_SPRITE1, size);
-	}
+//emu_printf("vbt malloc sprite %d num %d\n", size, num);
+	uint8_t *ptr = allocate_memory((num == 2 || num == 7) ? TYPE_ANDY : TYPE_ANDY1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -742,7 +738,7 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 //	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
 //	_resLevelData0x2988SizeTable[num] = 0;
-emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount);
+//emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount);
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
@@ -777,15 +773,17 @@ void Resource::loadLvlScreenMaskData() {
 static const uint32_t _lvlTag = 0x484F4400; // 'HOD\x00'
 
 uint8_t *cs1ram_res = NULL;
+uint8_t *hwram_res  = NULL;
 uint8_t *lwram_res  = NULL;
 
 void Resource::loadLvlData(File *fp) {
-emu_printf("loadLvlData %p\n", _lvlFile);
+//emu_printf("loadLvlData %p\n", _lvlFile);
 //	assert(fp == _lvlFile);
 	if(lwram_res==NULL)
 	{
 		cs1ram_res = cs1ram;
 		lwram_res = current_lwram;
+		hwram_res = hwram_work;
 	}
 	unloadLvlData();
 	const uint32_t tag = _lvlFile->readUint32();
@@ -841,7 +839,7 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	uint8_t spr[kMaxSpriteTypes * 16];
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
+//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
 	}
@@ -878,7 +876,7 @@ void Resource::loadLvlSprite(int levelNum)
 	
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
+//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
 
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, spr + i * 16);
@@ -891,7 +889,8 @@ void Resource::loadLvlMst(int levelNum)
 	char filename[16];
 	
 	closeDat(_fs, _mstFile);
-	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+//	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
+	make_filename(filename, sizeof(filename), levelName, "_HOD.MST");
 	if (openDat(_fs, filename, _mstFile)) {
 		loadMstData(_mstFile);
 	} else {
@@ -906,6 +905,7 @@ void Resource::unloadLvlData() {
 //emu_printf("unloadLvlData reset cs1ram\n");
 	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
+	hwram_work = hwram_res;
 
 	_resLevelData0x470CTable = 0;
 #if 0
@@ -1078,6 +1078,12 @@ bool Resource::isLvlBackgroundDataLoaded(int num) const {
 
 void Resource::incLvlSpriteDataRefCounter(LvlObject *ptr) {
 	LvlObjectData *dat = _resLevelData0x2988PtrTable[ptr->spriteNum];
+
+	if(dat==0)
+	{
+		emu_printf("dat %p ptr->spriteNum %d\n", dat, ptr->spriteNum);
+//		ptr = allocate_memory (TYPE_ANDY, size);
+	}
 	assert(dat);
 	++dat->refCount;
 	ptr->levelData0x2988 = dat;
@@ -2517,4 +2523,11 @@ void Resource::setDefaultsSetupCfg(SetupConfig *config, int num) {
 	config->players[num].stereo = 1;
 	config->players[num].volume = 128;
 	config->players[num].lastLevelNum = 0;
+}
+
+static void make_filename(char *buf, int bufsize, const char *prefix, const char *suffix) {
+    int i = 0;
+    while (*prefix && i < bufsize - 1) buf[i++] = *prefix++;
+    while (*suffix && i < bufsize - 1) buf[i++] = *suffix++;
+    buf[i] = 0;
 }

@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -13,6 +13,15 @@ void abort(void) {
     while(1);  // Infinite loop instead of aborting
 }
 }
+
+#pragma GCC optimize ("O2")
+/*
+ * Heart of Darkness engine rewrite
+ * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
+ */
+
+#include "intern.h"
+#include "util.h"
 
 enum {
 	kCodeWidth = 9,

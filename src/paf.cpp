@@ -78,9 +78,8 @@ static void closePaf(FileSystem *fs, File *f) {
 	}
 }
 
-PafPlayer::PafPlayer(FileSystem *fs/*, Video *vid*/)
-	: _fs(fs) /*, _video(vid)*/ {
-emu_printf("PafPlayer\n");
+PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
+	: _fs(fs), _video(vid) {
 	_skipCutscenes = !openPaf(_fs, &_file);
 	_videoNum = -1;
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
@@ -157,7 +156,7 @@ void PafPlayer::play(int num) {
 void PafPlayer::unload(int num) {
 	if (lwram_cut)
 		current_lwram = lwram_cut;
-	hwram_work_paf = _shadowLayer;
+	hwram_work_paf = _video->_shadowLayer;
 
 	if (_videoNum < 0) return;
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
@@ -173,8 +172,8 @@ void PafPlayer::unload(int num) {
 	}
 	_audioQueueTail = 0;
 #endif
-//	memset(_video->_backgroundLayer, 0, Video::W * Video::H);
-//	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
+	memset(_video->_backgroundLayer, 0, Video::W * Video::H);
+	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 	slScrAutoDisp(NBG0ON|NBG1ON);
 }
 

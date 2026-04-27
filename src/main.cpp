@@ -320,9 +320,7 @@ int ss_main() {
 #endif
 	cheats = 0xffff;
 //	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
-	g_system = SystemStub_SDL_create();
-
-emu_printf("Game\n");
+//emu_printf("Game\n");
 	Game *g = new Game(dataPath, savePath, cheats);
 #if 0
 	readConfigIni(_configIni, g);
@@ -336,7 +334,7 @@ emu_printf("Game\n");
 	g->_res->loadSetupDat();
 //	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;
-//	g_system = SystemStub_SDL_create();
+	g_system = SystemStub_SDL_create();
 	g_system->init("", Video::W, Video::H);
 #if 0
 	setupAudio(g);
@@ -351,7 +349,6 @@ emu_printf("Game\n");
 	do {
 		g->loadSetupCfg(resume);
 		if (_runMenu && resume) {
-emu_printf("Menu\n");
 			Menu *m = new Menu(g, g->_paf, g->_res, g->_video);
 			const bool runGame = m->mainLoop();
 			delete m;

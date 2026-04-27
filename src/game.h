@@ -167,7 +167,7 @@ struct Game {
 	int16_t _plasmaCannonXPointsTable2[127];
 	int16_t _plasmaCannonYPointsTable2[127];
 	
-	ScreenMask _shadowScreenMasksTable[8];
+	ScreenMask _shadowScreenMasksTable[8] __attribute__((aligned(2)));
 
 	uint16_t _mstCurrentAnim;
 	uint16_t _specialAnimMask;

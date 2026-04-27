@@ -29,7 +29,7 @@ static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
-emu_printf("Video\n");
+//emu_printf("Video\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;
@@ -38,7 +38,7 @@ emu_printf("Video\n");
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+16000);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+24000);
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
@@ -47,8 +47,8 @@ emu_printf("Video\n");
 		_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
 		_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4); //99k
 		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256); //49k
-//		andy			 = allocate_memory (TYPE_LAYER, 197068);
-	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, _shadowScreenMaskBuffer + 256 * 192 * 2 + 256 * 4);
+		
+//	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, hwram_work);
 
 		if (kUseShadowColorLut) {
 	//		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
@@ -56,8 +56,6 @@ emu_printf("Video\n");
 		} else {
 			_shadowColorLookupTable = 0;
 		}
-//		memset(hwram_work,0x11,197068);
-//		hwram_work+=197068;
 		emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
 //		hwram_work = hwram_work_paf; // vbt : on ne rend pas la ram !!!
 	}
@@ -667,7 +665,7 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 	SPRITE line;
 	line.CTRL = FUNC_Line | _ZmLT;
 //	line.CTRL = FUNC_Line;
-	line.PMOD = CL256Bnk | 0x0800;
+	line.PMOD = CL256Bnk | 0x0800 | ECdis | SPdis;
 	line.COLR = color;
 	line.XA = ((x1 * 5) >> 1) - 320;
 //	line.XA = x1 - 160;
@@ -753,52 +751,48 @@ void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch,
 	if (dst2 != _backgroundLayer) return;
 
 	dst2 += y * dst_pitch + x;
-	const uint8_t * const lut = _shadowColorLut;
+	const uint8_t * const shadow = _shadowLayer;
+	const uint8_t * const lut    = _shadowColorLut;
+	const int limit = W * H;
 
 	for (int j = 0; j < src_h; ++j) {
-		const uint16_t *offsets = (const uint16_t *)src1;
-		uint8_t *out = dst2;
 		int i = 0;
-
-		// 4x unroll - load offsets ahead to hide random-access latency on SH-2
 		for (; i <= src_w - 4; i += 4) {
-			const uint16_t o0 = offsets[i+0];
-			const uint16_t o1 = offsets[i+1];
-			const uint16_t o2 = offsets[i+2];
-			const uint16_t o3 = offsets[i+3];
+			const uint16_t o0 = read_le16_aligned(src1 + 0);
+			const uint16_t o1 = read_le16_aligned(src1 + 2);
+			const uint16_t o2 = read_le16_aligned(src1 + 4);
+			const uint16_t o3 = read_le16_aligned(src1 + 6);
+			src1 += 8;
 
-			const uint8_t s0 = dst1[o0];
-			const uint8_t s1 = dst1[o1];
-			const uint8_t s2 = dst1[o2];
-			const uint8_t s3 = dst1[o3];
+			// early shadow loads to hide random-access latency
+			const uint8_t s0 = (o0 <= limit) ? shadow[o0] : 0;
+			const uint8_t s1 = (o1 <= limit) ? shadow[o1] : 0;
+			const uint8_t s2 = (o2 <= limit) ? shadow[o2] : 0;
+			const uint8_t s3 = (o3 <= limit) ? shadow[o3] : 0;
 
-			const uint8_t f0 = out[0];
-			const uint8_t f1 = out[1];
-			const uint8_t f2 = out[2];
-			const uint8_t f3 = out[3];
+			const uint8_t f0 = dst2[i+0];
+			const uint8_t f1 = dst2[i+1];
+			const uint8_t f2 = dst2[i+2];
+			const uint8_t f3 = dst2[i+3];
 
-			out[0] = (s0 >= 144 && f0 < 144) ? lut[f0] : f0;
-			out[1] = (s1 >= 144 && f1 < 144) ? lut[f1] : f1;
-			out[2] = (s2 >= 144 && f2 < 144) ? lut[f2] : f2;
-			out[3] = (s3 >= 144 && f3 < 144) ? lut[f3] : f3;
-			out += 4;
+			if (s0 >= 144 && f0 < 144) dst2[i+0] = lut[f0];
+			if (s1 >= 144 && f1 < 144) dst2[i+1] = lut[f1];
+			if (s2 >= 144 && f2 < 144) dst2[i+2] = lut[f2];
+			if (s3 >= 144 && f3 < 144) dst2[i+3] = lut[f3];
 		}
-
 		// tail
 		for (; i < src_w; ++i) {
-			const uint8_t s = dst1[offsets[i]];
-			const uint8_t f = *out;
-			if (s >= 144 && f < 144) *out = lut[f];
-			out++;
+			const uint16_t o = read_le16_aligned(src1); src1 += 2;
+			const uint8_t s = (o <= limit) ? shadow[o] : 0;
+			const uint8_t f = dst2[i];
+			if (s >= 144 && f < 144) dst2[i] = lut[f];
 		}
-
-		src1 += src_w * 2;
 		dst2 += dst_pitch;
 	}
 }
 
 void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
-	if (kUseShadowColorLut) {
+	/*if (kUseShadowColorLut) {
 		assert(dst == _shadowColorLookupTable);
 		// 256x256
 		//   0..143 : 0..255
@@ -815,7 +809,7 @@ void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 				*dst++ = 144 + j;
 			}
 		}
-	}
+	}*/
 	memcpy(_shadowColorLut, src, 144); // indexes 144-256 are not remapped
 /*
 	if (0) {
