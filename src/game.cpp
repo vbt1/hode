@@ -3209,7 +3209,7 @@ void Game::levelMainLoop() {
 #endif
 //emu_printf("drawScreen\n");
 	drawScreen();
-#ifdef DEBUG2
+#ifdef DEBUG
 	unsigned int e7 = g_system->getTimeStamp();
 	result = e7-e6c;
 	if(result>0)

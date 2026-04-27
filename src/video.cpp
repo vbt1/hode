@@ -665,7 +665,7 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 	SPRITE line;
 	line.CTRL = FUNC_Line | _ZmLT;
 //	line.CTRL = FUNC_Line;
-	line.PMOD = CL256Bnk | 0x0800;
+	line.PMOD = CL256Bnk | 0x0800 | ECdis | SPdis;
 	line.COLR = color;
 	line.XA = ((x1 * 5) >> 1) - 320;
 //	line.XA = x1 - 160;
@@ -758,10 +758,10 @@ void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch,
 	for (int j = 0; j < src_h; ++j) {
 		int i = 0;
 		for (; i <= src_w - 4; i += 4) {
-			const uint16_t o0 = READ_LE_UINT16(src1 + 0);
-			const uint16_t o1 = READ_LE_UINT16(src1 + 2);
-			const uint16_t o2 = READ_LE_UINT16(src1 + 4);
-			const uint16_t o3 = READ_LE_UINT16(src1 + 6);
+			const uint16_t o0 = read_le16_aligned(src1 + 0);
+			const uint16_t o1 = read_le16_aligned(src1 + 2);
+			const uint16_t o2 = read_le16_aligned(src1 + 4);
+			const uint16_t o3 = read_le16_aligned(src1 + 6);
 			src1 += 8;
 
 			// early shadow loads to hide random-access latency
@@ -782,7 +782,7 @@ void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch,
 		}
 		// tail
 		for (; i < src_w; ++i) {
-			const uint16_t o = READ_LE_UINT16(src1); src1 += 2;
+			const uint16_t o = read_le16_aligned(src1); src1 += 2;
 			const uint8_t s = (o <= limit) ? shadow[o] : 0;
 			const uint8_t f = dst2[i];
 			if (s >= 144 && f < 144) dst2[i] = lut[f];

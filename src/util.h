@@ -64,4 +64,8 @@ extern Uint8 *hwram_work;
 #include "sat_mem_checker.h"
 }
 
+static inline uint16_t read_le16_aligned(const uint8_t *p) {
+    uint16_t v = *(const uint16_t *)p;
+    return __builtin_bswap16(v); // emits SWAP.B on SH-2
+}
 #endif // UTIL_H__
