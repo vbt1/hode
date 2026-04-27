@@ -1,10 +1,11 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define PAF 1
 #define USE_LESS_RAM 1
 //#define DISPLAYANDYANIM 1
 //#define USE_SPRITE 1
 #define OLD_DRAW_SCREEN 1
 //#define DEBUG 1
+#define DEBUG2 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -2497,7 +2498,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 			break;
 		}
 		const int delay = MAX<int>(10, frameTimeStamp - g_system->getTimeStamp());
-#ifdef DEBUG
+#ifdef DEBUG2
 		if (frame_z != last_frame_z) {
 			last_frame_z = frame_z;
 
@@ -2511,8 +2512,8 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 				dst[4] = 0; dst[5] = 0; dst[6] = 0; dst[7] = 0;
 				dst += 128;
 			}
-			_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
 		}
+		_video->drawString(buffer, (Video::W - 24), 0, _video->findWhiteColor(), (uint8 *)VDP2_VRAM_A0);
 #endif
 		g_system->sleep(delay);
 		slSynch(); // vbt : apres le sleep gagne 3fps

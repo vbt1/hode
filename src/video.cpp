@@ -751,24 +751,41 @@ void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch,
 	if (dst2 != _backgroundLayer) return;
 
 	dst2 += y * dst_pitch + x;
+	const uint8_t * const shadow = _shadowLayer;
+	const uint8_t * const lut    = _shadowColorLut;
+	const int limit = W * H;
+
 	for (int j = 0; j < src_h; ++j) {
 		int i = 0;
-		// 4x unroll - read offsets ahead to hide random-access latency
 		for (; i <= src_w - 4; i += 4) {
 			const uint16_t o0 = READ_LE_UINT16(src1 + 0);
 			const uint16_t o1 = READ_LE_UINT16(src1 + 2);
 			const uint16_t o2 = READ_LE_UINT16(src1 + 4);
 			const uint16_t o3 = READ_LE_UINT16(src1 + 6);
 			src1 += 8;
-			if (o0 <= W * H) dst2[i+0] = lookupColor(_shadowLayer[o0], dst2[i+0], _shadowColorLut);
-			if (o1 <= W * H) dst2[i+1] = lookupColor(_shadowLayer[o1], dst2[i+1], _shadowColorLut);
-			if (o2 <= W * H) dst2[i+2] = lookupColor(_shadowLayer[o2], dst2[i+2], _shadowColorLut);
-			if (o3 <= W * H) dst2[i+3] = lookupColor(_shadowLayer[o3], dst2[i+3], _shadowColorLut);
+
+			// early shadow loads to hide random-access latency
+			const uint8_t s0 = (o0 <= limit) ? shadow[o0] : 0;
+			const uint8_t s1 = (o1 <= limit) ? shadow[o1] : 0;
+			const uint8_t s2 = (o2 <= limit) ? shadow[o2] : 0;
+			const uint8_t s3 = (o3 <= limit) ? shadow[o3] : 0;
+
+			const uint8_t f0 = dst2[i+0];
+			const uint8_t f1 = dst2[i+1];
+			const uint8_t f2 = dst2[i+2];
+			const uint8_t f3 = dst2[i+3];
+
+			if (s0 >= 144 && f0 < 144) dst2[i+0] = lut[f0];
+			if (s1 >= 144 && f1 < 144) dst2[i+1] = lut[f1];
+			if (s2 >= 144 && f2 < 144) dst2[i+2] = lut[f2];
+			if (s3 >= 144 && f3 < 144) dst2[i+3] = lut[f3];
 		}
 		// tail
 		for (; i < src_w; ++i) {
-			const uint16_t offset = READ_LE_UINT16(src1); src1 += 2;
-			if (offset <= W * H) dst2[i] = lookupColor(_shadowLayer[offset], dst2[i], _shadowColorLut);
+			const uint16_t o = READ_LE_UINT16(src1); src1 += 2;
+			const uint8_t s = (o <= limit) ? shadow[o] : 0;
+			const uint8_t f = dst2[i];
+			if (s >= 144 && f < 144) dst2[i] = lut[f];
 		}
 		dst2 += dst_pitch;
 	}
