@@ -191,16 +191,24 @@ bool PafPlayer::readPafHeader() {
 	_pafHdr.maxAudioFrameBlocksCount = READ_LE_UINT32(_bufferBlock + 0xAC);
 	_pafHdr.frameBlocksCount         = READ_LE_UINT32(_bufferBlock + 0xA0);
 	if (_pafHdr.frameBlocksCount <= 0) return false;
-	_pafHdr.frameBlocksCountTable  = readPafHeaderTable(_pafHdr.framesCount);
-	_pafHdr.framesOffsetTable      = readPafHeaderTable(_pafHdr.framesCount);
-	_pafHdr.frameBlocksOffsetTable = readPafHeaderTable(_pafHdr.frameBlocksCount);
+	
+	uint32_t *dst = (uint32_t *)allocate_memory(TYPE_PAFHEAD, 4);
+	
+	_pafHdr.frameBlocksCountTable  = readPafHeaderTable(_pafHdr.framesCount, dst);
+	dst += _pafHdr.framesCount;
+	emu_printf("dst %p fc %d\n", dst, _pafHdr.framesCount);
+	_pafHdr.framesOffsetTable      = readPafHeaderTable(_pafHdr.framesCount, dst);
+	dst += _pafHdr.framesCount;
+	_pafHdr.frameBlocksOffsetTable = readPafHeaderTable(_pafHdr.frameBlocksCount, dst);
+	dst += _pafHdr.frameBlocksCount*4;
+	
 	return _pafHdr.frameBlocksCountTable != 0
 	    && _pafHdr.framesOffsetTable      != 0
 	    && _pafHdr.frameBlocksOffsetTable != 0;
 }
 
-uint32_t *PafPlayer::readPafHeaderTable(int count) {
-	uint32_t *dst = (uint32_t *)allocate_memory(TYPE_PAFHEAD, count * sizeof(uint32_t));
+uint32_t *PafPlayer::readPafHeaderTable(int count, uint32_t *dst) {
+//	uint32_t *dst = (uint32_t *)allocate_memory(TYPE_PAFHEAD, count * sizeof(uint32_t));
 	if (!dst) return 0;
 	for (int i = 0; i < count; ++i) dst[i] = _file.readUint32();
 	const int align = (count * 4) & 0x7FF;
@@ -599,7 +607,7 @@ void PafPlayer::mainLoop() {
 	_paletteChanged    = true;
 	_currentPageBuffer = 0;
 	int currentFrameBlock = 0;
-
+slSynch();
 	PafAsyncCtx ctx;
 	ctx.buffers[0] = (uint8_t *)hwram_work_paf;
 //	ctx.buffers[1] = (uint8_t *)hwram_work_paf+24576+2048;

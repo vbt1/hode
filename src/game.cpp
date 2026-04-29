@@ -1,11 +1,11 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define PAF 1
 #define USE_LESS_RAM 1
 //#define DISPLAYANDYANIM 1
 //#define USE_SPRITE 1
-#define OLD_DRAW_SCREEN 1
+//#define OLD_DRAW_SCREEN 1
 //#define DEBUG 1
-#define DEBUG2 1
+//#define DEBUG2 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -1411,7 +1411,7 @@ void Game::resetScreen() {
 }
 
 void Game::restartLevel() {
-emu_printf("restartLevel\n");
+//emu_printf("restartLevel\n");
 	setupAndyLvlObject();
 	clearLvlObjectsList2();
 	clearLvlObjectsList3();
