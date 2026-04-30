@@ -52,8 +52,9 @@ emu_printf("type %d size %d\n", type, alignedSize);
         return bump(&vdp2ram, alignedSize);
   // plante à la fin des videos
     case TYPE_PAF:
+		emu_printf("addr %p %d\n", hwram_work_paf, alignedSize);
 //		return bump(&cs1ram, alignedSize);
-//        return bump(&hwram_work_paf, alignedSize);
+//      return bump(&hwram_work_paf, alignedSize);
     case TYPE_PAFBUF:
         return bump(&hwram_work_paf, alignedSize); // à remettre des que possible
 
@@ -64,13 +65,13 @@ emu_printf("type %d size %d\n", type, alignedSize);
         hwram_src = (Uint8 *)malloc(alignedSize);
         hwram     = hwram_src + alignedSize;
         return hwram_src;
-		
+/*
 	case TYPE_PAFHEAD:
 	{
-		emu_printf("addr %p\n", hwram);
-		return (uint8_t*)(0x300000-4096*8);
+//		emu_printf("addr %x\n", hwram-alignedSize);
+		return bump(&current_lwram, alignedSize);	
 	}
-
+*/
     case TYPE_BGLVL:
 //        return bump(&current_lwram, alignedSize);
 //       return bump(&cs1ram, alignedSize);
@@ -130,6 +131,7 @@ emu_printf("test failed d\n", ((int)hwram_work+alignedSize)<(int)hwram);
         return bump(&cs1ram, alignedSize);
 */
     case TYPE_RES:
+	case TYPE_PAFHEAD:
     case TYPE_MONSTER1:
     case TYPE_MONSTER2:
     case TYPE_MSTAREA:

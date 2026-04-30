@@ -157,6 +157,7 @@ void PafPlayer::unload(int num) {
 	if (lwram_cut)
 		current_lwram = lwram_cut;
 	hwram_work_paf = _video->_shadowLayer;
+emu_printf("current_lwram %p hwram_work_paf %p\n", current_lwram, hwram_work_paf);
 
 	if (_videoNum < 0) return;
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
@@ -192,17 +193,20 @@ bool PafPlayer::readPafHeader() {
 	_pafHdr.frameBlocksCount         = READ_LE_UINT32(_bufferBlock + 0xA0);
 	if (_pafHdr.frameBlocksCount <= 0) return false;
 	
-	uint32_t *dst = (uint32_t *)allocate_memory(TYPE_PAFHEAD, 4);
+//	uint8_t *save = current_lwram;
+	uint32_t *dst = (uint32_t *)allocate_memory(TYPE_PAFHEAD, _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);
 	
 	_pafHdr.frameBlocksCountTable  = readPafHeaderTable(_pafHdr.framesCount, dst);
 	dst += _pafHdr.framesCount;
-	emu_printf("dst %p fc %d\n", dst, _pafHdr.framesCount);
+	emu_printf("dst %p fc %d\n", dst, _pafHdr.framesCount*4);
 	_pafHdr.framesOffsetTable      = readPafHeaderTable(_pafHdr.framesCount, dst);
 	dst += _pafHdr.framesCount;
+	emu_printf("dst %p fc %d\n", dst, _pafHdr.framesCount*4);
 	_pafHdr.frameBlocksOffsetTable = readPafHeaderTable(_pafHdr.frameBlocksCount, dst);
-	dst += _pafHdr.frameBlocksCount*4;
-	
-	return _pafHdr.frameBlocksCountTable != 0
+	dst += _pafHdr.frameBlocksCount;
+	emu_printf("dst %p fc %d\n", dst, _pafHdr.frameBlocksCount*4);
+//	current_lwram = save;
+	return _pafHdr.frameBlocksCountTable  != 0
 	    && _pafHdr.framesOffsetTable      != 0
 	    && _pafHdr.frameBlocksOffsetTable != 0;
 }
@@ -612,7 +616,8 @@ slSynch();
 	ctx.buffers[0] = (uint8_t *)hwram_work_paf;
 //	ctx.buffers[1] = (uint8_t *)hwram_work_paf+24576+2048;
 	ctx.buffers[1] = (uint8_t *)current_lwram;
-
+	current_lwram +=  ASYNCH_MAX;
+	
 	ctx.readBuf    = 1;
 	ctx.active     = (_pafHdr.framesCount > 1);
 
