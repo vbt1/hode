@@ -55,12 +55,12 @@ void* operator new[](size_t size) {
 }
 
 void operator delete(void* ptr) {
-	emu_printf("free %p\n", ptr);
+//	emu_printf("free %p\n", ptr);
 //    free(ptr);
 }
 
 void operator delete[](void* ptr) {
-	emu_printf("free2 %p\n", ptr);
+//	emu_printf("free2 %p\n", ptr);
 //    free(ptr);
 }
 

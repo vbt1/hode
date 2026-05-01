@@ -22,7 +22,7 @@ void *calloc(size_t nmemb, size_t size);
 void CSH_AllClr(void);
 extern unsigned char frame_x;
 extern unsigned char frame_z;
-extern Uint8 *cs1ram;
+//extern Uint8 *cs1ram;
 //extern Uint8 *cs2ram;
 extern Sint32 iondata;
 Sint32 GFCD_GetBufSiz(void);
@@ -157,7 +157,7 @@ void PafPlayer::unload(int num) {
 	if (lwram_cut)
 		current_lwram = lwram_cut;
 	hwram_work_paf = _video->_shadowLayer;
-emu_printf("current_lwram %p hwram_work_paf %p\n", current_lwram, hwram_work_paf);
+//emu_printf("current_lwram %p hwram_work_paf %p\n", current_lwram, hwram_work_paf);
 
 	if (_videoNum < 0) return;
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
@@ -198,13 +198,13 @@ bool PafPlayer::readPafHeader() {
 	
 	_pafHdr.frameBlocksCountTable  = readPafHeaderTable(_pafHdr.framesCount, dst);
 	dst += _pafHdr.framesCount;
-	emu_printf("dst %p fc %d\n", dst, _pafHdr.framesCount*4);
+//	emu_printf("dst %p fc %d\n", dst, _pafHdr.framesCount*4);
 	_pafHdr.framesOffsetTable      = readPafHeaderTable(_pafHdr.framesCount, dst);
 	dst += _pafHdr.framesCount;
-	emu_printf("dst %p fc %d\n", dst, _pafHdr.framesCount*4);
+//	emu_printf("dst %p fc %d\n", dst, _pafHdr.framesCount*4);
 	_pafHdr.frameBlocksOffsetTable = readPafHeaderTable(_pafHdr.frameBlocksCount, dst);
 	dst += _pafHdr.frameBlocksCount;
-	emu_printf("dst %p fc %d\n", dst, _pafHdr.frameBlocksCount*4);
+//	emu_printf("dst %p fc %d\n", dst, _pafHdr.frameBlocksCount*4);
 //	current_lwram = save;
 	return _pafHdr.frameBlocksCountTable  != 0
 	    && _pafHdr.framesOffsetTable      != 0

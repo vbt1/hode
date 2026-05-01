@@ -4,6 +4,7 @@
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
 //#define USE_SPRITE 1
+//#define USE_FONT 1
 extern "C" {
 #include <sl_def.h>
 }
@@ -25,7 +26,7 @@ extern SAT_sprite andy_vdp2[284];
 extern SAT_sprite _sprData[4];
 }
 
-static const bool kUseShadowColorLut = false;
+//static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
@@ -38,7 +39,7 @@ Video::Video() {
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+24000);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+16000);
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
@@ -49,21 +50,22 @@ Video::Video() {
 		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256); //49k
 		
 //	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, hwram_work);
-
+/*
 		if (kUseShadowColorLut) {
 	//		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
 			_shadowColorLookupTable = allocate_memory (TYPE_SHADWLUT, 256 * 256);
 		} else {
 			_shadowColorLookupTable = 0;
 		}
-		emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
+*/
+//		emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
 //		hwram_work = hwram_work_paf; // vbt : on ne rend pas la ram !!!
 	}
 
 //	_shadowScreenMaskBuffer = (uint8_t *)malloc(256 * 192 * 2 + 256 * 4);
 //	_shadowScreenMaskBuffer = allocate_memory (TYPE_SCRMASKBUF, 256 * 192 * 2 + 256 * 4);
-	for (int i = 144; i < 256; ++i) {
-		_shadowColorLut[i] = i;
+	for (int i = 0; i < 112; ++i) {
+		_shadowColorLut[i] = i + 144;
 	}
 //	_transformShadowBuffer = 0;
 	_transformShadowLayerDelta = 0;
@@ -747,50 +749,44 @@ static uint8_t lookupColor(uint8_t a, uint8_t b, const uint8_t *lut) {
 }
 
 void Video::applyShadowColors(int x, int y, int src_w, int src_h, int dst_pitch, int src_pitch, uint8_t *dst1, uint8_t *dst2, uint8_t *src1, uint8_t *src2) {
-	if (dst1 != _shadowLayer)     return;
-	if (dst2 != _backgroundLayer) return;
-
-	dst2 += y * dst_pitch + x;
-	const uint8_t * const shadow = _shadowLayer;
-	const uint8_t * const lut    = _shadowColorLut;
-	const int limit = W * H;
-
-	for (int j = 0; j < src_h; ++j) {
-		int i = 0;
-		for (; i <= src_w - 4; i += 4) {
-			const uint16_t o0 = read_le16_aligned(src1 + 0);
-			const uint16_t o1 = read_le16_aligned(src1 + 2);
-			const uint16_t o2 = read_le16_aligned(src1 + 4);
-			const uint16_t o3 = read_le16_aligned(src1 + 6);
-			src1 += 8;
-
-			// early shadow loads to hide random-access latency
-			const uint8_t s0 = (o0 <= limit) ? shadow[o0] : 0;
-			const uint8_t s1 = (o1 <= limit) ? shadow[o1] : 0;
-			const uint8_t s2 = (o2 <= limit) ? shadow[o2] : 0;
-			const uint8_t s3 = (o3 <= limit) ? shadow[o3] : 0;
-
-			const uint8_t f0 = dst2[i+0];
-			const uint8_t f1 = dst2[i+1];
-			const uint8_t f2 = dst2[i+2];
-			const uint8_t f3 = dst2[i+3];
-
-			if (s0 >= 144 && f0 < 144) dst2[i+0] = lut[f0];
-			if (s1 >= 144 && f1 < 144) dst2[i+1] = lut[f1];
-			if (s2 >= 144 && f2 < 144) dst2[i+2] = lut[f2];
-			if (s3 >= 144 && f3 < 144) dst2[i+3] = lut[f3];
-		}
-		// tail
-		for (; i < src_w; ++i) {
-			const uint16_t o = read_le16_aligned(src1); src1 += 2;
-			const uint8_t s = (o <= limit) ? shadow[o] : 0;
-			const uint8_t f = dst2[i];
-			if (s >= 144 && f < 144) dst2[i] = lut[f];
-		}
-		dst2 += dst_pitch;
-	}
+    if (dst1 != _shadowLayer)     return;
+    if (dst2 != _backgroundLayer) return;
+    dst2 += y * dst_pitch + x;
+    const uint8_t * const shadow = _shadowLayer;
+    const uint8_t * const lut    = _shadowColorLut;
+    const int limit = W * H;
+    for (int j = 0; j < src_h; ++j) {
+        int i = 0;
+        for (; i <= src_w - 4; i += 4) {
+            const uint16_t o0 = read_le16_aligned(src1 + 0);
+            const uint16_t o1 = read_le16_aligned(src1 + 2);
+            const uint16_t o2 = read_le16_aligned(src1 + 4);
+            const uint16_t o3 = read_le16_aligned(src1 + 6);
+            src1 += 8;
+            const uint8_t s0 = (o0 <= limit) ? shadow[o0] : 0;
+            const uint8_t s1 = (o1 <= limit) ? shadow[o1] : 0;
+            const uint8_t s2 = (o2 <= limit) ? shadow[o2] : 0;
+            const uint8_t s3 = (o3 <= limit) ? shadow[o3] : 0;
+            const uint8_t f0 = dst2[i+0];
+            const uint8_t f1 = dst2[i+1];
+            const uint8_t f2 = dst2[i+2];
+            const uint8_t f3 = dst2[i+3];
+            if (s0 >= 144 && f0 >= 144) dst2[i+0] = lut[f0 - 144];
+            if (s1 >= 144 && f1 >= 144) dst2[i+1] = lut[f1 - 144];
+            if (s2 >= 144 && f2 >= 144) dst2[i+2] = lut[f2 - 144];
+            if (s3 >= 144 && f3 >= 144) dst2[i+3] = lut[f3 - 144];
+        }
+        // tail
+        for (; i < src_w; ++i) {
+            const uint16_t o = read_le16_aligned(src1); src1 += 2;
+            const uint8_t s = (o <= limit) ? shadow[o] : 0;
+            const uint8_t f = dst2[i];
+            if (s >= 144 && f >= 144) dst2[i] = lut[f - 144];
+        }
+        dst2 += dst_pitch;
+    }
 }
-
+#if 0
 void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 	/*if (kUseShadowColorLut) {
 		assert(dst == _shadowColorLookupTable);
@@ -833,7 +829,8 @@ void Video::buildShadowColorLookupTable(const uint8_t *src, uint8_t *dst) {
 	}
 */
 }
-
+#endif
+#ifdef USE_FONT
 // returns the font index
 uint8_t Video::findStringCharacterFontIndex(uint8_t chr) const {
 	// bugfix: the original code seems to ignore the last 3 entries
@@ -858,7 +855,7 @@ void Video::drawStringCharacter(int x, int y, uint8_t chr, uint8_t color, uint8_
 		dst += 512;
 	}
 }
-#if 1
+
 void Video::drawString(const char *s, int x, int y, uint8_t color, uint8_t *dst) {
 //emu_printf("drawString %s col %d x%d y%d\n", s, color, x, y);
 	for (int i = 0; s[i]; ++i) {

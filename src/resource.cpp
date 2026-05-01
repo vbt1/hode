@@ -18,8 +18,8 @@ extern "C" {
 #include "util.h"
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
-uint8_t *cs1ram = (uint8_t *)0x22402000;
-uint8_t *save_cs1ram;
+//uint8_t *cs1ram = (uint8_t *)0x22402000;
+//uint8_t *save_cs1ram;
 #ifdef PRELOAD_ANDY
 SAT_sprite andy_vdp2[284];
 #endif
@@ -411,7 +411,7 @@ void Resource::loadLevelData(int levelNum) {
 	closeDat(_fs, _lvlFile);
 //	snprintf(filename, sizeof(filename), "%s_HOD.LVL", levelName);
 	make_filename(filename, sizeof(filename), levelName, "_HOD.LVL");
-emu_printf("vbt filename %s\n",filename);
+//emu_printf("vbt filename %s\n",filename);
 
 	if (openDat(_fs, filename, _lvlFile)) {
 		loadLvlData(_lvlFile);
@@ -772,7 +772,7 @@ void Resource::loadLvlScreenMaskData() {
 
 static const uint32_t _lvlTag = 0x484F4400; // 'HOD\x00'
 
-uint8_t *cs1ram_res = NULL;
+//uint8_t *cs1ram_res = NULL;
 uint8_t *hwram_res  = NULL;
 uint8_t *lwram_res  = NULL;
 
@@ -781,7 +781,7 @@ void Resource::loadLvlData(File *fp) {
 //	assert(fp == _lvlFile);
 	if(lwram_res==NULL)
 	{
-		cs1ram_res = cs1ram;
+//		cs1ram_res = cs1ram;
 		lwram_res = current_lwram;
 		hwram_res = hwram_work;
 	}
@@ -903,7 +903,7 @@ void Resource::unloadLvlData() {
 //emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
 //emu_printf("unloadLvlData reset cs1ram\n");
-	cs1ram = cs1ram_res;
+//	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
 	hwram_work = hwram_res;
 
@@ -995,7 +995,7 @@ static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, 
 		return 0;
 	return offsetsSize;
 }
-uint8_t *cs1ram_bg;
+//uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
@@ -1003,7 +1003,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	if((unsigned int)num >= kMaxScreens)
 		return;
 //	if(cs1ram_bg==0)
-	cs1ram_bg = cs1ram;
+//	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
 //emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
@@ -1061,10 +1061,10 @@ void Resource::unloadLvlScreenBackgroundData(int num) {
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
 		memset(dat, 0, sizeof(LvlBackgroundData));
-		*/
+		
 		if(cs1ram_bg!=0)
 			cs1ram = cs1ram_bg;
-
+*/
 	}
 }
 

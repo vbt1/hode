@@ -11,6 +11,9 @@
 #include "paf.h"
 #include "util.h"
 #include "video.h"
+extern "C" {
+void SYS_Exit(Sint32 code);
+};
 
 static const CheckpointData _fort_checkpointData[5] = {
 	{ 105,  46, 0x300c, 232,  0,  2 },
@@ -61,7 +64,7 @@ struct Level_fort: Level {
 };
 
 Level *Level_fort_create() {
-	emu_printf("Level_fort_create\n");
+//	emu_printf("Level_fort_create\n");
 	return new Level_fort;
 }
 
@@ -221,6 +224,9 @@ void Level_fort::postScreenUpdate(int num) {
 	switch (num) {
 	case 1:
 		postScreenUpdate_fort_screen1();
+		break;
+	case 4:
+//		SYS_Exit(0);
 		break;
 	case 6:
 		postScreenUpdate_fort_screen6();

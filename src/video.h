@@ -26,7 +26,7 @@ struct Video {
 		H = 192
 	};
 
-	static const uint8_t _fontCharactersTable[39 * 2];
+//	static const uint8_t _fontCharactersTable[39 * 2];
 
 	uint8_t _palette[256 * 3];
 	uint16_t _displayPaletteBuffer[256 * 3];
@@ -36,12 +36,12 @@ struct Video {
 	uint8_t *_frontLayer;
 	uint8_t *_backgroundLayer;
 	uint8_t *_backgroundLayer2;
-	uint8_t *_shadowColorLookupTable;
+//	uint8_t *_shadowColorLookupTable;
 	uint16_t _fadePaletteBuffer[256 * 3];
 	uint8_t *_shadowScreenMaskBuffer;
 	uint8_t *_transformShadowBuffer;
 	uint8_t _transformShadowLayerDelta;
-	uint8_t _shadowColorLut[256];
+	uint8_t _shadowColorLut[112];
 	const uint8_t *_font;
 
 	struct {

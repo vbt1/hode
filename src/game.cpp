@@ -311,7 +311,7 @@ void Game::loadTransformLayerData(const uint8_t *data) {
 void Game::unloadTransformLayerData() {
 //emu_printf("vbt unloadTransformLayerData\n");	
 //	free(_video->_transformShadowBuffer);
-	_video->_transformShadowBuffer = 0;
+//	_video->_transformShadowBuffer = 0;
 }
 #if 1
 void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
@@ -348,10 +348,12 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 				p += 2;
 			}
 //emu_printf("shadow screen\n");
+#if 0
 			const int shadowPaletteSize = decodedSize - 20 - w * h * sizeof(uint16_t);
 //emu_printf("shadowPaletteSize %d 144\n", shadowPaletteSize);
 			assert(shadowPaletteSize >= 144);
 			_video->buildShadowColorLookupTable(_shadowScreenMasksTable[i].shadowPalettePtr, _video->_shadowColorLookupTable);
+#endif
 //emu_printf("dst %p %d 144\n", dst, decodedSize);
 			dst += decodedSize;
 		}
@@ -1358,7 +1360,7 @@ void Game::setupScreen(uint8_t num) {
 	}
 	i = _res->_screensGrid[num][kPosRightScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-emu_printf("setupScreenLvlObjects1 i %d\n", i);
+//emu_printf("setupScreenLvlObjects1 i %d\n", i);
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -1373,7 +1375,7 @@ emu_printf("setupScreenLvlObjects1 i %d\n", i);
 	}
 	i = _res->_screensGrid[num][kPosLeftScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-emu_printf("setupScreenLvlObjects2 %d\n", i);
+//emu_printf("setupScreenLvlObjects2 %d\n", i);
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -2105,7 +2107,8 @@ void Game::drawScreen() {
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
  // vbt : à remettre
-
+emu_printf("--dat->shadowCount %d\n", dat->shadowCount);
+while(1);
 	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
@@ -2284,7 +2287,7 @@ emu_printf("vram %d %x\n", sz, sz);
     if (result > 0)
         emu_printf("--duration %s : %d\n", "drawPlasmaCannon", result);
 #endif
-/*
+// vbt code utilisé !!!
     for (int i = 0; i < dat->shadowCount; ++i) {
         _video->applyShadowColors(
             _shadowScreenMasksTable[i].x,
@@ -2298,7 +2301,7 @@ emu_printf("vram %d %x\n", sz, sz);
             _shadowScreenMasksTable[i].projectionDataPtr,
             _shadowScreenMasksTable[i].shadowPalettePtr);
     }
-*/
+
 #ifdef DEBUG
     unsigned int e5 = g_system->getTimeStamp();
     result = e5 - e4;
@@ -2789,7 +2792,7 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 		return o;
 	}
 	if (!ptr->callbackFuncPtr) {
-		emu_printf("updateAnimatedLvlObjectType2: no callback ptr\n");
+//		emu_printf("updateAnimatedLvlObjectType2: no callback ptr\n");
 	} else {
 //		emu_printf("updateAnimatedLvlObjectType2: callback ptr %p\n", ptr->callbackFuncPtr);
 		if ((this->*(ptr->callbackFuncPtr))(ptr) == 0) {
@@ -2886,7 +2889,7 @@ LvlObject *Game::updateAnimatedLvlObject(LvlObject *o) {
 		o = o->nextPtr;
 		break;
 	default:
-		emu_printf("updateAnimatedLvlObject unhandled type %d\n", o->type);
+//		emu_printf("updateAnimatedLvlObject unhandled type %d\n", o->type);
 		break;
 	}
 	return o;

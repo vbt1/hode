@@ -41,7 +41,7 @@ struct LzwDecoder {
 	uint8_t _bitsLeft;
 
 	uint32_t nextCode(int codeSize);
-	int decode(uint8_t *dst);
+	inline int decode(uint8_t *dst);
 };
 
 static struct LzwDecoder _lzw;
@@ -59,7 +59,7 @@ uint32_t LzwDecoder::nextCode(int codeSize) { // 9 to 12bits
 	return code;
 }
 
-int LzwDecoder::decode(uint8_t *dst) {
+inline int LzwDecoder::decode(uint8_t *dst) {
 //emu_printf("decode %p\n", dst);
 	uint8_t *p = dst;
 	uint8_t *stackPtr = &_stack[kStackSize - 1];
