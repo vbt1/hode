@@ -99,7 +99,7 @@ static int readBytesAlign(File *f, uint8_t *buf, int len) {
 }
 
 Resource::Resource(FileSystem *fs)
-	: _fs(fs), _isPsx(false), /*_isDemo(false),*/ _version(V1_1) {
+	: _fs(fs), /*_isPsx(false), _isDemo(false),*/ _version(V1_1) {
 //emu_printf("Resource\n");
 	memset(_screensGrid, 0, sizeof(_screensGrid));
 	memset(_screensBasePos, 0, sizeof(_screensBasePos));
@@ -286,7 +286,7 @@ void Resource::loadSetupDat() {
 
 		uint32_t offset = 0;
 
-		if (!_isPsx) {
+//		if (!_isPsx) {
 			// loading image
 			uint32_t size = READ_LE_UINT32(_loadingImageBuffer + offset); offset += 8;
 			offset += size + 768;
@@ -294,7 +294,7 @@ void Resource::loadSetupDat() {
 			// loading animation
 			size = READ_LE_UINT32(_loadingImageBuffer + offset + 8); offset += 16;
 			offset += size;
-		}
+//		}
 
 		// font
 		static const int kFontSize = 16 * 16 * 64;
@@ -308,8 +308,8 @@ void Resource::loadSetupDat() {
 			if (_datHdr.version == 11) {
 				const uint32_t uncompressedSize = decodeLZW(_loadingImageBuffer + offset, _fontBuffer);
 //				assert(uncompressedSize == kFontSize);
-				if(uncompressedSize != kFontSize)
-					emu_printf("font decompression error\n");
+//				if(uncompressedSize != kFontSize)
+//					emu_printf("font decompression error\n");
 			} else {
 				memcpy(_fontBuffer, _loadingImageBuffer + offset, kFontSize);
 			}
@@ -426,7 +426,7 @@ void Resource::loadLevelData(int levelNum) {
 	if (openDat(_fs, filename, _mstFile)) {
 		loadMstData(_mstFile);
 	} else {
-emu_printf("xxx Unable to open '%s'\n", filename);
+//emu_printf("xxx Unable to open '%s'\n", filename);
 		memset(&_mstHdr, 0, sizeof(_mstHdr));
 	}
 #else
@@ -530,7 +530,8 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 	dat->hotspotsData = (hotspotsDataOffset == 0) ? 0 : base + hotspotsDataOffset;
 	dat->movesData = (movesDataOffset == 0) ? 0 : base + movesDataOffset;
 	dat->coordsData = (coordsDataOffset == 0) ? 0 : base + coordsDataOffset;
-	if (kByteSwapData) {
+//	if (kByteSwapData) 
+	{
 		for (int i = 0; i < dat->hotspotsCount; ++i) {
 			LvlAnimHeader *ah = ((LvlAnimHeader *)(base + kLvlAnimHdrOffset)) + i;
 			ah->unk0 = le16toh(ah->unk0);
@@ -686,8 +687,8 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 //		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
-//emu_printf("vbt malloc sprite %d num %d\n", size, num);
-	uint8_t *ptr = allocate_memory((num == 2 || num == 7) ? TYPE_ANDY : TYPE_ANDY1, size);
+emu_printf("vbt malloc sprite %d num %d\n", size, num);
+	uint8_t *ptr = allocate_memory((num == 2 || num == 3) ? TYPE_ANDY : TYPE_ANDY1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -788,7 +789,7 @@ void Resource::loadLvlData(File *fp) {
 	unloadLvlData();
 	const uint32_t tag = _lvlFile->readUint32();
 	if (tag != _lvlTag) {
-		emu_printf("Unhandled .lvl tag 0x%x\n", tag);
+//		emu_printf("Unhandled .lvl tag 0x%x\n", tag);
 		closeDat(_fs, _lvlFile);
 		return;
 	}
@@ -931,7 +932,7 @@ void Resource::unloadLvlData() {
 #endif
 }
 
-static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat, bool isPsx) {
+static uint32_t resFixPointersLevelData0x2B88(const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat) {
 //emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
 	const uint8_t *start = src;
 
@@ -1035,7 +1036,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 ////emu_printf("g %d\n", baseOffset + kMaxScreens * 16 + num * 160);
 	_lvlFile->read(hdr, 160);
 	LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
-	const uint32_t readOffsetsSize = resFixPointersLevelData0x2B88(hdr, ptr, ptr + readSize, dat, _isPsx);
+	const uint32_t readOffsetsSize = resFixPointersLevelData0x2B88(hdr, ptr, ptr + readSize, dat);
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	
 //emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
@@ -1078,12 +1079,13 @@ bool Resource::isLvlBackgroundDataLoaded(int num) const {
 
 void Resource::incLvlSpriteDataRefCounter(LvlObject *ptr) {
 	LvlObjectData *dat = _resLevelData0x2988PtrTable[ptr->spriteNum];
-
+/*
 	if(dat==0)
 	{
 		emu_printf("dat %p ptr->spriteNum %d\n", dat, ptr->spriteNum);
 //		ptr = allocate_memory (TYPE_ANDY, size);
 	}
+*/
 	assert(dat);
 	++dat->refCount;
 	ptr->levelData0x2988 = dat;
@@ -2291,10 +2293,10 @@ void Resource::loadMstData(File *fp) {
 	_mstCodeData = (uint8_t *)allocate_memory (TYPE_MSTCODE, _mstHdr.codeSize * 4);
 	fp->read(_mstCodeData, _mstHdr.codeSize * 4);
 	bytesRead += _mstHdr.codeSize * 4;
-
+/*
 	if (bytesRead != _mstHdr.dataSize) {
 		emu_printf("Unexpected .mst bytesRead %d dataSize %d\n", bytesRead, _mstHdr.dataSize);
-	}
+	}*/
 }
 
 void Resource::unloadMstData() {

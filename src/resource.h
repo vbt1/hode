@@ -573,7 +573,7 @@ struct Resource {
 	SssHdr _sssHdr;
 	File *_sssFile;
 #endif
-	bool _isPsx;
+//	bool _isPsx;
 #ifdef DEMO
 	bool _isDemo;
 #endif

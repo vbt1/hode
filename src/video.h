@@ -29,7 +29,7 @@ struct Video {
 //	static const uint8_t _fontCharactersTable[39 * 2];
 
 	uint8_t _palette[256 * 3];
-	uint16_t _displayPaletteBuffer[256 * 3];
+	uint8_t _displayPaletteBuffer[256 * 3];
 	bool _paletteChanged;
 	bool _displayShadowLayer;
 	uint8_t *_shadowLayer;
@@ -37,11 +37,11 @@ struct Video {
 	uint8_t *_backgroundLayer;
 	uint8_t *_backgroundLayer2;
 //	uint8_t *_shadowColorLookupTable;
-	uint16_t _fadePaletteBuffer[256 * 3];
+	uint8_t _fadePaletteBuffer[256 * 3];
 	uint8_t *_shadowScreenMaskBuffer;
 	uint8_t *_transformShadowBuffer;
 	uint8_t _transformShadowLayerDelta;
-	uint8_t _shadowColorLut[112];
+	uint8_t _shadowColorLut[144];
 	const uint8_t *_font;
 
 	struct {
@@ -57,7 +57,7 @@ struct Video {
 #ifdef PSX
 	void initPsx();
 #endif
-	void updateGamePalette(const uint16_t *pal);
+	void updateGamePalette(const uint8_t *pal);
 	void updateGameDisplay(uint8_t *buf);
 	void updateYuvDisplay();
 	void copyYuvBackBuffer();

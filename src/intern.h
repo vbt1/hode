@@ -36,7 +36,7 @@ static const bool kByteSwapData = true;
 #define le32toh(x) __bswap32(x)
 #define htole16(x) __bswap16(x)
 #define htole32(x) __bswap32(x)
-static const bool kByteSwapData = true; //(__BYTE_ORDER == __BIG_ENDIAN);
+//static const bool kByteSwapData = true; //(__BYTE_ORDER == __BIG_ENDIAN);
 #endif
 
 #define ARRAYSIZE(a) (sizeof(a)/sizeof(a[0]))

@@ -15,7 +15,7 @@ Uint8 *hwram;
 extern Uint8 *current_lwram;
 //extern Uint8 *cs1ram;
 extern Uint8 *hwram_src;
-Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B0+1284;
+Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B0+516;
 Uint8 *vdp1ram = (Uint8 *)SpriteVRAM+0x20;
 //Uint8 *cs2ram = (uint8_t *)0x22600000;
 Uint8 *hwram_src;
@@ -31,11 +31,13 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
     uint8_t *dst = (uint8_t*)SAT_ALIGN((int)*ptr);
 //	emu_printf("bump %p\n", ptr);
     *ptr = dst + size;
-//if(size>8000)
+/*
     emu_printf("hwram %d ptr %p lwram %d hw %p aft %p sz %d p %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, ptr, size, sbrk(0));
-			memset(hwram_work,0x00,10000);
+*/			
+			memset(dst,0x00,size);
+			
     return dst;
 }
 
@@ -45,7 +47,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 //		return (uint8_t*)0;
 //if(alignedSize>8000)
 //	if(type==TYPE_PAFHEAD)
-//emu_printf("type %d size %d\n", type, alignedSize);
+emu_printf("type %d size %d\n", type, alignedSize);
     switch (type) {	
     case TYPE_HWRAM:
         hwram_src = (Uint8 *)malloc(alignedSize);
@@ -70,6 +72,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 	case TYPE_ANDY1:
 	{
 		lwram_end-=SAT_ALIGN(alignedSize);
+//		emu_printf("andy1 %p\n", lwram_end);
 		return lwram_end;
 	}
 
@@ -78,8 +81,9 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
     case TYPE_LAYER:
 //    case TYPE_MSTCODE:
 	{
-		if ((int)hwram_work+alignedSize > (int)hwram) {
-			emu_printf("ERROR: hwram_work overflow! Requested: %d bytes\n", alignedSize);
+		if ((int)hwram_work + alignedSize > (int)hwram) {
+			int missing = ((int)hwram_work + alignedSize) - (int)hwram;
+//			emu_printf("ERROR: %d hwram_work overflow! Requested: %d bytes, Missing: %d bytes\n", type, alignedSize, missing);
 			return nullptr;
 		}
 		return bump(&hwram_work, alignedSize);
@@ -102,10 +106,9 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 //	case TYPE_SHADWBUF:
         if (((int)current_lwram) + SAT_ALIGN(alignedSize) < 0x300000)
 		{
-//    emu_printf("hwram %d ptr %p lwram %d cs1 %p cs2 %p hw %p aft %p sz %d p %p\n",
-//            ((int)hwram_work) - 0x6000000, hwram_work,
-//            ((int)current_lwram) - 0x200000, cs1ram, cs2ram, hwram, current_lwram, alignedSize, sbrk(0));
-
+			emu_printf("type %d hwram %d ptr %p lwram %d hw %p aft %p sz %d p %p\n", type,
+					((int)hwram_work) - 0x6000000, hwram_work,
+					((int)current_lwram) - 0x200000, hwram, current_lwram, alignedSize, sbrk(0));
             return bump(&current_lwram, alignedSize);
 		}
 //        emu_printf("lwram %d %p lwram %d cs1 %d\n",
@@ -114,7 +117,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
         return nullptr;
 
     default:
-    	emu_printf("missing case!!!\n");
+//    	emu_printf("missing case!!!\n");
         return nullptr;
     }
 }

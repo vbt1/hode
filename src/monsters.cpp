@@ -175,7 +175,9 @@ bool Game::addChasingMonster(MstMonsterAction *m48, uint8_t direction) {
 		MstMonsterAreaAction *unk4 = m48->area[i].data;
 		const uint8_t num = unk4->monster1Index;
 		if (num != 0xFF) {
-			assert(num < kMaxMonsterObjects1);
+//			assert(num < kMaxMonsterObjects1);
+			if(num >= kMaxMonsterObjects1)
+				return false;
 			unk4->direction = direction;
 			MonsterObject1 *m = &_monsterObjects1Table[num];
 			m->action = unk4;
@@ -184,7 +186,10 @@ bool Game::addChasingMonster(MstMonsterAction *m48, uint8_t direction) {
 			mstMonster1ResetWalkPath(m);
 			Task *current = _monsterObjects1TasksList;
 			Task *t = m->task;
-			assert(t);
+//			assert(t);
+			if(!t)
+				return false;
+
 			while (current) {
 				Task *next = current->nextPtr;
 				if (current == t) {
@@ -195,7 +200,12 @@ bool Game::addChasingMonster(MstMonsterAction *m48, uint8_t direction) {
 				current = next;
 			}
 			const uint32_t codeData = unk4->codeData;
-			assert(codeData != kNone);
+//			assert(codeData != kNone);
+			if(codeData == kNone)
+			{
+				t = 0;
+				return false;
+			}
 			resetTask(t, _res->_mstCodeData + codeData * 4);
 			++_mstChasingMonstersCount;
 		}
@@ -838,9 +848,9 @@ void Game::resetMstCode() {
 	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
 	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
 	memset(_mstVars, 0, sizeof(_mstVars));
-//	memset(_tasksTable, 0, sizeof(_tasksTable));
+	memset(_tasksTable, 0, sizeof(_tasksTable));
 //	_tasksTable = (Task *)allocate_memory(TYPE_TASK,kMaxTasks*sizeof(Task));
-	memset(_tasksTable, 0, sizeof(Task) * kMaxTasks);
+//	memset(_tasksTable, 0, sizeof(Task) * kMaxTasks);
 	_m43Num3 = _m43Num1 = _m43Num2 = _mstActionNum = -1;
 	_mstOp54Counter = 0; // bugfix: not reset in the original, causes uninitialized reads at the beginning of 'fort'
 	_executeMstLogicPrevCounter = _executeMstLogicCounter = 0;
@@ -3235,7 +3245,9 @@ void Game::updateTask(Task *t, int num, const uint8_t *codeData) {
 
 void Game::resetTask(Task *t, const uint8_t *codeData) {
 	//debug(kDebug_MONSTER, "resetTask t %p offset 0x%04x monster1 %p monster2 %p", t, codeData - _res->_mstCodeData, t->monster1, t->monster2);
-	assert(codeData);
+//	assert(codeData);
+	if(!codeData)
+		return;
 	t->state |= 2;
 	t->codeData = codeData;
 	t->run = &Game::mstTask_main;
@@ -3634,17 +3646,24 @@ int Game::getTaskFlag(Task *t, int num, int type) const {
 }
 
 int Game::mstTask_main(Task *t) {
-	assert(t->codeData);
+//	assert(t->codeData);
+	if (!t->codeData)
+		return 0;
 	const int taskNum = t - _tasksTable;
 	int ret = 0;
 	t->state &= ~2;
 	const uint8_t *p = t->codeData;
 	do {
-		assert(p >= _res->_mstCodeData && p < _res->_mstCodeData + _res->_mstHdr.codeSize * 4);
-		assert(((p - t->codeData) & 3) == 0);
+//		assert(p >= _res->_mstCodeData && p < _res->_mstCodeData + _res->_mstHdr.codeSize * 4);
+//		assert(((p - t->codeData) & 3) == 0);
+    	if (p < _res->_mstCodeData || p >= _res->_mstCodeData + _res->_mstHdr.codeSize * 4) break;
+    	if (((p - t->codeData) & 3) != 0) break;
+
 		const uint32_t codeOffset = p - _res->_mstCodeData;
 		//debug(kDebug_MONSTER, "executeMstCode task %d %p code %d offset 0x%04x", taskNum, t, p[0], codeOffset);
-		assert(p[0] <= 242);
+//		assert(p[0] <= 242);
+		if (p[0] > 242)
+			break;
 		switch (p[0]) {
 		case 0: { // 0
 				LvlObject *o = 0;

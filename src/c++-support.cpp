@@ -20,7 +20,7 @@ void __cxa_pure_virtual(void) {
 }
 
 void* operator new(size_t size) {
-//	emu_printf("size %d\n", size);
+	emu_printf("size %d\n", size);
 //    return malloc(size);
 	void *ptr;
 /*	if(size!=8)
@@ -32,7 +32,7 @@ void* operator new(size_t size) {
 	}
 //	else if(size==66316)
 //		return current_lwram;
-	else*/ if(size==1284)
+	else*/ if(size==516)
 	{
 		return (uint8_t *)VDP2_VRAM_B0;
 	}

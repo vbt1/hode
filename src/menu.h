@@ -75,7 +75,7 @@ struct Menu {
 //	DatSpritesGroup *_psxSprites[3];
 //	const uint8_t *_psxPalettes[3];
 
-	uint8_t _paletteBuffer[256 * 3];
+//	uint8_t _paletteBuffer[256 * 3];
 	uint8_t _loadLevelButtonState;
 	uint8_t _optionNum;
 	int _lastLevelNum;

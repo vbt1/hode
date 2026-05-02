@@ -3,7 +3,7 @@
 #define USE_LESS_RAM 1
 //#define DISPLAYANDYANIM 1
 //#define USE_SPRITE 1
-//#define OLD_DRAW_SCREEN 1
+#define OLD_DRAW_SCREEN 1
 //#define DEBUG 1
 //#define DEBUG2 1
 /*
@@ -353,6 +353,8 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 //emu_printf("shadowPaletteSize %d 144\n", shadowPaletteSize);
 			assert(shadowPaletteSize >= 144);
 			_video->buildShadowColorLookupTable(_shadowScreenMasksTable[i].shadowPalettePtr, _video->_shadowColorLookupTable);
+#else
+	memcpy(_video->_shadowColorLut, _shadowScreenMasksTable[i].shadowPalettePtr, 144);	
 #endif
 //emu_printf("dst %p %d 144\n", dst, decodedSize);
 			dst += decodedSize;
@@ -420,7 +422,6 @@ void Game::setupBackgroundBitmap() {
 		emu_printf("--duration %s : %d\n","decodeLZW", result);
 #endif
 	}
-//lvl->shadowCount = 1;
 	if (lvl->shadowCount != 0) {
 //emu_printf("decodeShadowScreenMask\n");
 #if 1
@@ -428,7 +429,7 @@ void Game::setupBackgroundBitmap() {
 #endif
 	}
 	for (int i = 0; i < 256 * 3; ++i) {
-		_video->_displayPaletteBuffer[i] = pal[i] << 8;
+		_video->_displayPaletteBuffer[i] = pal[i];// << 8;
 	}
 	_video->_paletteChanged = true;
 }
@@ -1402,13 +1403,10 @@ void Game::resetScreen() {
 		_res->_screensState[i].s0 = *dat2++;
 		_level->_screenCounterTable[i] = *dat2++;
 	}
-//emu_printf("4\n");
 	resetScreenMask();
-//emu_printf("5\n");
 	for (int i = screenNum; i < _res->_lvlHdr.screensCount; ++i) {
 		_level->setupScreenCheckpoint(i);
 	}
-//emu_printf("6\n");
 	resetWormHoleSprites();
 }
 
@@ -1440,8 +1438,8 @@ void Game::restartLevel() {
 	if (_andyObject->screenNum != screenNum) {
 		preloadLevelScreenData(_andyObject->screenNum, kNoScreen);
 	}
-//emu_printf("setupScreen1\n");
 	setupScreen(_andyObject->screenNum);
+	frame_y = frame_x = 0;
 }
 
 void Game::playAndyFallingCutscene(int type) {
@@ -2107,8 +2105,8 @@ void Game::drawScreen() {
 		emu_printf("--duration %s : %d\n","decodeSPR5", result);
 #endif
  // vbt : à remettre
-emu_printf("--dat->shadowCount %d\n", dat->shadowCount);
-while(1);
+//emu_printf("--dat->shadowCount %d\n", dat->shadowCount);
+// old rendering !
 	for (int i = 0; i < dat->shadowCount; ++i) {
 		_video->applyShadowColors(_shadowScreenMasksTable[i].x,
 			_shadowScreenMasksTable[i].y,
@@ -2238,7 +2236,7 @@ void Game::drawScreen() {
 #ifdef DISPLAYANDYANIM
 		LvlObjectData *dat = _andyObject->levelData0x2988;
 
-					emu_printf("type %d movesCount %d\n", spr->type, dat->movesCount);
+//					emu_printf("type %d movesCount %d\n", spr->type, dat->movesCount);
 int sz=0;
 for(int i = 0; i < dat->framesCount;i++)
 {
@@ -2252,7 +2250,7 @@ spr->xPos++;
 					slSynch();
 			g_system->sleep(500);
 }
-emu_printf("vram %d %x\n", sz, sz);
+//emu_printf("vram %d %x\n", sz, sz);
 #endif
 					_video->decodeSPR(spr, _video->_frontLayer);
 //                } else if (_currentScreen != redraw_fg) {
@@ -2485,7 +2483,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	callLevel_initialize();
 //emu_printf("restartLevel\n");
 	restartLevel();
-	frame_y = frame_x = 0;
+//	frame_y = frame_x = 0;
 
 	uint8_t last_frame_z = 0xFF;
 	char buffer[8];
@@ -2607,17 +2605,20 @@ void Game::updateLvlObjectLists() {
 }
 
 LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
-	const bool isPsx = _res->_isPsx;
-	const int soundDataLen = isPsx ? sizeof(uint32_t) : sizeof(uint16_t);
+//	const bool isPsx = _res->_isPsx;
+	const int soundDataLen = /*isPsx ? sizeof(uint32_t) :*/ sizeof(uint16_t);
 	AnimBackgroundData *vg = (AnimBackgroundData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAnimBackgroundData);
 	const uint8_t *data = vg->currentSpriteData + soundDataLen;
 	if (_res->_currentScreenResourceNum == ptr->screenNum) {
-		if (ptr->currentSound != 0xFFFF) {
 #ifdef SOUND
+		if (ptr->currentSound != 0xFFFF) {
+
 			playSound(ptr->currentSound, ptr, 0, 3);
 #endif
 			ptr->currentSound = 0xFFFF;
+#ifdef SOUND
 		}
+#endif
 		Sprite *spr = _spritesNextPtr;
 		if (spr && READ_LE_UINT16(data + 2) > 8) {
 #ifdef PSX			
@@ -2647,7 +2648,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 		vg->currentSpriteData = vg->nextSpriteData;
 		if (vg->currentFrame == 0) {
 			vg->currentFrame = 1;
-			soundNum = isPsx ? READ_LE_UINT32(vg->nextSpriteData) : READ_LE_UINT16(vg->nextSpriteData);
+			soundNum = /*isPsx ? READ_LE_UINT32(vg->nextSpriteData) :*/ READ_LE_UINT16(vg->nextSpriteData);
 		}
 		ptr->objectUpdateType = 4;
 		break;
@@ -2665,7 +2666,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 			vg->currentSpriteData = vg->otherSpriteData;
 			ptr->objectUpdateType = 1;
 		}
-		soundNum = isPsx ? READ_LE_UINT32(vg->currentSpriteData) : READ_LE_UINT16(vg->currentSpriteData);
+		soundNum = /*isPsx ? READ_LE_UINT32(vg->currentSpriteData) :*/ READ_LE_UINT16(vg->currentSpriteData);
 		break;
 	case 4:
 		++vg->currentFrame;
@@ -2676,7 +2677,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 			vg->currentSpriteData = vg->otherSpriteData;
 			ptr->objectUpdateType = 1;
 		}
-		soundNum = isPsx ? READ_LE_UINT32(vg->currentSpriteData) : READ_LE_UINT16(vg->currentSpriteData);
+		soundNum = /*isPsx ? READ_LE_UINT32(vg->currentSpriteData) :*/ READ_LE_UINT16(vg->currentSpriteData);
 		break;
 	case 2:
 		while (vg->currentFrame < vg->framesCount - 2) {
@@ -2716,7 +2717,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 		++vg->currentFrame;
 		if (vg->currentFrame < vg->framesCount - 1) {
 			vg->currentSpriteData = nextSpriteData;
-			soundNum = isPsx ? READ_LE_UINT32(vg->currentSpriteData) : READ_LE_UINT16(vg->currentSpriteData);
+			soundNum = /*isPsx ? READ_LE_UINT32(vg->currentSpriteData) :*/ READ_LE_UINT16(vg->currentSpriteData);
 		} else {
 			if (vg->currentFrame > vg->framesCount) {
 				vg->currentFrame = vg->framesCount;
@@ -2728,7 +2729,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 	case 0:
 		return ptr->nextPtr;
 	default:
-		soundNum = isPsx ? READ_LE_UINT32(vg->currentSpriteData) : READ_LE_UINT16(vg->currentSpriteData);
+		soundNum = /*isPsx ? READ_LE_UINT32(vg->currentSpriteData) :*/ READ_LE_UINT16(vg->currentSpriteData);
 		if (ptr->hitCount == 0) {
 			++vg->currentFrame;
 			if (vg->currentFrame >= vg->framesCount) {
@@ -2825,7 +2826,6 @@ LvlObject *Game::updateAnimatedLvlObjectType2(LvlObject *ptr) {
 			spr->h = ptr->height;
 			spr->bitmapBits = bitmap;
 			spr->num = num;
-//			spr->type = kObjectDataTypeAnimBackgroundData;
 			spr->type = kObjectDataTypeMonster1;
 			addToSpriteList(spr);
 		}
@@ -3262,7 +3262,6 @@ void Game::levelMainLoop() {
 }
 
 void Game::callLevel_postScreenUpdate(int num) {
-//	return;
 	_level->postScreenUpdate(num);
 }
 
@@ -3277,7 +3276,6 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
-
 	case 1:
 		_level = Level_fort_create();
 		break;
@@ -3308,7 +3306,7 @@ Level *Game::createLevel() {
 }
 
 void Game::callLevel_initialize() {
-#if PAF
+#ifdef PAF
 //emu_printf("setPointers\n");
 	_level->setPointers(this, _andyObject, NULL, _res, _video);
 #endif
@@ -3362,7 +3360,7 @@ int Game::displayHintScreen(int num, int pause) {
 		_video->_frontLayer,
 		_video->_shadowLayer,
 	};
-	const bool isPsx = _res->_isPsx;
+//	const bool isPsx = _res->_isPsx;
 #ifdef SOUND
 	muteSound();
 #endif
@@ -4701,7 +4699,7 @@ void Game::initLvlObjects() {
 		case 1:
 //emu_printf("case 1 %d\n", _res->_lvlHdr.staticLvlObjectsCount);
 			if (ptr->dataPtr) {
-				emu_printf("Trying to free _resLvlScreenBackgroundDataTable.backgroundSoundTable (i=%d index=%d)\n", i, index);
+//				emu_printf("Trying to free _resLvlScreenBackgroundDataTable.backgroundSoundTable (i=%d index=%d)\n", i, index);
 			}
 			ptr->xPos = 0;
 			ptr->yPos = 0;

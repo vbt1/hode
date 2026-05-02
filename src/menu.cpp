@@ -133,7 +133,7 @@ void Menu::loadData() {
 #endif
 	const int version = _res->_datHdr.version;
 
-	const int paletteSize = _res->_isPsx ? 0 : 256 * 3;
+	const int paletteSize = /*_res->_isPsx ? 0 :*/ 256 * 3;
 
 	const uint8_t *ptr = _res->_menuBuffer1;
 	uint32_t hdrOffset, ptrOffset = 0;
@@ -429,14 +429,15 @@ void Menu::drawSprite(const DatSpritesGroup *spriteGroup, const uint8_t *ptr, ui
 	for (uint32_t i = 0; i < spriteGroup->count; ++i) {
 		const uint16_t size = READ_LE_UINT16(ptr + 2);
 		if (num == i) {
-			if (_res->_isPsx) {
 #ifdef PSX
+			if (_res->_isPsx) {
 				const int count = READ_LE_UINT32(ptr + 4);
 				if (count != 0 && (count & 0x100) == 0) {
 					_video->decodeBackgroundOverlayPsx(ptr);
 				}
+			} else 
 #endif
-			} else {
+			{
 				if (x < 0) {
 					x = ptr[0];
 				}
@@ -578,8 +579,8 @@ void Menu::drawTitleScreen(int option) {
 
 int Menu::handleTitleScreen() {
 //emu_printf("handleTitleScreen\n");
-	const int firstOption = _res->_isPsx ? kTitleScreen_Play : kTitleScreen_AssignPlayer;
-	const int lastOption = _res->_isPsx ? kTitleScreen_Options : kTitleScreen_Quit;
+	const int firstOption = /*_res->_isPsx ? kTitleScreen_Play :*/ kTitleScreen_AssignPlayer;
+	const int lastOption = /*_res->_isPsx ? kTitleScreen_Options :*/ kTitleScreen_Quit;
 	int currentOption = kTitleScreen_Play;
 
 // vbt : déplacement pour ne pas le réafficher

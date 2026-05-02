@@ -614,7 +614,6 @@ void PafPlayer::mainLoop() {
 slSynch();
 	PafAsyncCtx ctx;
 	ctx.buffers[0] = (uint8_t *)hwram_work_paf;
-//	ctx.buffers[1] = (uint8_t *)hwram_work_paf+24576+2048;
 	ctx.buffers[1] = (uint8_t *)current_lwram;
 	current_lwram +=  ASYNCH_MAX;
 	
