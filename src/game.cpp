@@ -1257,7 +1257,7 @@ void Game::setupScreenLvlObjects(int num) {
 #endif				
 				{
 					p->framesCount = READ_LE_UINT16(data); data += 2;
-					ptr->currentSound = READ_LE_UINT16(data); data += 2;
+					/*ptr->currentSound = READ_LE_UINT16(data);*/ data += 2;
 					p->nextSpriteData = READ_LE_UINT16(data + 4) + data + 4;
 				}
 				p->currentSpriteData = p->otherSpriteData = data;
@@ -1270,7 +1270,7 @@ void Game::setupScreenLvlObjects(int num) {
 //					emu_printf("No backgroundSoundData num %d screen %d\n", ptr->dataNum, num);
 					break;
 				}
-				ptr->currentSound = READ_LE_UINT16(data); data += 2;
+				/*ptr->currentSound = READ_LE_UINT16(data);*/ data += 2;
 				ptr->dataPtr = data;
 			}
 			break;
@@ -2614,9 +2614,7 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 		if (ptr->currentSound != 0xFFFF) {
 
 			playSound(ptr->currentSound, ptr, 0, 3);
-#endif
 			ptr->currentSound = 0xFFFF;
-#ifdef SOUND
 		}
 #endif
 		Sprite *spr = _spritesNextPtr;
@@ -2754,12 +2752,13 @@ LvlObject *Game::updateAnimatedLvlObjectType0(LvlObject *ptr) {
 LvlObject *Game::updateAnimatedLvlObjectType1(LvlObject *ptr) {
 	if (ptr->screenNum == _res->_currentScreenResourceNum) {
 		if (_res->_screensState[_res->_currentScreenResourceNum].s0 == ptr->screenState || ptr->screenState == 0xFF) {
-			if (ptr->currentSound != 0xFFFF) {
 #ifdef SOUND
+			if (ptr->currentSound != 0xFFFF) {
+
 				playSound(ptr->currentSound, 0, 0, 3);
-#endif
 				ptr->currentSound = 0xFFFF;
 			}
+#endif
 			const uint8_t *data = (const uint8_t *)getLvlObjectDataPtr(ptr, kObjectDataTypeLvlBackgroundSound);
 			Sprite *spr = _spritesNextPtr;
 			if (spr && READ_LE_UINT16(data + 2) > 8) {

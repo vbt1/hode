@@ -478,7 +478,7 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 	dat->directionKeyMask = *src++;
 	dat->actionKeyMask = *src++;
 	dat->currentSprite = READ_LE_UINT16(src); src += 2;
-	dat->currentSound = READ_LE_UINT16(src); src += 2;
+	/*dat->currentSound = READ_LE_UINT16(src);*/ src += 2;
 	src += 2; // 0x26
 	dat->bitmapBits = 0; src += 4;
 	dat->callbackFuncPtr = 0; src += 4;
@@ -688,7 +688,7 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 		return;
 	}
 emu_printf("vbt malloc sprite %d num %d\n", size, num);
-	uint8_t *ptr = allocate_memory((num == 2 || num == 3 ) ? TYPE_ANDY : TYPE_ANDY1, size);
+	uint8_t *ptr = allocate_memory((num == 2 || num == 3) ? TYPE_ANDY : TYPE_ANDY1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
