@@ -79,11 +79,11 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_SCRMASKBUF:
     case TYPE_ANDY:
     case TYPE_LAYER:
-//    case TYPE_MSTCODE:
+    case TYPE_MSTCODE:
 	{
 		if ((int)hwram_work + alignedSize > (int)hwram) {
 			int missing = ((int)hwram_work + alignedSize) - (int)hwram;
-//			emu_printf("ERROR: %d hwram_work overflow! Requested: %d bytes, Missing: %d bytes\n", type, alignedSize, missing);
+			emu_printf("ERROR: %d hwram_work overflow! Requested: %d bytes, Missing: %d bytes\n", type, alignedSize, missing);
 			return nullptr;
 		}
 		return bump(&hwram_work, alignedSize);
@@ -98,7 +98,7 @@ emu_printf("type %d size %d\n", type, alignedSize);
     case TYPE_MSTAREA:
     case TYPE_MAP:
     case TYPE_SHOOT:
-    case TYPE_MSTCODE:
+//    case TYPE_MSTCODE:
 //    case TYPE_GFSFILE:
     case TYPE_SCRMASK:
     case TYPE_BGLVLOBJ:
