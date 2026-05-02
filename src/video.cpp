@@ -45,7 +45,7 @@ Video::Video() {
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
 		_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
 		_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
-		_backgroundLayer2= allocate_memory (TYPE_LAYER, W * H);
+		_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
 		_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4); //99k
 		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256); //49k
 		

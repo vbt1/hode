@@ -85,7 +85,7 @@ struct Game {
 	static const uint8_t _lar1_spritesData[];
 	static const int16_t *_lar_screenMaskOffsets[];
 
-	static uint8_t _lar1_maskData[];
+//	static uint8_t _lar1_maskData[];
 
 	FileSystem _fs;
 	Level *_level;

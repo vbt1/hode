@@ -32,7 +32,7 @@ void* operator new(size_t size) {
 	}
 //	else if(size==66316)
 //		return current_lwram;
-	else*/ if(size==240)
+	else*/ if(size==224)
 	{
 		return (uint8_t *)VDP2_VRAM_B0;
 	}

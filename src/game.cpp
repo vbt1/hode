@@ -51,6 +51,7 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 	_res = new Resource(&_fs);
 	_rnd.setSeed();
 	_video = new Video();
+//	_screenMaskBuffer = allocate_memory(TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
 #ifdef PAF
 	_paf = new PafPlayer(&_fs, _video);
 #endif
@@ -2360,7 +2361,10 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	pafCb.userdata = this;
 	_paf->setCallback(&pafCb);
 #endif
+
+#ifdef USE_FONT
 	_video->_font = _res->_fontBuffer;
+#endif
 //	assert(level < kLvl_test);
 
 //	level = kLvl_fort;
@@ -4946,7 +4950,7 @@ void Game::updateGatesLar(LvlObject *o, uint8_t *p, int num) {
 		}
 	}
 }
-
+#ifdef LEVEL7
 void Game::updateSwitchesLar(int count, uint8_t *switchesData, BoundingBox *switchesBoundingBox, uint8_t *gatesData) {
 	for (int i = 0; i < count; ++i) {
 		switchesData[i * 4 + 1] &= ~0x40;
@@ -5112,7 +5116,7 @@ int Game::updateSwitchesLar_toggle(bool flag, uint8_t dataNum, int screenNum, in
 	}
 	return ret;
 }
-/*
+
 void Game::dumpSwitchesLar(int switchesCount, const uint8_t *switchesData, const BoundingBox *switchesBoundingBox, int gatesCount, const uint8_t *gatesData) {
 	fprintf(stdout, "_mstAndyVarMask 0x%x _mstLevelGatesMask 0x%x\n", _mstAndyVarMask, _mstLevelGatesMask);
 	for (int i = 0; i < gatesCount; ++i) {
@@ -5125,7 +5129,7 @@ void Game::dumpSwitchesLar(int switchesCount, const uint8_t *switchesData, const
 		fprintf(stdout, "switch %2d: screen %2d (%3d,%3d,%3d,%3d) flags 0x%02x sprite %2d gate %2d\n", i, p[0], b->x1, b->y1, b->x2, b->y2, p[1], (int8_t)p[2], p[3]);
 	}
 }
-*/
+
 void Game::updateScreenMaskLar(uint8_t *p, uint8_t flag) {
 	if (p[1] != flag) {
 		p[1] = flag;
@@ -5189,7 +5193,7 @@ int Game::clipAndyLvlObjectLar(BoundingBox *a /* unused */, BoundingBox *b, bool
 	}
 	return ret;
 }
-
+#endif
 void Game::resetWormHoleSprites() {
 	memset(_wormHoleSpritesTable, 0, sizeof(_wormHoleSpritesTable));
 	_wormHoleSpritesCount = 0;

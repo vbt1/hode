@@ -194,8 +194,10 @@ emu_printf("_version = V1_2\n");
 	_lvlMasksOffset = _lvlBackgroundsOffset + kMaxScreens * (16 + 160);
 
 	_loadingImageBuffer = 0;
+#ifdef USE_FONT
 	_fontBuffer = 0;
 	_fontDefaultColor = 0;
+#endif
 	_menuBuffer0 = 0;
 	_menuBuffer1 = 0;
 //	current_lwram = (Uint8 *)VBT_L_START;
@@ -297,6 +299,7 @@ void Resource::loadSetupDat() {
 //		}
 
 		// font
+#ifdef USE_FONT
 		static const int kFontSize = 16 * 16 * 64;
 //		//emu_printf("malloc(kFontSize) %d\n", kFontSize);		
 //		_fontBuffer = (uint8_t *)malloc(kFontSize);
@@ -320,6 +323,7 @@ void Resource::loadSetupDat() {
 				}
 			}
 		}
+#endif
 	}
 	else
 	{

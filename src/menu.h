@@ -91,21 +91,21 @@ struct Menu {
 //	int _controlsNum;
 //	int _joystickControlsNum;
 //	int _keyboardControlsNum;
-	int _difficultyNum;
-	int _soundNum;
-	uint8_t _soundVolume;
-	int _volumeState;
+//	int _difficultyNum;
+//	int _soundNum;
+//	uint8_t _soundVolume;
+//	int _volumeState;
 //	int _soundCounter;
 //	int _soundTestSpriteNum;
 
 	Menu(Game *g, PafPlayer *paf, Resource *res, Video *video);
 
-	void setVolume();
+//	void setVolume();
 
 	void loadData();
 
-	int getSoundNum(int num, int index = 0) const;
-	SssObject *playSound(int num);
+//	int getSoundNum(int num, int index = 0) const;
+//	SssObject *playSound(int num);
 
 	void drawBitmap(const uint8_t *data, uint32_t size, bool setPalette = false);
 
@@ -121,34 +121,34 @@ struct Menu {
 	int handleTitleScreen();
 	void drawDigit(int x, int y, int num);
 	void drawBitmap(const DatBitmapsGroup *bitmapsGroup, const uint8_t *bitmapData, int x, int y, int w, int h, uint8_t baseColor = 0);
-	void setCurrentPlayer(int num);
+//	void setCurrentPlayer(int num);
 	void setLevelCheckpoint(int num);
 	void drawPlayerProgress(int state, int cursor);
-	void handleAssignPlayer();
+//	void handleAssignPlayer();
 	void updateBitmapsCircularList(const DatBitmapsGroup *bitmapsGroup, const uint8_t *bitmapData, int num, int count);
 	void drawBitmapsCircularList(const DatBitmapsGroup *bitmapsGroup, const uint8_t *bitmapData, int num, int count, bool updatePalette);
-	void drawCheckpointScreen();
-	void drawLevelScreen();
-	void drawCutsceneScreen();
-	void drawSettingsScreen();
-	void handleSettingsScreen(int num);
-	void drawControlsScreen();
-	void handleControlsScreen(int num);
-	void drawJoystickKeyCode(int num);
-	void drawJoystickControlsScreen();
-	void handleJoystickControlsScreen(int num);
-	void drawKeyboardKeyCode(int num);
-	void drawKeyboardControlsScreen();
-	void handleKeyboardControlsScreen(int num);
-	void drawDifficultyScreen();
-	void handleDifficultyScreen(int num);
-	void drawSoundScreen();
-	void handleSoundScreen(int num);
-	void changeToOption(int num);
+//	void drawCheckpointScreen();
+//	void drawLevelScreen();
+//	void drawCutsceneScreen();
+//	void drawSettingsScreen();
+//	void handleSettingsScreen(int num);
+//	void drawControlsScreen();
+//	void handleControlsScreen(int num);
+//	void drawJoystickKeyCode(int num);
+//	void drawJoystickControlsScreen();
+//	void handleJoystickControlsScreen(int num);
+//	void drawKeyboardKeyCode(int num);
+//	void drawKeyboardControlsScreen();
+//	void handleKeyboardControlsScreen(int num);
+//	void drawDifficultyScreen();
+//	void handleDifficultyScreen(int num);
+//	void drawSoundScreen();
+//	void handleSoundScreen(int num);
+//	void changeToOption(int num);
 	void handleLoadLevel(int num);
-	void handleLoadCheckpoint(int num);
-	void handleLoadCutscene(int num);
-	bool handleOptions();
+//	void handleLoadCheckpoint(int num);
+//	void handleLoadCutscene(int num);
+//	bool handleOptions();
 };
 
 #endif // MENU_H__

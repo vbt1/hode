@@ -42,8 +42,9 @@ struct Video {
 	uint8_t *_transformShadowBuffer;
 	uint8_t _transformShadowLayerDelta;
 	uint8_t _shadowColorLut[144];
+#ifdef USE_FONT
 	const uint8_t *_font;
-
+#endif
 	struct {
 		int x1, y1;
 		int x2, y2;

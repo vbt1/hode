@@ -580,8 +580,10 @@ struct Resource {
 	int _version;
 
 	uint8_t *_loadingImageBuffer;
+#ifdef USE_FONT
 	uint8_t *_fontBuffer;
 	uint8_t _fontDefaultColor;
+#endif
 	uint8_t *_menuBuffer0;
 	uint8_t *_menuBuffer1;
 	uint32_t _menuBuffersOffset;
