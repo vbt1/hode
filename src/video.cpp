@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -39,7 +39,7 @@ Video::Video() {
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+34000);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+24000);
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);

@@ -43,7 +43,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 //		return (uint8_t*)0;
 //if(alignedSize>8000)
 //	if(type==TYPE_PAFHEAD)
-//emu_printf("type %d size %d\n", type, alignedSize);
+emu_printf("type %d size %d\n", type, alignedSize);
     switch (type) {	
     case TYPE_HWRAM:
         hwram_src = (Uint8 *)malloc(alignedSize);
@@ -73,7 +73,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
     case TYPE_SCRMASKBUF:
     case TYPE_ANDY:
     case TYPE_LAYER:
-//    case TYPE_MSTCODE:
+
 	{
         if ((int)hwram_work + alignedSize > (int)hwram) {
             DPRINTF("ERROR: %d overflow req:%d miss:%d\n", type, alignedSize,
@@ -97,7 +97,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 //    case TYPE_GFSFILE:
     case TYPE_SCRMASK:
     case TYPE_BGLVLOBJ:
-//  case TYPE_TASK:
+//    case TYPE_TASK:
 //	case TYPE_SHADWBUF:
         if (((int)current_lwram) + SAT_ALIGN(alignedSize) < 0x300000)
 		{

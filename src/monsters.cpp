@@ -838,9 +838,9 @@ void Game::resetMstCode() {
 	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
 	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
 	memset(_mstVars, 0, sizeof(_mstVars));
-	memset(_tasksTable, 0, sizeof(_tasksTable));
+//	memset(_tasksTable, 0, sizeof(_tasksTable));
 //	_tasksTable = (Task *)allocate_memory(TYPE_TASK,kMaxTasks*sizeof(Task));
-//	memset(_tasksTable, 0, sizeof(Task) * kMaxTasks);
+	memset(_tasksTable, 0, sizeof(Task) * kMaxTasks);
 	_m43Num3 = _m43Num1 = _m43Num2 = _mstActionNum = -1;
 	_mstOp54Counter = 0; // bugfix: not reset in the original, causes uninitialized reads at the beginning of 'fort'
 	_executeMstLogicPrevCounter = _executeMstLogicCounter = 0;

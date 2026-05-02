@@ -28,7 +28,7 @@ enum {
 	kClearCode = 1 << (kCodeWidth - 1),
 	kEndCode = kClearCode + 1,
 	kNewCodes = kEndCode + 1,
-	kStackSize = 4096,
+	kStackSize = 8192, // vbt : ne pas réduire , garder 8k
 	kMaxBits = 12
 };
 
@@ -41,7 +41,7 @@ struct LzwDecoder {
 	uint8_t _bitsLeft;
 
 	uint32_t nextCode(int codeSize);
-	inline int decode(uint8_t *dst);
+	int decode(uint8_t *dst);
 };
 
 static struct LzwDecoder _lzw;
@@ -59,7 +59,7 @@ uint32_t LzwDecoder::nextCode(int codeSize) { // 9 to 12bits
 	return code;
 }
 
-inline int LzwDecoder::decode(uint8_t *dst) {
+int LzwDecoder::decode(uint8_t *dst) {
 //emu_printf("decode %p\n", dst);
 	uint8_t *p = dst;
 	uint8_t *stackPtr = &_stack[kStackSize - 1];
