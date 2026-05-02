@@ -1439,7 +1439,6 @@ void Game::restartLevel() {
 		preloadLevelScreenData(_andyObject->screenNum, kNoScreen);
 	}
 	setupScreen(_andyObject->screenNum);
-	frame_y = frame_x = 0;
 }
 
 void Game::playAndyFallingCutscene(int type) {

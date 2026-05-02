@@ -232,7 +232,7 @@ int xx = 0;
 
 		_playerBitmapSize = READ_LE_UINT32(ptr + hdrOffset);
 		hdrOffset += sizeof(DatBitmap);
-		_playerBitmapData = ptr + ptrOffset;
+//		_playerBitmapData = ptr + ptrOffset;
 		ptrOffset += _playerBitmapSize + paletteSize;
 
 		for (int i = 0; i < kOptionsCount; ++i) {
@@ -246,7 +246,7 @@ int xx = 0;
 				_optionsBitmapData[i] = 0;
 			}
 		}
-
+/*
 		const int cutscenesCount = _res->_datHdr.cutscenesCount;
 		_cutscenesBitmaps = (DatBitmapsGroup *)(ptr + hdrOffset);
 		_cutscenesBitmapsData = ptr + ptrOffset;
@@ -255,17 +255,17 @@ int xx = 0;
 
 		for (int i = 0; i < kCheckpointLevelsCount; ++i) {
 			DatBitmapsGroup *bitmapsGroup = (DatBitmapsGroup *)(ptr + hdrOffset);
-			_checkpointsBitmaps[i] = bitmapsGroup;
-			_checkpointsBitmapsData[i] = ptr + ptrOffset;
+//			_checkpointsBitmaps[i] = bitmapsGroup;
+//			_checkpointsBitmapsData[i] = ptr + ptrOffset;
 			const int count = _res->_datHdr.levelCheckpointsCount[i];
 			hdrOffset += count * sizeof(DatBitmapsGroup);
 			ptrOffset += readBitmapsGroup(count, bitmapsGroup, ptrOffset, paletteSize);
 		}
-
-		const int levelsCount = _res->_datHdr.levelsCount;
-		_levelsBitmaps = (DatBitmapsGroup *)(ptr + hdrOffset);
-		_levelsBitmapsData = ptr + ptrOffset;
-		readBitmapsGroup(levelsCount, _levelsBitmaps, ptrOffset, paletteSize);
+*/
+//		const int levelsCount = _res->_datHdr.levelsCount;
+//		_levelsBitmaps = (DatBitmapsGroup *)(ptr + hdrOffset);
+//		_levelsBitmapsData = ptr + ptrOffset;
+//		readBitmapsGroup(levelsCount, _levelsBitmaps, ptrOffset, paletteSize);
 	}
 
 	ptr = _res->_menuBuffer0;
@@ -370,12 +370,12 @@ int xx = 0;
 			}
 		}
 
-		const int levelsCount = _res->_datHdr.levelsCount;
-		hdrOffset = ptrOffset;
-		ptrOffset += levelsCount * sizeof(DatBitmapsGroup);
-		_levelsBitmaps = (DatBitmapsGroup *)(ptr + hdrOffset);
-		_levelsBitmapsData = ptr + ptrOffset;
-		readBitmapsGroup(levelsCount, _levelsBitmaps, ptrOffset, paletteSize);
+//		const int levelsCount = _res->_datHdr.levelsCount;
+//		hdrOffset = ptrOffset;
+//		ptrOffset += levelsCount * sizeof(DatBitmapsGroup);
+//		_levelsBitmaps = (DatBitmapsGroup *)(ptr + hdrOffset);
+//		_levelsBitmapsData = ptr + ptrOffset;
+//		readBitmapsGroup(levelsCount, _levelsBitmaps, ptrOffset, paletteSize);
 	}
 }
 #ifdef SOUND
@@ -623,7 +623,7 @@ int Menu::handleTitleScreen() {
 //	SPR_InitSlaveSH();
 	return currentOption;
 }
-
+/*
 void Menu::drawDigit(int x, int y, int num) {
 	assert(x >= 0 && x + 16 < Video::W && y >= 0 && y + 10 < Video::H);
 	assert(num < 16);
@@ -639,7 +639,7 @@ void Menu::drawDigit(int x, int y, int num) {
 		src += Video::W;
 	}
 }
-
+*/
 void Menu::drawBitmap(const DatBitmapsGroup *bitmapsGroup, const uint8_t *bitmapData, int x, int y, int w, int h, uint8_t baseColor) {
 #ifdef PSX
 	if (_res->_isPsx) {

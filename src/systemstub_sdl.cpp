@@ -141,14 +141,12 @@ uint8 isNTSC(void);
 /* SDL WRAPPER */
 struct SystemStub_SDL : System {
 	enum {
-		kJoystickCommitValue = 3200,
-		kKeyMappingsSize = 20,
+//		kJoystickCommitValue = 3200,
+//		kKeyMappingsSize = 20,
 		kAudioHz = 22050
 	};
 
-//	uint8 _overscanColor;
-	uint16 _pal[512];
-//	uint16 _screenW, _screenH;
+	uint16 _pal[256];
 
 	/* Controller data */
 	PerDigital *input_devices[MAX_INPUT_DEVICES];
@@ -161,7 +159,7 @@ struct SystemStub_SDL : System {
 //	virtual void getPaletteEntry(uint16 i, Color *c);
 //	virtual void setOverscanColor(uint8 i);
 	virtual void initTimeStamp();
-	virtual uint32 getOutputSampleRate();
+//	virtual uint32 getOutputSampleRate();
 	virtual void setup_input (void); // Setup input controllers
 	virtual void setScaler(const char *name, int multiplier);
 	virtual void setGamma(float gamma);
@@ -264,79 +262,18 @@ void SystemStub_SDL::setGamma(float gamma) {
 }
 
 void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
+    const int shift = (depth == 8) ? 3 : 1;  // 8-bit→5-bit or 6-bit→5-bit
     uint16_t *dst = _clut;
-
-    if (depth == 8) {
-        for (int i = 0; i < n; i++) {
-            int r = pal[0];
-            int g = pal[1];
-            int b = pal[2];
-            pal += 3;
-
-            // Saturn uses BGR555
-            *dst++ = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag;
-        }
-    } else {  // depth == 6
-        for (int i = 0; i < n; i++) {
-            // Expand 6→8 bits: x * (255/63) ≈ (x<<2)|(x>>4)
-            int r = (pal[0] << 2) | (pal[0] >> 4);
-            int g = (pal[1] << 2) | (pal[1] >> 4);
-            int b = (pal[2] << 2) | (pal[2] >> 4);
-            pal += 3;
-
-            *dst++ = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag;
-        }
+    for (int i = 0; i < n; i++) {
+        const int r = pal[0] >> shift;
+        const int g = pal[1] >> shift;
+        const int b = pal[2] >> shift;
+        pal += 3;
+        *dst++ = (b << 10) | (g << 5) | r | RGB_Flag;
     }
-
     slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
 }
 
-/*
-void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
-	const int shift = 8 - depth;
-	for (int i = 0; i < n; ++i) {
-
-		int r = pal[i * 3];
-		int g = pal[i * 3 + 1];
-		int b = pal[i * 3 + 2];
-		if (shift != 0) {
-			r = (r << shift) | (r >> (depth - shift));
-			g = (g << shift) | (g >> (depth - shift));
-			b = (b << shift) | (b >> (depth - shift));
-		}
-//		//emu_printf("r%d g%d b%d\n",r,g,b);
-		_clut[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag; // BGR for saturn		
-	}
-	slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
-//	sceKernelDcacheWritebackRange(_clut, sizeof(_clut));
-}
-*/
-/*
-void SystemStub_SDL::setPalette(uint8 *palette, uint16 colors) {
-	assert(colors <= 256);
-	for (int i = 0; i < colors; ++i) {
-		uint8 r = palette[i * 3];
-		uint8 g = palette[i * 3 + 1];
-		uint8 b = palette[i * 3 + 2];
-
-		_pal[i] = ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) | RGB_Flag; // BGR for saturn
-	}
-}
-
-void SystemStub_SDL::setPaletteEntry(uint16 i, const Color *c) {
-	_pal[i] = RGB(c->r, c->g, c->b);
-}
-
-void SystemStub_SDL::getPaletteEntry(uint16 i, Color *c) {
-	Uint8 b = ((_pal[i] >> 10) & 0x1F);
-	Uint8 g = ((_pal[i] >> 5)  & 0x1F);
-	Uint8 r = ((_pal[i] >> 0)  & 0x1F);
-
-	c->r = r;
-	c->g = g;
-	c->b = b;
-}
-*/
 void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) 
 {
 
@@ -420,12 +357,6 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 		set_sr( sr );
 	}
 
-#define CADR_WORKRAM_L_START   0x200000
-#define CADR_WORKRAM_L_END     0x300000
-
-#define ADR_WORKRAM_L_START2 0x20200000
-#define ADR_WORKRAM_L_END2 0x20300000
-
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch)
 {
     // pitch = 256 bytes per line in source buffer
@@ -433,18 +364,7 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 
     const uint8_t *src = buf + y * w + x;
     uint8_t * dst = (uint8_t *)VDP2_VRAM_A0 + y * 512 + x;
-/*
-uintptr_t dst_addr = reinterpret_cast<uintptr_t>(dst);
-uintptr_t src_addr = reinterpret_cast<uintptr_t>(src);
 
-    if(((dst_addr >= ADR_WORKRAM_L_START2) && (dst_addr < ADR_WORKRAM_L_END2)) ||
-       ((dst_addr >= CADR_WORKRAM_L_START) && (dst_addr < CADR_WORKRAM_L_END)) ||
-       ((src_addr >= ADR_WORKRAM_L_START2) && (src_addr < ADR_WORKRAM_L_END2)) ||
-       ((src_addr >= CADR_WORKRAM_L_START) && (src_addr < CADR_WORKRAM_L_END))){
-	emu_printf("no dma\n");
-return;	
-	   }
-*/
     Uint32 saved_imask = get_imask();
     set_imask(15);  // Disable interrupts during DMA setup
 
@@ -640,11 +560,11 @@ void SystemStub_SDL::stopAudio() {
 	return;
 }
 #endif
-
+/*
 uint32 SystemStub_SDL::getOutputSampleRate() {
 	return kAudioHz;
 }
-/*
+
 void *SystemStub_SDL::createMutex() {
 ////emu_printf("SystemStub_SDL::createMutex\n");	
 	SatMutex *mtx = (SatMutex*)malloc(sizeof(SatMutex));
@@ -706,7 +626,7 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 	void SystemStub_SDL::clearPalette() 
 	{
 		for (int i = 0; i < 256; ++i) {
-			_clut[i] = RGB(0, 0, 0);
+			_clut[i] = 0x8000;
 		}
 		slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
 	}

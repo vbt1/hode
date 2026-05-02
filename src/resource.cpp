@@ -687,7 +687,7 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 //		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
-emu_printf("vbt malloc sprite %d num %d\n", size, num);
+//emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	uint8_t *ptr = allocate_memory((num == 2 || num == 3) ? TYPE_ANDY : TYPE_ANDY1, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
@@ -713,18 +713,6 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 
 //emu_printf("position_vram %x  %d i %d\n", position_vram, position_vram/8, i);
 			decodeLvlSpriteData(src, w, h);
-/*
-			LvlObject ptr;
-			Sprite spr;
-			spr.w = w;
-			spr.h = h;
-			spr.ptr->spriteNum = 0;
-			spr.ptr->currentSprite = i;
-			spr.type = 0;
-			spr.ptr = 0;
-			spr.num = 1240;			
-            _video->decodeSPR(&spr, _video->_frontLayer);
-			slSynch();*/
 		}
 		position_vram_save = position_vram;
 //		while(1);

@@ -39,13 +39,13 @@ Video::Video() {
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+30000);
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+34000);
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
 		_frontLayer      = allocate_memory (TYPE_LAYER, W * H);
 		_backgroundLayer = allocate_memory (TYPE_LAYER, W * H);
-		_backgroundLayer2= allocate_memory (TYPE_LDIMG, W * H);
+		_backgroundLayer2= allocate_memory (TYPE_LAYER, W * H);
 		_shadowScreenMaskBuffer = allocate_memory (TYPE_LAYER, 256 * 192 * 2 + 256 * 4); //99k
 		_transformShadowBuffer = allocate_memory (TYPE_LAYER, 256 * 192 + 256); //49k
 		

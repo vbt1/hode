@@ -175,9 +175,7 @@ bool Game::addChasingMonster(MstMonsterAction *m48, uint8_t direction) {
 		MstMonsterAreaAction *unk4 = m48->area[i].data;
 		const uint8_t num = unk4->monster1Index;
 		if (num != 0xFF) {
-//			assert(num < kMaxMonsterObjects1);
-			if(num >= kMaxMonsterObjects1)
-				return false;
+			assert(num < kMaxMonsterObjects1);
 			unk4->direction = direction;
 			MonsterObject1 *m = &_monsterObjects1Table[num];
 			m->action = unk4;
@@ -186,10 +184,7 @@ bool Game::addChasingMonster(MstMonsterAction *m48, uint8_t direction) {
 			mstMonster1ResetWalkPath(m);
 			Task *current = _monsterObjects1TasksList;
 			Task *t = m->task;
-//			assert(t);
-			if(!t)
-				return false;
-
+			assert(t);
 			while (current) {
 				Task *next = current->nextPtr;
 				if (current == t) {
@@ -200,12 +195,7 @@ bool Game::addChasingMonster(MstMonsterAction *m48, uint8_t direction) {
 				current = next;
 			}
 			const uint32_t codeData = unk4->codeData;
-//			assert(codeData != kNone);
-			if(codeData == kNone)
-			{
-				t = 0;
-				return false;
-			}
+			assert(codeData != kNone);
 			resetTask(t, _res->_mstCodeData + codeData * 4);
 			++_mstChasingMonstersCount;
 		}
@@ -3245,9 +3235,7 @@ void Game::updateTask(Task *t, int num, const uint8_t *codeData) {
 
 void Game::resetTask(Task *t, const uint8_t *codeData) {
 	//debug(kDebug_MONSTER, "resetTask t %p offset 0x%04x monster1 %p monster2 %p", t, codeData - _res->_mstCodeData, t->monster1, t->monster2);
-//	assert(codeData);
-	if(!codeData)
-		return;
+	assert(codeData);
 	t->state |= 2;
 	t->codeData = codeData;
 	t->run = &Game::mstTask_main;
@@ -3646,24 +3634,17 @@ int Game::getTaskFlag(Task *t, int num, int type) const {
 }
 
 int Game::mstTask_main(Task *t) {
-//	assert(t->codeData);
-	if (!t->codeData)
-		return 0;
+	assert(t->codeData);
 	const int taskNum = t - _tasksTable;
 	int ret = 0;
 	t->state &= ~2;
 	const uint8_t *p = t->codeData;
 	do {
-//		assert(p >= _res->_mstCodeData && p < _res->_mstCodeData + _res->_mstHdr.codeSize * 4);
-//		assert(((p - t->codeData) & 3) == 0);
-    	if (p < _res->_mstCodeData || p >= _res->_mstCodeData + _res->_mstHdr.codeSize * 4) break;
-    	if (((p - t->codeData) & 3) != 0) break;
-
+		assert(p >= _res->_mstCodeData && p < _res->_mstCodeData + _res->_mstHdr.codeSize * 4);
+		assert(((p - t->codeData) & 3) == 0);
 		const uint32_t codeOffset = p - _res->_mstCodeData;
 		//debug(kDebug_MONSTER, "executeMstCode task %d %p code %d offset 0x%04x", taskNum, t, p[0], codeOffset);
-//		assert(p[0] <= 242);
-		if (p[0] > 242)
-			break;
+		assert(p[0] <= 242);
 		switch (p[0]) {
 		case 0: { // 0
 				LvlObject *o = 0;

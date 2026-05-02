@@ -72,6 +72,7 @@ struct Game {
 	static const uint8_t _pointSrcIndex2Table[];
 	static const uint8_t _pointSrcIndex1Table[];
 	static const uint8_t _actionDirectionKeyMaskTable[];
+/*
 	static const uint8_t _pwr1_screenTransformData[];
 	static const uint8_t _pwr2_screenTransformData[];
 	static const uint8_t _pwr1_screenTransformLut[];
@@ -80,8 +81,10 @@ struct Game {
 	static const uint8_t _pwr1_spritesData[];
 	static const uint8_t _isld_spritesData[];
 	static const uint8_t _lava_spritesData[];
+*/
 	static const uint8_t _lar1_spritesData[];
 	static const int16_t *_lar_screenMaskOffsets[];
+
 	static uint8_t _lar1_maskData[];
 
 	FileSystem _fs;
