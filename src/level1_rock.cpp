@@ -410,7 +410,7 @@ void Level_rock::postScreenUpdate(int num) {
 		if(!done)
 		{
 		lwram_end = (Uint8 *)0x300000;
-		_res->loadLvlSprite(0, 0);
+		_res->loadLvlSprite(0, 1);
 		done = 1;
 		}
 		break;

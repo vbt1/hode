@@ -1035,7 +1035,7 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 //emu_printf("preloadLevelScreenData num %d\n", num);
 	if(num == kNoScreen)
 		return;
-
+//vbtvbtvbtvbt
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
 //emu_printf("isLvlBackgroundDataLoaded(prev) %d %p\n", _res->_resLevelData0x2B88SizeTable[prev], _res->_resLevelData0x2B88SizeTable);
@@ -1043,9 +1043,11 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	}
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
-//emu_printf("isLvlBackgroundDataLoaded(num) %d\n", _res->_resLevelData0x2B88SizeTable[num]);
+emu_printf("isLvlBackgroundDataLoaded(num) %d\n", num);
 		_res->unloadLvlScreenBackgroundData(num);
 	}
+emu_printf("loadLvlScreenBackgroundData(num) %d\n", num);
+
 	_res->loadLvlScreenBackgroundData(num);
 #ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {

@@ -696,9 +696,16 @@ void Resource::loadLvlSpriteData(int num, bool all, const uint8_t *buf) {
 //emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	uint8_t *ptr = 0;
 
-	if(all)
+	if(all==1)
 	{
 		ptr = allocate_memory((num == 2 || num == 7) ? TYPE_ANDY : TYPE_ANDY1, size);
+	}
+	else if(all==2)
+	{
+		if(num == 2)
+			ptr = allocate_memory(TYPE_ANDY, size);
+		else
+			return;
 	}
 	else
 	{
