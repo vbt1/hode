@@ -298,9 +298,9 @@ int xx = 0;
 
 		_soundData = ptr + ptrOffset;
 		readSoundData(_res->_menuBuffer0 + ptrOffset, _res->_datHdr.soundDataSize);
-#endif
-		ptrOffset += _res->_datHdr.soundDataSize;
 
+		ptrOffset += _res->_datHdr.soundDataSize;
+#endif
 
 	}
 #ifdef PSX

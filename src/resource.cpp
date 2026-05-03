@@ -268,15 +268,16 @@ void Resource::loadSetupDat() {
 		_datHdr.levelCheckpointsCount[i] = _datFile->readUint32();
 	}
 	_datHdr.yesNoQuitImage   = _datFile->readUint32();
-	_datHdr.soundDataSize    = _datFile->readUint32();
+	/*_datHdr.soundDataSize    =*/ _datFile->readUint32();
 	_datHdr.loadingImageSize = _datFile->readUint32();
+
 	const int hintsCount = (_datHdr.version == 11) ? 46 : 20;
 	for (int i = 0; i < hintsCount; ++i) {
 		_datHdr.hintsImageOffsetTable[i] = _datFile->readUint32();
 	}
-	for (int i = 0; i < hintsCount; ++i) {
+/*	for (int i = 0; i < hintsCount; ++i) {
 		_datHdr.hintsImageSizeTable[i] = _datFile->readUint32();
-	}
+	}*/
 	_datFile->seek(2048, SEEK_SET); // align to next sector
 //	//emu_printf("malloc(loadingImageSize) %d\n", _datHdr.loadingImageSize);
 //	_loadingImageBuffer = (uint8_t *)malloc(_datHdr.loadingImageSize);

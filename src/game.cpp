@@ -1473,10 +1473,14 @@ void Game::playAndyFallingCutscene(int type) {
 		}
 	}
 #endif
+/*
+emu_printf("here!!!\n");
+		lwram_end = (Uint8 *)0x300000;
+		_res->loadLvlSprite(0, 0);*/
 	if (type != 0 && play) {
-//emu_printf("restartlevel!!!\n");
 		restartLevel();
 	}
+//emu_printf("here!!!22222\n");
 }
 
 int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
@@ -1967,6 +1971,7 @@ void Game::drawPlasmaCannon() {
 	do {
 		int x2 = _plasmaCannonXPointsTable1[index];
 		int y2 = _plasmaCannonYPointsTable1[index];
+//emu_printf("drawLine(%d, %d, %d, %d case %d indx %d)\n", x1 - 1, y1, x2 - 1, y2, _plasmaCannonDirection, lastIndex/4);
 		if (_plasmaCannonDirection == 1) {
 			_video->drawLine(x1 - 1, y1, x2 - 1, y2, 0xA9);
 			_video->drawLine(x1 + 1, y1, x2 + 1, y2, 0xA9);

@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define PAF 1
 /*
  * Heart of Darkness engine rewrite
@@ -400,15 +400,17 @@ void Level_rock::postScreenUpdate_rock_screen19() {
 }
 int done=0;
 void Level_rock::postScreenUpdate(int num) {
+//	emu_printf("bum %d %d\n",num, done);
 	switch (num) {
 	case 0:
+//		done = 0;
 		postScreenUpdate_rock_screen0();
 		break;
 	case 2:
 		if(!done)
 		{
 		lwram_end = (Uint8 *)0x300000;
-		_res->loadLvlSprite(0, 1);
+		_res->loadLvlSprite(0, 0);
 		done = 1;
 		}
 		break;

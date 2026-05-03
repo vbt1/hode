@@ -237,7 +237,7 @@ struct Sprite {
 	const uint8_t *bitmapBits;
 	Sprite *nextPtr;
 	uint16_t num;
-	uint8_t w;
+	uint16_t w;
 	uint8_t h;
 	uint8_t type;
 	LvlObject *ptr;
