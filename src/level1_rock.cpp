@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define PAF 1
 /*
  * Heart of Darkness engine rewrite
@@ -12,6 +12,9 @@
 #include "paf.h"
 #include "util.h"
 #include "video.h"
+extern "C" {
+extern Uint8 *lwram_end;
+};
 
 static const CheckpointData _rock_checkpointData[8] = {
 	{  96,  34, 0x300c,  22,  0,  0 },
@@ -395,11 +398,19 @@ void Level_rock::postScreenUpdate_rock_screen19() {
 		break;
 	}
 }
-
+int done=0;
 void Level_rock::postScreenUpdate(int num) {
 	switch (num) {
 	case 0:
 		postScreenUpdate_rock_screen0();
+		break;
+	case 2:
+		if(!done)
+		{
+		lwram_end = (Uint8 *)0x300000;
+		_res->loadLvlSprite(0, 1);
+		done = 1;
+		}
 		break;
 	case 4:
 		postScreenUpdate_rock_screen4();

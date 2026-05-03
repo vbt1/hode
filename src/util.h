@@ -33,7 +33,7 @@ void warning(const char *msg, ...);
 #define SAT_ALIGN8(a) ((a+15)&~15)
 
 #define	    SpriteVRAM		0x25c00000
-#define	cgaddress	0x1000 //SpriteBufSize
+#define	cgaddress	0x1400 //SpriteBufSize
 #define pal1 COL_256
 #undef TEXDEF
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}

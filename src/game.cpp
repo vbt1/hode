@@ -4718,7 +4718,7 @@ void Game::initLvlObjects() {
 		}
 	}
 #ifdef USE_LESS_RAM
-	_res->loadLvlSprite(_currentLevel);
+	_res->loadLvlSprite(_currentLevel, 0);
 #endif	
 //	_declaredLvlObjectsList = (LvlObject *)allocate_memory(TYPE_MONSTER, kMaxLvlObjects*sizeof(LvlObject));//[kMaxLvlObjects];
 

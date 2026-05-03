@@ -14,7 +14,7 @@ Uint8 *hwram;
 Uint8 *hwram_src;
 Uint8 *hwram_work;
 Uint8 *vdp2ram = (Uint8 *)VDP2_VRAM_B0 + 256;
-Uint8 *vdp1ram = (Uint8 *)SpriteVRAM + 0x20;
+//Uint8 *vdp1ram = (Uint8 *)SpriteVRAM + 0x20;
 Uint8 *lwram_end = (Uint8 *)0x300000;
 extern Uint8 *current_lwram;
 extern Uint8 *hwram_work_paf;
@@ -29,7 +29,7 @@ extern Uint8 *hwram_work_paf;
 static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
     uint8_t *dst = (uint8_t *)SAT_ALIGN((int)*ptr);
     *ptr = dst + size;
-//if(size>8000)
+
     emu_printf("hwram %d ptr %p lwram %d hw %p aft %p sz %d p %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, ptr, size, sbrk(0));
@@ -41,9 +41,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
 {
 //	if(alignedSize==0)
 //		return (uint8_t*)0;
-//if(alignedSize>8000)
-//	if(type==TYPE_PAFHEAD)
-emu_printf("type %d size %d\n", type, alignedSize);
+
     switch (type) {	
     case TYPE_HWRAM:
         hwram_src = (Uint8 *)malloc(alignedSize);
@@ -61,30 +59,27 @@ emu_printf("type %d size %d\n", type, alignedSize);
         return current_lwram; // no increment
 
     case TYPE_BGLVL:
-//        return bump(&current_lwram, alignedSize);
-//       return bump(&cs1ram, alignedSize);
 		return (uint8_t*)0x219400;
 
     case TYPE_ANDY1:
         lwram_end -= SAT_ALIGN(alignedSize);
-        DPRINTF("andy1 %p\n", lwram_end);
         return lwram_end;
 
     case TYPE_SCRMASKBUF:
     case TYPE_ANDY:
     case TYPE_LAYER:
-
+//    case TYPE_MSTCODE:
 	{
         if ((int)hwram_work + alignedSize > (int)hwram) {
-            DPRINTF("ERROR: %d overflow req:%d miss:%d\n", type, alignedSize,
+            emu_printf("ERROR: %d overflow req:%d miss:%d\n", type, alignedSize,
                     (int)hwram_work + alignedSize - (int)hwram);
             return nullptr;
         }
         return bump(&hwram_work, alignedSize);
     }
 
-    case TYPE_SHADWLUT:
-    case TYPE_SPRITE1:
+//    case TYPE_SHADWLUT:// plus utilisé
+//    case TYPE_SPRITE1: // plus utilisé
     case TYPE_MOVBOUND:
     case TYPE_RES:
     case TYPE_PAFHEAD:
@@ -97,8 +92,8 @@ emu_printf("type %d size %d\n", type, alignedSize);
 //    case TYPE_GFSFILE:
     case TYPE_SCRMASK:
     case TYPE_BGLVLOBJ:
-//    case TYPE_TASK:
-//	case TYPE_SHADWBUF:
+//    case TYPE_TASK:// plus utilisé
+//	case TYPE_SHADWBUF:// plus utilisé
         if (((int)current_lwram) + SAT_ALIGN(alignedSize) < 0x300000)
 		{
 //    DPRINTF("hwram %d ptr %p lwram %d cs1 %p cs2 %p hw %p aft %p sz %d p %p\n",

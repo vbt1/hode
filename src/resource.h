@@ -682,7 +682,7 @@ struct Resource {
 	void loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src);
 	void loadLvlData(File *fp);
 	void unloadLvlData();
-	void loadLvlSpriteData(int num, const uint8_t *buf = 0);
+	void loadLvlSpriteData(int num, bool all, const uint8_t *buf = 0);
 	void decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const uint8_t h);
 	const uint8_t *getLvlScreenMaskDataPtr(int num) const;
 	const uint8_t *getLvlScreenPosDataPtr(int num) const;
@@ -717,7 +717,7 @@ struct Resource {
 	bool readSetupCfg(SetupConfig *config);
 	void setDefaultsSetupCfg(SetupConfig *config, int num);
 	
-	void loadLvlSprite(int levelNum);
+	void loadLvlSprite(int levelNum, bool all);
 	void loadLvlMst(int levelNum);
 };
 

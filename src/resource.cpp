@@ -540,6 +540,7 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 			LvlAnimHeader *ah = ((LvlAnimHeader *)(base + kLvlAnimHdrOffset)) + i;
 			ah->unk0 = le16toh(ah->unk0);
 			ah->seqOffset = le32toh(ah->seqOffset);
+//emu_printf ("ah %p %d seqoff %d\n", ah, i, ah->seqOffset);
 			if (ah->seqOffset == 0) {
 				continue;
 			}
@@ -609,7 +610,7 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 
 	return (dat->framesCount + dat->coordsCount) * sizeof(uint32_t);
 }
-
+#ifdef PRELOAD_ANDY
 void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const uint8_t h)
 {
     int             x       = 0;
@@ -660,8 +661,8 @@ void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const 
         }
     }
 }
-
-void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
+#endif
+void Resource::loadLvlSpriteData(int num, bool all, const uint8_t *buf) {
 //	assert((unsigned int)num < kMaxSpriteTypes);
 	if((unsigned int)num >= kMaxSpriteTypes)
 	{
@@ -692,8 +693,20 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 		return;
 	}
 //emu_printf("vbt malloc sprite %d num %d\n", size, num);
-	uint8_t *ptr = allocate_memory((num == 2 || num == 7) ? TYPE_ANDY : TYPE_ANDY1, size);
+	uint8_t *ptr = 0;
 
+	if(all)
+	{
+		ptr = allocate_memory((num == 2 || num == 7) ? TYPE_ANDY : TYPE_ANDY1, size);
+	}
+	else
+	{
+		if(num == 2 || num == 7)
+		{
+			return;
+		}
+		ptr =  allocate_memory(TYPE_ANDY1, size);
+	}
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
@@ -724,14 +737,16 @@ void Resource::loadLvlSpriteData(int num, const uint8_t *buf) {
 #endif
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
+	{
+		emu_printf("vbt bad read !!!!!\n");
 		return;
-
+	}
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
 //	_resLevelData0x2988PtrTable[dat->spriteNum] = 0;
 //	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
 //	_resLevelData0x2988SizeTable[num] = 0;
-//emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount);
+//emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount, dat->framesCount);
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
@@ -834,7 +849,7 @@ void Resource::loadLvlData(File *fp) {
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
 //emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
-		loadLvlSpriteData(i, spr + i * 16);
+		loadLvlSpriteData(i, spr + i * 16, xxx);
 	}
 #endif
 //	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
@@ -852,7 +867,7 @@ void Resource::loadLvlData(File *fp) {
 #endif
 }
 #ifdef USE_LESS_RAM
-void Resource::loadLvlSprite(int levelNum)
+void Resource::loadLvlSprite(int levelNum, bool all)
 {
 //emu_printf("loadLvlSprite %d\n", levelNum);
 //	const char *levelName = _prefixes[levelNum];
@@ -872,8 +887,9 @@ void Resource::loadLvlSprite(int levelNum)
 //emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
 
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
-		loadLvlSpriteData(i, spr + i * 16);
+		loadLvlSpriteData(i, all , spr + i * 16);
 	}
+//	while(1);
 }
 
 void Resource::loadLvlMst(int levelNum)
@@ -899,6 +915,7 @@ void Resource::unloadLvlData() {
 //	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
 	hwram_work = hwram_res;
+	_mstCodeData = 0;
 
 	_resLevelData0x470CTable = 0;
 #if 0
@@ -1616,10 +1633,11 @@ void Resource::preloadSssPcmList(const SssPreloadInfoData *preloadInfoData) {
 }
 #endif
 void Resource::loadMstData(File *fp) {
-//emu_printf("loadMstData\n");
+emu_printf("loadMstData\n");
 //	assert(fp == _mstFile);
 
 	if (_mstHdr.dataSize != 0) {
+emu_printf("unloadMstData\n");
 		unloadMstData();
 		_mstHdr.dataSize = 0;
 	}
@@ -1671,6 +1689,8 @@ void Resource::loadMstData(File *fp) {
 	_mstHdr.op204DataCount = fp->readUint32();
 	_mstHdr.codeSize = fp->readUint32();
 	_mstHdr.screensCount = fp->readUint32();
+if(_mstCodeData==0)	
+	_mstCodeData = (uint8_t *)allocate_memory (TYPE_MSTCODE, _mstHdr.codeSize * 4);
 //////emu_printf("screensCount %d\n", _mstHdr.screensCount);
 //	//emu_printf("_mstHdr.version %d _mstHdr.codeSize %d\n", _mstHdr.version, _mstHdr.codeSize);
 
@@ -2282,7 +2302,7 @@ void Resource::loadMstData(File *fp) {
 	}
 
 //	_mstCodeData = (uint8_t *)malloc(_mstHdr.codeSize * 4);
-	_mstCodeData = (uint8_t *)allocate_memory (TYPE_MSTCODE, _mstHdr.codeSize * 4);
+//	_mstCodeData = (uint8_t *)allocate_memory (TYPE_MSTCODE, _mstHdr.codeSize * 4);
 	fp->read(_mstCodeData, _mstHdr.codeSize * 4);
 	bytesRead += _mstHdr.codeSize * 4;
 /*
@@ -2356,7 +2376,7 @@ void Resource::unloadMstData() {
 	}
 
 //	free(_mstCodeData);
-	_mstCodeData = 0;
+//	_mstCodeData = 0; // vbt : on ne réalloue pas sauf au changement de niveau
 }
 
 const MstScreenArea *Resource::findMstCodeForPos(int num, int xPos, int yPos) const {

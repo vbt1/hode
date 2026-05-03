@@ -12,13 +12,13 @@
 /*---- [2.This part must not be modified] ---------------------------------*/
 
 #define		MAX_VERTICES	1	/* number of vertices that can be used */
-#define		MAX_POLYGONS	88	/* number of vertices that can be used */
+#define		MAX_POLYGONS	96	/* number of vertices that can be used */
 #define		MAX_EVENTS		 1	/* number of events that can be used   */
 #define		MAX_WORKS		 1	/* number of works that can be used    */
 
-#define		WORK_AREA		0x060FC200			/* SGL Work Area           */
+#define		WORK_AREA		0x060FC100			/* SGL Work Area           */
 
-#define		trans_list		0x060fc800			/* DMA Transfer Table      */
+#define		trans_list		0x060fc700			/* DMA Transfer Table      */
 #define		pcmbuf			SoundRAM+0x78000	/* PCM Stream Address      */
 #define		PCM_SIZE		0x20				/* PCM Stream Size         */
 #define		master_stack	SystemWork			/* MasterSH2 StackPointer  */
