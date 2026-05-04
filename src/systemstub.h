@@ -16,7 +16,7 @@ extern "C" {
 void SCU_DMAWait(void);
 void emu_printf(const char *format, ...);
 }
-#define	cgaddress	0x1200 //SpriteBufSize
+#define	cgaddress	0x1800 //SpriteBufSize
 //#define PCM_ADDR ((void*)0x25a20000)
 //#define PCM_SIZE (4096L*8)
 

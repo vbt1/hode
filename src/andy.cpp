@@ -1567,6 +1567,10 @@ void Game::updateAndyObject(LvlObject *ptr) {
 		{
 			emu_printf("assert %d %d count %d count\n", asfh[count].move , dat->movesCount);
 			asfh[count].move=0;
+			_andyUpdatePositionFlag = 0;
+			mask = 0;
+			return;
+			break;
 		}
 		
 		LvlSprMoveData *m = ((LvlSprMoveData *)dat->movesData) + asfh[count].move;
@@ -1608,7 +1612,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 		{
 			emu_printf("assert2 %d %d\n", count , ash->count);
 			count = 0;
-//			return;
+			return;
 		}
 			
 		currentAnimFrame = asfh[count].frame;
@@ -1744,9 +1748,9 @@ else
 	}
 	const int w = ptr->width - 1;
 	const int h = ptr->height - 1;
-	const int type = (ptr->flags1 >> 4) & 3;
+	const int type2 = (ptr->flags1 >> 4) & 3;
 	for (int i = 0; i < 8; ++i) {
-		switch (type) {
+		switch (type2) {
 		case 0:
 			ptr->posTable[i].x = hs->pts[i].x;
 			ptr->posTable[i].y = hs->pts[i].y;

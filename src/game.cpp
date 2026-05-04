@@ -23,6 +23,8 @@ unsigned char frame_z = 0;
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
 extern Uint8 *lwram_end;
+extern int nb_spr;
+void SYS_Exit(Sint32 code);
 };
 #include "game.h"
 #include "fileio.h"
@@ -1030,7 +1032,7 @@ endDir:
 	_plasmaCannonPointsMask = 0;
 	return 1;
 }
-
+int done1 = 0;
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 //emu_printf("preloadLevelScreenData num %d\n", num);
 	if(num == kNoScreen)
@@ -1047,7 +1049,13 @@ emu_printf("isLvlBackgroundDataLoaded(num) %d\n", num);
 		_res->unloadLvlScreenBackgroundData(num);
 	}
 emu_printf("loadLvlScreenBackgroundData(num) %d\n", num);
-
+	if(num==2 && _currentLevel==0 && !done1)
+	{
+	lwram_end = (Uint8 *)0x300000;
+	_res->loadLvlSprite(0, 1);
+	done1=1;
+// loadLvlScreenBackgroundData(num) 9 = ecran perte arme
+	}
 	_res->loadLvlScreenBackgroundData(num);
 #ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {
@@ -1473,12 +1481,14 @@ void Game::playAndyFallingCutscene(int type) {
 			_paf->play(kPafAnimation_IslandAndyFalling);
 			break;
 		}
+
+		emu_printf("here!!!\n");
+		lwram_end = (Uint8 *)0x300000;
+		_res->loadLvlSprite(0, 0);
 	}
 #endif
-/*
-emu_printf("here!!!\n");
-		lwram_end = (Uint8 *)0x300000;
-		_res->loadLvlSprite(0, 0);*/
+
+
 	if (type != 0 && play) {
 		restartLevel();
 	}
@@ -2389,7 +2399,6 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #endif
 //emu_printf("createLevel\n");
 	createLevel();
-
 	assert(checkpoint < _res->_datHdr.levelCheckpointsCount[level]);
 	_currentLevelCheckpoint = _level->_checkpoint = checkpoint;
 #ifdef SOUND
@@ -2455,6 +2464,45 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		}
 	}
 #endif
+
+	if(level==2)
+	{
+		slTVOff();
+		GFS_Load(GFS_NameToId((Sint8*)"ENDPAL.BIN"),0,(void *) hwram_work,512);
+		Uint16 *Pal_Data  = (Uint16 *)hwram_work;
+		Uint16 *VRAM = (Uint16 *)VDP2_COLRAM;
+
+		for(unsigned int  i = 0; i < 256; i++ )
+			*(VRAM++) = *(Pal_Data++);
+
+		memset((void *) hwram_work,0x00, 71680);
+
+		GFS_Load(GFS_NameToId((Sint8*)"END.BIN"),0,(void *) (hwram_work+(32*320)),40960);
+
+		uint8 *srcPtr = (uint8 *)hwram_work;
+		uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0);
+
+		for (uint16 idx = 0; idx < 224; ++idx) {
+			for(int x=0;x<320;x++)
+			{
+				if(srcPtr[x]==0)
+					dstPtr[x]=0;
+				else
+					dstPtr[x]=srcPtr[x];
+			}
+			srcPtr += 320;
+			dstPtr += 512;
+		}
+		slZoomNbg1(toFIXED(0.5), toFIXED(1.0));		
+		slTVOn();
+
+		do {
+			g_system->processEvents();
+		} while (!g_system->inp.keyPressed(SYS_INP_ESC));
+
+
+		SYS_Exit(0);
+	}
 
 #ifdef USE_LESS_RAM
 // vbt : voir comment restaurer hwram_work correctement
@@ -2528,6 +2576,9 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #endif
 		g_system->sleep(delay);
 		slSynch(); // vbt : apres le sleep gagne 3fps
+		if(nb_spr>85)
+			emu_printf("nb_spr %d\n", nb_spr);
+		nb_spr=0;
 		frame_x++;
 	}
 	_animBackgroundDataCount = 0;
@@ -3288,10 +3339,10 @@ Level *Game::createLevel() {
 	case 1:
 		_level = Level_fort_create();
 		break;
-/*	case 2:
+	case 2:
 		_level = Level_pwr1_create();
 		break;
-	case 3:
+/*	case 3:
 		_level = Level_isld_create();
 		break;
 	case 4:

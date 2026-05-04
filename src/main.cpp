@@ -328,11 +328,60 @@ int ss_main() {
 #endif
 	// load setup.dat (PC) or setup.dax (PSX)
 	slTVOff();
+	
 	g->_res->loadSetupDat();
-//	const bool isPsx = g->_res->_isPsx;
 	const bool isPsx = false;
 	g_system = SystemStub_SDL_create();
 	g_system->init("", Video::W, Video::H);
+	
+	GFS_Load(GFS_NameToId((Sint8*)"HODPAL.BIN"),0,(void *) hwram_work,512);
+	Uint16 *Pal_Data  = (Uint16 *)hwram_work;
+	Uint16 *VRAM = (Uint16 *)VDP2_COLRAM;
+
+	for(unsigned int  i = 0; i < 256; i++ )
+		*(VRAM++) = *(Pal_Data++);
+
+	GFS_Load(GFS_NameToId((Sint8*)"HOD.BIN"),0,(void *) hwram_work,71680);
+
+	uint8 *srcPtr = (uint8 *)hwram_work;
+	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0);
+
+	for (uint16 idx = 0; idx < 224; ++idx) {
+		for(int x=0;x<320;x++)
+		{
+			if(srcPtr[x]==0)
+				dstPtr[x]=0;
+			else
+				dstPtr[x]=srcPtr[x];
+		}
+		srcPtr += 320;
+		dstPtr += 512;
+	}
+	slScrPosNbg1(0, 0);
+	slZoomNbg1(toFIXED(0.5), toFIXED(1.0));
+	slScrAutoDisp(NBG0ON|NBG1ON);
+
+	
+	memset((void *) hwram_work,0x00, 71680);
+
+	slTVOn();
+	
+
+	do {
+		g_system->processEvents();
+	} while (!g_system->inp.keyPressed(SYS_INP_ESC));
+
+	slTVOff();
+	slZoomNbg1(26350, toFIXED(1.0));
+	slScrPosNbg1(0, toFIXED(-16));
+
+	slScrWindow0(0 , 16 , 639 , 207 );
+
+	slScrWindowModeNbg1(win0_IN);
+	slScrWindowModeSPR(win0_IN);
+
+
+
 #if 0
 	setupAudio(g);
 	if (isPsx) {

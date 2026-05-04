@@ -24,6 +24,7 @@ extern Uint32 position_vram_save;
 extern SAT_sprite andy_vdp2[284];
 #endif
 extern SAT_sprite _sprData[4];
+int nb_spr=0;
 }
 
 //static const bool kUseShadowColorLut = false;
@@ -39,7 +40,7 @@ Video::Video() {
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+34000); // ne pas trop monter
+		hwram_work = allocate_memory (TYPE_HWRAM, 588000+116000+18000); // ne pas trop monter
 	//	emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory (TYPE_LAYER, W * H + 1);
@@ -544,6 +545,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 		user_sprite.SRCA = tx.CGadr;
 	//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
 		position_vram += size;
+		nb_spr++;
 		slSetSprite(&user_sprite, toFIXED2(240));
 		uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
 		memset(dst2, 0x00, size);
@@ -675,8 +677,8 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 	line.XB = ((x2 * 5) >> 1) - 320;
 //	line.XB = x2 - 160;
 	line.YB = y2 - 112+16;
-
-	slSetSprite(&line, toFIXED2(240));	
+	nb_spr++;
+//	slSetSprite(&line, toFIXED2(240));	
 #else	
 	assert(x1 >= _drawLine.x1 && x1 <= _drawLine.x2);
 	assert(y1 >= _drawLine.y1 && y1 <= _drawLine.y2);

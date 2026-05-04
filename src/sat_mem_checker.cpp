@@ -68,7 +68,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
     case TYPE_SCRMASKBUF:
     case TYPE_ANDY:
     case TYPE_LAYER:
-//    case TYPE_MSTCODE:
+    case TYPE_MSTCODE:
 	{
         if ((int)hwram_work + alignedSize > (int)hwram) {
             emu_printf("ERROR: %d overflow req:%d miss:%d\n", type, alignedSize,
@@ -88,7 +88,7 @@ uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize)
     case TYPE_MSTAREA:
     case TYPE_MAP:
     case TYPE_SHOOT:
-    case TYPE_MSTCODE:
+//    case TYPE_MSTCODE:
 //    case TYPE_GFSFILE:
     case TYPE_SCRMASK:
     case TYPE_BGLVLOBJ:

@@ -126,13 +126,13 @@ int	main( void )
 	
 //	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;
 //	(*sys_clip).XC = 574;
-
+/*
 	slScrWindow0(0 , 16 , 639 , 207 );
 //	slScrWindowModeNbg0(win0_IN);
 //	slScrWindow1(0 , 16 , 639 , 207 );
 	slScrWindowModeNbg1(win0_IN);
 	slScrWindowModeSPR(win0_IN);
-	
+*/	
 	slZdspLevel(7); // vbt : ne pas d?placer !!!
 // vbt : modifier le user clipping !!!!!
 //		
@@ -168,7 +168,7 @@ extern void emu_printf(const char *format, ...);
 #if 1
 void emu_printf(const char *format, ...)
 {
-#if 1
+#if 0
    static char emu_printf_buffer[128];
    char *s = emu_printf_buffer;
    volatile uint8_t *addr = (volatile uint8_t *)CS1(0x1000);

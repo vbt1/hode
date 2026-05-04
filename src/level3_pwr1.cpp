@@ -12,6 +12,10 @@
 #include "util.h"
 #include "video.h"
 
+extern "C" {
+void SYS_Exit(Sint32 code);
+};
+
 static const CheckpointData _pwr1_checkpointData[10] = {
 	{ 190,  48, 0x300c, 196,  1,  2 },
 	{ 158,  89, 0x300c, 232,  6,  2 },
@@ -74,7 +78,7 @@ struct Level_pwr1: Level {
 Level *Level_pwr1_create() {
 	return new Level_pwr1;
 }
-
+#ifdef ENABLED
 void Level_pwr1::postScreenUpdate_pwr1_helper(BoundingBox *b, int dx, int dy) {
 	LvlObject *o = _g->_lvlObjectsList3;
 	while (o) {
@@ -329,8 +333,9 @@ void Level_pwr1::postScreenUpdate_pwr1_screen35() {
 		}
 	}
 }
-
+#endif
 void Level_pwr1::postScreenUpdate(int num) {
+#ifdef ENABLED
 	switch (num) {
 	case 6:
 		postScreenUpdate_pwr1_screen6();
@@ -360,8 +365,9 @@ void Level_pwr1::postScreenUpdate(int num) {
 		postScreenUpdate_pwr1_screen35();
 		break;
 	}
+#endif
 }
-
+#ifdef ENABLED
 void Level_pwr1::preScreenUpdate_pwr1_screen4() {
         if (_res->_currentScreenResourceNum == 4) {
 		const uint8_t num = (_res->_screensState[4].s0 == 0) ? 0 : 1;
@@ -484,8 +490,10 @@ void Level_pwr1::preScreenUpdate_pwr1_screen35() {
 		}
 	}
 }
-
+#endif
 void Level_pwr1::preScreenUpdate(int num) {
+	SYS_Exit(0);
+#ifdef ENABLED
 	switch (num) {
 	case 4:
 		preScreenUpdate_pwr1_screen4();
@@ -524,25 +532,32 @@ void Level_pwr1::preScreenUpdate(int num) {
 		preScreenUpdate_pwr1_screen35();
 		break;
 	}
+#endif
 }
 
 void Level_pwr1::initialize() {
+#ifdef ENABLED
 	_g->loadTransformLayerData(Game::_pwr1_screenTransformData);
 	_g->resetWormHoleSprites();
+#endif
 }
 
 void Level_pwr1::terminate() {
+#ifdef ENABLED
 	_g->unloadTransformLayerData();
+#endif
 }
-
+#ifdef ENABLED
 const uint8_t Game::_pwr1_screenTransformLut[] = {
 	1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0,
 	1, 2, 1, 0, 1, 3, 1, 0, 1, 0, 1, 4, 1, 0, 1, 0, 1, 0,
 	1, 5, 1, 0, 1, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0,
 	0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
-
+#endif
 void Level_pwr1::tick() {
+#ifdef ENABLED
 	_video->_displayShadowLayer = Game::_pwr1_screenTransformLut[_res->_currentScreenResourceNum * 2] != 0;
 	_g->updateWormHoleSprites();
+#endif
 }

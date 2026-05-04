@@ -398,21 +398,11 @@ void Level_rock::postScreenUpdate_rock_screen19() {
 		break;
 	}
 }
-int done=0;
 void Level_rock::postScreenUpdate(int num) {
 //	emu_printf("bum %d %d\n",num, done);
 	switch (num) {
 	case 0:
-//		done = 0;
 		postScreenUpdate_rock_screen0();
-		break;
-	case 2:
-		if(!done)
-		{
-		lwram_end = (Uint8 *)0x300000;
-		_res->loadLvlSprite(0, 1);
-		done = 1;
-		}
 		break;
 	case 4:
 		postScreenUpdate_rock_screen4();
