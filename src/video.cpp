@@ -3,7 +3,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-//#define USE_SPRITE 1
+#define VBT 1
 //#define USE_FONT 1
 extern "C" {
 #include <sl_def.h>
@@ -272,7 +272,7 @@ void Video::decodeNBG(const Sprite *spr, uint8_t *dst) {
         }
     }
 }
-
+/*
 void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 {
     const uint8_t  *src   = spr->bitmapBits;
@@ -317,7 +317,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 		return;
 	}
 #endif
-	/* ---- COMPRESSED ---- */
+	// ---- COMPRESSED ---- 
 	int x = hFlip ? x2 : xOrig;
 	int y = vFlip ? y2 : yOrig;
 	const int xStart = x;
@@ -333,8 +333,9 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 			clippedCount = 0;
 
 		switch (code >> 6) {
-		/* ---------- COPY ---------- */
+		// ---------- COPY ---------- 
 		case 0:
+#ifndef VBT
 			if (clipFlags == 0) {
 				memcpy(p, src, clippedCount);
 				if (bg && y >= 0 && y < H) {
@@ -343,7 +344,8 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 							bg[y * W + (x + i)] = 0;
 				}
 				x += count;
-			} else if (hFlip) {
+			}
+			else if (hFlip) {
 				for (int i = 0; i < clippedCount; ++i)
 					if (x - i >= 0 && x - i < W) {
 						p[-i] = src[i];
@@ -360,11 +362,26 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 					}
 				x += count;
 			}
+#else
+			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+				memcpy(p, src, clippedCount);
+				x += count;
+			} else if (flags & kSprHorizFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) p[-i] = src[i];
+				x -= count;
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) p[i] = src[i];
+				x += count;
+			}	
+#endif
 			src += count;
 			break;
-		/* ---------- FILL ---------- */
+		// ---------- FILL ---------- 
 		case 1:
 			code = *src++;
+#ifndef VBT
 			if (clipFlags == 0) {
 				memset(p, code, clippedCount);
 				if (bg && code == 0 && y >= 0 && y < H) {
@@ -390,25 +407,52 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst)
 					}
 				x += count;
 			}
+#else
+			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+				memset(p, code, clippedCount);
+				x += count;
+			} else if (flags & kSprHorizFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) p[-i] = code;
+				x -= count;	
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) p[i] = code;
+				x += count;
+			}
+#endif
 			break;
-		/* ---------- SKIP X ---------- */
+		// ---------- SKIP X ---------- 
 		case 2:
 			if (count == 0) count = *src++;
+#ifndef VBT
 			x += hFlip ? -count : count;
+#else
+			x   += (flags & kSprHorizFlip) ? -count : count;
+#endif
 			break;
-		/* ---------- NEW LINE ---------- */
+		// ---------- NEW LINE ---------- 
 		case 3:
 			if (count == 0) {
 				count = *src++;
 				if (count == 0) return;
 			}
+#ifndef VBT
 			y += vFlip ? -count : count;
+#else
+			y   += (flags & kSprVertFlip) ? -count : count;	
+#endif
 			uint8_t dx = *src++;
+#ifndef VBT
 			x = hFlip ? (xStart - dx) : (xStart + dx);
+#else
+			x   = (flags & kSprHorizFlip) ? (xStart - dx) : (xStart + dx);
+#endif
 			break;
 		}
 	}
 }
+*/
 #if 0
 void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 {
@@ -489,6 +533,187 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
             rowBase  = dst2 + y * w;     // multiply only here
         }
     }
+}
+#else
+#ifdef VBT
+void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
+{
+    const uint8_t  *src   = spr->bitmapBits;
+    const int      xOrig = spr->xPos;
+    const int      yOrig = spr->yPos;
+    uint8_t        flags = (spr->num >> 0xE) & 3;
+    const uint16_t spr_w = spr->w;
+    const uint8_t  spr_h = spr->h;
+#ifdef PRELOAD_ANDY
+    const bool     compressed = !(spr->ptr->spriteNum == 0 && spr->type == 0);
+#endif
+	if (yOrig >= H) return;
+	else if (yOrig < 0) flags |= kSprClipTop;
+	const int y2 = yOrig + spr_h - 1;
+	if (y2 < 0) return;
+	else if (y2 >= H) flags |= kSprClipBottom;
+	if (xOrig >= W) return;
+	else if (xOrig < 0) flags |= kSprClipLeft;
+	const int x2 = xOrig + spr_w - 1;
+	if (x2 < 0) return;
+	else if (x2 >= W) flags |= kSprClipRight;
+
+	const bool hFlip = (flags & kSprHorizFlip) != 0;
+	const bool vFlip = (flags & kSprVertFlip) != 0;
+#ifdef PRELOAD_ANDY
+	if (!compressed) {
+		src = (uint8_t *)SpriteVRAM + (0x200+andy_vdp2[spr->ptr->currentSprite].cgaddr) * 8;
+		const uint16_t spr_w_padded = (spr_w + 7) & ~7;
+		for (int iy = 0; iy < spr_h; ++iy) {
+			const int dstY = vFlip ? (y2 - iy) : (yOrig + iy);
+			for (int ix = 0; ix < spr_w; ++ix) {
+				const int srcX = hFlip ? (spr_w - 1 - ix) : ix;
+				const int dstX = xOrig + ix;
+				const uint8_t pixel = src[iy * spr_w_padded + srcX];
+				if (dstY >= 0 && dstY < H && dstX >= 0 && dstX < W) {
+					dst[dstY * W + dstX] = pixel;
+//					if (bg && pixel == 0)
+//						bg[dstY * W + dstX] = 0;
+				}
+			}
+		}
+		return;
+	}
+#endif
+	/* ---- COMPRESSED ---- */
+	int x = hFlip ? x2 : xOrig;
+	int y = vFlip ? y2 : yOrig;
+	const int xStart = x;
+
+	const uint8_t clipFlags = flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight);
+
+	while (1) {
+		uint8_t *p = dst + y * W + x;
+		int code  = *src++;
+		int count = code & 0x3F;
+		int clippedCount = count;
+		if (y < 0 || y >= H)
+			clippedCount = 0;
+
+		switch (code >> 6) {
+		/* ---------- COPY ---------- */
+		case 0:
+#ifndef VBT
+			if (clipFlags == 0) {
+				memcpy(p, src, clippedCount);
+				if (bg && y >= 0 && y < H) {
+					for (int i = 0; i < clippedCount; ++i)
+						if (x + i >= 0 && x + i < W && src[i] == 0)
+							bg[y * W + (x + i)] = 0;
+				}
+				x += count;
+			}
+			else if (hFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) {
+						p[-i] = src[i];
+						if (bg && src[i] == 0)
+							bg[y * W + (x - i)] = 0;
+					}
+				x -= count;
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) {
+						p[i] = src[i];
+						if (bg && src[i] == 0)
+							bg[y * W + (x + i)] = 0;
+					}
+				x += count;
+			}
+#else
+			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+				memcpy(p, src, clippedCount);
+				x += count;
+			} else if (flags & kSprHorizFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) p[-i] = src[i];
+				x -= count;
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) p[i] = src[i];
+				x += count;
+			}	
+#endif
+			src += count;
+			break;
+		/* ---------- FILL ---------- */
+		case 1:
+			code = *src++;
+#ifndef VBT
+			if (clipFlags == 0) {
+				memset(p, code, clippedCount);
+				if (bg && code == 0 && y >= 0 && y < H) {
+					for (int i = 0; i < clippedCount; ++i)
+						if (x + i >= 0 && x + i < W)
+							bg[y * W + (x + i)] = 0;
+				}
+				x += count;
+			} else if (hFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) {
+						p[-i] = code;
+						if (bg && code == 0)
+							bg[y * W + (x - i)] = 0;
+					}
+				x -= count;
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) {
+						p[i] = code;
+						if (bg && code == 0)
+							bg[y * W + (x + i)] = 0;
+					}
+				x += count;
+			}
+#else
+			if ((flags & (kSprHorizFlip | kSprClipLeft | kSprClipRight)) == 0) {
+				memset(p, code, clippedCount);
+				x += count;
+			} else if (flags & kSprHorizFlip) {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x - i >= 0 && x - i < W) p[-i] = code;
+				x -= count;	
+			} else {
+				for (int i = 0; i < clippedCount; ++i)
+					if (x + i >= 0 && x + i < W) p[i] = code;
+				x += count;
+			}
+#endif
+			break;
+		/* ---------- SKIP X ---------- */
+		case 2:
+			if (count == 0) count = *src++;
+#ifndef VBT
+			x += hFlip ? -count : count;
+#else
+			x   += (flags & kSprHorizFlip) ? -count : count;
+#endif
+			break;
+		/* ---------- NEW LINE ---------- */
+		case 3:
+			if (count == 0) {
+				count = *src++;
+				if (count == 0) return;
+			}
+#ifndef VBT
+			y += vFlip ? -count : count;
+#else
+			y   += (flags & kSprVertFlip) ? -count : count;	
+#endif
+			uint8_t dx = *src++;
+#ifndef VBT
+			x = hFlip ? (xStart - dx) : (xStart + dx);
+#else
+			x   = (flags & kSprHorizFlip) ? (xStart - dx) : (xStart + dx);
+#endif
+			break;
+		}
+	}
 }
 #else
 void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
@@ -586,6 +811,8 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 	}
 }
 #endif
+
+#endif
 void Video::decodeRLE(const uint8_t *src, uint8_t *dst, int size) {
 //	emu_printf("decode RLE\n");
 	uint8_t *dstEnd = dst + size;
@@ -664,12 +891,11 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 	if (clipLineCoords(x1, y1, x2, y2)) {
 		return;
 	}
-//#ifdef USE_SPRITE
-#if 1
+#ifdef USE_SPRITE
 	SPRITE line;
 	line.CTRL = FUNC_Line | _ZmLT;
 //	line.CTRL = FUNC_Line;
-	line.PMOD = CL256Bnk | 0x0800 | ECdis | SPdis;
+	line.PMOD = CL256Bnk | ECdis | SPdis;
 	line.COLR = color;
 	line.XA = ((x1 * 5) >> 1) - 320;
 //	line.XA = x1 - 160;
@@ -678,7 +904,7 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 //	line.XB = x2 - 160;
 	line.YB = y2 - 112+16;
 	nb_spr++;
-//	slSetSprite(&line, toFIXED2(240));	
+	slSetSprite(&line, toFIXED2(240));	
 #else	
 	assert(x1 >= _drawLine.x1 && x1 <= _drawLine.x2);
 	assert(y1 >= _drawLine.y1 && y1 <= _drawLine.y2);
