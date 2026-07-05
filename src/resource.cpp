@@ -1,5 +1,6 @@
 #pragma GCC optimize ("Os")
 #define USE_LESS_RAM 1
+//#define USE_FONT 1
 //#define SECTOR_ALIGNED 1
 //#define PRELOAD_ANDY 1
 /*

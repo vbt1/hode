@@ -3,7 +3,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-
+//#define USE_FONT 1
 #include "game.h"
 #include "video.h"
 

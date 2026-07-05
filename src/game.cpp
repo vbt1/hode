@@ -6,6 +6,7 @@
 #define OLD_DRAW_SCREEN 1
 //#define DEBUG 1
 //#define DEBUG2 1
+//#define USE_FONT 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -3339,10 +3340,10 @@ Level *Game::createLevel() {
 	case 1:
 		_level = Level_fort_create();
 		break;
-	case 2:
+/*	case 2:
 		_level = Level_pwr1_create();
 		break;
-/*	case 3:
+	case 3:
 		_level = Level_isld_create();
 		break;
 	case 4:

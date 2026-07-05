@@ -306,6 +306,143 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 // =============================================================================
 
 void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code) {
+    uint8_t **p = _pageBuffers;
+
+    // =========================================================================
+    // 1. HORIZONTAL (inchangé)
+    // =========================================================================
+    const uint8_t *v = src;
+    int n = *v++;
+    if (n) {
+        if (code & 0x10) {
+            int a = (v - base) & 3;
+            if (a) v += 4 - a;
+        }
+        for (int i = 0; i < n; ++i) {
+            const uint8_t  hi  = v[0];
+            const uint8_t  lo  = v[1];
+            const uint8_t  idx = hi >> 6;
+            const uint32_t off = (((((hi << 1) | (lo >> 7)) & 0x7F) << 8) | (lo & 0x7F)) << 1;
+            uint8_t *db = p[idx] + off;
+            uint32_t o  = (lo & 0x7F) << 1;
+            uint32_t e  = READ_LE_UINT16(v + 2) + o;
+            v += 4;
+
+            uint8_t *d0 = db;
+            uint8_t *d1 = db + 256;
+            uint8_t *d2 = db + 512;
+            uint8_t *d3 = db + 768;
+
+            while (o < e) {
+                store4_a(d0, load4_any(v));
+                store4_a(d1, load4_any(v +  4));
+                store4_a(d2, load4_any(v +  8));
+                store4_a(d3, load4_any(v + 12));
+                v += 16;
+                d0 += 4; d1 += 4; d2 += 4; d3 += 4;
+                if ((++o & 0x3F) == 0) {
+                    d0 += 768; d1 += 768; d2 += 768; d3 += 768;
+                }
+            }
+        }
+    }
+
+    // =========================================================================
+    // 2. VERTICAL (inchangé)
+    // =========================================================================
+    {
+        uint8_t *d = _pageBuffers[_currentPageBuffer];
+        const uint8_t *s = v;
+        for (int y = 0; y < 192; y += 4, d += 768) {
+            for (int x = 0; x < 256; x += 4, d += 4, s += 2) {
+                const uint8_t b0 = s[0], b1 = s[1];
+                const uint8_t idx = b0 >> 6;
+                const uint32_t off = (((((b0 << 1) | (b1 >> 7)) & 0x7F) << 8) | (b1 & 0x7F)) << 1;
+                const uint8_t *t = p[idx] + off;
+                copy4x4_tile(d, d + 256, d + 512, d + 768, t, t + 256, t + 512, t + 768);
+            }
+        }
+    }
+
+    // =========================================================================
+    // 3. OP (CORRIGÉ : gestion des offsets + inlining)
+    // =========================================================================
+    const uint8_t *op = v + 6144;
+    uint32_t sz = READ_LE_UINT16(op);
+    op += 4;
+    uint8_t *d = _pageBuffers[_currentPageBuffer];
+    const uint8_t *src2 = op + sz;
+
+    for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
+        for (int x = 0; x < kVideoWidth; x += 4, d += 4) {
+            const char *q = updateSequences[(x & 4) ? (*op++ & 15) : (*op >> 4)];
+
+            uint8_t k;
+            while ((k = *q++)) {
+                // Variables locales à chaque itération (comme l'original)
+                register uint8_t *d0 = d + 512;  // Default pour case 7
+                register uint8_t *d1;
+                register const uint8_t *s2;
+                register uint8_t m, c;
+                // Offsets pour s2 + (d0 - d) et s2 + (d1 - d)
+                register ptrdiff_t offset0 = 512;  // d0 - d (par défaut)
+                register ptrdiff_t offset1;
+
+                switch (k) {
+                    // --- Gestion de k=2,3,4 (fall-through) ---
+                    case 2:
+                        d0 = d;
+                        offset0 = 0;  // d0 = d → offset0 = 0
+                    case 3:
+                        c = *src2++;
+                    case 4:
+                        m = *src2++;
+                        d1 = d0 + 256;
+                        offset1 = offset0 + 256;  // d1 - d = (d0 + 256) - d
+                        // Inline pafCopyColorMask (m >> 4 et m & 15)
+                        if (m & 0x80) d0[0] = c;
+                        if (m & 0x40) d0[1] = c;
+                        if (m & 0x20) d0[2] = c;
+                        if (m & 0x10) d0[3] = c;
+                        if (m & 0x08) d1[0] = c;
+                        if (m & 0x04) d1[1] = c;
+                        if (m & 0x02) d1[2] = c;
+                        if (m & 0x01) d1[3] = c;
+                        break;
+
+                    // --- Gestion de k=5,6,7 (fall-through) ---
+                    case 5:
+                        d0 = d;
+                        offset0 = 0;  // d0 = d → offset0 = 0
+                    case 6:
+                        // Inline fastOffset (optimisé pour SH-2)
+                        s2 = _pageBuffers[src2[0] >> 6] +
+                             ((((src2[0] << 1) | (src2[1] >> 7)) & 0x7F) << 9) +
+                             (src2[1] & 0x7F) * 2;
+                        src2 += 2;
+                    case 7:
+                        m = *src2++;
+                        d1 = d0 + 256;
+                        offset1 = offset0 + 256;  // d1 - d = (d0 + 256) - d
+                        // Inline pafCopySrcMask avec offsets
+                        // s2 + (d0 - d) = s2 + offset0
+                        // s2 + (d1 - d) = s2 + offset1
+                        if (m & 0x80) d0[0] = s2[offset0 + 0];
+                        if (m & 0x40) d0[1] = s2[offset0 + 1];
+                        if (m & 0x20) d0[2] = s2[offset0 + 2];
+                        if (m & 0x10) d0[3] = s2[offset0 + 3];
+                        if (m & 0x08) d1[0] = s2[offset1 + 0];
+                        if (m & 0x04) d1[1] = s2[offset1 + 1];
+                        if (m & 0x02) d1[2] = s2[offset1 + 2];
+                        if (m & 0x01) d1[3] = s2[offset1 + 3];
+                        break;
+                }
+            }
+        }
+    }
+}
+/*
+void PafPlayer::decodeVideoFrameOp0old(const uint8_t *base, const uint8_t *src, uint8_t code) {
 	uint8_t **p = _pageBuffers;
 
 	// ── 1. HORIZONTAL ─────────────────────────────────────────────────────────
@@ -367,10 +504,10 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 
 	// ── 3. OP ─────────────────────────────────────────────────────────────────
 	const uint8_t *op = v + 6144;
-	/*if (op >= _demuxVideoFrameBlocks + (_pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize)) {
-		emu_printf("OP OOB!\n");
-		return;
-	}*/
+	//if (op >= _demuxVideoFrameBlocks + (_pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize)) {
+	//	emu_printf("OP OOB!\n");
+	//	return;
+	//}
 	uint32_t sz = READ_LE_UINT16(op);
 	op += 4;
 	uint8_t       *d    = _pageBuffers[_currentPageBuffer];
@@ -404,7 +541,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
 		}
 	}
 }
-
+*/
 // =============================================================================
 // Op1 / Op2 / Op4
 // =============================================================================
@@ -709,7 +846,7 @@ slSynch();
 		}
 		_video->drawString(dbgbuf, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #endif
-//emu_printf("fps %d\n", frame_z);
+emu_printf("fps %d\n", frame_z);
 
 		if (g_system->inp.quit
 		 || g_system->inp.keyPressed(SYS_INP_ESC)
