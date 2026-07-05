@@ -380,13 +380,13 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
             uint8_t k;
             while ((k = *q++)) {
                 // Variables locales à chaque itération (comme l'original)
-                register uint8_t *d0 = d + 512;  // Default pour case 7
-                register uint8_t *d1;
-                register const uint8_t *s2;
-                register uint8_t m, c;
+                uint8_t *d0 = d + 512;  // Default pour case 7
+                uint8_t *d1;
+                const uint8_t *s2;
+                uint8_t m, c;
                 // Offsets pour s2 + (d0 - d) et s2 + (d1 - d)
-                register ptrdiff_t offset0 = 512;  // d0 - d (par défaut)
-                register ptrdiff_t offset1;
+                ptrdiff_t offset0 = 512;  // d0 - d (par défaut)
+                ptrdiff_t offset1;
 
                 switch (k) {
                     // --- Gestion de k=2,3,4 (fall-through) ---
