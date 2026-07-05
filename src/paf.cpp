@@ -244,7 +244,7 @@ static void pafCopyColorMask(uint8_t mask, uint8_t *dst, uint8_t color) {
 	if (mask & 0x2) dst[2] = color;
 	if (mask & 0x1) dst[3] = color;
 }
-
+/*
 static const char *updateSequences[] = {
 	"",
 	"\x02",
@@ -263,7 +263,7 @@ static const char *updateSequences[] = {
 	"\x02\x04\x06",
 	"\x02\x04\x05\x07\x05\x07"
 };
-
+*/
 FORCE_INLINE uint8_t *fastOffset(uint8_t **pages, const uint8_t *src) {
 	const int x    =  src[1] & 0x7F;
 	const int page =  src[0] >> 6;
@@ -308,9 +308,7 @@ void PafPlayer::decodeVideoFrame(const uint8_t *src) {
 void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uint8_t code) {
     uint8_t **p = _pageBuffers;
 
-    // =========================================================================
     // 1. HORIZONTAL (inchangé)
-    // =========================================================================
     const uint8_t *v = src;
     int n = *v++;
     if (n) {
@@ -347,9 +345,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
         }
     }
 
-    // =========================================================================
     // 2. VERTICAL (inchangé)
-    // =========================================================================
     {
         uint8_t *d = _pageBuffers[_currentPageBuffer];
         const uint8_t *s = v;
@@ -364,82 +360,209 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
         }
     }
 
-    // =========================================================================
-    // 3. OP (CORRIGÉ : gestion des offsets + inlining)
-    // =========================================================================
+	// 3. OP — Version sans boucle while (corrigée)
+	// 3. OP — Version sans boucle (dernière tentative)
+const uint8_t *op = v + 6144;
+uint32_t sz = READ_LE_UINT16(op);
+op += 4;
+
+uint8_t *d = _pageBuffers[_currentPageBuffer];
+const uint8_t *src2 = op + sz;
+
+// Représentation exacte de chaque caractère individuel de updateSequences
+#define OP_02() { d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
+#define OP_03() { c = *src2++; m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
+#define OP_04() { m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
+
+#define OP_05() { d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
+#define OP_06() { s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
+#define OP_07() { m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
+
+for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
+    for (int x = 0; x < kVideoWidth; x += 4, d += 4) {
+
+        const uint8_t seq = (x & 4) ? (*op++ & 15) : (*op >> 4);
+
+        uint8_t *d0;
+        uint8_t *d1;
+        const uint8_t *s2 = nullptr; // Doit persister entre les caractères d'une même séquence
+        uint8_t m = 0, c = 0;        // Doivent persister également
+
+        switch (seq) {
+            case 0:  // ""
+                break;
+            case 1:  // "\x02"
+                d0 = d + 512; OP_02();
+                break;
+            case 2:  // "\x05\x07"
+                d0 = d + 512; OP_05();
+                d0 = d + 512; OP_07();
+                break;
+            case 3:  // "\x05"
+                d0 = d + 512; OP_05();
+                break;
+            case 4:  // "\x06"
+                d0 = d + 512; OP_06();
+                break;
+            case 5:  // "\x05\x07\x05\x07"
+                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
+                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
+                break;
+            case 6:  // "\x05\x07\x05"
+                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
+                d0 = d + 512; OP_05();
+                break;
+            case 7:  // "\x05\x07\x06"
+                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
+                d0 = d + 512; OP_06();
+                break;
+            case 8:  // "\x05\x05"
+                d0 = d + 512; OP_05(); d0 = d + 512; OP_05();
+                break;
+            case 9:  // "\x03"
+                d0 = d + 512; OP_03();
+                break;
+            case 10: // "\x06\x06"
+                d0 = d + 512; OP_06(); d0 = d + 512; OP_06();
+                break;
+            case 11: // "\x02\x04"
+                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
+                break;
+            case 12: // "\x02\x04\x05\x07"
+                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
+                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
+                break;
+            case 13: // "\x02\x04\x05"
+                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
+                d0 = d + 512; OP_05();
+                break;
+            case 14: // "\x02\x04\x06"
+                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
+                d0 = d + 512; OP_06();
+                break;
+            case 15: // "\x02\x04\x05\x07\x05\x07"
+                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
+                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
+                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
+                break;
+        }
+    }
+}
+
+#undef OP_02
+#undef OP_03
+#undef OP_04
+#undef OP_05
+#undef OP_06
+#undef OP_07
+/*
     const uint8_t *op = v + 6144;
     uint32_t sz = READ_LE_UINT16(op);
     op += 4;
+
     uint8_t *d = _pageBuffers[_currentPageBuffer];
     const uint8_t *src2 = op + sz;
 
     for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
         for (int x = 0; x < kVideoWidth; x += 4, d += 4) {
-            const char *q = updateSequences[(x & 4) ? (*op++ & 15) : (*op >> 4)];
 
-            uint8_t k;
-            while ((k = *q++)) {
-                // Variables locales à chaque itération (comme l'original)
-                uint8_t *d0 = d + 512;  // Default pour case 7
-                uint8_t *d1;
-                const uint8_t *s2;
-                uint8_t m, c;
-                // Offsets pour s2 + (d0 - d) et s2 + (d1 - d)
-                ptrdiff_t offset0 = 512;  // d0 - d (par défaut)
-                ptrdiff_t offset1;
+            const uint8_t seq = (x & 4) ? (*op++ & 15) : (*op >> 4);
 
-                switch (k) {
-                    // --- Gestion de k=2,3,4 (fall-through) ---
-                    case 2:
-                        d0 = d;
-                        offset0 = 0;  // d0 = d → offset0 = 0
-                    case 3:
-                        c = *src2++;
-                    case 4:
-                        m = *src2++;
-                        d1 = d0 + 256;
-                        offset1 = offset0 + 256;  // d1 - d = (d0 + 256) - d
-                        // Inline pafCopyColorMask (m >> 4 et m & 15)
-                        if (m & 0x80) d0[0] = c;
-                        if (m & 0x40) d0[1] = c;
-                        if (m & 0x20) d0[2] = c;
-                        if (m & 0x10) d0[3] = c;
-                        if (m & 0x08) d1[0] = c;
-                        if (m & 0x04) d1[1] = c;
-                        if (m & 0x02) d1[2] = c;
-                        if (m & 0x01) d1[3] = c;
-                        break;
+            uint8_t *d0, *d1;
+            const uint8_t *s2;
+            uint8_t m, c;
 
-                    // --- Gestion de k=5,6,7 (fall-through) ---
-                    case 5:
-                        d0 = d;
-                        offset0 = 0;  // d0 = d → offset0 = 0
-                    case 6:
-                        // Inline fastOffset (optimisé pour SH-2)
-                        s2 = _pageBuffers[src2[0] >> 6] +
-                             ((((src2[0] << 1) | (src2[1] >> 7)) & 0x7F) << 9) +
-                             (src2[1] & 0x7F) * 2;
-                        src2 += 2;
-                    case 7:
-                        m = *src2++;
-                        d1 = d0 + 256;
-                        offset1 = offset0 + 256;  // d1 - d = (d0 + 256) - d
-                        // Inline pafCopySrcMask avec offsets
-                        // s2 + (d0 - d) = s2 + offset0
-                        // s2 + (d1 - d) = s2 + offset1
-                        if (m & 0x80) d0[0] = s2[offset0 + 0];
-                        if (m & 0x40) d0[1] = s2[offset0 + 1];
-                        if (m & 0x20) d0[2] = s2[offset0 + 2];
-                        if (m & 0x10) d0[3] = s2[offset0 + 3];
-                        if (m & 0x08) d1[0] = s2[offset1 + 0];
-                        if (m & 0x04) d1[1] = s2[offset1 + 1];
-                        if (m & 0x02) d1[2] = s2[offset1 + 2];
-                        if (m & 0x01) d1[3] = s2[offset1 + 3];
-                        break;
-                }
+            switch (seq) {
+                case 0: break;
+
+                case 1: // \x02
+                    d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256;
+                    pafCopyColorMask(m >> 4, d0, c);
+                    pafCopyColorMask(m & 15, d1, c);
+                    break;
+
+                case 2: // \x05\x07
+                    d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                    pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                    pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    break;
+
+                case 3: // \x05
+                    d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                    pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    break;
+
+                case 4: // \x06
+                    s2 = fastOffset(_pageBuffers, src2); src2 += 2;
+                    break;
+
+                case 5: // \x05\x07\x05\x07
+                    for(int i=0; i<4; i++) {
+                        d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                        pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    }
+                    break;
+
+                case 6: // \x05\x07\x05
+                    for(int i=0; i<3; i++) {
+                        d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                        pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    }
+                    break;
+
+                case 7: // \x05\x07\x06
+                    d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                    pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    s2 = fastOffset(_pageBuffers, src2); src2 += 2;
+                    break;
+
+                case 8: // \x05\x05
+                    for(int i=0; i<2; i++) {
+                        d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                        pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    }
+                    break;
+
+                case 9: // \x03
+                    c = *src2++;
+                    break;
+
+                case 10: // \x06\x06
+                    s2 = fastOffset(_pageBuffers, src2); src2 += 2;
+                    s2 = fastOffset(_pageBuffers, src2); src2 += 2;
+                    break;
+
+                case 11: // \x02\x04
+                    d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256;
+                    pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c);
+                    break;
+
+                case 12: case 13: // \x02\x04\x05\x07 et \x02\x04\x05
+                    d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256;
+                    pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c);
+                    d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                    pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    break;
+
+                case 14: // \x02\x04\x06
+                    d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256;
+                    pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c);
+                    s2 = fastOffset(_pageBuffers, src2); src2 += 2;
+                    break;
+
+                case 15: // \x02\x04\x05\x07\x05\x07
+                    d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256;
+                    pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c);
+                    for(int i=0; i<2; i++) {
+                        d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256;
+                        pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d));
+                    }
+                    break;
             }
         }
     }
+*/	
 }
 /*
 void PafPlayer::decodeVideoFrameOp0old(const uint8_t *base, const uint8_t *src, uint8_t code) {
