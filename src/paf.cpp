@@ -41,9 +41,11 @@ FORCE_INLINE uint32_t load4_u16(const uint8_t *p) {
 }
 
 FORCE_INLINE uint32_t load4_any(const uint8_t *p) {
-	uint32_t v;
+/*	uint32_t v;
 	__builtin_memcpy(&v, p, 4);
 	return v;
+*/
+	return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
 }
 
 FORCE_INLINE void store4_a(uint8_t *p, uint32_t v) {
