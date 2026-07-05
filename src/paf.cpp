@@ -361,7 +361,6 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
     }
 
 	// 3. OP — Version sans boucle while (corrigée)
-	// 3. OP — Version sans boucle (dernière tentative)
 const uint8_t *op = v + 6144;
 uint32_t sz = READ_LE_UINT16(op);
 op += 4;
@@ -369,7 +368,7 @@ op += 4;
 uint8_t *d = _pageBuffers[_currentPageBuffer];
 const uint8_t *src2 = op + sz;
 
-// Représentation exacte de chaque caractère individuel de updateSequences
+// --- DÉFINITION DES MACROS POUR LE DÉCODAGE SH-2 ---
 #define OP_02() { d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
 #define OP_03() { c = *src2++; m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
 #define OP_04() { m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
@@ -379,82 +378,85 @@ const uint8_t *src2 = op + sz;
 #define OP_07() { m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
 
 for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
-    for (int x = 0; x < kVideoWidth; x += 4, d += 4) {
+    for (int x = 0; x < kVideoWidth; x += 8) {
+        
+        // Lecture de l'octet complet (2 blocs de 4 pixels traités d'un coup)
+        uint8_t byteOp = *op++;
+        
+        // =================================================================
+        // 1. PREMIER BLOC (x) : Séquence poids fort
+        // =================================================================
+        {
+            uint8_t seq = byteOp >> 4;
+            const uint8_t *s2 = nullptr;
+            uint8_t m = 0, c = 0;
+            uint8_t *d0;
+            uint8_t *d1; // Nécessaire pour les macros OP_XX
 
-        const uint8_t seq = (x & 4) ? (*op++ & 15) : (*op >> 4);
-
-        uint8_t *d0;
-        uint8_t *d1;
-        const uint8_t *s2 = nullptr; // Doit persister entre les caractères d'une même séquence
-        uint8_t m = 0, c = 0;        // Doivent persister également
-
-        switch (seq) {
-            case 0:  // ""
-                break;
-            case 1:  // "\x02"
-                d0 = d + 512; OP_02();
-                break;
-            case 2:  // "\x05\x07"
-                d0 = d + 512; OP_05();
-                d0 = d + 512; OP_07();
-                break;
-            case 3:  // "\x05"
-                d0 = d + 512; OP_05();
-                break;
-            case 4:  // "\x06"
-                d0 = d + 512; OP_06();
-                break;
-            case 5:  // "\x05\x07\x05\x07"
-                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
-                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
-                break;
-            case 6:  // "\x05\x07\x05"
-                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
-                d0 = d + 512; OP_05();
-                break;
-            case 7:  // "\x05\x07\x06"
-                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
-                d0 = d + 512; OP_06();
-                break;
-            case 8:  // "\x05\x05"
-                d0 = d + 512; OP_05(); d0 = d + 512; OP_05();
-                break;
-            case 9:  // "\x03"
-                d0 = d + 512; OP_03();
-                break;
-            case 10: // "\x06\x06"
-                d0 = d + 512; OP_06(); d0 = d + 512; OP_06();
-                break;
-            case 11: // "\x02\x04"
-                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
-                break;
-            case 12: // "\x02\x04\x05\x07"
-                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
-                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
-                break;
-            case 13: // "\x02\x04\x05"
-                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
-                d0 = d + 512; OP_05();
-                break;
-            case 14: // "\x02\x04\x06"
-                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
-                d0 = d + 512; OP_06();
-                break;
-            case 15: // "\x02\x04\x05\x07\x05\x07"
-                d0 = d + 512; OP_02(); d0 = d + 512; OP_04();
-                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
-                d0 = d + 512; OP_05(); d0 = d + 512; OP_07();
-                break;
+            switch (seq) {
+                case 0: break;
+                case 1:  d0 = d + 512; OP_02(); break;
+                case 2:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+                case 3:  d0 = d + 512; OP_05(); break;
+                case 4:  d0 = d + 512; OP_06(); break;
+                case 5:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+                case 6:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); break;
+                case 7:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_06(); break;
+                case 8:  d0 = d + 512; OP_05(); d0 = d + 512; OP_05(); break;
+                case 9:  d0 = d + 512; OP_03(); break;
+                case 10: d0 = d + 512; OP_06(); d0 = d + 512; OP_06(); break;
+                case 11: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); break;
+                case 12: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+                case 13: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
+                case 14: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
+                case 15: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+            }
         }
+
+        d += 4; // Avance de 4 pixels pour passer au bloc suivant
+
+        // =================================================================
+        // 2. DEUXIÈME BLOC (x + 4) : Séquence poids faible
+        // =================================================================
+        {
+            uint8_t seq = byteOp & 15;
+            const uint8_t *s2 = nullptr;
+            uint8_t m = 0, c = 0;
+            uint8_t *d0;
+            uint8_t *d1; // Nécessaire pour les macros OP_XX
+
+            switch (seq) {
+                case 0: break;
+                case 1:  d0 = d + 512; OP_02(); break;
+                case 2:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+                case 3:  d0 = d + 512; OP_05(); break;
+                case 4:  d0 = d + 512; OP_06(); break;
+                case 5:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+                case 6:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); break;
+                case 7:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_06(); break;
+                case 8:  d0 = d + 512; OP_05(); d0 = d + 512; OP_05(); break;
+                case 9:  d0 = d + 512; OP_03(); break;
+                case 10: d0 = d + 512; OP_06(); d0 = d + 512; OP_06(); break;
+                case 11: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); break;
+                case 12: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+                case 13: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
+                case 14: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
+                case 15: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+            }
+        }
+
+        d += 4; // Avance de 4 pixels pour être prêt pour la prochaine itération de x
     }
 }
 
+// Nettoyage des macros
 #undef OP_02
 #undef OP_03
 #undef OP_04
 #undef OP_05
 #undef OP_06
 #undef OP_07
+
 /*
     const uint8_t *op = v + 6144;
     uint32_t sz = READ_LE_UINT16(op);
