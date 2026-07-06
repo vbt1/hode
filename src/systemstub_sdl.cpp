@@ -306,6 +306,7 @@ void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const 
 void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
 // le dma ne fonctionne pas sur les videos car type_paf est en lwram
 #ifndef LINEAR_BITMAP
+/*
 	// Calculate initial source and destination pointers
 //emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
 	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
@@ -325,6 +326,31 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 		dstPtr += (pitch*2);
 	}
 //	SCU_DMAWait();
+*/
+// Pointeurs de départ
+    const uint8_t *srcPtr = buf + y * pitch + x;
+    uint8_t *dstPtr = (uint8_t *)(VDP2_VRAM_A0 + (y * (pitch * 2)) + x);
+
+    // w vaut 256 pixels, donc 256 octets. En 32-bit (uint32_t), cela représente 64 itérations.
+    // On peut diviser par 4 la boucle ou utiliser un déroulage partiel.
+    const int wordsPerLine = w >> 2; 
+
+    for (uint16_t idx = 0; idx < h; ++idx) {
+        const uint32_t *src32 = (const uint32_t *)srcPtr;
+        uint32_t *dst32 = (uint32_t *)dstPtr;
+
+        // Déroulage par 4 pour maximiser le pipeline d'accès mémoire du SH-2 (64 / 4 = 16 itérations)
+        for (int i = 0; i < wordsPerLine; i += 4) {
+            dst32[i + 0] = src32[i + 0];
+            dst32[i + 1] = src32[i + 1];
+            dst32[i + 2] = src32[i + 2];
+            dst32[i + 3] = src32[i + 3];
+        }
+
+        // Avancement d'une ligne
+        srcPtr += pitch;
+        dstPtr += (pitch * 2); // VRAM entrelacée / pas de 512 octets
+    }
 #else
 	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
 	SCU_DMAWait();
