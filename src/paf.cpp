@@ -374,6 +374,7 @@ uint8_t *d = _pageBuffers[_currentPageBuffer];
 const uint8_t *src2 = op + sz;
 
 // --- DÉFINITION DES MACROS POUR LE DÉCODAGE SH-2 ---
+/*
 #define OP_02() { d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
 #define OP_03() { c = *src2++; m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
 #define OP_04() { m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
@@ -381,6 +382,16 @@ const uint8_t *src2 = op + sz;
 #define OP_05() { d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
 #define OP_06() { s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
 #define OP_07() { m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
+*/
+// Celles-ci travaillent sur la ligne du haut (d)
+#define OP_02() { uint8_t *d0_local = d; c = *src2++; m = *src2++; d1 = d0_local + 256; pafCopyColorMask(m >> 4, d0_local, c); pafCopyColorMask(m & 15, d1, c); }
+#define OP_05() { uint8_t *d0_local = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0_local + 256; pafCopySrcMask(m >> 4, d0_local, s2 + (d0_local - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
+
+// Celles-ci travaillent TOUJOURS sur la ligne du bas (d + 512)
+#define OP_03() { uint8_t *d0_local = d + 512; c = *src2++; m = *src2++; d1 = d0_local + 256; pafCopyColorMask(m >> 4, d0_local, c); pafCopyColorMask(m & 15, d1, c); }
+#define OP_04() { uint8_t *d0_local = d + 512; m = *src2++; d1 = d0_local + 256; pafCopyColorMask(m >> 4, d0_local, c); pafCopyColorMask(m & 15, d1, c); }
+#define OP_06() { uint8_t *d0_local = d + 512; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0_local + 256; pafCopySrcMask(m >> 4, d0_local, s2 + (d0_local - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
+#define OP_07() { uint8_t *d0_local = d + 512; m = *src2++; d1 = d0_local + 256; pafCopySrcMask(m >> 4, d0_local, s2 + (d0_local - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
 
 for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
     for (int x = 0; x < kVideoWidth; x += 8) {
@@ -401,6 +412,7 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
 
 			switch (seq) {
 					case 0: break;
+/*
 					case 1:  OP_02(); break;
 					case 2:  OP_05(); d0 = d + 512; OP_07(); break;
 					case 3:  OP_05(); break;
@@ -416,6 +428,22 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
 					case 13: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
 					case 14: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
 					case 15: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+*/
+					case 1:  OP_02(); break;
+					case 2:  OP_05(); OP_07(); break; // Propre, net, sans réaffectation intermédiaire
+					case 3:  OP_05(); break;
+					case 4:  OP_06(); break;
+					case 5:  OP_05(); OP_07(); OP_05(); OP_07(); break;
+					case 6:  OP_05(); OP_07(); OP_05(); break;
+					case 7:  OP_05(); OP_07(); OP_06(); break;
+					case 8:  OP_05(); OP_05(); break;
+					case 9:  OP_03(); break;
+					case 10: OP_06(); OP_06(); break;
+					case 11: OP_02(); OP_04(); break;
+					case 12: OP_02(); OP_04(); OP_05(); OP_07(); break;
+					case 13: OP_02(); OP_04(); OP_05(); break;
+					case 14: OP_02(); OP_04(); OP_06(); break;
+					case 15: OP_02(); OP_04(); OP_05(); OP_07(); OP_05(); OP_07(); break;
 				}
 			}
 		}
@@ -434,7 +462,7 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
 
 			switch (seq) {
 					case 0: break;
-					case 1:  OP_02(); break;
+/*					case 1:  OP_02(); break;
 					case 2:  OP_05(); d0 = d + 512; OP_07(); break;
 					case 3:  OP_05(); break;
 					case 4:  OP_06(); break;
@@ -449,6 +477,22 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
 					case 13: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
 					case 14: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
 					case 15: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+*/
+					case 1:  OP_02(); break;
+					case 2:  OP_05(); OP_07(); break; // Propre, net, sans réaffectation intermédiaire
+					case 3:  OP_05(); break;
+					case 4:  OP_06(); break;
+					case 5:  OP_05(); OP_07(); OP_05(); OP_07(); break;
+					case 6:  OP_05(); OP_07(); OP_05(); break;
+					case 7:  OP_05(); OP_07(); OP_06(); break;
+					case 8:  OP_05(); OP_05(); break;
+					case 9:  OP_03(); break;
+					case 10: OP_06(); OP_06(); break;
+					case 11: OP_02(); OP_04(); break;
+					case 12: OP_02(); OP_04(); OP_05(); OP_07(); break;
+					case 13: OP_02(); OP_04(); OP_05(); break;
+					case 14: OP_02(); OP_04(); OP_06(); break;
+					case 15: OP_02(); OP_04(); OP_05(); OP_07(); OP_05(); OP_07(); break;
 				}
 			}
         }
