@@ -392,32 +392,33 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
         // 1. PREMIER BLOC (x) : Séquence poids fort
         // =================================================================
         {
-            uint8_t seq = byteOp >> 4;
-            const uint8_t *s2 = nullptr;
-            uint8_t m = 0, c = 0;
-            uint8_t *d0;
-            uint8_t *d1; // Nécessaire pour les macros OP_XX
+		uint8_t seq = byteOp >> 4;
+			if (seq != 0) { // On élimine le cas vide immédiatement
+				const uint8_t *s2 = nullptr;
+				uint8_t m = 0, c = 0;
+				uint8_t *d1; 
+				uint8_t *d0 = d + 512; 
 
-            switch (seq) {
-                case 0: break;
-                case 1:  d0 = d + 512; OP_02(); break;
-                case 2:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-                case 3:  d0 = d + 512; OP_05(); break;
-                case 4:  d0 = d + 512; OP_06(); break;
-                case 5:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-                case 6:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); break;
-                case 7:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_06(); break;
-                case 8:  d0 = d + 512; OP_05(); d0 = d + 512; OP_05(); break;
-                case 9:  d0 = d + 512; OP_03(); break;
-                case 10: d0 = d + 512; OP_06(); d0 = d + 512; OP_06(); break;
-                case 11: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); break;
-                case 12: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-                case 13: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
-                case 14: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
-                case 15: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-            }
-        }
-
+			switch (seq) {
+					case 0: break;
+					case 1:  OP_02(); break;
+					case 2:  OP_05(); d0 = d + 512; OP_07(); break;
+					case 3:  OP_05(); break;
+					case 4:  OP_06(); break;
+					case 5:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+					case 6:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); break;
+					case 7:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_06(); break;
+					case 8:  OP_05(); d0 = d + 512; OP_05(); break;
+					case 9:  OP_03(); break;
+					case 10: OP_06(); d0 = d + 512; OP_06(); break;
+					case 11: OP_02(); d0 = d + 512; OP_04(); break;
+					case 12: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+					case 13: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
+					case 14: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
+					case 15: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+				}
+			}
+		}
         d += 4; // Avance de 4 pixels pour passer au bloc suivant
 
         // =================================================================
@@ -425,29 +426,31 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
         // =================================================================
         {
             uint8_t seq = byteOp & 15;
-            const uint8_t *s2 = nullptr;
-            uint8_t m = 0, c = 0;
-            uint8_t *d0;
-            uint8_t *d1; // Nécessaire pour les macros OP_XX
+			if (seq != 0) { // On élimine le cas vide immédiatement
+				const uint8_t *s2 = nullptr;
+				uint8_t m = 0, c = 0;
+				uint8_t *d1; 
+				uint8_t *d0 = d + 512; 
 
-            switch (seq) {
-                case 0: break;
-                case 1:  d0 = d + 512; OP_02(); break;
-                case 2:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-                case 3:  d0 = d + 512; OP_05(); break;
-                case 4:  d0 = d + 512; OP_06(); break;
-                case 5:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-                case 6:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); break;
-                case 7:  d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_06(); break;
-                case 8:  d0 = d + 512; OP_05(); d0 = d + 512; OP_05(); break;
-                case 9:  d0 = d + 512; OP_03(); break;
-                case 10: d0 = d + 512; OP_06(); d0 = d + 512; OP_06(); break;
-                case 11: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); break;
-                case 12: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-                case 13: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
-                case 14: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
-                case 15: d0 = d + 512; OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-            }
+			switch (seq) {
+					case 0: break;
+					case 1:  OP_02(); break;
+					case 2:  OP_05(); d0 = d + 512; OP_07(); break;
+					case 3:  OP_05(); break;
+					case 4:  OP_06(); break;
+					case 5:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+					case 6:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); break;
+					case 7:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_06(); break;
+					case 8:  OP_05(); d0 = d + 512; OP_05(); break;
+					case 9:  OP_03(); break;
+					case 10: OP_06(); d0 = d + 512; OP_06(); break;
+					case 11: OP_02(); d0 = d + 512; OP_04(); break;
+					case 12: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+					case 13: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
+					case 14: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
+					case 15: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
+				}
+			}
         }
 
         d += 4; // Avance de 4 pixels pour être prêt pour la prochaine itération de x
