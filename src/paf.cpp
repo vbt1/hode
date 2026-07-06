@@ -320,6 +320,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
             if (a) v += 4 - a;
         }
         for (int i = 0; i < n; ++i) {
+/*
             const uint8_t  hi  = v[0];
             const uint8_t  lo  = v[1];
             const uint8_t  idx = hi >> 6;
@@ -327,6 +328,10 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
             uint8_t *db = p[idx] + off;
             uint32_t o  = (lo & 0x7F) << 1;
             uint32_t e  = READ_LE_UINT16(v + 2) + o;
+*/
+			uint8_t *db = fastOffset(p, v);
+			uint32_t o  = (v[1] & 0x7F) << 1;   // ici tu relis v[1], léger surcoût
+			uint32_t e  = READ_LE_UINT16(v + 2) + o;
             v += 4;
 
             uint8_t *d0 = db;
@@ -354,10 +359,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
         const uint8_t *s = v;
         for (int y = 0; y < 192; y += 4, d += 768) {
             for (int x = 0; x < 256; x += 4, d += 4, s += 2) {
-                const uint8_t b0 = s[0], b1 = s[1];
-                const uint8_t idx = b0 >> 6;
-                const uint32_t off = (((((b0 << 1) | (b1 >> 7)) & 0x7F) << 8) | (b1 & 0x7F)) << 1;
-                const uint8_t *t = p[idx] + off;
+				const uint8_t *t = fastOffset(p, s);
                 copy4x4_tile(d, d + 256, d + 512, d + 768, t, t + 256, t + 512, t + 768);
             }
         }
