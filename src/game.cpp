@@ -2062,7 +2062,7 @@ void Game::drawScreen() {
 	for (int i = 1; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-				_video->decodeSPR(spr, _video->_backgroundLayer, _video->_shadowLayer);
+				_video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
 			}
 		}
 	}
@@ -2112,7 +2112,7 @@ void Game::drawScreen() {
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-				_video->decodeSPR(spr, _video->_backgroundLayer, _video->_shadowLayer);
+				_video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
 			}
 		}
 	}
@@ -2246,7 +2246,7 @@ void Game::drawScreen() {
         for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
             switch (spr->num & 0x3000) {
             case 0x3000:
-                _video->decodeSPR(spr, _video->_backgroundLayer, _video->_shadowLayer);
+                _video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
                 // fallthrough
             case 0x1000:
                 if (spr->type != kObjectDataTypeLvlBackgroundSound) {
@@ -2277,7 +2277,7 @@ spr->xPos++;
                 }
                 break;
             case 0x2000:
-                _video->decodeSPR(spr, _video->_backgroundLayer, _video->_shadowLayer);
+                _video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
                 break;
             case 0x0000:
                 break;

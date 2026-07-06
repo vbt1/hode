@@ -225,14 +225,14 @@ uint32_t *PafPlayer::readPafHeaderTable(int count, uint32_t *dst) {
 // =============================================================================
 // Helpers mask
 // =============================================================================
-
+/*
 FORCE_INLINE void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
 	store4_a(dst,       load4_u16(src));
 	store4_a(dst + 256, load4_u16(src + 256));
 	store4_a(dst + 512, load4_u16(src + 512));
 	store4_a(dst + 768, load4_u16(src + 768));
 }
-
+*/
 static void pafCopySrcMask(uint8_t mask, uint8_t *dst, const uint8_t *src) {
 	if (mask & 0x8) dst[0] = src[0];
 	if (mask & 0x4) dst[1] = src[1];
@@ -246,6 +246,7 @@ static void pafCopyColorMask(uint8_t mask, uint8_t *dst, uint8_t color) {
 	if (mask & 0x2) dst[2] = color;
 	if (mask & 0x1) dst[3] = color;
 }
+
 /*
 static const char *updateSequences[] = {
 	"",
