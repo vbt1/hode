@@ -225,14 +225,7 @@ uint32_t *PafPlayer::readPafHeaderTable(int count, uint32_t *dst) {
 // =============================================================================
 // Helpers mask
 // =============================================================================
-/*
-FORCE_INLINE void pafCopy4x4v(uint8_t *dst, const uint8_t *src) {
-	store4_a(dst,       load4_u16(src));
-	store4_a(dst + 256, load4_u16(src + 256));
-	store4_a(dst + 512, load4_u16(src + 512));
-	store4_a(dst + 768, load4_u16(src + 768));
-}
-*/
+
 static void pafCopySrcMask(uint8_t mask, uint8_t *dst, const uint8_t *src) {
 	if (mask & 0x8) dst[0] = src[0];
 	if (mask & 0x4) dst[1] = src[1];
@@ -247,26 +240,6 @@ static void pafCopyColorMask(uint8_t mask, uint8_t *dst, uint8_t color) {
 	if (mask & 0x1) dst[3] = color;
 }
 
-/*
-static const char *updateSequences[] = {
-	"",
-	"\x02",
-	"\x05\x07",
-	"\x05",
-	"\x06",
-	"\x05\x07\x05\x07",
-	"\x05\x07\x05",
-	"\x05\x07\x06",
-	"\x05\x05",
-	"\x03",
-	"\x06\x06",
-	"\x02\x04",
-	"\x02\x04\x05\x07",
-	"\x02\x04\x05",
-	"\x02\x04\x06",
-	"\x02\x04\x05\x07\x05\x07"
-};
-*/
 FORCE_INLINE uint8_t *fastOffset(uint8_t **pages, const uint8_t *src) {
 	const int x    =  src[1] & 0x7F;
 	const int page =  src[0] >> 6;
@@ -366,6 +339,7 @@ void PafPlayer::decodeVideoFrameOp0(const uint8_t *base, const uint8_t *src, uin
     }
 
 	// 3. OP — Version sans boucle while (corrigée)
+#if 1
 const uint8_t *op = v + 6144;
 uint32_t sz = READ_LE_UINT16(op);
 op += 4;
@@ -374,15 +348,7 @@ uint8_t *d = _pageBuffers[_currentPageBuffer];
 const uint8_t *src2 = op + sz;
 
 // --- DÉFINITION DES MACROS POUR LE DÉCODAGE SH-2 ---
-/*
-#define OP_02() { d0 = d; c = *src2++; m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
-#define OP_03() { c = *src2++; m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
-#define OP_04() { m = *src2++; d1 = d0 + 256; pafCopyColorMask(m >> 4, d0, c); pafCopyColorMask(m & 15, d1, c); }
 
-#define OP_05() { d0 = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
-#define OP_06() { s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
-#define OP_07() { m = *src2++; d1 = d0 + 256; pafCopySrcMask(m >> 4, d0, s2 + (d0 - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
-*/
 // Celles-ci travaillent sur la ligne du haut (d)
 #define OP_02() { uint8_t *d0_local = d; c = *src2++; m = *src2++; d1 = d0_local + 256; pafCopyColorMask(m >> 4, d0_local, c); pafCopyColorMask(m & 15, d1, c); }
 #define OP_05() { uint8_t *d0_local = d; s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1 = d0_local + 256; pafCopySrcMask(m >> 4, d0_local, s2 + (d0_local - d)); pafCopySrcMask(m & 15, d1, s2 + (d1 - d)); }
@@ -411,24 +377,6 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
 				uint8_t *d0 = d + 512; 
 
 			switch (seq) {
-					case 0: break;
-/*
-					case 1:  OP_02(); break;
-					case 2:  OP_05(); d0 = d + 512; OP_07(); break;
-					case 3:  OP_05(); break;
-					case 4:  OP_06(); break;
-					case 5:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-					case 6:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); break;
-					case 7:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_06(); break;
-					case 8:  OP_05(); d0 = d + 512; OP_05(); break;
-					case 9:  OP_03(); break;
-					case 10: OP_06(); d0 = d + 512; OP_06(); break;
-					case 11: OP_02(); d0 = d + 512; OP_04(); break;
-					case 12: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-					case 13: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
-					case 14: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
-					case 15: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-*/
 					case 1:  OP_02(); break;
 					case 2:  OP_05(); OP_07(); break; // Propre, net, sans réaffectation intermédiaire
 					case 3:  OP_05(); break;
@@ -461,23 +409,6 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
 				uint8_t *d0 = d + 512; 
 
 			switch (seq) {
-					case 0: break;
-/*					case 1:  OP_02(); break;
-					case 2:  OP_05(); d0 = d + 512; OP_07(); break;
-					case 3:  OP_05(); break;
-					case 4:  OP_06(); break;
-					case 5:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-					case 6:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); break;
-					case 7:  OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_06(); break;
-					case 8:  OP_05(); d0 = d + 512; OP_05(); break;
-					case 9:  OP_03(); break;
-					case 10: OP_06(); d0 = d + 512; OP_06(); break;
-					case 11: OP_02(); d0 = d + 512; OP_04(); break;
-					case 12: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-					case 13: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); break;
-					case 14: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_06(); break;
-					case 15: OP_02(); d0 = d + 512; OP_04(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); d0 = d + 512; OP_05(); d0 = d + 512; OP_07(); break;
-*/
 					case 1:  OP_02(); break;
 					case 2:  OP_05(); OP_07(); break; // Propre, net, sans réaffectation intermédiaire
 					case 3:  OP_05(); break;
@@ -508,6 +439,110 @@ for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
 #undef OP_05
 #undef OP_06
 #undef OP_07
+
+#else
+// 3. OP — Version hautement optimisée avec Computed GOTOs
+	const uint8_t *op = v + 6144;
+	uint32_t sz = READ_LE_UINT16(op);
+	op += 4;
+
+	uint8_t *d = _pageBuffers[_currentPageBuffer];
+	const uint8_t *src2 = op + sz;
+
+	// Tables de sauts statiques pour un accès direct (0 cycle de logique)
+	static const void* const dispatch_high[16] = {
+		&&skip_high,  &&h_case1,  &&h_case2,  &&h_case3,
+		&&h_case4,     &&h_case5,  &&h_case6,  &&h_case7,
+		&&h_case8,     &&h_case9,  &&h_case10, &&h_case11,
+		&&h_case12,    &&h_case13, &&h_case14, &&h_case15
+	};
+
+	static const void* const dispatch_low[16] = {
+		&&skip_low,   &&l_case1,  &&l_case2,  &&l_case3,
+		&&l_case4,     &&l_case5,  &&l_case6,  &&l_case7,
+		&&l_case8,     &&l_case9,  &&l_case10, &&l_case11,
+		&&l_case12,    &&l_case13, &&l_case14, &&l_case15
+	};
+
+	// Variables de travail globales à la boucle pour maximiser l'usage des registres SH-2
+	const uint8_t *s2 = nullptr;
+	uint8_t m = 0, c = 0;
+	uint8_t *d0_reg = nullptr;
+	uint8_t *d1_reg = nullptr;
+
+	// Macros nettoyées de toute logique de pointeur superflue
+	#define M_OP_02() { d0_reg = d;         c = *src2++; m = *src2++; d1_reg = d0_reg + 256; pafCopyColorMask(m >> 4, d0_reg, c); pafCopyColorMask(m & 15, d1_reg, c); }
+	#define M_OP_05() { d0_reg = d;         s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1_reg = d0_reg + 256; pafCopySrcMask(m >> 4, d0_reg, s2); pafCopySrcMask(m & 15, d1_reg, s2 + 256); }
+
+	#define M_OP_03() { d0_reg = d + 512;   c = *src2++; m = *src2++; d1_reg = d0_reg + 256; pafCopyColorMask(m >> 4, d0_reg, c); pafCopyColorMask(m & 15, d1_reg, c); }
+	#define M_OP_04() { d0_reg = d + 512;   m = *src2++; d1_reg = d0_reg + 256; pafCopyColorMask(m >> 4, d0_reg, c); pafCopyColorMask(m & 15, d1_reg, c); }
+	#define M_OP_06() { d0_reg = d + 512;   s2 = fastOffset(_pageBuffers, src2); src2 += 2; m = *src2++; d1_reg = d0_reg + 256; pafCopySrcMask(m >> 4, d0_reg, s2 + 512); pafCopySrcMask(m & 15, d1_reg, s2 + 768); }
+	#define M_OP_07() { d0_reg = d + 512;   m = *src2++; d1_reg = d0_reg + 256; pafCopySrcMask(m >> 4, d0_reg, s2 + 512); pafCopySrcMask(m & 15, d1_reg, s2 + 768); }
+
+	for (int y = 0; y < kVideoHeight; y += 4, d += kVideoWidth * 3) {
+		for (int x = 0; x < kVideoWidth; x += 8) {
+			
+			uint32_t byteOp = *op++; // Utilisation d'un type 32 bits natif pour le registre SH-2
+			
+			// =================================================================
+			// 1. PREMIER BLOC (Poids fort)
+			// =================================================================
+			goto *dispatch_high[byteOp >> 4];
+
+			h_case1:  M_OP_02(); goto end_high;
+			h_case2:  M_OP_05(); M_OP_07(); goto end_high;
+			h_case3:  M_OP_05(); goto end_high;
+			h_case4:  M_OP_06(); goto end_high;
+			h_case5:  M_OP_05(); M_OP_07(); M_OP_05(); M_OP_07(); goto end_high;
+			h_case6:  M_OP_05(); M_OP_07(); M_OP_05(); goto end_high;
+			h_case7:  M_OP_05(); M_OP_07(); M_OP_06(); goto end_high;
+			h_case8:  M_OP_05(); M_OP_05(); goto end_high;
+			h_case9:  M_OP_03(); goto end_high;
+			h_case10: M_OP_06(); M_OP_06(); goto end_high;
+			h_case11: M_OP_02(); M_OP_04(); goto end_high;
+			h_case12: M_OP_02(); M_OP_04(); M_OP_05(); M_OP_07(); goto end_high;
+			h_case13: M_OP_02(); M_OP_04(); M_OP_05(); goto end_high;
+			h_case14: M_OP_02(); M_OP_04(); M_OP_06(); goto end_high;
+			h_case15: M_OP_02(); M_OP_04(); M_OP_05(); M_OP_07(); M_OP_05(); M_OP_07(); goto end_high;
+			skip_high:
+			end_high:
+
+			d += 4; // On décale la destination de 4 pixels pour le bloc bas
+
+			// =================================================================
+			// 2. DEUXIÈME BLOC (Poids faible)
+			// =================================================================
+			goto *dispatch_low[byteOp & 15];
+
+			l_case1:  M_OP_02(); goto end_low;
+			l_case2:  M_OP_05(); M_OP_07(); goto end_low;
+			l_case3:  M_OP_05(); goto end_low;
+			l_case4:  M_OP_06(); goto end_low;
+			l_case5:  M_OP_05(); M_OP_07(); M_OP_05(); M_OP_07(); goto end_low;
+			l_case6:  M_OP_05(); M_OP_07(); M_OP_05(); goto end_low;
+			l_case7:  M_OP_05(); M_OP_07(); M_OP_06(); goto end_low;
+			l_case8:  M_OP_05(); M_OP_05(); goto end_low;
+			l_case9:  M_OP_03(); goto end_low;
+			l_case10: M_OP_06(); M_OP_06(); goto end_low;
+			l_case11: M_OP_02(); M_OP_04(); goto end_low;
+			l_case12: M_OP_02(); M_OP_04(); M_OP_05(); M_OP_07(); goto end_low;
+			l_case13: M_OP_02(); M_OP_04(); M_OP_05(); goto end_low;
+			l_case14: M_OP_02(); M_OP_04(); M_OP_06(); goto end_low;
+			l_case15: M_OP_02(); M_OP_04(); M_OP_05(); M_OP_07(); M_OP_05(); M_OP_07(); goto end_low;
+			skip_low:
+			end_low:
+
+			d += 4; // Prêt pour l'itération suivante (x += 8 virtuel fait manuellement via les deux d+=4)
+		}
+	}
+
+	#undef M_OP_02
+	#undef M_OP_03
+	#undef M_OP_04
+	#undef M_OP_05
+	#undef M_OP_06
+	#undef M_OP_07
+#endif
 
 /*
     const uint8_t *op = v + 6144;
