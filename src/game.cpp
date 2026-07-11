@@ -3408,7 +3408,7 @@ void Game::displayLoadingScreen() {
 			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (int)256);
 			g_system->updateScreen(false);
 		}
-		slScrAutoDisp(NBG0ON|NBG1ON);
+		slScrAutoDisp(NBG0ON|NBG1ON|NBG3ON);
 	}
 }
 #if 0

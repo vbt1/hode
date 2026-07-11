@@ -122,6 +122,11 @@ int	main( void )
 	slPriorityNbg0(2);
 //	slPrioritySpr0(7);
 
+	slCharNbg3(COL_TYPE_256, CHAR_SIZE_1x1);
+    slPageNbg3((void*)0x25e60000, 0, PNB_1WORD|CN_10BIT );
+    slPlaneNbg3(PL_SIZE_1x1);
+    slMapNbg3((void*)0x25e76000, (void*)0x25e76000, (void*)0x25e76000, (void*)0x25e76000);
+//	slPriorityNbg3(6);
 //	slWindow(0 , 16 , 639 , 192 , 241 ,319 , 112);
 	
 //	SPRITE *sys_clip = (SPRITE *) SpriteVRAM;

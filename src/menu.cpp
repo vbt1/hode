@@ -619,7 +619,8 @@ int Menu::handleTitleScreen() {
 //		g_system->sleep(kDelayMs);
 	}
 	_video->SAT_cleanSprites();
-	slPriorityNbg1(7);
+	slPriorityNbg1(6);
+	slPriorityNbg3(7);
 //	SPR_InitSlaveSH();
 	return currentOption;
 }
