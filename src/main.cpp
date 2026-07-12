@@ -359,7 +359,7 @@ int ss_main() {
 	}
 	slScrPosNbg1(0, 0);
 	slZoomNbg1(toFIXED(0.5), toFIXED(1.0));
-	slScrAutoDisp(NBG0ON|NBG1ON);
+	slScrAutoDisp(NBG0ON|NBG1ON|NBG3ON);
 
 	
 	memset((void *) hwram_work,0x00, 71680);

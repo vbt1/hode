@@ -4,7 +4,7 @@
 //#include <sega_mem.h>
 #include <stdlib.h>
 
-uint8_t* allocate_memory(const uint8_t type, uint32_t alignedSize);
+uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t alignedSize);
 
 /*
 void *sat_calloc(size_t nmemb, size_t size);

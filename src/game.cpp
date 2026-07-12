@@ -102,8 +102,8 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 	memset(_animBackgroundDataTable, 0, sizeof(_animBackgroundDataTable));
 	_animBackgroundDataCount = 0;
 
-	_monsterObjects1Table = (MonsterObject1 *)allocate_memory(TYPE_MONSTER1, sizeof(MonsterObject1) * kMaxMonsterObjects1);
-	_monsterObjects2Table = (MonsterObject2 *)allocate_memory(TYPE_MONSTER2, sizeof(MonsterObject2) * kMaxMonsterObjects2);
+	_monsterObjects1Table = (MonsterObject1 *)allocate_memory(-1, TYPE_MONSTER1, sizeof(MonsterObject1) * kMaxMonsterObjects1);
+	_monsterObjects2Table = (MonsterObject2 *)allocate_memory(-1, TYPE_MONSTER2, sizeof(MonsterObject2) * kMaxMonsterObjects2);
 	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
 	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
 //	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
@@ -600,7 +600,7 @@ void Game::resetScreenMask() {
 //emu_printf("resetScreenMask\n");
 //	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
 	if(_screenMaskBuffer == 0)
-		_screenMaskBuffer = allocate_memory(TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
+		_screenMaskBuffer = allocate_memory(_res->_level, TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
 
 	memset(_screenMaskBuffer, 0, (16 * 6) * 24 * 32);
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
@@ -4744,6 +4744,7 @@ void Game::initLvlObjects() {
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_screenLvlObjectsList[i] = 0;
 	}
+
 	LvlObject *prevLvlObj = 0;
 	for (int i = 0; i < _res->_lvlHdr.staticLvlObjectsCount; ++i) {
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];
