@@ -6,6 +6,7 @@
 #define OLD_DRAW_SCREEN 1
 //#define DEBUG 1
 //#define DEBUG2 1
+//#define USE_FONT 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -101,8 +102,8 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 	memset(_animBackgroundDataTable, 0, sizeof(_animBackgroundDataTable));
 	_animBackgroundDataCount = 0;
 
-	_monsterObjects1Table = (MonsterObject1 *)allocate_memory(TYPE_MONSTER1, sizeof(MonsterObject1) * kMaxMonsterObjects1);
-	_monsterObjects2Table = (MonsterObject2 *)allocate_memory(TYPE_MONSTER2, sizeof(MonsterObject2) * kMaxMonsterObjects2);
+	_monsterObjects1Table = (MonsterObject1 *)allocate_memory(-1, TYPE_MONSTER1, sizeof(MonsterObject1) * kMaxMonsterObjects1);
+	_monsterObjects2Table = (MonsterObject2 *)allocate_memory(-1, TYPE_MONSTER2, sizeof(MonsterObject2) * kMaxMonsterObjects2);
 	memset(_monsterObjects1Table, 0, sizeof(MonsterObject1)*kMaxMonsterObjects1);
 	memset(_monsterObjects2Table, 0, sizeof(MonsterObject2)*kMaxMonsterObjects2);
 //	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
@@ -599,7 +600,7 @@ void Game::resetScreenMask() {
 //emu_printf("resetScreenMask\n");
 //	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
 	if(_screenMaskBuffer == 0)
-		_screenMaskBuffer = allocate_memory(TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
+		_screenMaskBuffer = allocate_memory(_res->_level, TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
 
 	memset(_screenMaskBuffer, 0, (16 * 6) * 24 * 32);
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
@@ -1045,10 +1046,10 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	}
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
-emu_printf("isLvlBackgroundDataLoaded(num) %d\n", num);
+//emu_printf("isLvlBackgroundDataLoaded(num) %d\n", num);
 		_res->unloadLvlScreenBackgroundData(num);
 	}
-emu_printf("loadLvlScreenBackgroundData(num) %d\n", num);
+//emu_printf("loadLvlScreenBackgroundData(num) %d\n", num);
 	if(num==2 && _currentLevel==0 && !done1)
 	{
 	lwram_end = (Uint8 *)0x300000;
@@ -3339,10 +3340,10 @@ Level *Game::createLevel() {
 	case 1:
 		_level = Level_fort_create();
 		break;
-	case 2:
+/*	case 2:
 		_level = Level_pwr1_create();
 		break;
-/*	case 3:
+	case 3:
 		_level = Level_isld_create();
 		break;
 	case 4:
@@ -3407,7 +3408,7 @@ void Game::displayLoadingScreen() {
 			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (int)256);
 			g_system->updateScreen(false);
 		}
-		slScrAutoDisp(NBG0ON|NBG1ON);
+		slScrAutoDisp(NBG0ON|NBG1ON|NBG3ON);
 	}
 }
 #if 0
@@ -4743,7 +4744,12 @@ void Game::initLvlObjects() {
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_screenLvlObjectsList[i] = 0;
 	}
+//emu_printf("initLvlObjects %d\n", (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));
 	LvlObject *prevLvlObj = 0;
+	
+//	_res->_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(-1, TYPE_MONSTER2, (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));//[104];
+//	memset(_res->_resLvlScreenObjectDataTable, 0, (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));	
+
 	for (int i = 0; i < _res->_lvlHdr.staticLvlObjectsCount; ++i) {
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];
 		int index = ptr->screenNum;

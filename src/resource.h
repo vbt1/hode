@@ -534,12 +534,12 @@ struct ResStruct {
 		count = 0;
 	}
 
-	void allocate(unsigned int size) {
+	void allocate(int _level, unsigned int size) {
 //		free(ptr);
 		count = size;
 // vbt : on garde malloc, peu couteux
 //		ptr = (T *)malloc(size * sizeof(T));
-		ptr = (T *)allocate_memory (TYPE_RES, size * sizeof(T));
+		ptr = (T *)allocate_memory (_level, TYPE_RES, size * sizeof(T));
 	}
 
 	const T& operator[](int i) const {
@@ -578,6 +578,7 @@ struct Resource {
 	bool _isDemo;
 #endif
 	int _version;
+	int _level;
 
 	uint8_t *_loadingImageBuffer;
 #ifdef USE_FONT
