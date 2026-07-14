@@ -4744,8 +4744,12 @@ void Game::initLvlObjects() {
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_screenLvlObjectsList[i] = 0;
 	}
-
+emu_printf("initLvlObjects %d\n", (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));
 	LvlObject *prevLvlObj = 0;
+	
+//	_res->_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(-1, TYPE_MONSTER2, (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));//[104];
+//	memset(_res->_resLvlScreenObjectDataTable, 0, (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));	
+
 	for (int i = 0; i < _res->_lvlHdr.staticLvlObjectsCount; ++i) {
 		LvlObject *ptr = &_res->_resLvlScreenObjectDataTable[i];
 		int index = ptr->screenNum;

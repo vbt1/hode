@@ -10,7 +10,7 @@
 extern "C" {
 void abort(void) {
     emu_printf("ABORT CALLED\n");
-//    while(1);  // Infinite loop instead of aborting
+    while(1);  // Infinite loop instead of aborting
 }
 }
 

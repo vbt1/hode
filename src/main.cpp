@@ -333,7 +333,7 @@ int ss_main() {
 	const bool isPsx = false;
 	g_system = SystemStub_SDL_create();
 	g_system->init("", Video::W, Video::H);
-	
+/*	
 	GFS_Load(GFS_NameToId((Sint8*)"HODPAL.BIN"),0,(void *) hwram_work,512);
 	Uint16 *Pal_Data  = (Uint16 *)hwram_work;
 	Uint16 *VRAM = (Uint16 *)VDP2_COLRAM;
@@ -357,11 +357,12 @@ int ss_main() {
 		srcPtr += 320;
 		dstPtr += 512;
 	}
+
 	slScrPosNbg1(0, 0);
 	slZoomNbg1(toFIXED(0.5), toFIXED(1.0));
+*/
 	slScrAutoDisp(NBG0ON|NBG1ON|NBG3ON);
-
-	
+/*	
 	memset((void *) hwram_work,0x00, 71680);
 
 	slTVOn();
@@ -373,6 +374,7 @@ int ss_main() {
 
 	slTVOff();
 	memset((void *) VDP2_VRAM_A0,0x00, 512*224);
+*/
 	slZoomNbg1(26350, toFIXED(1.0));
 	slScrPosNbg1(0, toFIXED(-16));
 /*

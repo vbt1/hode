@@ -29,11 +29,12 @@ extern Uint8 *hwram_work_paf;
 static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
     uint8_t *dst = (uint8_t *)SAT_ALIGN((int)*ptr);
     *ptr = dst + size;
-
+/*
     emu_printf("hwram %d ptr %p lwram %d hw %p aft %p sz %d p %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, ptr, size, sbrk(0));
 			memset(hwram_work,0x00,10000);
+*/
     return dst;
 }
 
@@ -60,9 +61,13 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 				return bump(&hwram_work, alignedSize);
 			case TYPE_PAFHEAD:
 			case TYPE_MONSTER1:
+				return bump(&current_lwram, alignedSize);
+	
 			case TYPE_MONSTER2:
 emu_printf("level %d type %d size %d\n", level, type, alignedSize);
+//				return (uint8_t *)0x22400000;
 				return bump(&current_lwram, alignedSize);
+
 			default:
 				emu_printf("missing case!!! -1 %d\n", type);
 				return nullptr;
