@@ -491,7 +491,7 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 	dat->bitmapBits = 0; src += 4;
 	dat->callbackFuncPtr = 0; src += 4;
 	dat->dataPtr = 0; src += 4;
-emu_printf("ldlvlobjscreen %d %d %d\n",dat->spriteNum,dat->screenNum, dat->width);
+//emu_printf("ldlvlobjscreen %d %d %d\n",dat->spriteNum,dat->screenNum, dat->width);
 
 #ifdef SOUND
 	dat->sssObject = 0; 
@@ -840,7 +840,8 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	}
 	_lvlFile->seekAlign(0x288);
 	static const int kSizeOfLvlObject = 96;
-	const int lvlObjectsCount = (_lvlSpritesOffset - 0x288) / kSizeOfLvlObject;
+//	const int lvlObjectsCount = (_lvlSpritesOffset - 0x288) / kSizeOfLvlObject;
+	const int lvlObjectsCount = (_lvlHdr.staticLvlObjectsCount + _lvlHdr.otherLvlObjectsCount);
 //emu_printf("Resource::loadLvlData() lvlObjectsCount %d\n", lvlObjectsCount);
 
 	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(-1, TYPE_MONSTER2, lvlObjectsCount * sizeof(LvlObject));//[104];
