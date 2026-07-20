@@ -1565,7 +1565,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 //		assert(asfh[count].move < dat->movesCount);
 		if(asfh[count].move >= dat->movesCount)
 		{
-			emu_printf("assert %d %d count %d count\n", asfh[count].move , dat->movesCount);
+//			emu_printf("assert %d %d count %d count\n", asfh[count].move , dat->movesCount);
 			asfh[count].move=0;
 			_andyUpdatePositionFlag = 0;
 			mask = 0;

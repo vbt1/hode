@@ -9,8 +9,8 @@
 
 extern "C" {
 void abort(void) {
-    emu_printf("ABORT CALLED\n");
-    while(1);  // Infinite loop instead of aborting
+//    emu_printf("ABORT CALLED\n");
+//    while(1);  // Infinite loop instead of aborting
 }
 }
 
@@ -96,7 +96,7 @@ int LzwDecoder::decode(uint8_t *dst) {
 				--currentStackPtr;
 //				assert(currentStackPtr >= &_stack[0]);
 				if (currentStackPtr < &_stack[0]) {
-					emu_printf("Error: LZW stack underflow\n");
+//					emu_printf("Error: LZW stack underflow\n");
 					break;  // ← EXIT 1: Safety check - stack overflow protection
 				}
 

@@ -5,7 +5,7 @@
 //#define SLAVE_SOUND 1
 //#define SOUND 1
 #define FONT_ADDR 0x25c01000
-#define FRAME 1
+//#define FRAME 1
 //#define LINEAR_BITMAP 1
 
 extern "C" {

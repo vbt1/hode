@@ -11,7 +11,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-#define FRAME 1
+//#define FRAME 1
 
 extern "C" {
 #include <sl_def.h>
@@ -1046,10 +1046,10 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	}
 	if(_res->isLvlBackgroundDataLoaded(num))
 	{
-emu_printf("isLvlBackgroundDataLoaded(num) %d\n", num);
+//emu_printf("isLvlBackgroundDataLoaded(num) %d\n", num);
 		_res->unloadLvlScreenBackgroundData(num);
 	}
-emu_printf("loadLvlScreenBackgroundData(num) %d\n", num);
+//emu_printf("loadLvlScreenBackgroundData(num) %d\n", num);
 	if(num==2 && _currentLevel==0 && !done1)
 	{
 	lwram_end = (Uint8 *)0x300000;
@@ -1483,7 +1483,7 @@ void Game::playAndyFallingCutscene(int type) {
 			break;
 		}
 
-		emu_printf("here!!!\n");
+//		emu_printf("here!!!\n");
 		lwram_end = (Uint8 *)0x300000;
 		_res->loadLvlSprite(0, 0);
 	}
@@ -2580,7 +2580,9 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		if(nb_spr>85)
 			emu_printf("nb_spr %d\n", nb_spr);
 		nb_spr=0;
+#ifdef FRAME
 		frame_x++;
+#endif
 	}
 	_animBackgroundDataCount = 0;
 	callLevel_terminate();
@@ -4744,7 +4746,7 @@ void Game::initLvlObjects() {
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_screenLvlObjectsList[i] = 0;
 	}
-emu_printf("initLvlObjects %d\n", (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));
+//emu_printf("initLvlObjects %d\n", (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));
 	LvlObject *prevLvlObj = 0;
 	
 //	_res->_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(-1, TYPE_MONSTER2, (_res->_lvlHdr.staticLvlObjectsCount + _res->_lvlHdr.otherLvlObjectsCount) * sizeof(LvlObject));//[104];

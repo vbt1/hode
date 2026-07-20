@@ -64,12 +64,12 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 				return bump(&current_lwram, alignedSize);
 	
 			case TYPE_MONSTER2:
-emu_printf("level %d type %d size %d\n", level, type, alignedSize);
+//emu_printf("level %d type %d size %d\n", level, type, alignedSize);
 //				return (uint8_t *)0x22400000;
 				return bump(&current_lwram, alignedSize);
 
 			default:
-				emu_printf("missing case!!! -1 %d\n", type);
+//				emu_printf("missing case!!! -1 %d\n", type);
 				return nullptr;
 		}
 	}
@@ -88,8 +88,8 @@ emu_printf("level %d type %d size %d\n", level, type, alignedSize);
 	//    case TYPE_MSTCODE:
 		{
 			if ((int)hwram_work + alignedSize > (int)hwram) {
-				emu_printf("ERROR: %d overflow req:%d miss:%d\n", type, alignedSize,
-						(int)hwram_work + alignedSize - (int)hwram);
+//				emu_printf("ERROR: %d overflow req:%d miss:%d\n", type, alignedSize,
+//						(int)hwram_work + alignedSize - (int)hwram);
 				return nullptr;
 			}
 			return bump(&hwram_work, alignedSize);
@@ -124,7 +124,7 @@ emu_printf("level %d type %d size %d\n", level, type, alignedSize);
 			return nullptr;
 
 		default:
-			emu_printf("missing case!!!\n");
+//			emu_printf("missing case!!!\n");
 			return nullptr;
 		}
 	}
