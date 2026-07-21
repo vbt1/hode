@@ -69,9 +69,11 @@ struct System {
 
 	virtual void setPalette(const uint8_t *pal, int n, int depth) = 0;
 	virtual void clearPalette() = 0;
-	virtual void copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) = 0;
+//	virtual void copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) = 0;
+	virtual void copyRect(int x, int y, int w, int h, const uint8_t *buf, uint8_t *vramDst) = 0;
 	virtual void copyYuv(int w, int h, const uint8_t *y, int ypitch, const uint8_t *u, int upitch, const uint8_t *v, int vpitch) = 0;
 	virtual void fillRect(int x, int y, int w, int h, uint8_t color) = 0;
+//	virtual void copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) = 0;
 	virtual void copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) = 0;
 	virtual void shakeScreen(int dx, int dy) = 0;
 	virtual void updateScreen(bool drawWidescreen) = 0;

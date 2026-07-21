@@ -11,7 +11,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-#define FRAME 1
+//#define FRAME 1
 
 extern "C" {
 #include <sl_def.h>
@@ -1483,7 +1483,7 @@ void Game::playAndyFallingCutscene(int type) {
 			break;
 		}
 
-		emu_printf("here!!!\n");
+//		emu_printf("here!!!\n");
 		lwram_end = (Uint8 *)0x300000;
 		_res->loadLvlSprite(0, 0);
 	}
@@ -2580,7 +2580,9 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		if(nb_spr>85)
 			emu_printf("nb_spr %d\n", nb_spr);
 		nb_spr=0;
+#ifdef FRAME
 		frame_x++;
+#endif
 	}
 	_animBackgroundDataCount = 0;
 	callLevel_terminate();
@@ -3405,7 +3407,7 @@ void Game::displayLoadingScreen() {
 
 		if (_res->loadDatLoadingImage(_video->_frontLayer, _video->_palette)) {
 			g_system->setPalette(_video->_palette, 256, 6);
-			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (int)256);
+			g_system->copyRect((int)0, (int)0, (int)Video::W, (int)Video::H, _video->_frontLayer, (uint8_t *)VDP2_VRAM_A0);
 			g_system->updateScreen(false);
 		}
 		slScrAutoDisp(NBG0ON|NBG1ON|NBG3ON);

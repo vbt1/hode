@@ -16,15 +16,15 @@ extern "C" {
 #include "video.h"
 
 extern "C" {
-void 	free(void *ptr);
-void	*malloc(size_t);
-void *calloc(size_t nmemb, size_t size);
-void CSH_AllClr(void);
+//void 	free(void *ptr);
+//void	*malloc(size_t);
+//void *calloc(size_t nmemb, size_t size);
+//void CSH_AllClr(void);
 extern unsigned char frame_x;
 extern unsigned char frame_z;
 //extern Uint8 *cs1ram;
 //extern Uint8 *cs2ram;
-extern Sint32 iondata;
+//extern Sint32 iondata;
 Sint32 GFCD_GetBufSiz(void);
 Sint32  CDC_GetBufSiz(Sint32 *totalsiz, Sint32 *bufnum, Sint32 *freesiz);
 uint8_t *hwram_work_paf;
@@ -95,6 +95,8 @@ PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
 	memset(&_pafCb, 0, sizeof(_pafCb));
 	_volume = 128;
 	_frameMs = kFrameDuration;
+	_paletteBuffer = allocate_memory(-1, TYPE_PAFHEAD, 256 * 3);
+	_bufferBlock = allocate_memory(-1, TYPE_PAFHEAD, kBufferBlockSize);
 }
 
 PafPlayer::~PafPlayer() {
@@ -115,8 +117,8 @@ void PafPlayer::preload(int num) {
 //	}
 	if (_videoNum != num) { unload(_videoNum); _videoNum = num; }
 	
-	_paletteBuffer = allocate_memory(-1, TYPE_PAF, 256 * 3);
-	_bufferBlock = allocate_memory(-1, TYPE_PAF, kBufferBlockSize);
+//	_paletteBuffer = allocate_memory(-1, TYPE_PAF, 256 * 3);
+//	_bufferBlock = allocate_memory(-1, TYPE_PAF, kBufferBlockSize);
 	
 	_file.seek(num * 4, SEEK_SET);
 	_videoOffset = _file.readUint32();
@@ -150,7 +152,7 @@ void PafPlayer::preload(int num) {
 void PafPlayer::play(int num) {
 	slScrAutoDisp(NBG1ON|NBG3ON);
 	lwram_cut = current_lwram;
-emu_printf("saving lwram %p\n", lwram_cut);
+//emu_printf("saving lwram %p\n", lwram_cut);
 //	num=kPafAnimation_CanyonAndyFallingCannon;
 	if (_videoNum != num) preload(num);
 	if (_videoNum == num) { _playedMask |= 1 << num; mainLoop(); }
@@ -160,7 +162,7 @@ void PafPlayer::unload(int num) {
 	if (lwram_cut)
 		current_lwram = lwram_cut;
 	hwram_work_paf = _video->_shadowLayer;
-emu_printf("current_lwram %p hwram_work_paf %p\n", current_lwram, hwram_work_paf);
+//emu_printf("current_lwram %p hwram_work_paf %p\n", current_lwram, hwram_work_paf);
 
 	if (_videoNum < 0) return;
 	memset(_pageBuffers, 0, sizeof(_pageBuffers));
@@ -197,9 +199,9 @@ bool PafPlayer::readPafHeader() {
 	if (_pafHdr.frameBlocksCount <= 0) return false;
 	
 //	uint8_t *save = current_lwram;
-	emu_printf("ram to use %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
+//	emu_printf("ram to use %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
 	uint32_t *dst = (uint32_t *)allocate_memory(-1, TYPE_PAFHEAD, _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);
-	emu_printf("ram used %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
+//	emu_printf("ram used %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
 	_pafHdr.frameBlocksCountTable  = readPafHeaderTable(_pafHdr.framesCount, dst);
 	dst += _pafHdr.framesCount;
 	_pafHdr.framesOffsetTable      = readPafHeaderTable(_pafHdr.framesCount, dst);
@@ -1029,7 +1031,7 @@ slSynch();
 		t_decode += t3 - t2;
 #endif
 		g_system->copyRect(0, 0, kVideoWidth, kVideoHeight,
-		                   _pageBuffers[_currentPageBuffer], kVideoWidth);
+		                   _pageBuffers[_currentPageBuffer], (uint8_t *)VDP2_VRAM_A0);
 #ifdef DEBUG2
 		uint32_t t4 = g_system->getTimeStamp();
 		t_copyrect += t4 - t3;
@@ -1060,16 +1062,18 @@ slSynch();
 		_video->drawString(dbgbuf, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #endif
 //emu_printf("fps %d\n", frame_z);
+/*
 char txt[2];
 sprintf(txt,"%02d", frame_z);
 slPrint((char *)txt,slLocate(10,2));
-
+*/
 		if (g_system->inp.quit
 		 || g_system->inp.keyPressed(SYS_INP_ESC)
 		 || g_system->inp.keyPressed(SYS_INP_RUN))
 			break;
-
+/*
 		frame_x++;
+*/
 		++_currentPageBuffer;
 		_currentPageBuffer &= 3;
 

@@ -5,7 +5,7 @@
 //#define SLAVE_SOUND 1
 //#define SOUND 1
 #define FONT_ADDR 0x25c01000
-#define FRAME 1
+//#define FRAME 1
 //#define LINEAR_BITMAP 1
 
 extern "C" {
@@ -165,7 +165,7 @@ struct SystemStub_SDL : System {
 	virtual void setGamma(float gamma);
 	virtual void setPalette(const uint8_t *pal, int n, int depth);
 	virtual void clearPalette();
-	virtual void copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch);
+	virtual void copyRect(int x, int y, int w, int h, const uint8_t *buf, uint8_t *vramDst);
 	virtual void copyYuv(int w, int h, const uint8_t *y, int ypitch, const uint8_t *u, int upitch, const uint8_t *v, int vpitch);
 	virtual void fillRect(int x, int y, int w, int h, uint8_t color);
 	virtual void copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal);
@@ -262,84 +262,45 @@ void SystemStub_SDL::setGamma(float gamma) {
 }
 
 void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
-    const int shift = (depth == 8) ? 3 : 1;  // 8-bit→5-bit or 6-bit→5-bit
-    uint16_t *dst = _clut;
-    for (int i = 0; i < n; i++) {
-        const int r = pal[0] >> shift;
-        const int g = pal[1] >> shift;
-        const int b = pal[2] >> shift;
-        pal += 3;
-        *dst++ = (b << 10) | (g << 5) | r | RGB_Flag;
+uint16_t *dst = _clut;
+
+    if (depth == 8) {
+        // Décalage fixe de 3 (Recherche de 5 bits)
+        for (int i = 0; i < n; i++) {
+            uint32_t r = pal[0] >> 3;
+            uint32_t g = pal[1] >> 3;
+            uint32_t b = pal[2] >> 3;
+            pal += 3;
+            *dst++ = (b << 10) | (g << 5) | r | RGB_Flag;
+        }
+    } else {
+        // Décalage fixe de 1 (Recherche de 5 bits depuis une source 6-bit)
+        for (int i = 0; i < n; i++) {
+            uint32_t r = pal[0] >> 1;
+            uint32_t g = pal[1] >> 1;
+            uint32_t b = pal[2] >> 1;
+            pal += 3;
+            *dst++ = (b << 10) | (g << 5) | r | RGB_Flag;
+        }
     }
     slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
 }
 
-void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) 
+void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, uint8_t *vramDst) 
 {
+    constexpr int PITCH = 256;
 
 #ifndef LINEAR_BITMAP
-	int pitch = 256;
-	int x = 0;
-	int y = 0;
-//	//emu_printf("copyRect %d %d\n",w,h);
-	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
-	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A1 + (y * (pitch*2)) + x);
+    const uint8_t *srcPtr = buf + y * PITCH + x;
+    uint8_t *dstPtr       = vramDst + (y * (PITCH * 2)) + x;
 
-	for (uint16 idx = 0; idx < h; ++idx) {
-//		DMA_ScuMemCopy(dstPtr, srcPtr, w);
-		memcpy(dstPtr, srcPtr, w);
-		srcPtr += pitch;
-		dstPtr += (pitch*2);
-	}
-//	SCU_DMAWait();
-#else
-//	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
-//	SCU_DMAWait();
-#endif
-
-//slTransferEntry((void*)buf, (void*)(VDP2_VRAM_A0), 49152);
-//memcpyl( (void*)(VDP2_VRAM_A0), (void*)buf, 49152);
-
-	////emu_printf("end copyRectwide %d %d %d %d\n",x,y,w,h);	
-}
-#if 1
-void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, int pitch) {
-// le dma ne fonctionne pas sur les videos car type_paf est en lwram
-#ifndef LINEAR_BITMAP
-/*
-	// Calculate initial source and destination pointers
-//emu_printf("copyRect %d %d %d %d\n",x,y,w,h);
-	uint8 *srcPtr = (uint8 *)(buf + y * pitch + x);
-	uint8 *dstPtr = (uint8 *)(VDP2_VRAM_A0 + (y * (pitch*2)) + x);
-
-	for (uint16 idx = 0; idx < h; ++idx) {
-//		DMA_ScuMemCopy(dstPtr, srcPtr, w);
-		for(int x=0;x<pitch;x++)
-		{
-			if(srcPtr[x]==0)
-				dstPtr[x]=0;
-			else
-				dstPtr[x]=srcPtr[x];
-		}
-	//	memcpy(dstPtr, srcPtr, w);
-		srcPtr += pitch;
-		dstPtr += (pitch*2);
-	}
-//	SCU_DMAWait();
-*/
-// Pointeurs de départ
-    const uint8_t *srcPtr = buf + y * pitch + x;
-    uint8_t *dstPtr = (uint8_t *)(VDP2_VRAM_A0 + (y * (pitch * 2)) + x);
-
-    // w vaut 256 pixels, donc 256 octets. En 32-bit (uint32_t), cela représente 64 itérations.
-    // On peut diviser par 4 la boucle ou utiliser un déroulage partiel.
     const int wordsPerLine = w >> 2; 
 
     for (uint16_t idx = 0; idx < h; ++idx) {
         const uint32_t *src32 = (const uint32_t *)srcPtr;
-        uint32_t *dst32 = (uint32_t *)dstPtr;
+        uint32_t *dst32       = (uint32_t *)dstPtr;
 
-        // Déroulage par 8 pour maximiser le pipeline d'accès mémoire du SH-2 (64 / 4 = 16 itérations)
+        // Déroulage par 8 pour le CPU SH-2
         for (int i = 0; i < wordsPerLine; i += 8) {
             dst32[i + 0] = src32[i + 0];
             dst32[i + 1] = src32[i + 1];
@@ -351,17 +312,19 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
             dst32[i + 7] = src32[i + 7];
         }
 
-        // Avancement d'une ligne
-        srcPtr += pitch;
-        dstPtr += (pitch * 2); // VRAM entrelacée / pas de 512 octets
+        srcPtr += PITCH;
+        dstPtr += (PITCH * 2);
     }
 #else
-	DMA_ScuMemCopy((uint8 *)VDP2_VRAM_A0, (uint8 *)buf, w * h);
-	SCU_DMAWait();
+    DMA_ScuMemCopy(vramDst, (uint8_t *)buf, w * h);
+    SCU_DMAWait();
 #endif
-
-//memcpyl( (void*)(VDP2_VRAM_A0), (void*)buf, 49152);
-////emu_printf("end copyRect %d %d %d %d\n",x,y,w,h);
+}
+#if 1
+// Fonction wrapper ultra-courte pour le Widescreen
+void SystemStub_SDL::copyRectWidescreen(int w, int h, const uint8_t *buf, const uint8_t *pal) 
+{
+    copyRect(0, 0, w, h, buf, (uint8_t *)VDP2_VRAM_A1);
 }
 #else
 	

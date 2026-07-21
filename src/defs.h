@@ -63,7 +63,7 @@ struct SetupConfig {
 		uint8_t stereo;
 		uint8_t volume;
 		uint8_t lastLevelNum;
-	} players[4]; // sizeof == 52
+	} players[1]; // sizeof == 52
 	uint8_t unkD0;
 	uint8_t currentPlayer; // 0xD1
 	uint8_t unkD2;

@@ -246,8 +246,8 @@ struct Game {
 
 	// 32*24 pitch=512
 	static uint32_t screenMaskOffset(int x, int y) {
-		return ((y << 6) & ~511) + (x >> 3);
-		// return ((y & ~7) << 6) + (x >> 3)
+//		return ((y << 6) & ~511) + (x >> 3);
+		return ((y & ~7) << 6) + (x >> 3);
 	}
 
 	// 32*24 pitch=32

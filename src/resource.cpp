@@ -130,7 +130,7 @@ Resource::Resource(FileSystem *fs)
 	memset(&_dummyObject, 0, sizeof(_dummyObject));
 #ifdef SECTOR_ALIGNED
 	if (sectorAlignedGameData()) {
-emu_printf("_version = V1_2\n");
+//emu_printf("_version = V1_2\n");
 		_datFile = new SectorFile;
 		_lvlFile = new SectorFile;
 		_mstFile = new SectorFile;
@@ -491,7 +491,7 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 	dat->bitmapBits = 0; src += 4;
 	dat->callbackFuncPtr = 0; src += 4;
 	dat->dataPtr = 0; src += 4;
-//emu_printf("ldlvlobjscreen %d %d %d\n",dat->spriteNum,dat->screenNum, dat->dataNum);
+//emu_printf("ldlvlobjscreen %d %d %d\n",dat->spriteNum,dat->screenNum, dat->width);
 
 #ifdef SOUND
 	dat->sssObject = 0; 
@@ -751,7 +751,7 @@ void Resource::loadLvlSpriteData(int num, bool all, const uint8_t *buf) {
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
 	{
-		emu_printf("vbt bad read !!!!!\n");
+//		emu_printf("vbt bad read !!!!!\n");
 		return;
 	}
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
@@ -842,12 +842,13 @@ emu_printf("loadLvlData %p\n", _lvlFile);
 	static const int kSizeOfLvlObject = 96;
 //	const int lvlObjectsCount = (_lvlSpritesOffset - 0x288) / kSizeOfLvlObject;
 	const int lvlObjectsCount = (_lvlHdr.staticLvlObjectsCount + _lvlHdr.otherLvlObjectsCount);
-emu_printf("Resource::loadLvlData() lvlObjectsCount %d\n", lvlObjectsCount);
+//emu_printf("Resource::loadLvlData() lvlObjectsCount %d\n", lvlObjectsCount);
 
 	_resLvlScreenObjectDataTable = (LvlObject *)allocate_memory(-1, TYPE_MONSTER2, lvlObjectsCount * sizeof(LvlObject));//[104];
 	memset(_resLvlScreenObjectDataTable, 0, lvlObjectsCount * sizeof(LvlObject));	
 
 	for (int i = 0; i < lvlObjectsCount; ++i) {
+//emu_printf("i %d\n", i);
 		LvlObject *dat = &_resLvlScreenObjectDataTable[i];
 		uint8_t buf[kSizeOfLvlObject];
 		_lvlFile->read(buf, kSizeOfLvlObject);

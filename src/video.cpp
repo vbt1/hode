@@ -116,7 +116,7 @@ void Video::updateGamePalette(const uint8_t *pal) {
 }
 
 void Video::updateGameDisplay(uint8_t *buf) {
-	g_system->copyRect(0, 0, W, H, buf, 256);
+	g_system->copyRect(0, 0, W, H, buf, (uint8_t *)VDP2_VRAM_A0);
 #ifdef PSX
 	if (_mdec.planes[kOutputPlaneY].ptr) {
 		updateYuvDisplay();
