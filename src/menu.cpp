@@ -229,7 +229,7 @@ int xx = 0;
 		hdrOffset += sizeof(DatBitmap);
 		_titleBitmapData = ptr + ptrOffset;
 		ptrOffset += _titleBitmapSize + paletteSize;
-
+/*
 		_playerBitmapSize = READ_LE_UINT32(ptr + hdrOffset);
 		hdrOffset += sizeof(DatBitmap);
 //		_playerBitmapData = ptr + ptrOffset;
@@ -246,7 +246,7 @@ int xx = 0;
 				_optionsBitmapData[i] = 0;
 			}
 		}
-/*
+
 		const int cutscenesCount = _res->_datHdr.cutscenesCount;
 		_cutscenesBitmaps = (DatBitmapsGroup *)(ptr + hdrOffset);
 		_cutscenesBitmapsData = ptr + ptrOffset;
@@ -334,7 +334,7 @@ int xx = 0;
 	}
 
 ////emu_printf("needed ram2 %d\n", yy);
-
+/*
 	_optionsButtonSpritesCount = READ_LE_UINT32(ptr + ptrOffset); ptrOffset += 4;
 	if (_optionsButtonSpritesCount != 0) {
 		_optionsButtonSpritesData = ptr + ptrOffset;
@@ -377,6 +377,7 @@ int xx = 0;
 //		_levelsBitmapsData = ptr + ptrOffset;
 //		readBitmapsGroup(levelsCount, _levelsBitmaps, ptrOffset, paletteSize);
 	}
+*/
 }
 #ifdef SOUND
 int Menu::getSoundNum(int num, int index) const {
