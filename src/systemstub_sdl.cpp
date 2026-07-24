@@ -106,8 +106,8 @@ typedef struct {
 */
 /* Required for audio sound buffers */
 //Uint8 buffer_filled[2];
-Uint8 ring_bufs[2][SND_BUFFER_SIZE * SND_BUF_SLOTS];
 #ifdef SOUND
+Uint8 ring_bufs[2][SND_BUFFER_SIZE * SND_BUF_SLOTS];
 static PcmWork pcm_work[2];
 static PcmHn pcm[2];
 #endif
@@ -192,15 +192,15 @@ System* g_system = nullptr;
 // static const int AUDIO_FREQ = 44100;
 static const int AUDIO_SAMPLES_COUNT = 2048;
 
-static const int SCREEN_W = 480;
-static const int SCREEN_H = 272;
-static const int SCREEN_PITCH = 512;
+//static const int SCREEN_W = 480;
+//static const int SCREEN_H = 272;
+//static const int SCREEN_PITCH = 512;
 
-static const int GAME_W = 256;
-static const int GAME_H = 192;
+//static const int GAME_W = 256;
+//static const int GAME_H = 192;
 
-static const int BLUR_TEX_W = 16;
-static const int BLUR_TEX_H = 16;
+//static const int BLUR_TEX_W = 16;
+//static const int BLUR_TEX_H = 16;
 
 static uint16_t __attribute__((aligned(16))) _clut[256];
 System *SystemStub_SDL_create() {
@@ -218,9 +218,11 @@ void SystemStub_SDL::init(const char *title, int w, int h) {
 #if 1
 	memset(&inp, 0, sizeof(inp)); // Clean inout
 ////emu_printf("load_audio_driver\n");
+#ifdef SOUND
 	load_audio_driver(); // Load M68K audio driver
 	init_cdda();
 	sound_external_audio_enable(7, 7);
+#endif
 ////emu_printf("prepareGfxMode\n");
 //	prepareGfxMode(); // Prepare graphic output
 ////emu_printf("setup_input\n");
@@ -618,10 +620,11 @@ void SystemStub_SDL::drawRect(SAT_Rect *rect, uint8 color, uint16 *dst, uint16 d
 
 	void SystemStub_SDL::clearPalette() 
 	{
-		for (int i = 0; i < 256; ++i) {
-			_clut[i] = 0x8000;
-		}
-		slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
+//		for (int i = 0; i < 256; ++i) {
+//			_clut[i] = 0x8000;
+//		}
+//		slTransferEntry((void*)_clut, (void*)(CRAM_BANK), 256 * 2);
+		memset((void*)(CRAM_BANK), 0x00, 256 * 2);
 	}
 	
 	void SystemStub_SDL::clearPalette();
@@ -673,12 +676,12 @@ void SystemStub_SDL::setup_input (void) {
 
 	connected_devices = input_index;
 }
-
+#ifdef SOUND
 void SystemStub_SDL::load_audio_driver(void) {
 //	snd_init();
 	return;
 }
-
+#endif
 
 AudioCallback SystemStub_SDL::setAudioCallback(AudioCallback callback) {
 	AudioCallback cb; //_audioCb;
@@ -687,7 +690,7 @@ AudioCallback SystemStub_SDL::setAudioCallback(AudioCallback callback) {
 	unlockAudio();*/
 	return cb;
 }
-
+#ifdef SOUND
 void SystemStub_SDL::init_cdda(void)
 {
 	CdcPly playdata;
@@ -755,7 +758,7 @@ void SystemStub_SDL::init_cdda(void)
 
     *((volatile Uint16 *)(0x25B00400)) = 0x020F;
 }
-
+#endif
 inline void timeTick() {
 	if(ticker > (0xFFFFFFFF - tickPerVblank)) {
 		ticker = 0;
