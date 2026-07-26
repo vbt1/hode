@@ -2459,6 +2459,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		const uint8_t num = _cutscenes[_currentLevel];
 //		_paf->preload(num); // vbt : pas utile
 		_paf->play(num);
+emu_printf("unload num\n");
 		_paf->unload(num);
 		if (g_system->inp.quit) {
 			return;

@@ -113,10 +113,11 @@ void PafPlayer::preload(int num) {
 
 	if (_file._fp == 0) openPaf(_fs, &_file);
 //	else {
-//		emu_printf("no openPaf!!!\n");
+		emu_printf("preload %d\n", num);
 //	}
+//	lwram_cut = current_lwram;
 	if (_videoNum != num) { unload(_videoNum); _videoNum = num; }
-	
+
 //	_paletteBuffer = allocate_memory(-1, TYPE_PAF, 256 * 3);
 //	_bufferBlock = allocate_memory(-1, TYPE_PAF, kBufferBlockSize);
 	
@@ -151,8 +152,9 @@ void PafPlayer::preload(int num) {
 
 void PafPlayer::play(int num) {
 	slScrAutoDisp(NBG1ON|NBG3ON);
-	lwram_cut = current_lwram;
-//emu_printf("saving lwram %p\n", lwram_cut);
+//	if (!lwram_cut)
+		lwram_cut = current_lwram;
+emu_printf("saving lwram %p\n", lwram_cut);
 //	num=kPafAnimation_CanyonAndyFallingCannon;
 	if (_videoNum != num) preload(num);
 	if (_videoNum == num) { _playedMask |= 1 << num; mainLoop(); }
@@ -161,6 +163,8 @@ void PafPlayer::play(int num) {
 void PafPlayer::unload(int num) {
 	if (lwram_cut)
 		current_lwram = lwram_cut;
+emu_printf("restoring lwram %p\n", lwram_cut);
+//	lwram_cut = 0;
 	hwram_work_paf = _video->_shadowLayer;
 //emu_printf("current_lwram %p hwram_work_paf %p\n", current_lwram, hwram_work_paf);
 
@@ -184,6 +188,7 @@ void PafPlayer::unload(int num) {
 }
 
 bool PafPlayer::readPafHeader() {
+emu_printf("readPafHeader\n");
 	_file.read(_bufferBlock, kBufferBlockSize);
 	_pafHdr.frameDuration            = READ_LE_UINT32(_bufferBlock + 0x88);
 	_pafHdr.startOffset              = READ_LE_UINT32(_bufferBlock + 0xA4);
@@ -199,9 +204,9 @@ bool PafPlayer::readPafHeader() {
 	if (_pafHdr.frameBlocksCount <= 0) return false;
 	
 //	uint8_t *save = current_lwram;
-//	emu_printf("ram to use %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
+	emu_printf("ram to use %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
 	uint32_t *dst = (uint32_t *)allocate_memory(-1, TYPE_PAFHEAD, _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);
-//	emu_printf("ram used %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
+	emu_printf("ram used %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
 	_pafHdr.frameBlocksCountTable  = readPafHeaderTable(_pafHdr.framesCount, dst);
 	dst += _pafHdr.framesCount;
 	_pafHdr.framesOffsetTable      = readPafHeaderTable(_pafHdr.framesCount, dst);
@@ -1090,7 +1095,7 @@ slPrint((char *)txt,slLocate(10,2));
 	}
 	if (ctx.active)
 		_file.asynchWait(ctx.buffers[ctx.readBuf], (Sint32)ctx.totalBytes);
-
+emu_printf("unload no params\n");
 	unload();
 	closePaf(_fs, &_file);
 }

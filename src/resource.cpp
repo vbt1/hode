@@ -960,7 +960,7 @@ void Resource::unloadLvlData() {
 }
 
 static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat) {
-//emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
+emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
 	const uint8_t *start = src;
 
 	dat->backgroundCount = *src++;
