@@ -1411,8 +1411,8 @@ l41B2DC:
 			va = ABS(m->yMstPos - _mstAndyLevelPosY - m49->unk15 + m->goalDistance_y2);
 			var18 = 15;
 		}
-		if (var18 == m->unkE4) {
-			var1C = m->unkE5;
+		if (var18 == m->approachDirectionMask) {
+			var1C = m->selectedPositionStrategy;
 		} else {
 			switch (var18 & 3) {
 			case 0:
@@ -1443,8 +1443,8 @@ l41B2DC:
 				}
 				break;
 			}
-			m->unkE4 = var18;
-			m->unkE5 = var1C;
+			m->approachDirectionMask = var18;
+			m->selectedPositionStrategy = var1C;
 		}
 	} else {
 		var1C = 0;
@@ -2425,7 +2425,7 @@ int Game::mstUpdateTaskMonsterObject1(Task *t) {
 			}
 		} else {
 			m->shootActionIndex = _mstLut1[m->goalDirectionMask];
-			var28 = 0;
+			var28 = m->goalDirectionMask;
 		}
 		uint32_t var24 = 0;
 		MstBehaviorState *vg = m->behaviorState;
@@ -4285,7 +4285,7 @@ int Game::mstTask_main(Task *t) {
 						dirMask |= 1;
 					}
 				} else {
-					dirMask = ((flags1 & 0x10) != 0) ? 8 : 0;
+					dirMask = ((flags1 & 0x10) != 0) ? 8 : 2;
 				}
 				if (p[1] == 255) {
 					int type = 0;
@@ -4734,6 +4734,7 @@ int Game::mstTask_main(Task *t) {
 									assert(codeData != kNone);
 									resetTask(t, _res->_mstCodeData + codeData * 4);
 									t->state &= ~2;
+									m->executeCounter = _executeMstLogicCounter;
 									p = t->codeData - 4;
 								}
 								break;
@@ -4906,7 +4907,7 @@ int Game::mstOp49_setMovingBounds(int a, int b, int c, int d, int screen, Task *
 	}
 	switch (screen + 4) {
 	case 1: { // 0xFD
-			m->unkE4 = 255;
+			m->approachDirectionMask = 255;
 			const uint8_t _al = m->monsterInfos[946];
 			if (_al & 4) {
 				t->run = &Game::mstTask_monsterWait10;
@@ -6512,7 +6513,7 @@ int Game::mstTaskInitMonster1Type2(Task *t, int flag) {
 	int vf;
 	const uint8_t *p = m->monsterInfos;
 	if (p[946] & 2) {
-		m->unkE4 = 255;
+		m->approachDirectionMask = 255;
 		if (p[946] & 4) {
 			m->unkAB = 0xFF;
 			m->targetLevelPos_x = -1;

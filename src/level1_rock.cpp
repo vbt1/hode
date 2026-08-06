@@ -244,7 +244,7 @@ void Level_rock::postScreenUpdate_rock_screen16() {
 				break;
 			}
 			AndyLvlObjectData *data = (AndyLvlObjectData *)_g->getLvlObjectDataPtr(_andyObject, kObjectDataTypeAndy);
-			if (data->unk4 != 2 || _andyObject->xPos <= 155 || _andyObject->yPos >= 87) {
+			if (data->spritePos != 2 || _andyObject->xPos <= 155 || _andyObject->yPos >= 87) {
 				break;
 			}
 			++_screenCounterTable[16];

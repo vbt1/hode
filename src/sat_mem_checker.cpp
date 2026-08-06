@@ -137,10 +137,12 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 	else
 	{
 	emu_printf("level %d type %d size %d\n", level, type, alignedSize);
+return bump(&cs1ram, alignedSize);
 
 		switch (type) {	
 		case TYPE_BGLVL:
-			return (uint8_t*)0x21B400;
+//			return (uint8_t*)0x21B400;
+			return bump(&cs1ram, alignedSize);
 		case TYPE_ANDY1:
 			return bump(&cs1ram, alignedSize);
 //			lwram_end -= SAT_ALIGN(alignedSize);

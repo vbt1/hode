@@ -304,6 +304,7 @@ void SectorFile::seek(int pos, int whence) {
 
 int SectorFile::read(uint8_t *ptr, int size) {
 ////emu_printf("SectorFile::read %p\n", ptr);
+	const int sizeRequested = size;
 	const int bufLen = 2044 - _bufPos;
 	if (size >= bufLen) {
 		if (bufLen) {
@@ -333,6 +334,6 @@ int SectorFile::read(uint8_t *ptr, int size) {
 		memcpy(ptr, _buf + _bufPos, size);
 		_bufPos += size;
 	}
-	return 0;
+	return sizeRequested - size;
 }
 #endif

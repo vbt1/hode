@@ -10,10 +10,10 @@ static uint32_t benchmarkLoop(const uint8_t *p, int count) {
 	count >>= 2; // sizeof(uint32_t)
 	if (count > 0) {
 		count += 1023;
-		count >>= 10;
+		count >>= 10; // Process in 1KB chunks
 		for (; count > 0; --count) {
 			accum += READ_LE_UINT32(p);
-			p += (1 << 10) * sizeof(uint32_t);
+			p += 4096; // Jump 4KB ahead
 		}
 	}
 	return accum;

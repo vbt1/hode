@@ -109,8 +109,8 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 //	memset(_monsterObjects2Table, 0, sizeof(_monsterObjects2Table));
 
 #ifdef SOUND
-	_sssDisabled = true;
-	_snd_muted = true;
+	_sssDisabled = false;
+	_snd_muted = false;
 	_snd_bufferOffset = _snd_bufferSize = 0;
 	_snd_masterPanning = kDefaultSoundPanning;
 	_snd_masterVolume = kDefaultSoundVolume;
@@ -1239,7 +1239,7 @@ void Game::setupAndyLvlObject() {
 	ptr->frame = 0;
 	setupLvlObjectBitmap(ptr);
 	AndyLvlObjectData *dataPtr = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
-	dataPtr->unk6 = 0;
+	dataPtr->apneaTimer = 0;
 	if (ptr->spriteNum == 2) {
 		removeLvlObject(ptr);
 	} else {
@@ -2387,8 +2387,8 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 
 //	level = kLvl_fort;
 //	level = 1;
-	_cheats = 	kCheatSpectreFireballNoHit | kCheatOneHitPlasmaCannon |	kCheatOneHitSpecialPowers |	kCheatWalkOnLava | kCheatGateNoCrush |
-	kCheatLavaNoHit | kCheatRockShadowNoHit;
+/*	_cheats = 	kCheatSpectreFireballNoHit | kCheatOneHitPlasmaCannon |	kCheatOneHitSpecialPowers |	kCheatWalkOnLava | kCheatGateNoCrush |
+	kCheatLavaNoHit | kCheatRockShadowNoHit;*/
 	_currentLevel = level;
 
 // vbt : free menu memory	
@@ -3689,12 +3689,12 @@ void Game::lvlObjectType0CallbackBreathBubbles(LvlObject *ptr) {
 
 	const int num = _pwr1_screenTransformLut[_res->_currentScreenResourceNum * 2 + 1];
 	if (!clipBoundingBox(&_screenTransformRects[num], &b)) {
-		++vf->unk6; // apnea counter/time
+		++vf->apneaTimer; // apnea counter/time
 	} else {
-		vf->unk6 = 0;
+		vf->apneaTimer = 0;
 	}
 	b.y1 -= 24;
-	if (vf->unk2 == 0 && !clipBoundingBox(&_screenTransformRects[num], &b)) {
+	if (vf->bubbleTimer == 0 && !clipBoundingBox(&_screenTransformRects[num], &b)) {
 
 		if (addLvlObjectToList3(4)) {
 			_lvlObjectsList3->xPos = b.x1;
@@ -3707,15 +3707,15 @@ void Game::lvlObjectType0CallbackBreathBubbles(LvlObject *ptr) {
 			_lvlObjectsList3->flags1 &= ~0x20;
 		}
 
-		int currentApneaLevel = vf->unk3;
+		int currentApneaLevel = vf->apneaLevel;
 		static const int16_t _pwr1_apneaDuration[] = { 625, 937, 1094, 1250 };
 		int newApneaLevel = 0;
-		while (newApneaLevel < 4 && vf->unk6 >= _pwr1_apneaDuration[newApneaLevel]) {
+		while (newApneaLevel < 4 && vf->apneaTimer >= _pwr1_apneaDuration[newApneaLevel]) {
 			++newApneaLevel;
 		}
-		vf->unk3 = newApneaLevel;
+		vf->apneaLevel = newApneaLevel;
 		static const uint8_t _pwr1_apneaBubble[] = { 22, 20, 18, 16, 14 };
-		vf->unk2 = _pwr1_apneaBubble[newApneaLevel];
+		vf->bubbleTimer = _pwr1_apneaBubble[newApneaLevel];
 		// play Andy animation when apnea level changes
 		switch (currentApneaLevel) {
 		case 2:
@@ -3735,7 +3735,7 @@ void Game::lvlObjectType0CallbackBreathBubbles(LvlObject *ptr) {
 			}
 			break;
 		case 4:
-			if (vf->unk6 >= 1250) {
+			if (vf->apneaTimer >= 1250) {
 				if (_actionDirectionKeyMaskIndex < 160) {
 					_actionDirectionKeyMaskIndex = 160;
 					_actionDirectionKeyMaskCounter = 0;
@@ -3762,8 +3762,8 @@ void Game::lvlObjectType0CallbackBreathBubbles(LvlObject *ptr) {
 			break;
 		}
 	}
-	if (vf->unk2 != 0) {
-		--vf->unk2;
+	if (vf->bubbleTimer != 0) {
+		--vf->bubbleTimer;
 	}
 }
 #endif
@@ -3944,11 +3944,11 @@ int Game::lvlObjectType0Callback(LvlObject *ptr) {
 	AndyLvlObjectData *vf = 0;
 	if (!_hideAndyObjectFlag) {
 		vf = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
-		vf->unk4 = ptr->flags0 & 0x1F;
-		vf->unk5 = (ptr->flags0 >> 5) & 7;
+		vf->spritePos = ptr->flags0 & 0x1F;
+		vf->direction = (ptr->flags0 >> 5) & 7;
 		lvlObjectType0CallbackHelper1();
 		updateAndyObject(ptr);
-		if (vf->unk4 == (ptr->flags0 & 0x1F) && vf->unk4 == 5) {
+		if (vf->spritePos == (ptr->flags0 & 0x1F) && vf->spritePos == 5) {
 			_fallingAndyFlag = true;
 		} else {
 			_fallingAndyFlag = false;
@@ -3987,11 +3987,9 @@ int Game::lvlObjectType0Callback(LvlObject *ptr) {
 		}
 		break;
 	case 2: // pwr1_hod
-
-		if (!_hideAndyObjectFlag && vf->unk4 == 6) {
+		if (!_hideAndyObjectFlag && vf->spritePos == 6) {
 			lvlObjectType0CallbackBreathBubbles(ptr);
 		}
-
 		// fall through
 	case 3:
 	case 4:
@@ -4006,7 +4004,7 @@ int Game::lvlObjectType0Callback(LvlObject *ptr) {
 	}
 	if (!_hideAndyObjectFlag) {
 		assert(vf);
-		vf->unk0 = ptr->actionKeyMask;
+		vf->actionKeyMask = ptr->actionKeyMask;
 	}
 	return _hideAndyObjectFlag;
 }

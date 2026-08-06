@@ -1,3 +1,7 @@
+* release 0.2.9g
+	- added support for reading data files from web installers
+	- fixed sounds panning
+
 * release 0.2.9f
 	- added 'linear' graphics scaler
 	- enabled PSX options menu

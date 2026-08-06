@@ -251,13 +251,13 @@ struct BoundingBox {
 };
 
 struct AndyLvlObjectData {
-	uint8_t unk0;
-	uint8_t unk1;
-	uint8_t unk2;
-	uint8_t unk3;
-	uint8_t unk4;
-	uint8_t unk5;
-	uint16_t unk6;
+	uint8_t actionKeyMask; // 0x0
+	uint8_t unk1; // 0x1
+	uint8_t bubbleTimer; // 0x2
+	uint8_t apneaLevel; // 0x3
+	uint8_t spritePos; // 0x4
+	uint8_t direction; // 0x5
+	uint16_t apneaTimer; // 0x6
 	BoundingBox boundingBox; // 0x8
 	int32_t dxPos; // 0x18
 	int32_t dyPos; // 0x1C
@@ -397,8 +397,8 @@ struct MonsterObject1 {
 	int levelPosBounds_y2; // 0x9C
 	int levelPosBounds_y1; // 0xA0
 	uint8_t o_flags0; // 0xA4
-	uint8_t flagsA5; // 0xA5
-	uint8_t flagsA6; // 0xA6 |1:turning |2:idle |4:colliding
+	uint8_t flagsA5; // 0xA5 behaviorStateFlags
+	uint8_t flagsA6; // 0xA6 collisionVisibilityFlags turning (bit 0) idle (bit 1) colliding (bit 2)
 	uint8_t targetDirectionMask; // 0xA7
 	uint8_t bboxNum[2]; // 0xA8, 0xA9
 	uint8_t walkBoxNum; // 0xAA
@@ -416,8 +416,8 @@ struct MonsterObject1 {
 	MstMovingBoundsUnk1 *m49Unk1; // 0xD4
 	MstMovingBounds *m49; // 0xD8
 	int indexUnk49Unk1; // 0xDC
-	uint8_t unkE4;
-	uint8_t unkE5;
+	uint8_t approachDirectionMask; // 0xE4 from right (bit 0) left (bit 1) bottom (bit 2) top (bit 3)
+	uint8_t selectedPositionStrategy; // 0xE5
 	uint8_t lut4Index; // 0xE6
 	uint8_t directionKeyMask;
 	uint16_t o_flags2; // 0xE8

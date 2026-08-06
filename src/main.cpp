@@ -259,7 +259,7 @@ int ss_main() {
 		if (argc == 2) {
 			// data path as the only command line argument
 			struct stat st;
-			if (stat(argv[1], &st) == 0 && S_ISDIR(st.st_mode)) {
+			if (stat(argv[1], &st) == 0) {
 				dataPath = strdup(argv[1]);
 			}
 		}

@@ -1167,9 +1167,9 @@ void Menu::drawJoystickControlsScreen() {
 			mask |= 4;
 		}
 		if (READ_LE_UINT32(_config->players[_config->currentPlayer].controls + 0xC) & joystickKeyCode) {
-			mask |= 5;
+			mask |= 8;
 		}
-		const int flag = (((mask & 5) - 5) != 0) ? 0 : 1;
+		const int flag = (((mask & 8) - 8) != 0) ? 0 : 1;
 		if (((mask & 1) != 0 && flag == 0) || _iconsSprites[0x19].num != 0) {
 			drawSpriteAnim(_iconsSprites, _iconsSpritesData, 0x19);
 		} else {
@@ -1352,7 +1352,7 @@ void Menu::drawKeyboardControlsScreen() {
 		drawSprite(&_iconsSprites[0x10], _iconsSpritesData, 4);
 		static const int keyboardMask = 0;
 		int mask = keyboardMask;
-		const int flag = (((keyboardMask & 5) - 5) != 0) ? 0 : 1;
+		const int flag = (((keyboardMask & 8) - 8) != 0) ? 0 : 1;
 		if (((mask & 1) != 0 && flag == 0) || _iconsSprites[0x21].num != 0) {
 			drawSpriteAnim(_iconsSprites, _iconsSpritesData, 0x21);
 		} else {
