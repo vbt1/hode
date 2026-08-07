@@ -315,7 +315,8 @@ int ss_main() {
 		}
 	}
 #endif
-	cheats = 0xffff;
+//	cheats = 0xffff;
+	cheats = 0;
 //	Game *g = new Game(dataPath ? dataPath : _defaultDataPath, savePath ? savePath : _defaultSavePath, cheats);
 //emu_printf("Game\n");
 	Game *g = new Game(dataPath, savePath, cheats);
