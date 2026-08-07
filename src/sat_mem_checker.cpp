@@ -41,7 +41,7 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
 
 uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t alignedSize) 
 {
-//	emu_printf("level %d type %d size %d\n", level, type, alignedSize);
+	emu_printf("level %d type %d size %d ", level, type, alignedSize);
 //	if(alignedSize==0)
 //		return (uint8_t*)0;
 	if(level==255)

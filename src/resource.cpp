@@ -755,7 +755,7 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
 	{
-//		emu_printf("vbt bad read !!!!!\n");
+		emu_printf("vbt bad read !!!!!\n");
 		return;
 	}
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
@@ -763,7 +763,7 @@ emu_printf("vbt malloc sprite %d num %d\n", size, num);
 //	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
 //	_resLevelData0x2988SizeTable[num] = 0;
-//emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount, dat->framesCount);
+emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount, dat->framesCount);
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
@@ -1015,9 +1015,11 @@ emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, d
 // vbt : allocation mémoiruniquement si nécessaire
 			if(dat->backgroundLvlObjectDataTable[i] == 0 )
 				dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)allocate_memory (_level, TYPE_BGLVLOBJ, sizeof(LvlObjectData));
-////emu_printf("backgroundLvlObjectDataTable %d %d %p\n", i,sizeof(LvlObjectData),dat->backgroundLvlObjectDataTable[i]  );
+emu_printf("on alloue backgroundLvlObjectDataTable %d %d %p\n", i,sizeof(LvlObjectData),dat->backgroundLvlObjectDataTable[i]  );
 			offsetsSize += resFixPointersLevelData0x2988(ptr + offs, offsetsPtr + offsetsSize, dat->backgroundLvlObjectDataTable[i]/*, isPsx*/);
 		} else {
+emu_printf("on vide backgroundLvlObjectDataTable %d %d %p\n", i,sizeof(LvlObjectData),dat->backgroundLvlObjectDataTable[i]  );
+
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
 	}

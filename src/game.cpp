@@ -1038,6 +1038,7 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 //emu_printf("preloadLevelScreenData num %d\n", num);
 	if(num == kNoScreen)
 		return;
+
 //vbtvbtvbtvbt
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
@@ -1058,6 +1059,7 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 // loadLvlScreenBackgroundData(num) 9 = ecran perte arme
 	}
 	_res->loadLvlScreenBackgroundData(num);
+
 #ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {
 		const SssPreloadInfo *preloadInfo = &_res->_sssPreloadInfosData[num];
