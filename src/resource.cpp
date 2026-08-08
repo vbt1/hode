@@ -702,7 +702,7 @@ void Resource::loadLvlSpriteData(int num, bool all, const uint8_t *buf) {
 //		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
-emu_printf("vbt malloc sprite %d num %d\n", size, num);
+//emu_printf("vbt malloc sprite %d num %d all %d\n", size, num, all);
 	uint8_t *ptr = 0;
 //TYPE_ANDY1 = lwram
 	if(all==1)
@@ -964,7 +964,7 @@ void Resource::unloadLvlData() {
 }
 
 static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat) {
-emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
+//emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
 	const uint8_t *start = src;
 
 	dat->backgroundCount = *src++;
@@ -1010,20 +1010,11 @@ emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, d
 	for (int i = 0; i < 8; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		if (offs != 0) {
-//			dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)malloc(sizeof(LvlObjectData));
-//			dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)allocate_memory (TYPE_BGLVLOBJ, sizeof(LvlObjectData));
-// vbt : allocation mémoiruniquement si nécessaire
-			if(dat->backgroundLvlObjectDataTable[i] == 0 )
-				dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)allocate_memory (_level, TYPE_BGLVLOBJ, sizeof(LvlObjectData));
-emu_printf("on alloue backgroundLvlObjectDataTable %d %d %p\n", i,sizeof(LvlObjectData),dat->backgroundLvlObjectDataTable[i]  );
-			offsetsSize += resFixPointersLevelData0x2988(ptr + offs, offsetsPtr + offsetsSize, dat->backgroundLvlObjectDataTable[i]/*, isPsx*/);
+			offsetsSize += resFixPointersLevelData0x2988(ptr + offs, offsetsPtr + offsetsSize, &dat->backgroundLvlObjectDataTable[i]/*, isPsx*/);
 		} else {
-emu_printf("on vide backgroundLvlObjectDataTable %d %d %p\n", i,sizeof(LvlObjectData),dat->backgroundLvlObjectDataTable[i]  );
-
-			dat->backgroundLvlObjectDataTable[i] = 0;
+			memset(&dat->backgroundLvlObjectDataTable[i],0x00,sizeof(LvlObjectData));
 		}
 	}
-//	emu_printf("%d == 160\n", src- start);
 //	assert((src - start) == 160);
 	if((src - start) != 160)
 		return 0;

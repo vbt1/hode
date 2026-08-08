@@ -31,10 +31,10 @@ static inline uint8_t *bump(Uint8 **ptr, uint32_t size) {
     uint8_t *dst = (uint8_t *)SAT_ALIGN((int)*ptr);
     *ptr = dst + size;
 
-    emu_printf("hwram %d ptr %p lwram %d hw %p aft %p sz %d p %p\n",
+    emu_printf("hwram %d ptr %p lwram %d hw %p aft %p sz %d p %p endhw %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
-            ((int)current_lwram) - 0x200000, hwram, ptr, size, sbrk(0));
-			memset(hwram_work,0x00,10000);
+            ((int)current_lwram) - 0x200000, hwram, ptr, size, sbrk(0), lwram_end);
+//			memset(hwram_work,0x00,10000);
 
     return dst;
 }
@@ -57,6 +57,12 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 			case TYPE_PAF:
 			case TYPE_PAFBUF:
 				return bump(&hwram_work_paf, alignedSize);
+			case TYPE_PAFEND:
+//			if ((int)current_lwram + alignedSize < 0x219400 && alignedSize >3000)
+			if (alignedSize !=2096)
+					return bump(&current_lwram, alignedSize);
+				else
+					return lwram_end - SAT_ALIGN(alignedSize);
 			case TYPE_MENU:
 				return current_lwram; // no increment
 			case TYPE_LAYER:
@@ -136,7 +142,7 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 	}
 	else
 	{
-	emu_printf("level %d type %d size %d\n", level, type, alignedSize);
+//	emu_printf("level %d type %d size %d\n", level, type, alignedSize);
 return bump(&cs1ram, alignedSize);
 
 		switch (type) {	

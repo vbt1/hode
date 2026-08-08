@@ -1289,7 +1289,7 @@ void Game::setupScreenLvlObjects(int num) {
 			}
 			break;
 		case 2:
-			ptr->levelData0x2988 = _res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum];
+			ptr->levelData0x2988 = &_res->_resLvlScreenBackgroundDataTable[num].backgroundLvlObjectDataTable[ptr->dataNum];
 			if (!ptr->levelData0x2988) {
 //				emu_printf("No backgroundLvlObjectData num %d screen %d\n", ptr->dataNum, num);
 				break;
@@ -2469,7 +2469,7 @@ emu_printf("unload num\n");
 	}
 #endif
 
-	if(level==2)
+/*	if(level==2)
 	{
 		slTVOff();
 		GFS_Load(GFS_NameToId((Sint8*)"ENDPAL.BIN"),0,(void *) hwram_work,512);
@@ -2505,9 +2505,9 @@ emu_printf("unload num\n");
 		} while (!g_system->inp.keyPressed(SYS_INP_ESC));
 
 
-		SYS_Exit(0);
+//		SYS_Exit(0);
 	}
-
+*/
 #ifdef USE_LESS_RAM
 // vbt : voir comment restaurer hwram_work correctement
 //	hwram_work = _video->_shadowScreenMaskBuffer + (256 * 192 * 2 + 256 * 4);

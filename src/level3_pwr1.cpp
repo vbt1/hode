@@ -492,7 +492,7 @@ void Level_pwr1::preScreenUpdate_pwr1_screen35() {
 }
 #endif
 void Level_pwr1::preScreenUpdate(int num) {
-	SYS_Exit(0);
+//	SYS_Exit(0);
 #ifdef ENABLED
 	switch (num) {
 	case 4:
