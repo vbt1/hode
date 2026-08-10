@@ -540,6 +540,7 @@ struct ResStruct {
 // vbt : on garde malloc, peu couteux
 //		ptr = (T *)malloc(size * sizeof(T));
 		ptr = (T *)allocate_memory (_level, TYPE_RES, size * sizeof(T));
+emu_printf("allocate RES %d %p\n", size * sizeof(T), ptr);
 	}
 
 	const T& operator[](int i) const {

@@ -48,7 +48,7 @@ static uint8_t *bump(Uint8 **ptr, uint32_t size) {
 
 uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t alignedSize) 
 {
-//	emu_printf("level %d type %d size %d ", level, type, alignedSize);
+	emu_printf("level %d type %d size %d ", level, type, alignedSize);
 //	if(alignedSize==0)
 //		return (uint8_t*)0;
 	if(level==255)
@@ -67,10 +67,10 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 			case TYPE_PAFEND:
 			if (alignedSize !=2096)
 					return bump(&current_lwram, alignedSize);
-				else
+//				else
 //					return _scrapBuffer;
 //					return bump(&hwram_work, alignedSize);
-					return lwram_end - SAT_ALIGN(alignedSize);
+				return lwram_end - SAT_ALIGN(alignedSize);
 			case TYPE_MENU:
 				return current_lwram; // no increment
 			case TYPE_LAYER:

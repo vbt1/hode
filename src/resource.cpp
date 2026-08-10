@@ -907,7 +907,7 @@ void Resource::loadLvlSprite(int levelNum, bool all)
 	
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
+emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
 
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, all , spr + i * 16);

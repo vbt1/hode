@@ -799,34 +799,44 @@ void Game::initMstCode() {
 }
 
 void Game::resetMstCode() {
+emu_printf("resetMstCode\n");
 	if (_mstDisabled) {
 		return;
 	}
 	_mstFlags = 0;
+emu_printf("mstMonster1ResetData\n");
 	for (int i = 0; i < kMaxMonsterObjects1; ++i) {
 		mstMonster1ResetData(&_monsterObjects1Table[i]);
 	}
+emu_printf("mstMonster2ResetData\n");
 	for (int i = 0; i < kMaxMonsterObjects2; ++i) {
 		mstMonster2ResetData(&_monsterObjects2Table[i]);
 	}
+emu_printf("clearLvlObjectsList1\n");
 	clearLvlObjectsList1();
 	for (int i = 0; i < _res->_mstHdr.screenAreaDataCount; ++i) {
 		_res->_mstScreenAreaData[i].unk0x1D = 1;
 	}
+emu_printf("initMstTable\n");
 	_rnd.initMstTable();
+emu_printf("initTable\n");
 	_rnd.initTable();
+emu_printf("_mstMovingBoundsData %d \n", _res->_mstHdr.movingBoundsDataCount);
 	for (int i = 0; i < _res->_mstHdr.movingBoundsDataCount; ++i) {
 		const int count = _res->_mstMovingBoundsData[i].indexDataCount;
+emu_printf("shuffleArray %p %d \n", _res->_mstMovingBoundsData[i].indexData, count);
 		if (count != 0) {
 			shuffleArray(_res->_mstMovingBoundsData[i].indexData, count);
 		}
 	}
+emu_printf("walkCodeDataCount\n");
 	for (int i = 0; i < _res->_mstHdr.walkCodeDataCount; ++i) {
 		const int count = _res->_mstWalkCodeData[i].indexDataCount;
 		if (count != 0) {
 			shuffleArray(_res->_mstWalkCodeData[i].indexData, count);
 		}
 	}
+emu_printf("monsterActionIndexDataCount\n");
 	for (int i = 0; i < _res->_mstHdr.monsterActionIndexDataCount; ++i) {
 		shuffleMstMonsterActionIndex(&_res->_mstMonsterActionIndexData[i]);
 	}
@@ -876,9 +886,11 @@ void Game::resetMstCode() {
 	for (int i = 0; i < kMaxMonsterObjects2; ++i) {
 		_monsterObjects2Table[i].monster2Index = i;
 	}
+emu_printf("mstUpdateRefPos\n");
 	mstUpdateRefPos();
 	_mstAndyLevelPrevPosX = _mstAndyLevelPosX;
 	_mstAndyLevelPrevPosY = _mstAndyLevelPosY;
+emu_printf("resteMstCode done\n");
 }
 
 void Game::startMstCode() {

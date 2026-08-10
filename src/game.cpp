@@ -1495,9 +1495,11 @@ void Game::playAndyFallingCutscene(int type) {
 			break;
 		}
 
-//		emu_printf("here!!!\n");
-		lwram_end = (Uint8 *)0x300000;
-		_res->loadLvlSprite(0, 0);
+		emu_printf("here!!!\n");
+emu_printf("reload sprites\n");
+//		lwram_end = (Uint8 *)0x300000;
+//		_res->loadLvlSprite(0, 0);
+emu_printf("reload sprites done\n");
 	}
 #endif
 
