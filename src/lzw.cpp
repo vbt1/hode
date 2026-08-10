@@ -12,6 +12,7 @@ void abort(void) {
 //    emu_printf("ABORT CALLED\n");
 //    while(1);  // Infinite loop instead of aborting
 }
+extern Uint8 *_scrapBuffer;
 }
 
 #pragma GCC optimize ("O2")
@@ -34,8 +35,10 @@ enum {
 
 struct LzwDecoder {
 
-	uint16_t _prefix[1 << kMaxBits];
-	uint8_t _stack[kStackSize];
+//	uint16_t _prefix[1 << kMaxBits];
+//	uint8_t _stack[kStackSize];
+	uint16_t *_prefix;
+	uint8_t *_stack;
 	const uint8_t *_buf;
 	uint32_t _currentBits;
 	uint8_t _bitsLeft;
@@ -62,6 +65,9 @@ uint32_t LzwDecoder::nextCode(int codeSize) { // 9 to 12bits
 int LzwDecoder::decode(uint8_t *dst) {
 //emu_printf("decode %p\n", dst);
 	uint8_t *p = dst;
+	_prefix = (uint16_t *)_scrapBuffer;
+	_stack = (uint8_t *)_scrapBuffer+(1 << kMaxBits)*2;
+	
 	uint8_t *stackPtr = &_stack[kStackSize - 1];
 	uint32_t previousCode = 0;
 	uint32_t lastCode = 0;
@@ -69,6 +75,7 @@ int LzwDecoder::decode(uint8_t *dst) {
 	uint32_t currentSlot = kNewCodes;
 	uint32_t topSlot = 1 << kCodeWidth;
 	int codeSize = kCodeWidth;
+	
 	while ((currentCode = nextCode(codeSize)) != kEndCode) {
 		if (currentCode == kClearCode) {
 			currentSlot = kNewCodes;

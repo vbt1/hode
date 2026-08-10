@@ -701,7 +701,7 @@ void Level_rock::preScreenUpdate_rock_screen10() {
 #ifdef PAF
 		if (!_paf->_skipCutscenes) {
 			_paf->unload(22);
-emu_printf("_paf->preload(23) screen 10\n");
+//emu_printf("_paf->preload(23) screen 10\n");
 //			_paf->preload(23); // vbt : à quoi ca sert ???
 		}
 #endif

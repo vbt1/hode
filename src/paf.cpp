@@ -1095,7 +1095,7 @@ slPrint((char *)txt,slLocate(10,2));
 	}
 	if (ctx.active)
 		_file.asynchWait(ctx.buffers[ctx.readBuf], (Sint32)ctx.totalBytes);
-emu_printf("unload no params\n");
+//emu_printf("unload no params\n");
 	unload();
 	closePaf(_fs, &_file);
 }

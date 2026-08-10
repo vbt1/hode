@@ -15,7 +15,7 @@
 
 extern "C" {
 #include <sl_def.h>
-
+extern Uint8 *_scrapBuffer;
 #ifdef FRAME
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
@@ -24,6 +24,7 @@ unsigned char frame_z = 0;
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
 extern Uint8 *lwram_end;
+extern Uint8 *hwram;
 extern int nb_spr;
 void SYS_Exit(Sint32 code);
 };
@@ -600,8 +601,10 @@ void Game::resetScreenMask() {
 //emu_printf("resetScreenMask\n");
 //	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
 	if(_screenMaskBuffer == 0)
+	{
 		_screenMaskBuffer = allocate_memory(_res->_level, TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
-
+//		_scrapBuffer = _screenMaskBuffer;
+	}
 	memset(_screenMaskBuffer, 0, (16 * 6) * 24 * 32);
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
 		_res->_screensState[i].s3 = 0xFF;
@@ -1426,6 +1429,10 @@ void Game::resetScreen() {
 
 void Game::restartLevel() {
 //emu_printf("restartLevel\n");
+//    emu_printf("1hwramw %d %p lwram %d hwram %p endhw %p\n",
+//            ((int)hwram_work) - 0x6000000, hwram_work,
+//            ((int)current_lwram) - 0x200000, hwram, lwram_end);
+
 	setupAndyLvlObject();
 	clearLvlObjectsList2();
 	clearLvlObjectsList3();
@@ -1453,6 +1460,9 @@ void Game::restartLevel() {
 		preloadLevelScreenData(_andyObject->screenNum, kNoScreen);
 	}
 	setupScreen(_andyObject->screenNum);
+//    emu_printf("2hwramw %d %p lwram %d hwram %p endhw %p\n",
+//            ((int)hwram_work) - 0x6000000, hwram_work,
+//            ((int)current_lwram) - 0x200000, hwram, lwram_end);
 }
 
 void Game::playAndyFallingCutscene(int type) {
@@ -2461,7 +2471,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		const uint8_t num = _cutscenes[_currentLevel];
 //		_paf->preload(num); // vbt : pas utile
 		_paf->play(num);
-emu_printf("unload num\n");
+//emu_printf("unload num\n");
 		_paf->unload(num);
 		if (g_system->inp.quit) {
 			return;
@@ -2580,8 +2590,8 @@ emu_printf("unload num\n");
 #endif
 		g_system->sleep(delay);
 		slSynch(); // vbt : apres le sleep gagne 3fps
-		if(nb_spr>85)
-			emu_printf("nb_spr %d\n", nb_spr);
+//		if(nb_spr>85)
+//			emu_printf("nb_spr %d\n", nb_spr);
 		nb_spr=0;
 #ifdef FRAME
 		frame_x++;
@@ -3128,6 +3138,9 @@ void Game::updateInput() {
 		{
 			_level->_checkpoint++;
 //			emu_printf("next check point %d\n", _level->_checkpoint);
+//    emu_printf("0hwramw %d %p lwram %d hwram %p endhw %p\n",
+//            ((int)hwram_work) - 0x6000000, hwram_work,
+//            ((int)current_lwram) - 0x200000, hwram, lwram_end);
 			_level->getCheckpointData(_level->_checkpoint);
 			restartLevel();
 		}
@@ -3342,10 +3355,10 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
-	case 1:
+/*	case 1:
 		_level = Level_fort_create();
 		break;
-/*	case 2:
+	case 2:
 		_level = Level_pwr1_create();
 		break;
 	case 3:

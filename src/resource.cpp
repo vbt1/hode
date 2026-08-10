@@ -9,6 +9,7 @@
  */
 extern "C" {
 #include 	<sl_def.h>
+Uint8 * _scrapBuffer;
 }
 #include "fileio.h"
 #include "fs.h"
@@ -19,6 +20,7 @@ extern "C" {
 #include "util.h"
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
+extern uint8_t *cs1ram;
 //uint8_t *cs1ram = (uint8_t *)0x22402000;
 //uint8_t *save_cs1ram;
 #ifdef PRELOAD_ANDY
@@ -685,7 +687,6 @@ void Resource::loadLvlSpriteData(int num, bool all, const uint8_t *buf) {
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) 
 	{
-//emu_printf("!buf\n");
 		_lvlFile->seekAlign(baseOffset + num * 16);
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
@@ -763,7 +764,7 @@ void Resource::loadLvlSpriteData(int num, bool all, const uint8_t *buf) {
 //	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
 //	_resLevelData0x2988SizeTable[num] = 0;
-emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount, dat->framesCount);
+//emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount, dat->framesCount);
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
@@ -802,7 +803,7 @@ uint8_t *hwram_res  = NULL;
 uint8_t *lwram_res  = NULL;
 
 void Resource::loadLvlData(File *fp) {
-emu_printf("loadLvlData %p\n", _lvlFile);
+//emu_printf("loadLvlData %p\n", _lvlFile);
 //	assert(fp == _lvlFile);
 	if(lwram_res==NULL)
 	{
@@ -980,9 +981,11 @@ static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, ui
 	dat->dataUnk45Count = *src++;
 	dat->unkB = *src++;
 	dat->backgroundPaletteId = READ_LE_UINT16(src); src += 2;
+//emu_printf("pal id %d\n", dat->backgroundPaletteId);	
 	dat->backgroundBitmapId = READ_LE_UINT16(src); src += 2;
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
+//		emu_printf("i %d off %d p %p\n", i, offs, ptr + offs);
 		dat->backgroundPaletteTable[i] = (offs != 0) ? ptr + offs : 0;
 	}
 	for (int i = 0; i < 4; ++i) {
@@ -1031,7 +1034,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
-//emu_printf("_lvlBackgroundsOffset %d\n", _lvlBackgroundsOffset);
+//emu_printf("loadLvlScreenBackgroundData num %d\n", num);
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
 		_lvlFile->seekAlign(baseOffset + num * 16);
@@ -1052,7 +1055,16 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	
-	uint8_t *ptr = allocate_memory (_level, TYPE_BGLVL, size);
+	uint8_t *ptr = NULL;
+	
+//	if (size <0x20000)
+//		ptr = cs1ram;//_scrapBuffer;
+//	else
+		ptr = allocate_memory (_level, TYPE_BGLVL, size);
+//	uint8_t *ptr2 = (uint8_t *)0x22400000;
+	
+//emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
+//memset(ptr, 0x00, SAT_ALIGN(readSize));
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
@@ -1063,7 +1075,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2B88(_level, hdr, ptr, ptr + readSize, dat);
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	
-//emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
+//  emu_printf("alloc %d %d\n", allocatedOffsetsSize,  readOffsetsSize);
 //	assert(allocatedOffsetsSize == readOffsetsSize);
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;
@@ -1073,7 +1085,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 }
 
 void Resource::unloadLvlScreenBackgroundData(int num) {
-//emu_printf("unloadLvlScreenBackgroundData %p\n", cs1ram_bg);
+//emu_printf("unloadLvlScreenBackgroundData %d\n", num);
 	if (_resLevelData0x2B88SizeTable[num] != 0) {
 //		free(_resLvlScreenBackgroundDataPtrTable[num]);
 		_resLvlScreenBackgroundDataPtrTable[num] = 0;
@@ -1662,11 +1674,11 @@ void Resource::preloadSssPcmList(const SssPreloadInfoData *preloadInfoData) {
 }
 #endif
 void Resource::loadMstData(File *fp) {
-emu_printf("loadMstData\n");
+//emu_printf("loadMstData\n");
 //	assert(fp == _mstFile);
 
 	if (_mstHdr.dataSize != 0) {
-emu_printf("unloadMstData\n");
+//emu_printf("unloadMstData\n");
 		unloadMstData();
 		_mstHdr.dataSize = 0;
 	}

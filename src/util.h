@@ -30,7 +30,7 @@ void warning(const char *msg, ...);
 #endif
 
 #define SAT_ALIGN(a) ((a+3)&~3)
-#define SAT_ALIGN8(a) ((a+15)&~15)
+//#define SAT_ALIGN8(a) ((a+15)&~15)
 
 #define	    SpriteVRAM		0x25c00000
 #define	cgaddress	0x1800 //SpriteBufSize
