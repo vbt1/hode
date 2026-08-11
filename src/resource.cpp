@@ -1225,7 +1225,8 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 	// _sssBuffer1
 	int bytesRead = 0;
 
-	_sssInfosData.allocate(_sssHdr.infosDataCount);
+	//	_sssInfosData.allocate(_sssHdr.infosDataCount);
+	_sssInfosData = (SssInfo*)allocate_memory(_level, TYPE_RES, _sssHdr.infosDataCount * sizeof(SssInfo));
 	for (int i = 0; i < _sssHdr.infosDataCount; ++i) {
 		_sssInfosData[i].sssBankIndex = fp->readUint16(); // index _sssBanksData
 		_sssInfosData[i].sampleIndex = fp->readByte();
@@ -1236,7 +1237,8 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 		fp->skipByte(); // padding to 8 bytes
 		bytesRead += 8;
 	}
-	_sssDefaultsData.allocate(_sssHdr.filtersDataCount);
+	//	_sssDefaultsData.allocate(_sssHdr.filtersDataCount);
+	_sssDefaultsData = (SssDefaults*)allocate_memory(_level, TYPE_RES, _sssHdr.filtersDataCount * sizeof(SssDefaults));
 	for (int i = 0; i < _sssHdr.filtersDataCount; ++i) {
 		_sssDefaultsData[i].defaultVolume   = fp->readByte();
 		_sssDefaultsData[i].defaultPriority = fp->readByte();
@@ -1244,7 +1246,8 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 		fp->skipByte(); // padding to 4 bytes
 		bytesRead += 4;
 	}
-	_sssBanksData.allocate(_sssHdr.banksDataCount);
+	//	_sssBanksData.allocate(_sssHdr.banksDataCount);
+	_sssBanksData = (SssBank*)allocate_memory(_level, TYPE_RES, _sssHdr.banksDataCount * sizeof(SssBank));
 	for (int i = 0; i < _sssHdr.banksDataCount; ++i) {
 		_sssBanksData[i].flags = fp->readByte();
 		_sssBanksData[i].count = fp->readByte();
@@ -1254,7 +1257,8 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 		debug(kDebug_RESOURCE, "SssBank #%d count %d codeOffset 0x%x", i, _sssBanksData[i].count, _sssBanksData[i].firstSampleIndex);
 		bytesRead += 8;
 	}
-	_sssSamplesData.allocate(_sssHdr.samplesDataCount);
+	//	_sssSamplesData.allocate(_sssHdr.samplesDataCount);
+	_sssSamplesData = (SssSample*)allocate_memory(_level, TYPE_RES, _sssHdr.samplesDataCount * sizeof(SssSample));
 	for (int i = 0; i < _sssHdr.samplesDataCount; ++i) {
 		_sssSamplesData[i].pcm = fp->readUint16();
 		_sssSamplesData[i].framesCount = fp->readUint16();
@@ -1290,7 +1294,8 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 			bytesRead += _sssHdr.preloadData3Count * 4;
 		}
 
-		_sssPreload1Table.allocate(_sssHdr.preloadData1Count);
+		//	_sssPreload1Table.allocate(_sssHdr.preloadData1Count);
+		_sssPreload1Table = (SssPreloadList*)allocate_memory(_level, TYPE_RES, _sssHdr.preloadData1Count * sizeof(SssPreloadList));
 		const int ptrSize = (_sssHdr.version == 12) ? 2 : 1;
 		for (int i = 0; i < _sssHdr.preloadData1Count; ++i) {
 			const int count = (ptrSize == 2) ? fp->readUint16() : fp->readByte();
@@ -1327,7 +1332,8 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 		}
 		// _sssPreloadInfosData = data;
 	}
-	_sssPreloadInfosData.allocate(_sssHdr.preloadInfoCount);
+	//	_sssPreloadInfosData.allocate(_sssHdr.preloadInfoCount);
+	_sssPreloadInfosData = (SssPreloadInfo*)allocate_memory(_level, TYPE_RES, _sssHdr.preloadInfoCount * sizeof(SssPreloadInfo));
 	for (int i = 0; i < _sssHdr.preloadInfoCount; ++i) {
 		_sssPreloadInfosData[i].count = fp->readUint32();
 		fp->readUint32();
@@ -1396,7 +1402,8 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 		}
 	}
 
-	_sssPcmTable.allocate(_sssHdr.pcmCount);
+	//	_sssPcmTable.allocate(_sssHdr.pcmCount);
+	_sssPcmTable = (SssPcm*)allocate_memory(_level, TYPE_RES, _sssHdr.pcmCount * sizeof(SssPcm));
 	uint32_t sssPcmOffset = baseOffset;
 	for (int i = 0; i < _sssHdr.pcmCount; ++i) {
 		_sssPcmTable[i].ptr = 0; fp->skipUint32();
@@ -1431,10 +1438,12 @@ void Resource::loadSssData(File *fp, const uint32_t baseOffset) {
 	assert(_sssHdr.filtersDataCount != 0);
 	static const int kSizeOfSssFilter = 52;
 	fp->seek(_sssHdr.filtersDataCount * kSizeOfSssFilter, SEEK_CUR);
-	_sssFilters.allocate(_sssHdr.filtersDataCount);
+	//	_sssFilters.allocate(_sssHdr.filtersDataCount);
+	_sssFilters = (SssFilter*)allocate_memory(_level, TYPE_RES, _sssHdr.filtersDataCount * sizeof(SssFilter));
 	bytesRead += _sssHdr.filtersDataCount * kSizeOfSssFilter;
 
-	_sssDataUnk6.allocate(_sssHdr.banksDataCount);
+	//	_sssDataUnk6.allocate(_sssHdr.banksDataCount);
+	_sssDataUnk6 = (SssUnk6*)allocate_memory(_level, TYPE_RES, _sssHdr.banksDataCount * sizeof(SssUnk6));
 	for (int i = 0; i < _sssHdr.banksDataCount; ++i) {
 		_sssDataUnk6[i].unk0[0] = fp->readUint32();
 		_sssDataUnk6[i].unk0[1] = fp->readUint32();
@@ -1740,15 +1749,17 @@ if(_mstCodeData==0)
 
 	int bytesRead = 0;
 ////emu_printf("_mstHdr.screensCount\n");
-	_mstPointOffsets.allocate(_level, _mstHdr.screensCount);
+//	_mstPointOffsets.allocate(_level, _mstHdr.screensCount);
+	_mstPointOffsets = (MstPointOffset*)allocate_memory(_level, TYPE_RES, _mstHdr.screensCount * sizeof(MstPointOffset));
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstPointOffsets[i].xOffset = fp->readUint32();
 		_mstPointOffsets[i].yOffset = fp->readUint32();
 ////emu_printf("vbt0 screensCount %d x %d y %d\n",i, _mstPointOffsets[i].xOffset, _mstPointOffsets[i].yOffset);
 		bytesRead += 8;
 	}
-////emu_printf("_mstHdr.walkBoxDataCount\n");
-	_mstWalkBoxData.allocate(_level, _mstHdr.walkBoxDataCount);
+
+//	_mstWalkBoxData.allocate(_level, _mstHdr.walkBoxDataCount);
+	_mstWalkBoxData = (MstWalkBox*)allocate_memory(_level, TYPE_RES, _mstHdr.walkBoxDataCount * sizeof(MstWalkBox));
 	for (int i = 0; i < _mstHdr.walkBoxDataCount; ++i) {
 		_mstWalkBoxData[i].right  = fp->readUint32();
 		_mstWalkBoxData[i].left   = fp->readUint32();
@@ -1762,9 +1773,9 @@ if(_mstCodeData==0)
 
 		bytesRead += 20;
 	}
-////emu_printf("_mstHdr.walkCodeDataCount\n");
 
-	_mstWalkCodeData.allocate(_level, _mstHdr.walkCodeDataCount);
+//	_mstWalkCodeData.allocate(_level, _mstHdr.walkCodeDataCount);
+	_mstWalkCodeData = (MstWalkCode*)allocate_memory(_level, TYPE_RES, _mstHdr.walkCodeDataCount * sizeof(MstWalkCode));
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		fp->skipUint32();
 		_mstWalkCodeData[i].codeDataCount = fp->readUint32();
@@ -1795,8 +1806,8 @@ if(_mstCodeData==0)
 		}
 	}
 
-////emu_printf("_mstHdr.movingBoundsIndexDataCount %d\n",_mstHdr.movingBoundsIndexDataCount);
-	_mstMovingBoundsIndexData.allocate(_level, _mstHdr.movingBoundsIndexDataCount);
+//	_mstMovingBoundsIndexData.allocate(_level, _mstHdr.movingBoundsIndexDataCount);
+	_mstMovingBoundsIndexData = (MstMovingBoundsIndex*)allocate_memory(_level, TYPE_RES, _mstHdr.movingBoundsIndexDataCount * sizeof(MstMovingBoundsIndex));
 	for (int i = 0; i < _mstHdr.movingBoundsIndexDataCount; ++i) {
 		_mstMovingBoundsIndexData[i].indexUnk49 = fp->readUint32();
 ////emu_printf("_mstMovingBoundsIndexData[i].indexUnk49 %d\n",_mstMovingBoundsIndexData[i].indexUnk49);
@@ -1813,14 +1824,17 @@ if(_mstCodeData==0)
 ////emu_printf("_mstTickCodeData %d\n", _mstTickCodeData);
 	bytesRead += 8;
 ////emu_printf("_mstHdr.levelCheckpointCodeDataCount %d\n", _mstHdr.levelCheckpointCodeDataCount);
-	_mstLevelCheckpointCodeData.allocate(_level, _mstHdr.levelCheckpointCodeDataCount);
+
+//	_mstLevelCheckpointCodeData.allocate(_level, _mstHdr.levelCheckpointCodeDataCount);
+	_mstLevelCheckpointCodeData = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.levelCheckpointCodeDataCount * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.levelCheckpointCodeDataCount; ++i) {
 		_mstLevelCheckpointCodeData[i] = fp->readUint32();
 ////emu_printf("_mstLevelCheckpointCodeData[%d] %d\n", i, _mstLevelCheckpointCodeData[i]);
 		bytesRead += 4;
 	}
 
-	_mstScreenAreaData.allocate(_level, _mstHdr.screenAreaDataCount);
+//	_mstScreenAreaData.allocate(_level, _mstHdr.screenAreaDataCount);
+	_mstScreenAreaData = (MstScreenArea*)allocate_memory(_level, TYPE_RES, _mstHdr.screenAreaDataCount * sizeof(MstScreenArea));
 ////emu_printf("_mstHdr.screenAreaDataCount %d\n", _mstHdr.screenAreaDataCount);
 
 	for (int i = 0; i < _mstHdr.screenAreaDataCount; ++i) {
@@ -1846,7 +1860,8 @@ if(_mstCodeData==0)
 		bytesRead += 36;
 	}
 ////emu_printf("_mstHdr.screenAreaIndexDataCount %d\n", _mstHdr.screenAreaIndexDataCount);
-	_mstScreenAreaByValueIndexData.allocate(_level, _mstHdr.screenAreaIndexDataCount);
+	//	_mstScreenAreaByValueIndexData.allocate(_level, _mstHdr.screenAreaIndexDataCount);
+	_mstScreenAreaByValueIndexData = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.screenAreaIndexDataCount * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.screenAreaIndexDataCount; ++i) {
 		_mstScreenAreaByValueIndexData[i] = fp->readUint32();
 ////emu_printf("_mstHdr._mstScreenAreaByValueIndexData[%d] %d\n", i, _mstScreenAreaByValueIndexData[i]);
@@ -1854,20 +1869,23 @@ if(_mstCodeData==0)
 		bytesRead += 4;
 	}
 
-	_mstScreenAreaByPosIndexData.allocate(_level, _mstHdr.screensCount);
+	//	_mstScreenAreaByPosIndexData.allocate(_level, _mstHdr.screensCount);
+	_mstScreenAreaByPosIndexData = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.screensCount * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstScreenAreaByPosIndexData[i] = fp->readUint32();
 //emu_printf("_mstScreenAreaByPosIndexData %d value %d\n", i, _mstScreenAreaByPosIndexData[i] );		
 		bytesRead += 4;
 	}
 
-	_mstUnk41.allocate(_level, _mstHdr.screensCount);
+	//	_mstUnk41.allocate(_level, _mstHdr.screensCount);
+	_mstUnk41 = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.screensCount * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstUnk41[i] = fp->readUint32();
 		bytesRead += 4;
 	}
 
-	_mstBehaviorIndexData.allocate(_level, _mstHdr.behaviorIndexDataCount);
+	//	_mstBehaviorIndexData.allocate(_level, _mstHdr.behaviorIndexDataCount);
+	_mstBehaviorIndexData = (MstBehaviorIndex*)allocate_memory(_level, TYPE_RES, _mstHdr.behaviorIndexDataCount * sizeof(MstBehaviorIndex));
 	for (int i = 0; i < _mstHdr.behaviorIndexDataCount; ++i) {
 		fp->skipUint32();
 		_mstBehaviorIndexData[i].count1 = fp->readUint32();
@@ -1893,7 +1911,8 @@ if(_mstCodeData==0)
 		}
 	}
 ////emu_printf("x1\n");
-	_mstMonsterActionIndexData.allocate(_level, _mstHdr.monsterActionIndexDataCount);
+	//	_mstMonsterActionIndexData.allocate(_level, _mstHdr.monsterActionIndexDataCount);
+	_mstMonsterActionIndexData = (MstMonsterActionIndex*)allocate_memory(_level, TYPE_RES, _mstHdr.monsterActionIndexDataCount * sizeof(MstMonsterActionIndex));
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
 		fp->skipUint32();
 		_mstMonsterActionIndexData[i].count1 = fp->readUint32();
@@ -1920,7 +1939,8 @@ if(_mstCodeData==0)
 		}
 	}
 ////emu_printf("x3\n");
-	_mstWalkPathData.allocate(_level, _mstHdr.walkPathDataCount);
+	//	_mstWalkPathData.allocate(_level, _mstHdr.walkPathDataCount);
+	_mstWalkPathData = (MstWalkPath*)allocate_memory(_level, TYPE_RES, _mstHdr.walkPathDataCount * sizeof(MstWalkPath));
 	for (int i = 0; i < _mstHdr.walkPathDataCount; ++i) {
 		fp->skipUint32();
 		fp->skipUint32();
@@ -1981,7 +2001,8 @@ if(_mstCodeData==0)
 		}
 	}
 ////emu_printf("x7\n");
-	_mstInfoMonster2Data.allocate(_level, _mstHdr.infoMonster2Count);
+	//	_mstInfoMonster2Data.allocate(_level, _mstHdr.infoMonster2Count);
+	_mstInfoMonster2Data = (MstInfoMonster2*)allocate_memory(_level, TYPE_RES, _mstHdr.infoMonster2Count * sizeof(MstInfoMonster2));
 	for (int i = 0; i < _mstHdr.infoMonster2Count; ++i) {
 		_mstInfoMonster2Data[i].type = fp->readByte();
 		_mstInfoMonster2Data[i].shootMask = fp->readByte();
@@ -1991,7 +2012,8 @@ if(_mstCodeData==0)
 		bytesRead += 12;
 	}
 ////emu_printf("x8\n");
-	_mstBehaviorData.allocate(_level, _mstHdr.behaviorDataCount);
+	//	_mstBehaviorData.allocate(_level, _mstHdr.behaviorDataCount);
+	_mstBehaviorData = (MstBehavior*)allocate_memory(_level, TYPE_RES, _mstHdr.behaviorDataCount * sizeof(MstBehavior));
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 		fp->skipUint32();
 		_mstBehaviorData[i].count = fp->readUint32();
@@ -2020,7 +2042,8 @@ if(_mstCodeData==0)
 		}
 	}
 ////emu_printf("x10\n");
-	_mstAttackBoxData.allocate(_level, _mstHdr.attackBoxDataCount);
+	//	_mstAttackBoxData.allocate(_level, _mstHdr.attackBoxDataCount);
+	_mstAttackBoxData = (MstAttackBox*)allocate_memory(_level, TYPE_RES, _mstHdr.attackBoxDataCount * sizeof(MstAttackBox));
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 		fp->skipUint32();
 		_mstAttackBoxData[i].count = fp->readUint32();
@@ -2034,7 +2057,8 @@ if(_mstCodeData==0)
 		bytesRead += _mstAttackBoxData[i].count * 20;
 	}
 ////emu_printf("x12\n");
-	_mstMonsterActionData.allocate(_level, _mstHdr.monsterActionDataCount);
+	//	_mstMonsterActionData.allocate(_level, _mstHdr.monsterActionDataCount);
+	_mstMonsterActionData = (MstMonsterAction*)allocate_memory(_level, TYPE_RES, _mstHdr.monsterActionDataCount * sizeof(MstMonsterAction));
 	for (int i = 0; i < _mstHdr.monsterActionDataCount; ++i) {
 		MstMonsterAction *m = &_mstMonsterActionData[i];
 		m->xRange = fp->readUint16();
@@ -2130,7 +2154,8 @@ if(_mstCodeData==0)
 	fp->read(_mstMonsterInfos, mapDataSize);
 	bytesRead += mapDataSize;
 
-	_mstMovingBoundsData.allocate(_level, _mstHdr.movingBoundsDataCount);
+	//	_mstMovingBoundsData.allocate(_level, _mstHdr.movingBoundsDataCount);
+	_mstMovingBoundsData = (MstMovingBounds*)allocate_memory(_level, TYPE_RES, _mstHdr.movingBoundsDataCount * sizeof(MstMovingBounds));
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 		_mstMovingBoundsData[i].indexMonsterInfo = fp->readUint32();
 ////emu_printf("_mstMovingBoundsData[%d].indexMonsterInfo %d\n", i, _mstMovingBoundsData[i].indexMonsterInfo);
@@ -2176,7 +2201,8 @@ if(_mstCodeData==0)
 		}
 	}
 
-	_mstShootData.allocate(_level, _mstHdr.shootDataCount);
+	//	_mstShootData.allocate(_level, _mstHdr.shootDataCount);
+	_mstShootData = (MstShoot*)allocate_memory(_level, TYPE_RES, _mstHdr.shootDataCount * sizeof(MstShoot));
 	for (int i = 0; i < _mstHdr.shootDataCount; ++i) {
 		_mstShootData[i].data  = 0; fp->skipUint32();
 		_mstShootData[i].count = fp->readUint32();
@@ -2200,7 +2226,8 @@ if(_mstCodeData==0)
 		}
 	}
 
-	_mstShootIndexData.allocate(_level, _mstHdr.shootIndexDataCount);
+	//	_mstShootIndexData.allocate(_level, _mstHdr.shootIndexDataCount);
+	_mstShootIndexData = (MstShootIndex*)allocate_memory(_level, TYPE_RES, _mstHdr.shootIndexDataCount * sizeof(MstShootIndex));
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {
 		_mstShootIndexData[i].indexUnk50 = fp->readUint32();
 		assert(_mstShootIndexData[i].indexUnk50 < (uint32_t)_mstHdr.shootDataCount);
@@ -2220,7 +2247,8 @@ if(_mstCodeData==0)
 		}
 	}
 
-	_mstActionDirectionData.allocate(_level, _mstHdr.actionDirectionDataCount);
+	//	_mstActionDirectionData.allocate(_level, _mstHdr.actionDirectionDataCount);
+	_mstActionDirectionData = (MstActionDirectionMask*)allocate_memory(_level, TYPE_RES, _mstHdr.actionDirectionDataCount * sizeof(MstActionDirectionMask));
 	for (int i = 0; i < _mstHdr.actionDirectionDataCount; ++i) {
 		_mstActionDirectionData[i].unk0 = fp->readByte();
 		_mstActionDirectionData[i].unk1 = fp->readByte();
@@ -2229,7 +2257,8 @@ if(_mstCodeData==0)
 		bytesRead += 4;
 	}
 
-	_mstOp223Data.allocate(_level, _mstHdr.op223DataCount);
+	//	_mstOp223Data.allocate(_level, _mstHdr.op223DataCount);
+	_mstOp223Data = (MstOp223Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op223DataCount * sizeof(MstOp223Data));
 	for (int i = 0; i < _mstHdr.op223DataCount; ++i) {
 		_mstOp223Data[i].indexVar1 = fp->readUint16();
 		_mstOp223Data[i].indexVar2 = fp->readUint16();
@@ -2245,7 +2274,8 @@ if(_mstCodeData==0)
 		bytesRead += 20;
 	}
 
-	_mstOp226Data.allocate(_level, _mstHdr.op226DataCount);
+	//	_mstOp226Data.allocate(_level, _mstHdr.op226DataCount);
+	_mstOp226Data = (MstOp226Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op226DataCount * sizeof(MstOp226Data));
 	for (int i = 0; i < _mstHdr.op226DataCount; ++i) {
 		_mstOp226Data[i].unk0 = fp->readByte();
 		_mstOp226Data[i].unk1 = fp->readByte();
@@ -2258,7 +2288,8 @@ if(_mstCodeData==0)
 		bytesRead += 8;
 	}
 
-	_mstOp227Data.allocate(_level, _mstHdr.op227DataCount);
+	//	_mstOp227Data.allocate(_level, _mstHdr.op227DataCount);
+	_mstOp227Data = (MstOp227Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op227DataCount * sizeof(MstOp227Data));
 	for (int i = 0; i < _mstHdr.op227DataCount; ++i) {
 		_mstOp227Data[i].indexVar1 = fp->readUint16();
 		_mstOp227Data[i].indexVar2 = fp->readUint16();
@@ -2268,7 +2299,8 @@ if(_mstCodeData==0)
 		bytesRead += 8;
 	}
 
-	_mstOp234Data.allocate(_level, _mstHdr.op234DataCount);
+	//	_mstOp234Data.allocate(_level, _mstHdr.op234DataCount);
+	_mstOp234Data = (MstOp234Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op234DataCount * sizeof(MstOp234Data));
 	for (int i = 0; i < _mstHdr.op234DataCount; ++i) {
 		_mstOp234Data[i].indexVar1 = fp->readUint16();
 		_mstOp234Data[i].indexVar2 = fp->readUint16();
@@ -2278,7 +2310,8 @@ if(_mstCodeData==0)
 		bytesRead += 8;
 	}
 
-	_mstOp2Data.allocate(_level, _mstHdr.op2DataCount);
+	//	_mstOp2Data.allocate(_level, _mstHdr.op2DataCount);
+	_mstOp2Data = (MstOp2Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op2DataCount * sizeof(MstOp2Data));
 	for (int i = 0; i < _mstHdr.op2DataCount; ++i) {
 		_mstOp2Data[i].indexVar1 = fp->readUint32();
 		_mstOp2Data[i].indexVar2 = fp->readUint32();
@@ -2289,7 +2322,8 @@ if(_mstCodeData==0)
 		bytesRead += 12;
 	}
 
-	_mstOp197Data.allocate(_level, _mstHdr.op197DataCount);
+	//	_mstOp197Data.allocate(_level, _mstHdr.op197DataCount);
+	_mstOp197Data = (MstOp197Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op197DataCount * sizeof(MstOp197Data));
 	for (int i = 0; i < _mstHdr.op197DataCount; ++i) {
 		_mstOp197Data[i].unk0 = fp->readUint16();
 		_mstOp197Data[i].unk2 = fp->readUint16();
@@ -2302,7 +2336,8 @@ if(_mstCodeData==0)
 		bytesRead += 16;
 	}
 
-	_mstOp211Data.allocate(_level, _mstHdr.op211DataCount);
+	//	_mstOp211Data.allocate(_level, _mstHdr.op211DataCount);
+	_mstOp211Data = (MstOp211Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op211DataCount * sizeof(MstOp211Data));
 	for (int i = 0; i < _mstHdr.op211DataCount; ++i) {
 		_mstOp211Data[i].indexVar1 = fp->readUint16();
 		_mstOp211Data[i].indexVar2 = fp->readUint16();
@@ -2318,14 +2353,16 @@ if(_mstCodeData==0)
 		bytesRead += 16;
 	}
 
-	_mstOp240Data.allocate(_level, _mstHdr.op240DataCount);
+	//	_mstOp240Data.allocate(_level, _mstHdr.op240DataCount);
+	_mstOp240Data = (MstOp240Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op240DataCount * sizeof(MstOp240Data));
 	for (int i = 0; i < _mstHdr.op240DataCount; ++i) {
 		_mstOp240Data[i].flags    = fp->readUint32();
 		_mstOp240Data[i].codeData = fp->readUint32();
 		bytesRead += 8;
 	}
 
-	_mstUnk60.allocate(_level, _mstHdr.unk0x70);
+	//	_mstUnk60.allocate(_level, _mstHdr.unk0x70);
+	_mstUnk60 = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.unk0x70 * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.unk0x70; ++i) {
 		_mstUnk60[i] = fp->readUint32();
 		bytesRead += 4;
@@ -2336,7 +2373,8 @@ if(_mstCodeData==0)
 		bytesRead += _mstHdr.unk0x74 * 4;
 	}
 
-	_mstOp204Data.allocate(_level, _mstHdr.op204DataCount);
+	//	_mstOp204Data.allocate(_level, _mstHdr.op204DataCount);
+	_mstOp204Data = (MstOp204Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op204DataCount * sizeof(MstOp204Data));
 	for (int i = 0; i < _mstHdr.op204DataCount; ++i) {
 		_mstOp204Data[i].arg0 = fp->readUint32();
 		_mstOp204Data[i].arg1 = fp->readUint32();

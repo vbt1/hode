@@ -516,6 +516,7 @@ struct Dem {
 	uint8_t *directionKeyMask;
 };
 #endif
+/* // vbt : devenu inutile
 template <typename T>
 struct ResStruct {
 	T *ptr;
@@ -552,7 +553,7 @@ emu_printf("allocate RES %d %p\n", size * sizeof(T), ptr);
 		return ptr[i];
 	}
 };
-
+*/
 struct FileSystem;
 
 struct Resource {
@@ -619,54 +620,93 @@ struct Resource {
 	LvlObject *_resLvlScreenObjectDataTable;//[104];
 	LvlObject _dummyObject; // (LvlObject *)0xFFFFFFFF
 #ifdef SOUND
-	ResStruct<SssInfo> _sssInfosData;
-	ResStruct<SssDefaults> _sssDefaultsData;
-	ResStruct<SssBank> _sssBanksData;
-	ResStruct<SssSample> _sssSamplesData;
-	ResStruct<SssPreloadList> _sssPreload1Table; // pcm
-	ResStruct<SssPreloadInfo> _sssPreloadInfosData; // indexed by screen number
-	ResStruct<SssFilter> _sssFilters;
-	ResStruct<SssPcm> _sssPcmTable;
-	ResStruct<SssUnk6> _sssDataUnk6;
+//	ResStruct<SssInfo> _sssInfosData;
+	SssInfo *_sssInfosData;
+//	ResStruct<SssDefaults> _sssDefaultsData;
+	SssDefaults *_sssDefaultsData;
+//	ResStruct<SssBank> _sssBanksData;
+	SssBank *_sssBanksData;
+//	ResStruct<SssSample> _sssSamplesData;
+	SssSample *_sssSamplesData;
+//	ResStruct<SssPreloadList> _sssPreload1Table; // pcm
+	SssPreloadList *_sssPreload1Table; // pcm
+//	ResStruct<SssPreloadInfo> _sssPreloadInfosData; // indexed by screen number
+	SssPreloadInfo *_sssPreloadInfosData; // indexed by screen number
+//	ResStruct<SssFilter> _sssFilters;
+	SssFilter *_sssFilters;
+//	ResStruct<SssPcm> _sssPcmTable;
+	SssPcm *_sssPcmTable;
+//	ResStruct<SssUnk6> _sssDataUnk6;
+	SssUnk6 *_sssDataUnk6;
 	uint32_t *_sssGroup1[3];
 	uint32_t *_sssGroup2[3];
 	uint32_t *_sssGroup3[3];
 	uint8_t *_sssCodeData;
 #endif
-	ResStruct<MstPointOffset> _mstPointOffsets;
-	ResStruct<MstWalkBox> _mstWalkBoxData;
-	ResStruct<MstWalkCode> _mstWalkCodeData;
-	ResStruct<MstMovingBoundsIndex> _mstMovingBoundsIndexData;
+//	ResStruct<MstPointOffset> _mstPointOffsets;
+	MstPointOffset *_mstPointOffsets;
+//	ResStruct<MstWalkBox> _mstWalkBoxData;
+	MstWalkBox *_mstWalkBoxData;
+//	ResStruct<MstWalkCode> _mstWalkCodeData;
+	MstWalkCode *_mstWalkCodeData;
+//	ResStruct<MstMovingBoundsIndex> _mstMovingBoundsIndexData;
+	MstMovingBoundsIndex *_mstMovingBoundsIndexData;
 	uint32_t _mstTickDelay;
 	uint32_t _mstTickCodeData;
-	ResStruct<uint32_t> _mstLevelCheckpointCodeData;
-	ResStruct<MstScreenArea> _mstScreenAreaData;
-	ResStruct<uint32_t> _mstScreenAreaByValueIndexData;
-	ResStruct<uint32_t> _mstScreenAreaByPosIndexData;
-	ResStruct<uint32_t> _mstUnk41;
-	ResStruct<MstBehaviorIndex> _mstBehaviorIndexData;
-	ResStruct<MstMonsterActionIndex> _mstMonsterActionIndexData;
-	ResStruct<MstWalkPath> _mstWalkPathData;
-	ResStruct<MstInfoMonster2> _mstInfoMonster2Data;
-	ResStruct<MstBehavior> _mstBehaviorData;
-	ResStruct<MstAttackBox> _mstAttackBoxData;
-	ResStruct<MstMonsterAction> _mstMonsterActionData;
+//	ResStruct<uint32_t> _mstLevelCheckpointCodeData;
+	uint32_t *_mstLevelCheckpointCodeData;
+//	ResStruct<MstScreenArea> _mstScreenAreaData;
+	MstScreenArea *_mstScreenAreaData;
+//	ResStruct<uint32_t> _mstScreenAreaByValueIndexData;
+	uint32_t *_mstScreenAreaByValueIndexData;
+//	ResStruct<uint32_t> _mstScreenAreaByPosIndexData;
+	uint32_t *_mstScreenAreaByPosIndexData;
+//	ResStruct<uint32_t> _mstUnk41;
+	uint32_t *_mstUnk41;
+//	ResStruct<MstBehaviorIndex> _mstBehaviorIndexData;
+	MstBehaviorIndex *_mstBehaviorIndexData;
+//	ResStruct<MstMonsterActionIndex> _mstMonsterActionIndexData;
+	MstMonsterActionIndex *_mstMonsterActionIndexData;
+//	ResStruct<MstWalkPath> _mstWalkPathData;
+	MstWalkPath *_mstWalkPathData;
+//	ResStruct<MstInfoMonster2> _mstInfoMonster2Data;
+	MstInfoMonster2 *_mstInfoMonster2Data;
+//	ResStruct<MstBehavior> _mstBehaviorData;
+	MstBehavior *_mstBehaviorData;
+//	ResStruct<MstAttackBox> _mstAttackBoxData;
+	MstAttackBox *_mstAttackBoxData;
+//	ResStruct<MstMonsterAction> _mstMonsterActionData;
+	MstMonsterAction *_mstMonsterActionData;
 	uint8_t *_mstMonsterInfos; // sizeof == 948
-	ResStruct<MstMovingBounds> _mstMovingBoundsData;
-	ResStruct<MstShoot> _mstShootData;
-	ResStruct<MstShootIndex> _mstShootIndexData;
-	ResStruct<MstActionDirectionMask> _mstActionDirectionData;
-	ResStruct<MstOp223Data> _mstOp223Data;
-	ResStruct<MstOp227Data> _mstOp227Data;
-	ResStruct<MstOp234Data> _mstOp234Data;
-	ResStruct<MstOp2Data> _mstOp2Data;
-	ResStruct<MstOp197Data> _mstOp197Data;
-	ResStruct<MstOp211Data> _mstOp211Data;
-	ResStruct<MstOp240Data> _mstOp240Data;
-	ResStruct<uint32_t> _mstUnk60; // indexes _mstCodeData
-	ResStruct<MstOp204Data> _mstOp204Data;
+//	ResStruct<MstMovingBounds> _mstMovingBoundsData;
+	MstMovingBounds *_mstMovingBoundsData;
+//	ResStruct<MstShoot> _mstShootData;
+	MstShoot *_mstShootData;
+//	ResStruct<MstShootIndex> _mstShootIndexData;
+	MstShootIndex *_mstShootIndexData;
+//	ResStruct<MstActionDirectionMask> _mstActionDirectionData;
+	MstActionDirectionMask *_mstActionDirectionData;
+//	ResStruct<MstOp223Data> _mstOp223Data;
+	MstOp223Data *_mstOp223Data;
+//	ResStruct<MstOp227Data> _mstOp227Data;
+	MstOp227Data *_mstOp227Data;
+//	ResStruct<MstOp234Data> _mstOp234Data;
+	MstOp234Data *_mstOp234Data;
+//	ResStruct<MstOp2Data> _mstOp2Data;
+	MstOp2Data *_mstOp2Data;
+//	ResStruct<MstOp197Data> _mstOp197Data;
+	MstOp197Data *_mstOp197Data;
+//	ResStruct<MstOp211Data> _mstOp211Data;
+	MstOp211Data *_mstOp211Data;
+//	ResStruct<MstOp240Data> _mstOp240Data;
+	MstOp240Data *_mstOp240Data;
+//	ResStruct<uint32_t> _mstUnk60; // indexes _mstCodeData
+	uint32_t *_mstUnk60; // indexes _mstCodeData
+//	ResStruct<MstOp204Data> _mstOp204Data;
+	MstOp204Data *_mstOp204Data;
 	uint8_t *_mstCodeData;
-	ResStruct<MstOp226Data> _mstOp226Data;
+//	ResStruct<MstOp226Data> _mstOp226Data;
+	MstOp226Data *_mstOp226Data;
 
 	Resource(FileSystem *fs);
 	~Resource();
