@@ -96,7 +96,9 @@ PafPlayer::PafPlayer(FileSystem *fs, Video *vid)
 	_volume = 128;
 	_frameMs = kFrameDuration;
 	_paletteBuffer = allocate_memory(-1, TYPE_PAFHEAD, 256 * 3);
+	emu_printf("_paletteBuffer %p\n", _paletteBuffer);
 	_bufferBlock = allocate_memory(-1, TYPE_PAFHEAD, kBufferBlockSize);
+	emu_printf("_bufferBlock %p end %p\n", _bufferBlock, _bufferBlock+kBufferBlockSize);
 }
 
 PafPlayer::~PafPlayer() {
@@ -128,13 +130,15 @@ void PafPlayer::preload(int num) {
 	if (!readPafHeader()) { unload(); return; }
 
 	uint8_t *buffer = allocate_memory(-1, TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
+	emu_printf("buffer %p end %p\n", buffer, buffer+(kPageBufferSize * 4 + 256 * 4));
+
 	if (!buffer) { unload(); return; }
 	for (int i = 0; i < 4; ++i)
 		_pageBuffers[i] = buffer + i * kPageBufferSize;
 
 	_demuxVideoFrameBlocks = (uint8_t *)allocate_memory(-1, TYPE_PAF,
 		_pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize);
-
+	emu_printf("_demuxVideoFrameBlocks %p end %p\n", _demuxVideoFrameBlocks, _demuxVideoFrameBlocks+(_pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize));
 	_pafHdr.maxAudioFrameBlocksCount = 0;
 #ifdef SOUND
 	if (_pafHdr.maxAudioFrameBlocksCount != 0) {
@@ -154,16 +158,16 @@ void PafPlayer::play(int num) {
 	slScrAutoDisp(NBG1ON|NBG3ON);
 //	if (!lwram_cut)
 		lwram_cut = current_lwram;
-//emu_printf("saving lwram %p\n", lwram_cut);
+//emu_printf("saving lwram %p hwram_work %p\n", lwram_cut, hwram_work);
 //	num=kPafAnimation_CanyonAndyFallingCannon;
 	if (_videoNum != num) preload(num);
 	if (_videoNum == num) { _playedMask |= 1 << num; mainLoop(); }
 }
 
 void PafPlayer::unload(int num) {
+//emu_printf("restoring lwram %p current_lwram %p hwram_work %p\n", lwram_cut, current_lwram, hwram_work);
 	if (lwram_cut)
 		current_lwram = lwram_cut;
-//emu_printf("restoring lwram %p\n", lwram_cut);
 //	lwram_cut = 0;
 	hwram_work_paf = _video->_shadowLayer;
 //emu_printf("current_lwram %p hwram_work_paf %p\n", current_lwram, hwram_work_paf);
@@ -204,8 +208,11 @@ bool PafPlayer::readPafHeader() {
 	if (_pafHdr.frameBlocksCount <= 0) return false;
 	
 //	uint8_t *save = current_lwram;
-//	emu_printf("ram to use %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
-	uint32_t *dst = (uint32_t *)allocate_memory(-1, TYPE_PAFEND, _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);
+//	emu_printf("ram to use %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);
+    const uint32_t hdrTablesSize = (uint32_t)(_pafHdr.framesCount * 8 + _pafHdr.frameBlocksCount * 4);
+    uint32_t *dst = (uint32_t *)allocate_memory(-1, TYPE_PAFEND, hdrTablesSize);	
+	emu_printf("dst %p sz %d end", dst, hdrTablesSize);
+//	uint32_t *dst = (uint32_t *)allocate_memory(-1, TYPE_PAFEND, _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);
 //	emu_printf("ram used %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
 	_pafHdr.frameBlocksCountTable  = readPafHeaderTable(_pafHdr.framesCount, dst);
 	dst += _pafHdr.framesCount;
@@ -216,6 +223,7 @@ bool PafPlayer::readPafHeader() {
 	dst += _pafHdr.frameBlocksCount;
 //	emu_printf("dst %p fc %d\n", dst, _pafHdr.frameBlocksCount*4);
 //	current_lwram = save;
+	emu_printf("%p\n", dst);
 	return _pafHdr.frameBlocksCountTable  != 0
 	    && _pafHdr.framesOffsetTable      != 0
 	    && _pafHdr.frameBlocksOffsetTable != 0;

@@ -903,11 +903,12 @@ void Resource::loadLvlSprite(int levelNum, bool all)
 	memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
 	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 	_lvlFile->seekAlign(_lvlSpritesOffset);
-	uint8_t spr[kMaxSpriteTypes * 16];
+//	uint8_t spr[kMaxSpriteTypes * 16];
+	uint8_t *spr = (uint8_t *)_scrapBuffer;
 	
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
-emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
+//emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
 
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, all , spr + i * 16);
@@ -934,7 +935,7 @@ void Resource::loadLvlMst(int levelNum)
 void Resource::unloadLvlData() {
 //emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
-//emu_printf("unloadLvlData reset cs1ram\n");
+//emu_printf("unloadLvlData reset lw %p %p hw %p %p\n",current_lwram, lwram_res, hwram_work, hwram_res);
 //	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
 	hwram_work = hwram_res;

@@ -471,6 +471,7 @@ struct Game {
 	void mstTaskResetMonster1WalkPath(Task *t);
 	bool mstSetCurrentPos(MonsterObject1 *m, int x, int y);
 	void mstMonster1SetGoalHorizontal(MonsterObject1 *m);
+	int mstMonster1AdvanceHorizontalGoal(Task *t, MonsterObject1 *m);
 	void mstResetCollisionTable();
 	void mstTaskRestart(Task *t);
 	bool mstMonster1CheckLevelBounds(MonsterObject1 *m, int x, int y, uint8_t dir);

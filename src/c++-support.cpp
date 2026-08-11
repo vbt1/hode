@@ -42,11 +42,13 @@ void* operator new(size_t size) {
 	{
 		ptr = (void *)current_lwram;
 		current_lwram +=size;
+//	emu_printf("size %d current_lwram %d\n", size, current_lwram);
 		return ptr;
 	}
 	else
 	{
 		ptr = malloc(size);
+	emu_printf("size %d malloc %p\n", size, ptr);
 	}
 	return ptr;
 }

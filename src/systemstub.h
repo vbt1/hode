@@ -64,8 +64,8 @@ struct System {
 	virtual void init(const char *title, int w, int h) = 0;
 	virtual void destroy() = 0;
 
-	virtual void setScaler(const char *name, int multiplier) = 0;
-	virtual void setGamma(float gamma) = 0;
+//	virtual void setScaler(const char *name, int multiplier) = 0;
+//	virtual void setGamma(float gamma) = 0;
 
 	virtual void setPalette(const uint8_t *pal, int n, int depth) = 0;
 	virtual void clearPalette() = 0;

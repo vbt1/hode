@@ -1494,12 +1494,8 @@ void Game::playAndyFallingCutscene(int type) {
 			_paf->play(kPafAnimation_IslandAndyFalling);
 			break;
 		}
-
-		emu_printf("here!!!\n");
-emu_printf("reload sprites\n");
 //		lwram_end = (Uint8 *)0x300000;
 //		_res->loadLvlSprite(0, 0);
-emu_printf("reload sprites done\n");
 	}
 #endif
 
@@ -1507,7 +1503,6 @@ emu_printf("reload sprites done\n");
 	if (type != 0 && play) {
 		restartLevel();
 	}
-//emu_printf("here!!!22222\n");
 }
 
 int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {

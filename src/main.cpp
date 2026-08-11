@@ -376,7 +376,7 @@ int ss_main() {
 	slTVOff();
 	memset((void *) VDP2_VRAM_A0,0x00, 512*224);
 */
-	slZoomNbg1(26350, toFIXED(1.0));
+	slZoomNbg1(26350, toFIXED(1));
 	slScrPosNbg1(0, toFIXED(-16));
 /*
 	slScrWindow0(0 , 16 , 639 , 207 );

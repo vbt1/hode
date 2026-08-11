@@ -37,7 +37,7 @@ void warning(const char *msg, ...);
 #define pal1 COL_256
 #undef TEXDEF
 #define TEXDEF(h,v,presize)		{h,v,(cgaddress+(((presize)*4)>>(pal1)))/8,(((h)&0x1f8)<<5 | (v))}
-#define	    toFIXED2(a)		((FIXED)(65536.0 * (a)))
+#define	    toFIXED2(a)		((FIXED)(a<<16))
 
 struct __attribute__((__packed__)) SAT_sprite {
     uint16_t cgaddr : 16;  // 32 bits

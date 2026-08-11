@@ -38,7 +38,7 @@ extern void ss_main( void );
 #ifdef LINEAR_BITMAP
 typedef Sint32           Fixed32;
 
-#define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
+#define	    toFIXED(a)		((FIXED)((a<<16)))
 #define		IntToFixed(x)	(((Fixed32)(x)) << 16)
 
 void BitmapCellScrTbl(Uint32 *tbl, Uint16 hRes)
@@ -115,8 +115,8 @@ int	main( void )
 	slBitMapNbg1(COL_TYPE_256, BM_512x256, (void*)VDP2_VRAM_A0); 
 	slScrTransparent(NBG0ON); // Do NOT elaborate transparency on NBG0 scroll
 //	slScrTransparent(NBG1ON); // Do NOT elaborate transparency on NBG1 scroll
-	slZoomNbg1(26350, toFIXED(1.0));
-	slZoomNbg0(26350, toFIXED(1.0));
+	slZoomNbg1(26350, toFIXED(1));
+	slZoomNbg0(26350, toFIXED(1));
 	slScrPosNbg1(0, toFIXED(-16));
 	slScrPosNbg0(0, toFIXED(-16));
 	slPriorityNbg0(2);
@@ -189,3 +189,39 @@ void emu_printf(const char *format, ...)
 #endif  
 }
 #endif
+
+
+extern "C"
+{
+#include <sys/stat.h>
+
+int _close(int file) {
+    return -1;
+}
+
+int _lseek(int file, int ptr, int dir) {
+    return 0;
+}
+
+int _read(int file, char *ptr, int len) {
+    return 0;
+}
+
+int _write(int file, char *ptr, int len) {
+    return 0;
+}
+
+caddr_t _sbrk(int incr) {
+    extern char end; // Symbol défini par le linker script
+    static char *heap_end;
+    char *prev_heap_end;
+
+    if (heap_end == 0) {
+        heap_end = &end;
+    }
+    prev_heap_end = heap_end;
+    heap_end += incr;
+
+    return (caddr_t) prev_heap_end;
+}	
+}

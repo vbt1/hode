@@ -43,7 +43,7 @@ Video::Video() {
 	if(hwram_work == 0)
 	{
 		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+34000); // ne pas trop monter
-	//	emu_printf("--hwram_work start %p\n", hwram_work);
+		emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory(-1, TYPE_LAYER, W * H + 1);
 		_frontLayer      = allocate_memory(-1, TYPE_LAYER, W * H);
@@ -52,7 +52,7 @@ Video::Video() {
 		_shadowScreenMaskBuffer = allocate_memory(-1, TYPE_LAYER, 256 * 192 * 2 + 256 * 4); //99k
 		_transformShadowBuffer = allocate_memory(-1, TYPE_LAYER, 256 * 192 + 256); //49k
 		_scrapBuffer = _shadowLayer;
-		
+		emu_printf("--hwram_work end %p\n", hwram_work);		
 //	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, hwram_work);
 /*
 		if (kUseShadowColorLut) {

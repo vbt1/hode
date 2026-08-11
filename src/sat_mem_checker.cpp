@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "stdlib.h"
-#define DEBUG 1
+//#define DEBUG 1
 
 extern "C" {
 #include <sgl.h>
@@ -48,7 +48,7 @@ static uint8_t *bump(Uint8 **ptr, uint32_t size) {
 
 uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t alignedSize) 
 {
-	emu_printf("level %d type %d size %d ", level, type, alignedSize);
+//	emu_printf("level %d type %d size %d ", level, type, alignedSize);
 //	if(alignedSize==0)
 //		return (uint8_t*)0;
 	if(level==255)
@@ -66,8 +66,11 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 				return bump(&hwram_work_paf, alignedSize);
 			case TYPE_PAFEND:
 			if (alignedSize !=2096)
-					return bump(&current_lwram, alignedSize);
-//				else
+				return bump(&current_lwram, alignedSize);
+				else
+//				return bump(&current_lwram, alignedSize);
+//					return cs1ram;
+//				return bump(&cs1ram, alignedSize);
 //					return _scrapBuffer;
 //					return bump(&hwram_work, alignedSize);
 				return lwram_end - SAT_ALIGN(alignedSize);

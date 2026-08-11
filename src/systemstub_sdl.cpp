@@ -52,7 +52,7 @@ extern void snd_init();
 #undef VDP2_VRAM_B0
 #define VDP2_VRAM_B0 NULL 
 */
-#define	    toFIXED(a)		((FIXED)(65536.0 * (a)))
+#define	    toFIXED(a)		(FIXED)((a<<16))
 /* Needed to unlock cd drive */
 #define SYS_CDINIT1(i) ((**(void(**)(int))0x60002dc)(i)) // Init functions for Saturn CD drive
 #define SYS_CDINIT2() ((**(void(**)(void))0x600029c)())
@@ -161,8 +161,8 @@ struct SystemStub_SDL : System {
 	virtual void initTimeStamp();
 //	virtual uint32 getOutputSampleRate();
 	virtual void setup_input (void); // Setup input controllers
-	virtual void setScaler(const char *name, int multiplier);
-	virtual void setGamma(float gamma);
+//	virtual void setScaler(const char *name, int multiplier);
+//	virtual void setGamma(float gamma);
 	virtual void setPalette(const uint8_t *pal, int n, int depth);
 	virtual void clearPalette();
 	virtual void copyRect(int x, int y, int w, int h, const uint8_t *buf, uint8_t *vramDst);
@@ -256,13 +256,13 @@ void SystemStub_SDL::destroy() {
 //	cleanupGfxMode();
 	SYS_Exit(0);
 }
-
+/*
 void SystemStub_SDL::setScaler(const char *name, int multiplier) {
 }
 
 void SystemStub_SDL::setGamma(float gamma) {
 }
-
+*/
 void SystemStub_SDL::setPalette(const uint8_t *pal, int n, int depth) {
 uint16_t *dst = _clut;
 
