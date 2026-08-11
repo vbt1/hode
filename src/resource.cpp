@@ -1740,26 +1740,120 @@ void Resource::loadMstData(File *fp) {
 	_mstHdr.op204DataCount = fp->readUint32();
 	_mstHdr.codeSize = fp->readUint32();
 	_mstHdr.screensCount = fp->readUint32();
-if(_mstCodeData==0)	
-	_mstCodeData = (uint8_t *)allocate_memory (_level, TYPE_MSTCODE, _mstHdr.codeSize * 4);
-//////emu_printf("screensCount %d\n", _mstHdr.screensCount);
-//	//emu_printf("_mstHdr.version %d _mstHdr.codeSize %d\n", _mstHdr.version, _mstHdr.codeSize);
 
+uint8_t *ptr=NULL;
+
+if (_mstResData == 0)
+{
+	_mstCodeData = (uint8_t *)allocate_memory (_level, TYPE_MSTCODE, _mstHdr.codeSize * 4);
+	ptr = _mstResData  = (uint8_t *)allocate_memory(_level, TYPE_RES,
+		  _mstHdr.screensCount * sizeof(MstPointOffset)
+		+ _mstHdr.walkBoxDataCount * sizeof(MstWalkBox)
+		+ _mstHdr.walkCodeDataCount * sizeof(MstWalkCode)
+		+ _mstHdr.movingBoundsIndexDataCount * sizeof(MstMovingBoundsIndex)
+		+ _mstHdr.levelCheckpointCodeDataCount * sizeof(uint32_t)
+		+ _mstHdr.screenAreaDataCount * sizeof(MstScreenArea)
+		+ _mstHdr.screenAreaIndexDataCount * sizeof(uint32_t)
+		+ _mstHdr.screensCount * sizeof(uint32_t)
+		+ _mstHdr.screensCount * sizeof(uint32_t)
+		+ _mstHdr.behaviorIndexDataCount * sizeof(MstBehaviorIndex)
+		+ _mstHdr.monsterActionIndexDataCount * sizeof(MstMonsterActionIndex)
+		+ _mstHdr.walkPathDataCount * sizeof(MstWalkPath)
+		+ _mstHdr.infoMonster2Count * sizeof(MstInfoMonster2)
+		+ _mstHdr.behaviorDataCount * sizeof(MstBehavior)
+		+ _mstHdr.attackBoxDataCount * sizeof(MstAttackBox)
+		+ _mstHdr.monsterActionDataCount * sizeof(MstMonsterAction)
+		+ _mstHdr.movingBoundsDataCount * sizeof(MstMovingBounds)
+		+ _mstHdr.shootDataCount * sizeof(MstShoot)
+		+ _mstHdr.shootIndexDataCount * sizeof(MstShootIndex)
+		+ _mstHdr.actionDirectionDataCount * sizeof(MstActionDirectionMask)
+		+ _mstHdr.op223DataCount * sizeof(MstOp223Data)
+		+ _mstHdr.op226DataCount * sizeof(MstOp226Data)
+		+ _mstHdr.op227DataCount * sizeof(MstOp227Data)
+		+ _mstHdr.op234DataCount * sizeof(MstOp234Data)
+		+ _mstHdr.op2DataCount * sizeof(MstOp2Data)
+		+ _mstHdr.op197DataCount * sizeof(MstOp197Data)
+		+ _mstHdr.op211DataCount * sizeof(MstOp211Data)
+		+ _mstHdr.op240DataCount * sizeof(MstOp240Data)
+		+ _mstHdr.unk0x70 * sizeof(uint32_t)
+		+ _mstHdr.op204DataCount * sizeof(MstOp204Data)
+	);
+	_mstPointOffsets = (MstPointOffset*)ptr;
+	ptr += _mstHdr.screensCount * sizeof(MstPointOffset);
+	_mstWalkBoxData = (MstWalkBox*)ptr;
+	ptr += _mstHdr.walkBoxDataCount * sizeof(MstWalkBox);
+	_mstWalkCodeData = (MstWalkCode*)ptr;
+	ptr += _mstHdr.walkCodeDataCount * sizeof(MstWalkCode);
+	_mstMovingBoundsIndexData = (MstMovingBoundsIndex*)ptr;
+	ptr += _mstHdr.movingBoundsIndexDataCount * sizeof(MstMovingBoundsIndex);
+	_mstLevelCheckpointCodeData = (uint32_t*)ptr;
+	ptr += _mstHdr.levelCheckpointCodeDataCount * sizeof(uint32_t);
+	_mstScreenAreaData = (MstScreenArea*)ptr;
+	ptr += _mstHdr.screenAreaDataCount * sizeof(MstScreenArea);
+	_mstScreenAreaByValueIndexData = (uint32_t*)ptr;
+	ptr += _mstHdr.screenAreaIndexDataCount * sizeof(uint32_t);
+	_mstScreenAreaByPosIndexData = (uint32_t*)ptr;
+	ptr += _mstHdr.screensCount * sizeof(uint32_t);
+	_mstUnk41 = (uint32_t*)ptr;
+	ptr += _mstHdr.screensCount * sizeof(uint32_t);
+	_mstBehaviorIndexData = (MstBehaviorIndex*)ptr;
+	ptr += _mstHdr.behaviorIndexDataCount * sizeof(MstBehaviorIndex);
+	_mstMonsterActionIndexData = (MstMonsterActionIndex*)ptr;
+	ptr += _mstHdr.monsterActionIndexDataCount * sizeof(MstMonsterActionIndex);
+	_mstWalkPathData = (MstWalkPath*)ptr;
+	ptr += _mstHdr.walkPathDataCount * sizeof(MstWalkPath);
+	_mstInfoMonster2Data = (MstInfoMonster2*)ptr;
+	ptr += _mstHdr.infoMonster2Count * sizeof(MstInfoMonster2);
+	_mstBehaviorData = (MstBehavior*)ptr;
+	ptr += _mstHdr.behaviorDataCount * sizeof(MstBehavior);
+	_mstAttackBoxData = (MstAttackBox*)ptr;
+	ptr += _mstHdr.attackBoxDataCount * sizeof(MstAttackBox);
+	_mstMonsterActionData = (MstMonsterAction*)ptr;
+	ptr += _mstHdr.monsterActionDataCount * sizeof(MstMonsterAction);
+	_mstMovingBoundsData = (MstMovingBounds*)ptr;
+	ptr += _mstHdr.movingBoundsDataCount * sizeof(MstMovingBounds);
+	_mstShootData = (MstShoot*)ptr;
+	ptr += _mstHdr.shootDataCount * sizeof(MstShoot);
+	_mstShootIndexData = (MstShootIndex*)ptr;
+	ptr += _mstHdr.shootIndexDataCount * sizeof(MstShootIndex);
+	_mstActionDirectionData = (MstActionDirectionMask*)ptr;
+	ptr += _mstHdr.actionDirectionDataCount * sizeof(MstActionDirectionMask);
+	_mstOp223Data = (MstOp223Data*)ptr;
+	ptr += _mstHdr.op223DataCount * sizeof(MstOp223Data);
+	_mstOp226Data = (MstOp226Data*)ptr;
+	ptr += _mstHdr.op226DataCount * sizeof(MstOp226Data);
+	_mstOp227Data = (MstOp227Data*)ptr;
+	ptr += _mstHdr.op227DataCount * sizeof(MstOp227Data);
+	_mstOp234Data = (MstOp234Data*)ptr;
+	ptr += _mstHdr.op234DataCount * sizeof(MstOp234Data);
+	_mstOp2Data = (MstOp2Data*)ptr;
+	ptr += _mstHdr.op2DataCount * sizeof(MstOp2Data);
+	_mstOp197Data = (MstOp197Data*)ptr;
+	ptr += _mstHdr.op197DataCount * sizeof(MstOp197Data);
+	_mstOp211Data = (MstOp211Data*)ptr;
+	ptr += _mstHdr.op211DataCount * sizeof(MstOp211Data);
+	_mstOp240Data = (MstOp240Data*)ptr;
+	ptr += _mstHdr.op240DataCount * sizeof(MstOp240Data);
+	_mstUnk60 = (uint32_t*)ptr;
+	ptr += _mstHdr.unk0x70 * sizeof(uint32_t);
+	_mstOp204Data = (MstOp204Data*)ptr;
+	ptr += _mstHdr.op204DataCount * sizeof(MstOp204Data);
+}
+
+//emu_printf("screensCount %d\n", _mstHdr.screensCount);
+//emu_printf("_mstHdr.version %d _mstHdr.codeSize %d\n", _mstHdr.version, _mstHdr.codeSize);
 	fp->seek(2048, SEEK_SET); // align to the next sector
 
 	int bytesRead = 0;
-////emu_printf("_mstHdr.screensCount\n");
 //	_mstPointOffsets.allocate(_level, _mstHdr.screensCount);
-	_mstPointOffsets = (MstPointOffset*)allocate_memory(_level, TYPE_RES, _mstHdr.screensCount * sizeof(MstPointOffset));
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstPointOffsets[i].xOffset = fp->readUint32();
 		_mstPointOffsets[i].yOffset = fp->readUint32();
-////emu_printf("vbt0 screensCount %d x %d y %d\n",i, _mstPointOffsets[i].xOffset, _mstPointOffsets[i].yOffset);
+//emu_printf("vbt0 screensCount %d x %d y %d\n",i, _mstPointOffsets[i].xOffset, _mstPointOffsets[i].yOffset);
 		bytesRead += 8;
 	}
 
 //	_mstWalkBoxData.allocate(_level, _mstHdr.walkBoxDataCount);
-	_mstWalkBoxData = (MstWalkBox*)allocate_memory(_level, TYPE_RES, _mstHdr.walkBoxDataCount * sizeof(MstWalkBox));
 	for (int i = 0; i < _mstHdr.walkBoxDataCount; ++i) {
 		_mstWalkBoxData[i].right  = fp->readUint32();
 		_mstWalkBoxData[i].left   = fp->readUint32();
@@ -1770,12 +1864,10 @@ if(_mstCodeData==0)
 		_mstWalkBoxData[i].flags[2] = fp->readByte();
 		_mstWalkBoxData[i].flags[3] = fp->readByte();
 ////emu_printf("vbt0 %d walkBoxDataCount r%d l %d b %d t %d\n", i, _mstWalkBoxData[i].right, _mstWalkBoxData[i].left, _mstWalkBoxData[i].bottom, _mstWalkBoxData[i].top);
-
 		bytesRead += 20;
 	}
 
 //	_mstWalkCodeData.allocate(_level, _mstHdr.walkCodeDataCount);
-	_mstWalkCodeData = (MstWalkCode*)allocate_memory(_level, TYPE_RES, _mstHdr.walkCodeDataCount * sizeof(MstWalkCode));
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		fp->skipUint32();
 		_mstWalkCodeData[i].codeDataCount = fp->readUint32();
@@ -1807,7 +1899,6 @@ if(_mstCodeData==0)
 	}
 
 //	_mstMovingBoundsIndexData.allocate(_level, _mstHdr.movingBoundsIndexDataCount);
-	_mstMovingBoundsIndexData = (MstMovingBoundsIndex*)allocate_memory(_level, TYPE_RES, _mstHdr.movingBoundsIndexDataCount * sizeof(MstMovingBoundsIndex));
 	for (int i = 0; i < _mstHdr.movingBoundsIndexDataCount; ++i) {
 		_mstMovingBoundsIndexData[i].indexUnk49 = fp->readUint32();
 ////emu_printf("_mstMovingBoundsIndexData[i].indexUnk49 %d\n",_mstMovingBoundsIndexData[i].indexUnk49);
@@ -1819,14 +1910,10 @@ if(_mstCodeData==0)
 	}
 
 	_mstTickDelay    = fp->readUint32();
-////emu_printf("_mstTickDelay %d\n", _mstTickDelay);
 	_mstTickCodeData = fp->readUint32();
-////emu_printf("_mstTickCodeData %d\n", _mstTickCodeData);
 	bytesRead += 8;
-////emu_printf("_mstHdr.levelCheckpointCodeDataCount %d\n", _mstHdr.levelCheckpointCodeDataCount);
 
 //	_mstLevelCheckpointCodeData.allocate(_level, _mstHdr.levelCheckpointCodeDataCount);
-	_mstLevelCheckpointCodeData = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.levelCheckpointCodeDataCount * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.levelCheckpointCodeDataCount; ++i) {
 		_mstLevelCheckpointCodeData[i] = fp->readUint32();
 ////emu_printf("_mstLevelCheckpointCodeData[%d] %d\n", i, _mstLevelCheckpointCodeData[i]);
@@ -1834,9 +1921,7 @@ if(_mstCodeData==0)
 	}
 
 //	_mstScreenAreaData.allocate(_level, _mstHdr.screenAreaDataCount);
-	_mstScreenAreaData = (MstScreenArea*)allocate_memory(_level, TYPE_RES, _mstHdr.screenAreaDataCount * sizeof(MstScreenArea));
 ////emu_printf("_mstHdr.screenAreaDataCount %d\n", _mstHdr.screenAreaDataCount);
-
 	for (int i = 0; i < _mstHdr.screenAreaDataCount; ++i) {
 		MstScreenArea *msac = &_mstScreenAreaData[i];
 		msac->x1 = fp->readUint32();
@@ -1859,18 +1944,14 @@ if(_mstCodeData==0)
 ////emu_printf("msac->codeData %d\n", msac->codeData);
 		bytesRead += 36;
 	}
-////emu_printf("_mstHdr.screenAreaIndexDataCount %d\n", _mstHdr.screenAreaIndexDataCount);
 	//	_mstScreenAreaByValueIndexData.allocate(_level, _mstHdr.screenAreaIndexDataCount);
-	_mstScreenAreaByValueIndexData = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.screenAreaIndexDataCount * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.screenAreaIndexDataCount; ++i) {
 		_mstScreenAreaByValueIndexData[i] = fp->readUint32();
-////emu_printf("_mstHdr._mstScreenAreaByValueIndexData[%d] %d\n", i, _mstScreenAreaByValueIndexData[i]);
-
+//emu_printf("_mstHdr._mstScreenAreaByValueIndexData[%d] %d\n", i, _mstScreenAreaByValueIndexData[i]);
 		bytesRead += 4;
 	}
 
 	//	_mstScreenAreaByPosIndexData.allocate(_level, _mstHdr.screensCount);
-	_mstScreenAreaByPosIndexData = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.screensCount * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstScreenAreaByPosIndexData[i] = fp->readUint32();
 //emu_printf("_mstScreenAreaByPosIndexData %d value %d\n", i, _mstScreenAreaByPosIndexData[i] );		
@@ -1878,14 +1959,12 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstUnk41.allocate(_level, _mstHdr.screensCount);
-	_mstUnk41 = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.screensCount * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.screensCount; ++i) {
 		_mstUnk41[i] = fp->readUint32();
 		bytesRead += 4;
 	}
 
 	//	_mstBehaviorIndexData.allocate(_level, _mstHdr.behaviorIndexDataCount);
-	_mstBehaviorIndexData = (MstBehaviorIndex*)allocate_memory(_level, TYPE_RES, _mstHdr.behaviorIndexDataCount * sizeof(MstBehaviorIndex));
 	for (int i = 0; i < _mstHdr.behaviorIndexDataCount; ++i) {
 		fp->skipUint32();
 		_mstBehaviorIndexData[i].count1 = fp->readUint32();
@@ -1910,9 +1989,8 @@ if(_mstCodeData==0)
 			bytesRead += readBytesAlign(fp, _mstBehaviorIndexData[i].data, _mstBehaviorIndexData[i].dataCount);
 		}
 	}
-////emu_printf("x1\n");
+
 	//	_mstMonsterActionIndexData.allocate(_level, _mstHdr.monsterActionIndexDataCount);
-	_mstMonsterActionIndexData = (MstMonsterActionIndex*)allocate_memory(_level, TYPE_RES, _mstHdr.monsterActionIndexDataCount * sizeof(MstMonsterActionIndex));
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
 		fp->skipUint32();
 		_mstMonsterActionIndexData[i].count1 = fp->readUint32();
@@ -1928,7 +2006,7 @@ if(_mstCodeData==0)
 		}
 		bytesRead += 16;
 	}
-////emu_printf("x2\n");
+	
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
 		for (uint32_t j = 0; j < _mstMonsterActionIndexData[i].count1; ++j) {
 			_mstMonsterActionIndexData[i].indexUnk48[j] = fp->readUint32();
@@ -1938,9 +2016,8 @@ if(_mstCodeData==0)
 			bytesRead += readBytesAlign(fp, _mstMonsterActionIndexData[i].data, _mstMonsterActionIndexData[i].dataCount);
 		}
 	}
-////emu_printf("x3\n");
+
 	//	_mstWalkPathData.allocate(_level, _mstHdr.walkPathDataCount);
-	_mstWalkPathData = (MstWalkPath*)allocate_memory(_level, TYPE_RES, _mstHdr.walkPathDataCount * sizeof(MstWalkPath));
 	for (int i = 0; i < _mstHdr.walkPathDataCount; ++i) {
 		fp->skipUint32();
 		fp->skipUint32();
@@ -1948,7 +2025,7 @@ if(_mstCodeData==0)
 		_mstWalkPathData[i].count = fp->readUint32();
 		bytesRead += 16;
 	}
-////emu_printf("x4\n");
+
 	for (int i = 0; i < _mstHdr.walkPathDataCount; ++i) {
 		const int count = _mstWalkPathData[i].count;
 //		_mstWalkPathData[i].data = (MstWalkNode *)malloc(sizeof(MstWalkNode) * count);
@@ -2000,9 +2077,8 @@ if(_mstCodeData==0)
 			}
 		}
 	}
-////emu_printf("x7\n");
+
 	//	_mstInfoMonster2Data.allocate(_level, _mstHdr.infoMonster2Count);
-	_mstInfoMonster2Data = (MstInfoMonster2*)allocate_memory(_level, TYPE_RES, _mstHdr.infoMonster2Count * sizeof(MstInfoMonster2));
 	for (int i = 0; i < _mstHdr.infoMonster2Count; ++i) {
 		_mstInfoMonster2Data[i].type = fp->readByte();
 		_mstInfoMonster2Data[i].shootMask = fp->readByte();
@@ -2011,15 +2087,13 @@ if(_mstCodeData==0)
 		_mstInfoMonster2Data[i].codeData2 = fp->readUint32();
 		bytesRead += 12;
 	}
-////emu_printf("x8\n");
+
 	//	_mstBehaviorData.allocate(_level, _mstHdr.behaviorDataCount);
-	_mstBehaviorData = (MstBehavior*)allocate_memory(_level, TYPE_RES, _mstHdr.behaviorDataCount * sizeof(MstBehavior));
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 		fp->skipUint32();
 		_mstBehaviorData[i].count = fp->readUint32();
 		bytesRead += 8;
 	}
-////emu_printf("x9\n");
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 //		_mstBehaviorData[i].data  = (MstBehaviorState *)malloc(_mstBehaviorData[i].count * sizeof(MstBehaviorState));
 		_mstBehaviorData[i].data = (MstBehaviorState *)allocate_memory (_level, TYPE_MONSTER1, _mstBehaviorData[i].count * sizeof(MstBehaviorState));
@@ -2041,24 +2115,22 @@ if(_mstCodeData==0)
 			_mstBehaviorData[i].data[j].codeData    = READ_LE_UINT32(data + 0x28);
 		}
 	}
-////emu_printf("x10\n");
+
 	//	_mstAttackBoxData.allocate(_level, _mstHdr.attackBoxDataCount);
-	_mstAttackBoxData = (MstAttackBox*)allocate_memory(_level, TYPE_RES, _mstHdr.attackBoxDataCount * sizeof(MstAttackBox));
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 		fp->skipUint32();
 		_mstAttackBoxData[i].count = fp->readUint32();
 		bytesRead += 8;
 	}
-////emu_printf("x11\n");
+
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 //		_mstAttackBoxData[i].data = (uint8_t *)malloc(_mstAttackBoxData[i].count * 20);
 		_mstAttackBoxData[i].data = (uint8_t *)allocate_memory (_level, TYPE_MONSTER1, _mstAttackBoxData[i].count * 20);
 		fp->read(_mstAttackBoxData[i].data, _mstAttackBoxData[i].count * 20);
 		bytesRead += _mstAttackBoxData[i].count * 20;
 	}
-////emu_printf("x12\n");
+
 	//	_mstMonsterActionData.allocate(_level, _mstHdr.monsterActionDataCount);
-	_mstMonsterActionData = (MstMonsterAction*)allocate_memory(_level, TYPE_RES, _mstHdr.monsterActionDataCount * sizeof(MstMonsterAction));
 	for (int i = 0; i < _mstHdr.monsterActionDataCount; ++i) {
 		MstMonsterAction *m = &_mstMonsterActionData[i];
 		m->xRange = fp->readUint16();
@@ -2075,7 +2147,7 @@ if(_mstCodeData==0)
 		m->count[1] = fp->readUint32();
 		bytesRead += 44;
 	}
-////emu_printf("x13\n");
+
 	for (int i = 0; i < _mstHdr.monsterActionDataCount; ++i) {
 		MstMonsterAction *m = &_mstMonsterActionData[i];
 		for (int j = 0; j < 2; ++j) {
@@ -2100,7 +2172,7 @@ if(_mstCodeData==0)
 		}
 //		MstMonsterArea *m12 = (MstMonsterArea *)malloc(m->areaCount * sizeof(MstMonsterArea));
 		MstMonsterArea *m12 = (MstMonsterArea *)allocate_memory (_level, TYPE_MONSTER1, m->areaCount * sizeof(MstMonsterArea));
-////emu_printf("x14 %p count %d\n", cs1ram, m->areaCount);
+
 		for (int j = 0; j < m->areaCount; ++j) {
 			m12[j].unk0  = fp->readByte();
 			fp->skipByte();
@@ -2145,17 +2217,14 @@ if(_mstCodeData==0)
 		}
 		m->area = m12;
 	}
-////emu_printf("x16\n");
 	const int mapDataSize = _mstHdr.infoMonster1Count * kMonsterInfoDataSize;
 	
-////emu_printf("malloc(mapDataSize) %d\n", mapDataSize);
 //	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
 	_mstMonsterInfos = (uint8_t *)allocate_memory (_level, TYPE_MAP, mapDataSize);
 	fp->read(_mstMonsterInfos, mapDataSize);
 	bytesRead += mapDataSize;
 
 	//	_mstMovingBoundsData.allocate(_level, _mstHdr.movingBoundsDataCount);
-	_mstMovingBoundsData = (MstMovingBounds*)allocate_memory(_level, TYPE_RES, _mstHdr.movingBoundsDataCount * sizeof(MstMovingBounds));
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 		_mstMovingBoundsData[i].indexMonsterInfo = fp->readUint32();
 ////emu_printf("_mstMovingBoundsData[%d].indexMonsterInfo %d\n", i, _mstMovingBoundsData[i].indexMonsterInfo);
@@ -2169,7 +2238,7 @@ if(_mstCodeData==0)
 		_mstMovingBoundsData[i].unk17   = fp->readByte();
 		bytesRead += 24;
 	}
-////emu_printf("x17\n");
+
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 //		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)malloc(_mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
 		_mstMovingBoundsData[i].data1 = (MstMovingBoundsUnk1 *)allocate_memory (_level, TYPE_MOVBOUND, _mstMovingBoundsData[i].count1 * sizeof(MstMovingBoundsUnk1));
@@ -2202,7 +2271,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstShootData.allocate(_level, _mstHdr.shootDataCount);
-	_mstShootData = (MstShoot*)allocate_memory(_level, TYPE_RES, _mstHdr.shootDataCount * sizeof(MstShoot));
 	for (int i = 0; i < _mstHdr.shootDataCount; ++i) {
 		_mstShootData[i].data  = 0; fp->skipUint32();
 		_mstShootData[i].count = fp->readUint32();
@@ -2227,7 +2295,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstShootIndexData.allocate(_level, _mstHdr.shootIndexDataCount);
-	_mstShootIndexData = (MstShootIndex*)allocate_memory(_level, TYPE_RES, _mstHdr.shootIndexDataCount * sizeof(MstShootIndex));
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {
 		_mstShootIndexData[i].indexUnk50 = fp->readUint32();
 		assert(_mstShootIndexData[i].indexUnk50 < (uint32_t)_mstHdr.shootDataCount);
@@ -2248,7 +2315,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstActionDirectionData.allocate(_level, _mstHdr.actionDirectionDataCount);
-	_mstActionDirectionData = (MstActionDirectionMask*)allocate_memory(_level, TYPE_RES, _mstHdr.actionDirectionDataCount * sizeof(MstActionDirectionMask));
 	for (int i = 0; i < _mstHdr.actionDirectionDataCount; ++i) {
 		_mstActionDirectionData[i].unk0 = fp->readByte();
 		_mstActionDirectionData[i].unk1 = fp->readByte();
@@ -2258,7 +2324,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp223Data.allocate(_level, _mstHdr.op223DataCount);
-	_mstOp223Data = (MstOp223Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op223DataCount * sizeof(MstOp223Data));
 	for (int i = 0; i < _mstHdr.op223DataCount; ++i) {
 		_mstOp223Data[i].indexVar1 = fp->readUint16();
 		_mstOp223Data[i].indexVar2 = fp->readUint16();
@@ -2275,7 +2340,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp226Data.allocate(_level, _mstHdr.op226DataCount);
-	_mstOp226Data = (MstOp226Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op226DataCount * sizeof(MstOp226Data));
 	for (int i = 0; i < _mstHdr.op226DataCount; ++i) {
 		_mstOp226Data[i].unk0 = fp->readByte();
 		_mstOp226Data[i].unk1 = fp->readByte();
@@ -2289,7 +2353,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp227Data.allocate(_level, _mstHdr.op227DataCount);
-	_mstOp227Data = (MstOp227Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op227DataCount * sizeof(MstOp227Data));
 	for (int i = 0; i < _mstHdr.op227DataCount; ++i) {
 		_mstOp227Data[i].indexVar1 = fp->readUint16();
 		_mstOp227Data[i].indexVar2 = fp->readUint16();
@@ -2300,7 +2363,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp234Data.allocate(_level, _mstHdr.op234DataCount);
-	_mstOp234Data = (MstOp234Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op234DataCount * sizeof(MstOp234Data));
 	for (int i = 0; i < _mstHdr.op234DataCount; ++i) {
 		_mstOp234Data[i].indexVar1 = fp->readUint16();
 		_mstOp234Data[i].indexVar2 = fp->readUint16();
@@ -2311,7 +2373,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp2Data.allocate(_level, _mstHdr.op2DataCount);
-	_mstOp2Data = (MstOp2Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op2DataCount * sizeof(MstOp2Data));
 	for (int i = 0; i < _mstHdr.op2DataCount; ++i) {
 		_mstOp2Data[i].indexVar1 = fp->readUint32();
 		_mstOp2Data[i].indexVar2 = fp->readUint32();
@@ -2323,7 +2384,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp197Data.allocate(_level, _mstHdr.op197DataCount);
-	_mstOp197Data = (MstOp197Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op197DataCount * sizeof(MstOp197Data));
 	for (int i = 0; i < _mstHdr.op197DataCount; ++i) {
 		_mstOp197Data[i].unk0 = fp->readUint16();
 		_mstOp197Data[i].unk2 = fp->readUint16();
@@ -2337,7 +2397,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp211Data.allocate(_level, _mstHdr.op211DataCount);
-	_mstOp211Data = (MstOp211Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op211DataCount * sizeof(MstOp211Data));
 	for (int i = 0; i < _mstHdr.op211DataCount; ++i) {
 		_mstOp211Data[i].indexVar1 = fp->readUint16();
 		_mstOp211Data[i].indexVar2 = fp->readUint16();
@@ -2354,7 +2413,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp240Data.allocate(_level, _mstHdr.op240DataCount);
-	_mstOp240Data = (MstOp240Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op240DataCount * sizeof(MstOp240Data));
 	for (int i = 0; i < _mstHdr.op240DataCount; ++i) {
 		_mstOp240Data[i].flags    = fp->readUint32();
 		_mstOp240Data[i].codeData = fp->readUint32();
@@ -2362,7 +2420,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstUnk60.allocate(_level, _mstHdr.unk0x70);
-	_mstUnk60 = (uint32_t*)allocate_memory(_level, TYPE_RES, _mstHdr.unk0x70 * sizeof(uint32_t));
 	for (int i = 0; i < _mstHdr.unk0x70; ++i) {
 		_mstUnk60[i] = fp->readUint32();
 		bytesRead += 4;
@@ -2374,7 +2431,6 @@ if(_mstCodeData==0)
 	}
 
 	//	_mstOp204Data.allocate(_level, _mstHdr.op204DataCount);
-	_mstOp204Data = (MstOp204Data*)allocate_memory(_level, TYPE_RES, _mstHdr.op204DataCount * sizeof(MstOp204Data));
 	for (int i = 0; i < _mstHdr.op204DataCount; ++i) {
 		_mstOp204Data[i].arg0 = fp->readUint32();
 		_mstOp204Data[i].arg1 = fp->readUint32();
@@ -2384,7 +2440,6 @@ if(_mstCodeData==0)
 	}
 
 //	_mstCodeData = (uint8_t *)malloc(_mstHdr.codeSize * 4);
-//	_mstCodeData = (uint8_t *)allocate_memory (TYPE_MSTCODE, _mstHdr.codeSize * 4);
 	fp->read(_mstCodeData, _mstHdr.codeSize * 4);
 	bytesRead += _mstHdr.codeSize * 4;
 /*
