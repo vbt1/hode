@@ -1893,7 +1893,7 @@ if (_mstResData == 0)
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
 			_mstWalkCodeData[i].indexData = IndexDataPtr;
 			IndexDataPtr += _mstWalkCodeData[i].indexDataCount;
-			bytesRead = readBytesAlign(fp, _mstWalkCodeData[i].indexData, _mstWalkCodeData[i].indexDataCount);
+			bytesRead += readBytesAlign(fp, _mstWalkCodeData[i].indexData, _mstWalkCodeData[i].indexDataCount);
 		} else {
 			_mstWalkCodeData[i].indexData = 0;
 		}
