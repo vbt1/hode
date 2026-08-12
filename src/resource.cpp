@@ -2100,15 +2100,23 @@ if (_mstResData == 0)
 		bytesRead += 12;
 	}
 
+	totalCount = 0;
 	//	_mstBehaviorData.allocate(_level, _mstHdr.behaviorDataCount);
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 		fp->skipUint32();
 		_mstBehaviorData[i].count = fp->readUint32();
+		totalCount += _mstBehaviorData[i].count;
 		bytesRead += 8;
 	}
+
+	MstBehaviorState *behaviorStatePtr = (MstBehaviorState *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(MstBehaviorState));
+
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 //		_mstBehaviorData[i].data  = (MstBehaviorState *)malloc(_mstBehaviorData[i].count * sizeof(MstBehaviorState));
-		_mstBehaviorData[i].data = (MstBehaviorState *)allocate_memory (_level, TYPE_MONSTER1, _mstBehaviorData[i].count * sizeof(MstBehaviorState));
+//		_mstBehaviorData[i].data = (MstBehaviorState *)allocate_memory (_level, TYPE_MONSTER1, _mstBehaviorData[i].count * sizeof(MstBehaviorState));
+		_mstBehaviorData[i].data = (MstBehaviorState *)behaviorStatePtr;
+		behaviorStatePtr += _mstBehaviorData[i].count;
+
 		for (uint32_t j = 0; j < _mstBehaviorData[i].count; ++j) {
 			uint8_t data[44];
 			fp->read(data, sizeof(data));
@@ -2129,15 +2137,22 @@ if (_mstResData == 0)
 	}
 
 	//	_mstAttackBoxData.allocate(_level, _mstHdr.attackBoxDataCount);
+	totalCount = 0;
+	
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 		fp->skipUint32();
 		_mstAttackBoxData[i].count = fp->readUint32();
+		totalCount += _mstAttackBoxData[i].count;
 		bytesRead += 8;
 	}
 
+	uint8_t *attackBoxPtr = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * 20);
+
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 //		_mstAttackBoxData[i].data = (uint8_t *)malloc(_mstAttackBoxData[i].count * 20);
-		_mstAttackBoxData[i].data = (uint8_t *)allocate_memory (_level, TYPE_MONSTER1, _mstAttackBoxData[i].count * 20);
+//		_mstAttackBoxData[i].data = (uint8_t *)allocate_memory (_level, TYPE_MONSTER1, _mstAttackBoxData[i].count * 20);
+		_mstAttackBoxData[i].data = attackBoxPtr;
+		attackBoxPtr += (_mstAttackBoxData[i].count*20);
 		fp->read(_mstAttackBoxData[i].data, _mstAttackBoxData[i].count * 20);
 		bytesRead += _mstAttackBoxData[i].count * 20;
 	}
