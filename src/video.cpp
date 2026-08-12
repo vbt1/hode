@@ -42,7 +42,7 @@ Video::Video() {
 #if 1
 	if(hwram_work == 0)
 	{
-		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+41000); // ne pas trop monter
+		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+40000); // ne pas trop monter
 		emu_printf("--hwram_work start %p\n", hwram_work);
 		hwram_work_paf   = hwram_work;
 		_shadowLayer     = allocate_memory(-1, TYPE_LAYER, W * H + 1);
