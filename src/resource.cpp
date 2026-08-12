@@ -1868,33 +1868,34 @@ if (_mstResData == 0)
 	}
 
 //	_mstWalkCodeData.allocate(_level, _mstHdr.walkCodeDataCount);
+	uint32_t codeDataTotalCount = 0;
+	uint32_t indexDataTotalSize = 0;
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		fp->skipUint32();
 		_mstWalkCodeData[i].codeDataCount = fp->readUint32();
-//		_mstWalkCodeData[i].codeData = (uint32_t *)malloc(_mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
-		_mstWalkCodeData[i].codeData = (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, _mstWalkCodeData[i].codeDataCount * sizeof(uint32_t));
+		codeDataTotalCount += _mstWalkCodeData[i].codeDataCount;
 		fp->skipUint32();
 		_mstWalkCodeData[i].indexDataCount = fp->readUint32();
-////emu_printf("_mstWalkCodeData[%d].indexDataCount %d\n",i,_mstWalkCodeData[i].indexDataCount);
-		if (_mstWalkCodeData[i].indexDataCount != 0) {
-//			_mstWalkCodeData[i].indexData = (uint8_t *)malloc(_mstWalkCodeData[i].indexDataCount);
-			_mstWalkCodeData[i].indexData = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, _mstWalkCodeData[i].indexDataCount);
-		} else {
-			_mstWalkCodeData[i].indexData = 0;
-		}
+		indexDataTotalSize += _mstWalkCodeData[i].indexDataCount;
 		bytesRead += 16;
 	}
 
+	uint32_t *Ptr = (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, codeDataTotalCount * sizeof(uint32_t));
+	uint8_t *IndexDataPtr = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, indexDataTotalSize);
+
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
+		_mstWalkCodeData[i].codeData = Ptr;
+		Ptr += _mstWalkCodeData[i].codeDataCount;
 		for (uint32_t j = 0; j < _mstWalkCodeData[i].codeDataCount; ++j) {
 			_mstWalkCodeData[i].codeData[j] = fp->readUint32();
-////emu_printf("_mstWalkCodeData[%d].codeData[%d] %d\n",i,j,_mstWalkCodeData[i].codeData[j]);
 			bytesRead += 4;
 		}
 		if (_mstWalkCodeData[i].indexDataCount != 0) {
-			int xx = readBytesAlign(fp, _mstWalkCodeData[i].indexData, _mstWalkCodeData[i].indexDataCount);
-//			//emu_printf("xx %d %d\n",i,xx);
-			bytesRead += xx;
+			_mstWalkCodeData[i].indexData = IndexDataPtr;
+			IndexDataPtr += _mstWalkCodeData[i].indexDataCount;
+			bytesRead = readBytesAlign(fp, _mstWalkCodeData[i].indexData, _mstWalkCodeData[i].indexDataCount);
+		} else {
+			_mstWalkCodeData[i].indexData = 0;
 		}
 	}
 
@@ -1965,55 +1966,66 @@ if (_mstResData == 0)
 	}
 
 	//	_mstBehaviorIndexData.allocate(_level, _mstHdr.behaviorIndexDataCount);
+	uint32_t totalCount = 0;
+	uint32_t totalSize = 0;
 	for (int i = 0; i < _mstHdr.behaviorIndexDataCount; ++i) {
 		fp->skipUint32();
 		_mstBehaviorIndexData[i].count1 = fp->readUint32();
-//		_mstBehaviorIndexData[i].behavior = (uint32_t *)malloc(_mstBehaviorIndexData[i].count1 * sizeof(uint32_t));
-		_mstBehaviorIndexData[i].behavior = (uint32_t *)allocate_memory (_level, TYPE_MONSTER1, _mstBehaviorIndexData[i].count1 * sizeof(uint32_t));
+		totalCount += _mstBehaviorIndexData[i].count1;
 		fp->skipUint32();
 		_mstBehaviorIndexData[i].dataCount = fp->readUint32();
-		if (_mstBehaviorIndexData[i].dataCount != 0) {
-//			_mstBehaviorIndexData[i].data = (uint8_t *)malloc(_mstBehaviorIndexData[i].dataCount);
-			_mstBehaviorIndexData[i].data = (uint8_t *)allocate_memory (_level, TYPE_MONSTER1, _mstBehaviorIndexData[i].dataCount);
-		} else {
-			_mstBehaviorIndexData[i].data = 0;
-		}
+		totalSize += _mstBehaviorIndexData[i].dataCount;
 		bytesRead += 16;
 	}
+
+	Ptr = (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(uint32_t));
+	IndexDataPtr = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalSize);
+
 	for (int i = 0; i < _mstHdr.behaviorIndexDataCount; ++i) {
+		_mstBehaviorIndexData[i].behavior = Ptr;
+		Ptr += _mstBehaviorIndexData[i].count1;
 		for (uint32_t j = 0; j < _mstBehaviorIndexData[i].count1; ++j) {
 			_mstBehaviorIndexData[i].behavior[j] = fp->readUint32();
 			bytesRead += 4;
 		}
 		if (_mstBehaviorIndexData[i].dataCount != 0) {
+			_mstBehaviorIndexData[i].data = IndexDataPtr;
+			IndexDataPtr += _mstBehaviorIndexData[i].dataCount;
 			bytesRead += readBytesAlign(fp, _mstBehaviorIndexData[i].data, _mstBehaviorIndexData[i].dataCount);
+		} else {
+			_mstBehaviorIndexData[i].data = 0;
 		}
 	}
 
 	//	_mstMonsterActionIndexData.allocate(_level, _mstHdr.monsterActionIndexDataCount);
+	totalCount = 0;
+	totalSize = 0;
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
 		fp->skipUint32();
 		_mstMonsterActionIndexData[i].count1 = fp->readUint32();
-//		_mstMonsterActionIndexData[i].indexUnk48 = (uint32_t *)malloc(_mstMonsterActionIndexData[i].count1 * sizeof(uint32_t));
-		_mstMonsterActionIndexData[i].indexUnk48 = (uint32_t *)allocate_memory (_level, TYPE_MONSTER1, _mstMonsterActionIndexData[i].count1 * sizeof(uint32_t));
+		totalCount += _mstMonsterActionIndexData[i].count1;
 		fp->skipUint32();
 		_mstMonsterActionIndexData[i].dataCount = fp->readUint32();
-		if (_mstMonsterActionIndexData[i].dataCount != 0) {
-//			_mstMonsterActionIndexData[i].data = (uint8_t *)malloc(_mstMonsterActionIndexData[i].dataCount);
-			_mstMonsterActionIndexData[i].data = (uint8_t *)allocate_memory (_level, TYPE_MONSTER1, _mstMonsterActionIndexData[i].dataCount);
-		} else {
-			_mstMonsterActionIndexData[i].data = 0;
-		}
+		totalSize += _mstMonsterActionIndexData[i].dataCount;
 		bytesRead += 16;
 	}
-	
+
+	Ptr = (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(uint32_t));
+	IndexDataPtr = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalSize);
+
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
+		_mstMonsterActionIndexData[i].indexUnk48 = Ptr;
+		Ptr += _mstMonsterActionIndexData[i].count1;
 		for (uint32_t j = 0; j < _mstMonsterActionIndexData[i].count1; ++j) {
 			_mstMonsterActionIndexData[i].indexUnk48[j] = fp->readUint32();
 			bytesRead += 4;
 		}
 		if (_mstMonsterActionIndexData[i].dataCount != 0) {
+			_mstMonsterActionIndexData[i].data = IndexDataPtr;
+			IndexDataPtr += _mstMonsterActionIndexData[i].dataCount;
 			bytesRead += readBytesAlign(fp, _mstMonsterActionIndexData[i].data, _mstMonsterActionIndexData[i].dataCount);
+		} else {
+			_mstMonsterActionIndexData[i].data = 0;
 		}
 	}
 
