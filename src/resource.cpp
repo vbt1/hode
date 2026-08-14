@@ -10,6 +10,7 @@
 extern "C" {
 #include 	<sl_def.h>
 Uint8 * _scrapBuffer;
+Uint8 * _mstResData;
 }
 #include "fileio.h"
 #include "fs.h"
@@ -434,21 +435,9 @@ void Resource::loadLevelData(int levelNum) {
 	}
 
 #ifndef USE_LESS_RAM
-	closeDat(_fs, _mstFile);
-//	snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
-	make_filename(filename, sizeof(filename), levelName, "_HOD.MST");
-	if (openDat(_fs, filename, _mstFile)) {
-		loadMstData(_mstFile);
-	} else {
-//emu_printf("xxx Unable to open '%s'\n", filename);
-		memset(&_mstHdr, 0, sizeof(_mstHdr));
-	}
-#else
-//		snprintf(filename, sizeof(filename), "%s_HOD.MST", levelName);
-		make_filename(filename, sizeof(filename), levelName, "_HOD.MST");
-		//emu_printf("yyy Unable to open '%s'\n", filename);
-		memset(&_mstHdr, 0, sizeof(_mstHdr));
+	loadLvlMst(levelNum);
 #endif
+
 #ifdef SOUND
 	closeDat(_fs, _sssFile);
 //	snprintf(filename, sizeof(filename), "%s_HOD.SSS", levelName);
@@ -1684,11 +1673,11 @@ void Resource::preloadSssPcmList(const SssPreloadInfoData *preloadInfoData) {
 }
 #endif
 void Resource::loadMstData(File *fp) {
-//emu_printf("loadMstData\n");
+emu_printf("loadMstData\n");
 //	assert(fp == _mstFile);
 
 	if (_mstHdr.dataSize != 0) {
-//emu_printf("unloadMstData\n");
+emu_printf("unloadMstData\n");
 		unloadMstData();
 		_mstHdr.dataSize = 0;
 	}
@@ -1701,7 +1690,7 @@ void Resource::loadMstData(File *fp) {
 	}
 
 	_mstHdr.dataSize = fp->readUint32();
-////emu_printf("dataSize %d\n", _mstHdr.dataSize);
+emu_printf("dataSize %d\n", _mstHdr.dataSize);
 	_mstHdr.walkBoxDataCount = fp->readUint32();
 ////emu_printf("walkBoxDataCount %d\n", _mstHdr.walkBoxDataCount);
 	_mstHdr.walkCodeDataCount = fp->readUint32();
@@ -1743,10 +1732,12 @@ void Resource::loadMstData(File *fp) {
 
 uint8_t *ptr=NULL;
 
-if (_mstResData == 0)
+if (_mstCodeData == 0)
 {
 	_mstCodeData = (uint8_t *)allocate_memory (_level, TYPE_MSTCODE, _mstHdr.codeSize * 4);
-	ptr = _mstResData  = (uint8_t *)allocate_memory(_level, TYPE_RES,
+emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeSize * 4));
+}
+	ptr = _mstResData;/*  = (uint8_t *)allocate_memory(_level, TYPE_RES,
 		  _mstHdr.screensCount * sizeof(MstPointOffset)
 		+ _mstHdr.walkBoxDataCount * sizeof(MstWalkBox)
 		+ _mstHdr.walkCodeDataCount * sizeof(MstWalkCode)
@@ -1777,7 +1768,7 @@ if (_mstResData == 0)
 		+ _mstHdr.op240DataCount * sizeof(MstOp240Data)
 		+ _mstHdr.unk0x70 * sizeof(uint32_t)
 		+ _mstHdr.op204DataCount * sizeof(MstOp204Data)
-	);
+	);*/
 	_mstPointOffsets = (MstPointOffset*)ptr;
 	ptr += _mstHdr.screensCount * sizeof(MstPointOffset);
 	_mstWalkBoxData = (MstWalkBox*)ptr;
@@ -1838,7 +1829,9 @@ if (_mstResData == 0)
 	ptr += _mstHdr.unk0x70 * sizeof(uint32_t);
 	_mstOp204Data = (MstOp204Data*)ptr;
 	ptr += _mstHdr.op204DataCount * sizeof(MstOp204Data);
-}
+	
+	emu_printf("-- _mstResData %p %p end\n", _mstResData, ptr);
+
 
 //emu_printf("screensCount %d\n", _mstHdr.screensCount);
 //emu_printf("_mstHdr.version %d _mstHdr.codeSize %d\n", _mstHdr.version, _mstHdr.codeSize);
@@ -1880,8 +1873,9 @@ if (_mstResData == 0)
 		bytesRead += 16;
 	}
 
-	uint32_t *Ptr = (codeDataTotalCount != 0) ? (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, codeDataTotalCount * sizeof(uint32_t)) : 0;
-	uint8_t *IndexDataPtr = (indexDataTotalSize != 0) ? (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, indexDataTotalSize) : 0;
+	uint8_t *base = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, codeDataTotalCount * sizeof(uint32_t) + indexDataTotalSize);
+	uint32_t *Ptr = (uint32_t *)base;
+	uint8_t *IndexDataPtr = base + codeDataTotalCount * sizeof(uint32_t);
 
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 		_mstWalkCodeData[i].codeData = Ptr;
@@ -1977,8 +1971,9 @@ if (_mstResData == 0)
 		bytesRead += 16;
 	}
 
-	Ptr = (totalCount != 0) ? (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(uint32_t)) : 0;
-	IndexDataPtr = (totalSize != 0) ? (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalSize) : 0;
+	base = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(uint32_t) + totalSize);
+	Ptr = (uint32_t *)base;
+	IndexDataPtr = base + totalCount * sizeof(uint32_t);
 
 	for (int i = 0; i < _mstHdr.behaviorIndexDataCount; ++i) {
 		_mstBehaviorIndexData[i].behavior = Ptr;
@@ -2008,8 +2003,9 @@ if (_mstResData == 0)
 		bytesRead += 16;
 	}
 
-	Ptr = (totalCount != 0) ? (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(uint32_t)) : 0;
-	IndexDataPtr = (totalSize != 0) ? (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalSize) : 0;
+	base = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(uint32_t) + totalSize);
+	Ptr = (uint32_t *)base;
+	IndexDataPtr = base + totalCount * sizeof(uint32_t);
 
 	for (int i = 0; i < _mstHdr.monsterActionIndexDataCount; ++i) {
 		_mstMonsterActionIndexData[i].indexUnk48 = Ptr;
@@ -2039,9 +2035,11 @@ if (_mstResData == 0)
 		bytesRead += 16;
 	}
 
-	MstWalkNode *nodePtr = (totalCount != 0) ? (MstWalkNode *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(MstWalkNode)) : 0;
-	Ptr = (_mstHdr.walkPathDataCount != 0) ? (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, _mstHdr.walkPathDataCount * _mstHdr.screensCount * sizeof(uint32_t)) : 0;
-	IndexDataPtr = (totalSize != 0) ? (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalSize) : 0;
+	const uint32_t walkNodeDataTotalSize = _mstHdr.walkPathDataCount * _mstHdr.screensCount * sizeof(uint32_t);
+	base = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(MstWalkNode) + walkNodeDataTotalSize + totalSize);
+	MstWalkNode *nodePtr = (MstWalkNode *)base;
+	Ptr = (uint32_t *)(base + totalCount * sizeof(MstWalkNode));
+	IndexDataPtr = base + totalCount * sizeof(MstWalkNode) + walkNodeDataTotalSize;
 
 	for (int i = 0; i < _mstHdr.walkPathDataCount; ++i) {
 		const int count = _mstWalkPathData[i].count;
@@ -2114,7 +2112,7 @@ if (_mstResData == 0)
 		bytesRead += 8;
 	}
 
-	MstBehaviorState *behaviorStatePtr = (totalCount != 0) ? (MstBehaviorState *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(MstBehaviorState)) : 0;
+	MstBehaviorState *behaviorStatePtr = (MstBehaviorState *)allocate_memory(_level, TYPE_MONSTER1, totalCount * sizeof(MstBehaviorState));
 
 	for (int i = 0; i < _mstHdr.behaviorDataCount; ++i) {
 //		_mstBehaviorData[i].data  = (MstBehaviorState *)malloc(_mstBehaviorData[i].count * sizeof(MstBehaviorState));
@@ -2151,7 +2149,7 @@ if (_mstResData == 0)
 		bytesRead += 8;
 	}
 
-	uint8_t *attackBoxPtr = (totalCount != 0) ? (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * 20) : 0;
+	uint8_t *attackBoxPtr = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, totalCount * 20);
 
 	for (int i = 0; i < _mstHdr.attackBoxDataCount; ++i) {
 //		_mstAttackBoxData[i].data = (uint8_t *)malloc(_mstAttackBoxData[i].count * 20);
@@ -2183,8 +2181,9 @@ if (_mstResData == 0)
 		bytesRead += 44;
 	}
 
-	Ptr = (totalCount != 0) ? (uint32_t *)allocate_memory(_level, TYPE_MONSTER1, 2 * totalCount * sizeof(uint32_t)) : 0;
-	MstMonsterArea *areaPtr = (totalSize != 0) ? (MstMonsterArea *)allocate_memory(_level, TYPE_MONSTER1, totalSize * sizeof(MstMonsterArea)) : 0;
+	base = (uint8_t *)allocate_memory(_level, TYPE_MONSTER1, 2 * totalCount * sizeof(uint32_t) + totalSize * sizeof(MstMonsterArea));
+	Ptr = (uint32_t *)base;
+	MstMonsterArea *areaPtr = (MstMonsterArea *)(base + 2 * totalCount * sizeof(uint32_t));
 
 	for (int i = 0; i < _mstHdr.monsterActionDataCount; ++i) {
 		MstMonsterAction *m = &_mstMonsterActionData[i];
@@ -2264,8 +2263,9 @@ if (_mstResData == 0)
 		bytesRead += 24;
 	}
 
-	MstMovingBoundsUnk1 *movBoundPtr = (totalCount != 0) ? (MstMovingBoundsUnk1 *)allocate_memory(_level, TYPE_MOVBOUND, totalCount * sizeof(MstMovingBoundsUnk1)) : 0;
-	IndexDataPtr = (totalSize != 0) ? (uint8_t *)allocate_memory(_level, TYPE_MOVBOUND, totalSize) : 0;
+	base = (uint8_t *)allocate_memory(_level, TYPE_MOVBOUND, totalCount * sizeof(MstMovingBoundsUnk1) + totalSize);
+	MstMovingBoundsUnk1 *movBoundPtr = (MstMovingBoundsUnk1 *)base;
+	IndexDataPtr = base + totalCount * sizeof(MstMovingBoundsUnk1);
 
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 		_mstMovingBoundsData[i].data1 = movBoundPtr;
@@ -2307,7 +2307,7 @@ if (_mstResData == 0)
 		bytesRead += 8;
 	}
 
-	MstShootAction *shootActionPtr = (totalCount != 0) ? (MstShootAction *)allocate_memory(_level, TYPE_SHOOT, totalCount * sizeof(MstShootAction)) : 0;
+	MstShootAction *shootActionPtr = (MstShootAction *)allocate_memory(_level, TYPE_SHOOT, totalCount * sizeof(MstShootAction));
 
 	for (int i = 0; i < _mstHdr.shootDataCount; ++i) {
 		_mstShootData[i].data = shootActionPtr;
@@ -2338,7 +2338,7 @@ if (_mstResData == 0)
 		bytesRead += 12;
 	}
 
-	Ptr = (totalCount != 0) ? (uint32_t *)allocate_memory(_level, TYPE_SHOOT, totalCount * sizeof(uint32_t)) : 0;
+	Ptr = (uint32_t *)allocate_memory(_level, TYPE_SHOOT, totalCount * sizeof(uint32_t));
 
 	for (int i = 0; i < _mstHdr.shootIndexDataCount; ++i) {
 		_mstShootIndexData[i].indexUnk50Unk1 = Ptr;

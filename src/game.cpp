@@ -2516,8 +2516,6 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 	}
 */
 #ifdef USE_LESS_RAM
-// vbt : voir comment restaurer hwram_work correctement
-//	hwram_work = _video->_shadowScreenMaskBuffer + (256 * 192 * 2 + 256 * 4);
  // vbt : à remettre !!!
 // emu_printf("initLvlObjects\n");
 	initLvlObjects();

@@ -705,7 +705,6 @@ struct Resource {
 //	ResStruct<MstOp204Data> _mstOp204Data;
 	MstOp204Data *_mstOp204Data;
 	uint8_t *_mstCodeData;
-	uint8_t *_mstResData;  // vbt ajout pour regrouper les allocations de ressources
 //	ResStruct<MstOp226Data> _mstOp226Data;
 	MstOp226Data *_mstOp226Data;
 

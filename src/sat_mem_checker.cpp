@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "stdlib.h"
-#define DEBUG 1
+//#define DEBUG 1
 
 extern "C" {
 #include <sgl.h>
@@ -68,12 +68,13 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 			if (alignedSize !=2096)
 				return bump(&current_lwram, alignedSize);
 				else
+				return lwram_end - SAT_ALIGN(alignedSize);
 //				return bump(&current_lwram, alignedSize);
 //					return cs1ram;
 //				return bump(&cs1ram, alignedSize);
 //					return _scrapBuffer;
 //					return bump(&hwram_work, alignedSize);
-				return lwram_end - SAT_ALIGN(alignedSize);
+//				return bump(&hwram_work_paf, alignedSize);
 			case TYPE_MENU:
 				return current_lwram; // no increment
 			case TYPE_LAYER:
