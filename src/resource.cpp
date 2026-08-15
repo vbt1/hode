@@ -2242,7 +2242,10 @@ emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeS
 	const int mapDataSize = _mstHdr.infoMonster1Count * kMonsterInfoDataSize;
 	
 //	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
-	_mstMonsterInfos = (uint8_t *)allocate_memory (_level, TYPE_MAP, mapDataSize);
+//	_mstMonsterInfos = (uint8_t *)allocate_memory (_level, TYPE_MAP, mapDataSize);
+emu_printf("_mstMonsterInfos alloc\n");
+	_mstMonsterInfos = (uint8_t *)_mstResData+21000;
+
 	fp->read(_mstMonsterInfos, mapDataSize);
 	bytesRead += mapDataSize;
 
@@ -2485,7 +2488,7 @@ emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeS
 }
 
 void Resource::unloadMstData() {
-//emu_printf("unloadMstData\n");
+emu_printf("unloadMstData\n");
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 //		free(_mstWalkCodeData[i].codeData);
 		_mstWalkCodeData[i].codeData = 0;
@@ -2531,7 +2534,7 @@ void Resource::unloadMstData() {
 	}
 
 //	free(_mstMonsterInfos);
-	_mstMonsterInfos = 0;
+//	_mstMonsterInfos = 0;
 
 	for (int i = 0; i < _mstHdr.movingBoundsDataCount; ++i) {
 //		free(_mstMovingBoundsData[i].data1);

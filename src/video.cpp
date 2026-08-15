@@ -8,8 +8,6 @@
 //#define USE_FONT 1
 extern "C" {
 #include <sl_def.h>
-extern Uint8 *_scrapBuffer;
-extern Uint8 *_mstResData;
 }
 #include "game.h"
 #include "menu.h"
@@ -20,44 +18,25 @@ extern Uint8 *_mstResData;
 #include "util.h"
 //#define PRELOAD_ANDY 1
 extern "C" {
-extern Uint8 *hwram_work_paf;
 extern Uint32 position_vram;
 extern Uint32 position_vram_save;
 #ifdef PRELOAD_ANDY
 extern SAT_sprite andy_vdp2[284];
 #endif
 extern SAT_sprite _sprData[4];
-int nb_spr=0;
+//int nb_spr=0;
 }
 
 //static const bool kUseShadowColorLut = false;
 //static const bool kUseShadowColorLut = true; // vbt on utilise la lut
 
 Video::Video() {
-//emu_printf("Video\n");
+emu_printf("Video\n");
 	_displayShadowLayer = false;
 	_drawLine.x1 = 0;
 	_drawLine.y1 = 0;
 	_drawLine.x2 = W - 1;
 	_drawLine.y2 = H - 1;
-#if 1
-	if(hwram_work == 0)
-	{
-		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+36000); // ne pas trop monter
-//		emu_printf("--hwram_work start %p\n", hwram_work);
-//		_mstResData = (uint8_t *)0x22400000;
-		_mstResData = hwram_work;
-		hwram_work += 21000;
-		hwram_work_paf   = hwram_work;
-		_shadowLayer     = allocate_memory(-1, TYPE_LAYER, W * H + 1);
-		_frontLayer      = allocate_memory(-1, TYPE_LAYER, W * H);
-		_backgroundLayer = allocate_memory(-1, TYPE_LAYER, W * H);
-		_backgroundLayer2= allocate_memory(-1, TYPE_LDIMG, W * H);
-		_shadowScreenMaskBuffer = allocate_memory(-1, TYPE_LAYER, 256 * 192 * 2 + 256 * 4); //99k
-		_transformShadowBuffer = allocate_memory(-1, TYPE_LAYER, 256 * 192 + 256); //49k
-		_scrapBuffer = _shadowLayer;
-		emu_printf("--hwram_work %p end %p\n", hwram_work_paf, hwram_work);		
-//	emu_printf("_shadow %p _front %p _back %p end %p\n", _shadowLayer, _frontLayer, _backgroundLayer, _backgroundLayer + W * H, hwram_work);
 /*
 		if (kUseShadowColorLut) {
 	//		_shadowColorLookupTable = (uint8_t *)malloc(256 * 256);
@@ -66,21 +45,11 @@ Video::Video() {
 			_shadowColorLookupTable = 0;
 		}
 */
-//		emu_printf("--hwram_work end %p size %d\n", hwram_work, (int)hwram_work-(int)hwram_work_paf);
-//		hwram_work = hwram_work_paf; // vbt : on ne rend pas la ram !!!
-	}
-
-//	_shadowScreenMaskBuffer = (uint8_t *)malloc(256 * 192 * 2 + 256 * 4);
-//	_shadowScreenMaskBuffer = allocate_memory (TYPE_SCRMASKBUF, 256 * 192 * 2 + 256 * 4);
-	/*for (int i = 0; i < 112; ++i) {
-		_shadowColorLut[i] = i + 144;
-	}*/
 //	_transformShadowBuffer = 0;
 	_transformShadowLayerDelta = 0;
 #ifdef PSX
 	memset(&_mdec, 0, sizeof(_mdec));
 	_backgroundPsx = 0;
-#endif
 #endif
 }
 
@@ -776,7 +745,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 		user_sprite.SRCA = tx.CGadr;
 	//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
 		position_vram += size;
-		nb_spr++;
+//		nb_spr++;
 		slSetSprite(&user_sprite, toFIXED2(240));
 		uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
 		memset(dst2, 0x00, size);
@@ -909,7 +878,7 @@ void Video::drawLine(int x1, int y1, int x2, int y2, uint8_t color) {
 	line.XB = ((x2 * 5) >> 1) - 320;
 //	line.XB = x2 - 160;
 	line.YB = y2 - 112+16;
-	nb_spr++;
+//	nb_spr++;
 	slSetSprite(&line, toFIXED2(240));	
 #else	
 	assert(x1 >= _drawLine.x1 && x1 <= _drawLine.x2);

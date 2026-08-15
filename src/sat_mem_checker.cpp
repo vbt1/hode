@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "stdlib.h"
-//#define DEBUG 1
+#define DEBUG 1
 
 extern "C" {
 #include <sgl.h>
@@ -61,6 +61,7 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 			case TYPE_LDIMG:
 			case TYPE_FONT:
 				return bump(&vdp2ram, alignedSize);
+			case TYPE_RES:
 			case TYPE_PAF:
 			case TYPE_PAFBUF:
 				return bump(&hwram_work_paf, alignedSize);
@@ -93,7 +94,7 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 	}
 	else if(level==0)
 	{
-		uint8_t *dst = (uint8_t *)0x20FD00;
+		uint8_t *dst = (uint8_t *)0x210000;
 		switch (type) {	
 		case TYPE_BGLVL:
 // vbt : si lwram > 103424 on ecrase des données
@@ -108,12 +109,12 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 
 		case TYPE_SCRMASKBUF:
 		case TYPE_ANDY:
-		case TYPE_RES:
-		case TYPE_BGLVLOBJ:
-		case TYPE_MAP:
+//		case TYPE_RES:
+		case TYPE_BGLVLOBJ: // pas lui
+///		case TYPE_MAP: // coupable
 //		case TYPE_MSTCODE:
 //		case TYPE_MOVBOUND:
-		case TYPE_MSTAREA:
+		case TYPE_MSTAREA: // pas lui
 		{
 			if (__builtin_expect((int)hwram_work + alignedSize > (int)hwram, 0)) {
 				DPRINTF("ERROR1: %d overflow req:%d miss:%d\n", type, alignedSize,
@@ -121,6 +122,9 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 				return nullptr;
 			}
 			return bump(&hwram_work, alignedSize);
+//			return bump(&cs1ram, alignedSize);
+//		case TYPE_MAP:
+//			return bump(&cs1ram, alignedSize);
 		}
 
 	//    case TYPE_SHADWLUT:// plus utilisé

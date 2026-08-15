@@ -15,7 +15,6 @@
 
 extern "C" {
 #include <sl_def.h>
-extern Uint8 *_scrapBuffer;
 #ifdef FRAME
 unsigned char frame_x = 0;
 unsigned char frame_y = 0;
@@ -25,7 +24,10 @@ extern Uint32 position_vram;
 extern Uint32 position_vram_save;
 extern Uint8 *lwram_end;
 extern Uint8 *hwram;
-extern int nb_spr;
+extern Uint8 *hwram_work;
+extern Uint8 *hwram_work_paf;
+extern Uint8 *_scrapBuffer;
+extern Uint8 *_mstResData;
 void SYS_Exit(Sint32 code);
 };
 #include "game.h"
@@ -54,7 +56,29 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 	_level = 0;
 	_res = new Resource(&_fs);
 	_rnd.setSeed();
+
+		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+36000); // ne pas trop monter
+//		emu_printf("--hwram_work start %p\n", hwram_work);
+//		_mstResData = (uint8_t *)0x22400000;
+//		_mstResData = cs1ram;
+//		_mstResData = (uint8_t *)allocate_memory(-1, TYPE_RES,33000);
+		_mstResData = hwram_work;
+		hwram_work += 33000;
+		hwram_work_paf   = hwram_work;
+
 	_video = new Video();
+
+const int frame = Video::W * Video::H;
+
+		_video->_shadowLayer             = allocate_memory(-1, TYPE_LAYER, frame + 1);
+		_video->_frontLayer              = allocate_memory(-1, TYPE_LAYER, frame);
+		_video->_backgroundLayer         = allocate_memory(-1, TYPE_LAYER, frame);
+		_video->_backgroundLayer2        = allocate_memory(-1, TYPE_LDIMG, frame);
+		_video->_shadowScreenMaskBuffer  = allocate_memory(-1, TYPE_LAYER, frame * 2 + 256 * 4); //99k
+		_video->_transformShadowBuffer   = allocate_memory(-1, TYPE_LAYER, frame + 256); //49k
+		_scrapBuffer = _video->_shadowLayer;
+		emu_printf("--hwram_work %p end %p\n", hwram_work_paf, hwram_work);	
+
 //	_screenMaskBuffer = allocate_memory(TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
 #ifdef PAF
 	_paf = new PafPlayer(&_fs, _video);
@@ -1494,6 +1518,7 @@ void Game::playAndyFallingCutscene(int type) {
 			_paf->play(kPafAnimation_IslandAndyFalling);
 			break;
 		}
+// ne corrige pas les ennemis perdus
 //		lwram_end = (Uint8 *)0x300000;
 //		_res->loadLvlSprite(0, 0);
 	}
@@ -2587,7 +2612,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		slSynch(); // vbt : apres le sleep gagne 3fps
 //		if(nb_spr>85)
 //			emu_printf("nb_spr %d\n", nb_spr);
-		nb_spr=0;
+//		nb_spr=0;
 #ifdef FRAME
 		frame_x++;
 #endif
