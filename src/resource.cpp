@@ -787,7 +787,6 @@ void Resource::loadLvlScreenMaskData() {
 
 static const uint32_t _lvlTag = 0x484F4400; // 'HOD\x00'
 
-//uint8_t *cs1ram_res = NULL;
 uint8_t *hwram_res  = NULL;
 uint8_t *lwram_res  = NULL;
 
@@ -796,7 +795,6 @@ void Resource::loadLvlData(File *fp) {
 //	assert(fp == _lvlFile);
 	if(lwram_res==NULL)
 	{
-//		cs1ram_res = cs1ram;
 		lwram_res = current_lwram;
 		hwram_res = hwram_work;
 	}
@@ -922,10 +920,9 @@ void Resource::loadLvlMst(int levelNum)
 }
 #endif
 void Resource::unloadLvlData() {
-//emu_printf("unloadLvlData\n");
+emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
 //emu_printf("unloadLvlData reset lw %p %p hw %p %p\n",current_lwram, lwram_res, hwram_work, hwram_res);
-//	cs1ram = cs1ram_res;
 	current_lwram = lwram_res;
 	hwram_work = hwram_res;
 	_mstCodeData = 0;
@@ -1013,15 +1010,12 @@ static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, ui
 		return 0;
 	return offsetsSize;
 }
-//uint8_t *cs1ram_bg;
 
 void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //emu_printf("loadLvlScreenBackgroundData %d addr %p\n", num, buf);
 //	assert((unsigned int)num < kMaxScreens);
 	if((unsigned int)num >= kMaxScreens)
 		return;
-//	if(cs1ram_bg==0)
-//	cs1ram_bg = cs1ram;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
 //emu_printf("loadLvlScreenBackgroundData num %d\n", num);
@@ -1045,16 +1039,10 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 //emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
 	
-	uint8_t *ptr = NULL;
-	
-//	if (size <0x20000)
-//		ptr = cs1ram;//_scrapBuffer;
-//	else
-		ptr = allocate_memory (_level, TYPE_BGLVL, size);
-//	uint8_t *ptr2 = (uint8_t *)0x22400000;
+	uint8_t *ptr = allocate_memory (_level, TYPE_BGLVL, size);
+//	uint8_t *ptr = (uint8_t *)0x22400000;
 	
 //emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
-//memset(ptr, 0x00, SAT_ALIGN(readSize));
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
@@ -1088,9 +1076,6 @@ void Resource::unloadLvlScreenBackgroundData(int num) {
 			dat->backgroundLvlObjectDataTable[i] = 0;
 		}
 		memset(dat, 0, sizeof(LvlBackgroundData));
-		
-		if(cs1ram_bg!=0)
-			cs1ram = cs1ram_bg;
 */
 	}
 }
@@ -1105,13 +1090,6 @@ bool Resource::isLvlBackgroundDataLoaded(int num) const {
 
 void Resource::incLvlSpriteDataRefCounter(LvlObject *ptr) {
 	LvlObjectData *dat = _resLevelData0x2988PtrTable[ptr->spriteNum];
-/*
-	if(dat==0)
-	{
-		emu_printf("dat %p ptr->spriteNum %d\n", dat, ptr->spriteNum);
-//		ptr = allocate_memory (TYPE_ANDY, size);
-	}
-*/
 	assert(dat);
 	++dat->refCount;
 	ptr->levelData0x2988 = dat;
@@ -1735,7 +1713,7 @@ uint8_t *ptr=NULL;
 if (_mstCodeData == 0)
 {
 	_mstCodeData = (uint8_t *)allocate_memory (_level, TYPE_MSTCODE, _mstHdr.codeSize * 4);
-emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeSize * 4));
+	emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeSize * 4));
 }
 	ptr = _mstResData;/*  = (uint8_t *)allocate_memory(_level, TYPE_RES,
 		  _mstHdr.screensCount * sizeof(MstPointOffset)
@@ -2219,21 +2197,35 @@ emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeS
 			m12[j].count = fp->readUint32();
 			bytesRead += 12;
 		}
+
+		// Calcul du nombre total d'éléments toutes zones confondues
+		uint32_t totalCount = 0;
 		for (int j = 0; j < m->areaCount; ++j) {
-			m12[j].data = (MstMonsterAreaAction *)allocate_memory (_level, TYPE_MSTAREA, m12[j].count * sizeof(MstMonsterAreaAction));
+			totalCount += m12[j].count;
+		}
+
+		// Une seule allocation pour l'ensemble des zones
+		MstMonsterAreaAction *allData = (MstMonsterAreaAction *)allocate_memory(
+			_level, TYPE_MSTAREA, totalCount * sizeof(MstMonsterAreaAction));
+
+		uint32_t offset = 0;
+		for (int j = 0; j < m->areaCount; ++j) {
+			m12[j].data = allData + offset; // sous-tableau dans le bloc unique
+			offset += m12[j].count;
+
 			for (uint32_t k = 0; k < m12[j].count; ++k) {
 				uint8_t data[28];
 				fp->read(data, sizeof(data));
 				m12[j].data[k].indexMonsterInfo = READ_LE_UINT32(data);
-				m12[j].data[k].indexUnk51 = READ_LE_UINT32(data + 0x4);
-				m12[j].data[k].xPos = READ_LE_UINT32(data + 0x8);
-				m12[j].data[k].yPos = READ_LE_UINT32(data + 0xC);
-				m12[j].data[k].codeData = READ_LE_UINT32(data + 0x10);
-				m12[j].data[k].codeData2 = READ_LE_UINT32(data + 0x14);
-				m12[j].data[k].unk18 = data[0x18];
-				m12[j].data[k].direction = data[0x19];
-				m12[j].data[k].screenNum = data[0x1A];
-				m12[j].data[k].monster1Index = data[0x1B];
+				m12[j].data[k].indexUnk51       = READ_LE_UINT32(data + 0x4);
+				m12[j].data[k].xPos             = READ_LE_UINT32(data + 0x8);
+				m12[j].data[k].yPos             = READ_LE_UINT32(data + 0xC);
+				m12[j].data[k].codeData         = READ_LE_UINT32(data + 0x10);
+				m12[j].data[k].codeData2        = READ_LE_UINT32(data + 0x14);
+				m12[j].data[k].unk18            = data[0x18];
+				m12[j].data[k].direction        = data[0x19];
+				m12[j].data[k].screenNum        = data[0x1A];
+				m12[j].data[k].monster1Index    = data[0x1B];
 				bytesRead += 28;
 			}
 		}

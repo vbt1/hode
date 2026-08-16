@@ -29,7 +29,7 @@ void *malloc(size_t);
 		TYPE_GFSFILE,
 		TYPE_LAYER,
 		TYPE_LDIMG,
-		TYPE_FONT,
+		TYPE_FONT, // pas utilisé
 		TYPE_MENU,   //5
 		TYPE_ANDY,
 		TYPE_SPRITE1,
@@ -37,12 +37,12 @@ void *malloc(size_t);
 		TYPE_SCRMASKBUF,
 		TYPE_SHADSCRMASKBUF,		 //10
 		TYPE_BGLVL,
-		TYPE_BGLVLOBJ,  
+		TYPE_BGLVLOBJ,  // pas utilisé
 		TYPE_SHADWBUF,
 		TYPE_SHADWLUT,
 		TYPE_MONSTER1,	 //15
 		TYPE_MONSTER2,
-		TYPE_TASK,
+		TYPE_TASK,	// pas utilisé
 		TYPE_MSTAREA,
 		TYPE_MAP,       
 		TYPE_MOVBOUND,	//20
@@ -53,7 +53,8 @@ void *malloc(size_t);
 		TYPE_PAF,       //25
 		TYPE_PAFBUF,	
 		TYPE_RES,
-		TYPE_ANDY1
+		TYPE_ANDY1,
+		TYPE_PAFEND1
 	};
 
 

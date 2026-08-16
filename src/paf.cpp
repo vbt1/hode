@@ -22,13 +22,11 @@ extern "C" {
 //void CSH_AllClr(void);
 extern unsigned char frame_x;
 extern unsigned char frame_z;
-//extern Uint8 *cs1ram;
-//extern Uint8 *cs2ram;
 //extern Sint32 iondata;
 Sint32 GFCD_GetBufSiz(void);
 Sint32  CDC_GetBufSiz(Sint32 *totalsiz, Sint32 *bufnum, Sint32 *freesiz);
 uint8_t *hwram_work_paf;
-extern uint8_t *_mstResData;
+extern uint8_t *cs1ram;
 }
 
 // =============================================================================
@@ -211,7 +209,12 @@ emu_printf("readPafHeader\n");
 //	uint8_t *save = current_lwram;
 //	emu_printf("ram to use %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);
     const uint32_t hdrTablesSize = (uint32_t)(_pafHdr.framesCount * 8 + _pafHdr.frameBlocksCount * 4);
-    uint32_t *dst = (uint32_t *)allocate_memory(-1, TYPE_PAFEND, hdrTablesSize);	
+	uint32_t *dst;
+//	if (hdrTablesSize !=2096)
+	dst = (uint32_t *)allocate_memory(-1, TYPE_PAFEND, hdrTablesSize);
+//	else
+//		dst = (uint32_t *)allocate_memory(-1, TYPE_PAFEND1, hdrTablesSize);
+	
 	emu_printf("dst %p sz %d end", dst, hdrTablesSize);
 //	uint32_t *dst = (uint32_t *)allocate_memory(-1, TYPE_PAFEND, _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);
 //	emu_printf("ram used %d\n", _pafHdr.framesCount*8+_pafHdr.frameBlocksCount*4);	
@@ -223,7 +226,7 @@ emu_printf("readPafHeader\n");
 	_pafHdr.frameBlocksOffsetTable = readPafHeaderTable(_pafHdr.frameBlocksCount, dst);
 	dst += _pafHdr.frameBlocksCount;
 //	emu_printf("dst %p fc %d\n", dst, _pafHdr.frameBlocksCount*4);
-//	current_lwram = save;
+
 	emu_printf("%p\n", dst);
 	return _pafHdr.frameBlocksCountTable  != 0
 	    && _pafHdr.framesOffsetTable      != 0
@@ -984,6 +987,7 @@ void PafPlayer::mainLoop() {
 	int currentFrameBlock = 0;
 slSynch();
 	PafAsyncCtx ctx;
+//	ctx.buffers[0] = (uint8_t *)hwram_work_paf;
 	ctx.buffers[0] = (uint8_t *)_bufferBlock+kBufferBlockSize;
 	ctx.buffers[1] = (uint8_t *)current_lwram;
 	current_lwram +=  ASYNCH_MAX;

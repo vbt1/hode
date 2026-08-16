@@ -37,12 +37,13 @@ __attribute__((noinline))
 static uint8_t *bump(Uint8 **ptr, uint32_t size) {
     uint8_t *dst = (uint8_t *)SAT_ALIGN((int)*ptr);
     *ptr = dst + size;
-
+	DPRINTF("start %p end %p\n", dst, dst+size);
+/*
     DPRINTF("hwram %d ptr %p lwram %d hw %p aft %p sz %d endhw %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, ptr, size, lwram_end);
 //			memset(hwram_work,0x00,10000);
-
+*/
     return dst;
 }
 
@@ -59,17 +60,20 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 				hwram     = hwram_src + alignedSize;
 				return hwram_src;
 			case TYPE_LDIMG:
-			case TYPE_FONT:
+//			case TYPE_FONT:
 				return bump(&vdp2ram, alignedSize);
-			case TYPE_RES:
 			case TYPE_PAF:
 			case TYPE_PAFBUF:
 				return bump(&hwram_work_paf, alignedSize);
 			case TYPE_PAFEND:
 			if (alignedSize !=2096)
 				return bump(&current_lwram, alignedSize);
-				else
+			else
 				return lwram_end - SAT_ALIGN(alignedSize);
+//			if (alignedSize !=2096)
+//			case TYPE_PAFEND1:
+//				return lwram_end - SAT_ALIGN(alignedSize);
+
 //				return bump(&current_lwram, alignedSize);
 //					return cs1ram;
 //				return bump(&cs1ram, alignedSize);
@@ -86,7 +90,8 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 //emu_printf("lwram level %d type %d size %d\n", level, type, alignedSize);
 //				return (uint8_t *)0x22400000;
 				return bump(&current_lwram, alignedSize);
-
+			case TYPE_RES:
+				return bump(&hwram_work, alignedSize);			
 			default:
 				DPRINTF("missing case!!! -1 %d\n", type);
 				return nullptr;
@@ -101,16 +106,17 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 			if (dst + alignedSize > lwram_end)
 				DPRINTF("ERROR33: %d overflow req:%d miss:%d\n", type, alignedSize,
 						(int)lwram_end - (int)dst - alignedSize);
-						
+	DPRINTF("start %p end %p\n", dst, dst+alignedSize);
 			return dst;
 		case TYPE_ANDY1:
 			lwram_end -= SAT_ALIGN(alignedSize);
+			DPRINTF("start %p end %p\n", lwram_end, lwram_end+alignedSize);
 			return lwram_end;
 
 		case TYPE_SCRMASKBUF:
 		case TYPE_ANDY:
 //		case TYPE_RES:
-		case TYPE_BGLVLOBJ: // pas lui
+		case TYPE_BGLVLOBJ:
 ///		case TYPE_MAP: // coupable
 //		case TYPE_MSTCODE:
 //		case TYPE_MOVBOUND:
@@ -122,6 +128,8 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 				return nullptr;
 			}
 			return bump(&hwram_work, alignedSize);
+
+//			return bump(&hwram_work, alignedSize);
 //			return bump(&cs1ram, alignedSize);
 //		case TYPE_MAP:
 //			return bump(&cs1ram, alignedSize);
@@ -136,11 +144,9 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 		case TYPE_MSTCODE:
 		case TYPE_MOVBOUND:
 		case TYPE_SHOOT:
+//			return bump(&cs1ram, alignedSize);
 	//    case TYPE_GFSFILE:
 		case TYPE_SCRMASK:
-//		case TYPE_BGLVLOBJ:
-	//    case TYPE_TASK:// plus utilisé
-	//	case TYPE_SHADWBUF:// plus utilisé
 			if (__builtin_expect(((int)current_lwram) + SAT_ALIGN(alignedSize) < (int)lwram_end, 1))
 			{
 	//    DPRINTF("hwram %d ptr %p lwram %d cs1 %p cs2 %p hw %p aft %p sz %d p %p\n",

@@ -26,6 +26,7 @@ extern Uint8 *lwram_end;
 extern Uint8 *hwram;
 extern Uint8 *hwram_work;
 extern Uint8 *hwram_work_paf;
+extern Uint8 *cs1ram;
 extern Uint8 *_scrapBuffer;
 extern Uint8 *_mstResData;
 void SYS_Exit(Sint32 code);
@@ -60,10 +61,11 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+36000); // ne pas trop monter
 //		emu_printf("--hwram_work start %p\n", hwram_work);
 //		_mstResData = (uint8_t *)0x22400000;
-//		_mstResData = cs1ram;
+//		_mstResData = hwram_work;
+//		hwram_work+=33000;
+		_mstResData = cs1ram;
+//		_screenMaskBuffer = allocate_memory(_res->_level, TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
 //		_mstResData = (uint8_t *)allocate_memory(-1, TYPE_RES,33000);
-		_mstResData = hwram_work;
-		hwram_work += 33000;
 		hwram_work_paf   = hwram_work;
 
 	_video = new Video();
@@ -622,12 +624,12 @@ void Game::setupScreenMask(uint8_t num) {
 }
 
 void Game::resetScreenMask() {
-//emu_printf("resetScreenMask\n");
+emu_printf("resetScreenMask\n");
 //	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
 	if(_screenMaskBuffer == 0)
 	{
 		_screenMaskBuffer = allocate_memory(_res->_level, TYPE_SCRMASKBUF, (16 * 6) * 24 * 32); //[(16 * 6) * 24 * 32];
-//		_scrapBuffer = _screenMaskBuffer;
+		emu_printf("-- _screenMaskBuffer hwram_work %p end %p\n", hwram_work_paf, hwram_work);	
 	}
 	memset(_screenMaskBuffer, 0, (16 * 6) * 24 * 32);
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
@@ -1452,14 +1454,15 @@ void Game::resetScreen() {
 }
 
 void Game::restartLevel() {
-//emu_printf("restartLevel\n");
-//    emu_printf("1hwramw %d %p lwram %d hwram %p endhw %p\n",
-//            ((int)hwram_work) - 0x6000000, hwram_work,
-//            ((int)current_lwram) - 0x200000, hwram, lwram_end);
+emu_printf("restartLevel\n");
+    emu_printf("1hwramw %d %p lwram %d hwram %p endhw %p\n",
+            ((int)hwram_work) - 0x6000000, hwram_work,
+            ((int)current_lwram) - 0x200000, hwram, lwram_end);
 
 	setupAndyLvlObject();
 	clearLvlObjectsList2();
 	clearLvlObjectsList3();
+	_res->loadLvlMst(_currentLevel); // vbt : ajout
 	if (!_mstDisabled) {
 		resetMstCode();
 		startMstCode();
@@ -1475,6 +1478,7 @@ void Game::restartLevel() {
 	const int screenNum = _level->getCheckpointData(_level->_checkpoint)->screenNum;
 	preloadLevelScreenData(screenNum, kNoScreen);
 	_andyObject->levelData0x2988 = _res->_resLevelData0x2988PtrTable[_andyObject->spriteNum];
+emu_printf("_andyObject->levelData0x2988 %p\n", _andyObject->levelData0x2988);
 	memset(_video->_backgroundLayer, 0, Video::W * Video::H);
 #ifdef PSX
 	_video->clearYuvBackBuffer();
@@ -1491,6 +1495,7 @@ void Game::restartLevel() {
 
 void Game::playAndyFallingCutscene(int type) {
 	bool play = false;
+
 	if (type == 0) {
 		play = true;
 	} else if (_fallingAndyFlag) {
@@ -1526,6 +1531,7 @@ void Game::playAndyFallingCutscene(int type) {
 
 
 	if (type != 0 && play) {
+
 		restartLevel();
 	}
 }

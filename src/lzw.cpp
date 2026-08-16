@@ -63,7 +63,7 @@ uint32_t LzwDecoder::nextCode(int codeSize) { // 9 to 12bits
 }
 
 int LzwDecoder::decode(uint8_t *dst) {
-//emu_printf("decode %p\n", dst);
+emu_printf("decode %p\n", dst);
 	uint8_t *p = dst;
 	_prefix = (uint16_t *)_scrapBuffer;
 	_stack = (uint8_t *)_scrapBuffer+(1 << kMaxBits)*2;
