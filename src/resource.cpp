@@ -879,7 +879,7 @@ void Resource::loadLvlData(File *fp) {
 #ifdef USE_LESS_RAM
 void Resource::loadLvlSprite(int levelNum, bool all)
 {
-//emu_printf("loadLvlSprite %d\n", levelNum);
+emu_printf("loadLvlSprite %d\n", levelNum);
 //	const char *levelName = _prefixes[levelNum];
 //Sint32 fileid, fsize;
 //	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
@@ -952,7 +952,7 @@ emu_printf("unloadLvlData\n");
 }
 
 static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat) {
-//emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
+emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
 	const uint8_t *start = src;
 
 	dat->backgroundCount = *src++;
@@ -1028,7 +1028,6 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	const uint32_t offset = READ_LE_UINT32(&buf[0]);
 	const uint32_t size = READ_LE_UINT32(&buf[4]);
 	if (size == 0) {
-//emu_printf("return 0\n");
 		return;
 	}
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
@@ -1038,11 +1037,17 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 		return;
 //emu_printf("loadLvlScreenBackgroundData malloc %d size cs1ram %p\n", size, cs1ram);
 //	uint8_t *ptr = (uint8_t *)malloc(size);
-	
+
+	// Le buffer TYPE_BGLVL est unique : un seul écran peut y être résident.
+	// On invalide tout écran encore marqué "chargé" avant de l'écraser.
+	for (unsigned int i = 0; i < kMaxScreens; ++i) {
+		if ((int)i != num && _resLevelData0x2B88SizeTable[i] != 0) {
+			unloadLvlScreenBackgroundData(i);
+		}
+	}
 	uint8_t *ptr = allocate_memory (_level, TYPE_BGLVL, size);
-//	uint8_t *ptr = (uint8_t *)0x22400000;
 	
-//emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
+emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
@@ -1070,13 +1075,8 @@ void Resource::unloadLvlScreenBackgroundData(int num) {
 		_resLevelData0x2B88SizeTable[num] = 0;
 
 // vbt : on ne rend pas la mémoire
-/*		LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
-		for (int i = 0; i < 4; ++i) {
-//			free(dat->backgroundLvlObjectDataTable[i]);
-			dat->backgroundLvlObjectDataTable[i] = 0;
-		}
+		LvlBackgroundData *dat = &_resLvlScreenBackgroundDataTable[num];
 		memset(dat, 0, sizeof(LvlBackgroundData));
-*/
 	}
 }
 
@@ -1655,7 +1655,7 @@ emu_printf("loadMstData\n");
 //	assert(fp == _mstFile);
 
 	if (_mstHdr.dataSize != 0) {
-emu_printf("unloadMstData\n");
+emu_printf("unloadMstData1\n");
 		unloadMstData();
 		_mstHdr.dataSize = 0;
 	}
@@ -2480,7 +2480,7 @@ emu_printf("_mstMonsterInfos alloc\n");
 }
 
 void Resource::unloadMstData() {
-emu_printf("unloadMstData\n");
+emu_printf("unloadMstData2\n");
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 //		free(_mstWalkCodeData[i].codeData);
 		_mstWalkCodeData[i].codeData = 0;

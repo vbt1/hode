@@ -99,7 +99,7 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 	}
 	else if(level==0)
 	{
-		uint8_t *dst = (uint8_t *)0x210000;
+		uint8_t *dst = (uint8_t *)cs1ram;//0x210000;
 		switch (type) {	
 		case TYPE_BGLVL:
 // vbt : si lwram > 103424 on ecrase des données
