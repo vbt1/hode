@@ -11,6 +11,7 @@ extern "C" {
 #include 	<sl_def.h>
 Uint8 * _scrapBuffer;
 Uint8 * _mstResData;
+extern Uint8 *lwram_end;
 }
 #include "fileio.h"
 #include "fs.h"
@@ -663,7 +664,7 @@ void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const 
     }
 }
 #endif
-void Resource::loadLvlSpriteData(int num, bool all, const uint8_t *buf) {
+void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t *buf) {
 //	assert((unsigned int)num < kMaxSpriteTypes);
 	if((unsigned int)num >= kMaxSpriteTypes)
 	{
@@ -692,28 +693,48 @@ void Resource::loadLvlSpriteData(int num, bool all, const uint8_t *buf) {
 //		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
-//emu_printf("vbt malloc sprite %d num %d all %d\n", size, num, all);
 	uint8_t *ptr = 0;
-//TYPE_ANDY1 = lwram
-	if(all==1)
+
+	bool load = false;
+	LvlObjectData *obj = &_resLevelData0x2988Table[num];
+	
+	if(num == 2 || num == 7)
+		all=0;
+	
+	if( obj->animsInfoData!=0 && all==0)
 	{
-		ptr = allocate_memory(_level, (num == 2 || num == 7) ? TYPE_ANDY : TYPE_ANDY1, size);
+		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
+		return;
 	}
-	else if(all==2)
+	
+	if (screenNum == 9 && num == 2)
 	{
-		if(num == 2)
-			ptr = allocate_memory(_level, TYPE_ANDY, size);
-		else
-			return;
+		load = true;
 	}
-	else
+	else if (screenNum == 13 && num == 7)
 	{
-		if(num == 2 || num == 7)
-		{
-			return;
-		}
-		ptr =  allocate_memory(_level, TYPE_ANDY1, size);
+emu_printf("ecran 13\n");
+		load = true;
 	}
+	else if (screenNum <= 3)
+	{
+		load = all ? (num <= 3 && num != 2) : (num == 3);
+	}
+	else if (screenNum >= 4)
+	{
+		load = all ? (num < 7 && num != 2) : (num > 3 && num < 7);
+	}
+	
+	if (!load)
+	{	
+//		emu_printf("je n'alloue pas de mémoire screen %d all %d\n",screenNum, all);
+		return;
+	}
+
+	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
+	if(num==2 || num==7)
+	emu_printf("vbt malloc sprite %d num %d all %d screen %d\n", size, num, all, screenNum );
+
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
@@ -859,7 +880,7 @@ void Resource::loadLvlData(File *fp) {
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
 //emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes * 16);
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
-		loadLvlSpriteData(i, spr + i * 16, xxx);
+		loadLvlSpriteData(i, spr + i * 16, xxx); // pas appelé !!!
 	}
 #endif
 //	memset(_resLevelData0x2B88SizeTable, 0, sizeof(_resLevelData0x2B88SizeTable));
@@ -877,18 +898,21 @@ void Resource::loadLvlData(File *fp) {
 #endif
 }
 #ifdef USE_LESS_RAM
-void Resource::loadLvlSprite(int levelNum, bool all)
+void Resource::loadLvlSprite(int levelNum, int screenNum, bool all)
 {
-emu_printf("loadLvlSprite %d\n", levelNum);
+emu_printf("loadLvlSprite %d all %d\n", levelNum, all);
 //	const char *levelName = _prefixes[levelNum];
 //Sint32 fileid, fsize;
 //	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
 //emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
-	
-//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
-	memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
-	memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
+	if(all && screenNum<13)
+	{	
+	//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+		memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
+		memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
+		lwram_end = (Uint8 *)0x300000;
+	}
 	_lvlFile->seekAlign(_lvlSpritesOffset);
 //	uint8_t spr[kMaxSpriteTypes * 16];
 	uint8_t *spr = (uint8_t *)_scrapBuffer;
@@ -896,11 +920,10 @@ emu_printf("loadLvlSprite %d\n", levelNum);
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
 //emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
-
+	
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
-		loadLvlSpriteData(i, all , spr + i * 16);
+		loadLvlSpriteData(i, screenNum, all, spr + i * 16);
 	}
-//	while(1);
 }
 
 void Resource::loadLvlMst(int levelNum)
@@ -920,7 +943,7 @@ void Resource::loadLvlMst(int levelNum)
 }
 #endif
 void Resource::unloadLvlData() {
-emu_printf("unloadLvlData\n");
+//emu_printf("unloadLvlData\n");
 //	free(_resLevelData0x470CTable);
 //emu_printf("unloadLvlData reset lw %p %p hw %p %p\n",current_lwram, lwram_res, hwram_work, hwram_res);
 	current_lwram = lwram_res;
@@ -952,7 +975,7 @@ emu_printf("unloadLvlData\n");
 }
 
 static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, uint8_t *ptr, uint8_t *offsetsPtr, LvlBackgroundData *dat) {
-emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
+//emu_printf("resfix src %p ptr %p offsetsPtr %p dat %p\n", src, ptr,offsetsPtr, dat);
 	const uint8_t *start = src;
 
 	dat->backgroundCount = *src++;
@@ -1047,7 +1070,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	}
 	uint8_t *ptr = allocate_memory (_level, TYPE_BGLVL, size);
 	
-emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
+//emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
@@ -1651,11 +1674,11 @@ void Resource::preloadSssPcmList(const SssPreloadInfoData *preloadInfoData) {
 }
 #endif
 void Resource::loadMstData(File *fp) {
-emu_printf("loadMstData\n");
+//emu_printf("loadMstData\n");
 //	assert(fp == _mstFile);
 
 	if (_mstHdr.dataSize != 0) {
-emu_printf("unloadMstData1\n");
+//emu_printf("unloadMstData1\n");
 		unloadMstData();
 		_mstHdr.dataSize = 0;
 	}
@@ -1668,7 +1691,7 @@ emu_printf("unloadMstData1\n");
 	}
 
 	_mstHdr.dataSize = fp->readUint32();
-emu_printf("dataSize %d\n", _mstHdr.dataSize);
+//emu_printf("dataSize %d\n", _mstHdr.dataSize);
 	_mstHdr.walkBoxDataCount = fp->readUint32();
 ////emu_printf("walkBoxDataCount %d\n", _mstHdr.walkBoxDataCount);
 	_mstHdr.walkCodeDataCount = fp->readUint32();
@@ -1713,7 +1736,7 @@ uint8_t *ptr=NULL;
 if (_mstCodeData == 0)
 {
 	_mstCodeData = (uint8_t *)allocate_memory (_level, TYPE_MSTCODE, _mstHdr.codeSize * 4);
-	emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeSize * 4));
+//	emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeSize * 4));
 }
 	ptr = _mstResData;/*  = (uint8_t *)allocate_memory(_level, TYPE_RES,
 		  _mstHdr.screensCount * sizeof(MstPointOffset)
@@ -1808,7 +1831,7 @@ if (_mstCodeData == 0)
 	_mstOp204Data = (MstOp204Data*)ptr;
 	ptr += _mstHdr.op204DataCount * sizeof(MstOp204Data);
 	
-	emu_printf("-- _mstResData %p %p end\n", _mstResData, ptr);
+//	emu_printf("-- _mstResData %p %p end\n", _mstResData, ptr);
 
 
 //emu_printf("screensCount %d\n", _mstHdr.screensCount);
@@ -2235,7 +2258,7 @@ if (_mstCodeData == 0)
 	
 //	_mstMonsterInfos = (uint8_t *)malloc(mapDataSize);
 //	_mstMonsterInfos = (uint8_t *)allocate_memory (_level, TYPE_MAP, mapDataSize);
-emu_printf("_mstMonsterInfos alloc\n");
+//emu_printf("_mstMonsterInfos alloc\n");
 	_mstMonsterInfos = (uint8_t *)_mstResData+21000;
 
 	fp->read(_mstMonsterInfos, mapDataSize);

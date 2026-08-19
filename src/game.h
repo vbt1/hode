@@ -151,6 +151,7 @@ struct Game {
 	uint8_t _plasmaCannonFlags;
 	uint8_t _actionDirectionKeyMaskCounter;
 	bool _fallingAndyFlag;
+	bool _restartLevel;
 	uint8_t _fallingAndyCounter;
 	uint8_t _actionDirectionKeyMaskIndex;
 	uint8_t _andyActionKeyMaskAnd, _andyActionKeyMaskOr;

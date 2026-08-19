@@ -37,7 +37,7 @@ __attribute__((noinline))
 static uint8_t *bump(Uint8 **ptr, uint32_t size) {
     uint8_t *dst = (uint8_t *)SAT_ALIGN((int)*ptr);
     *ptr = dst + size;
-	DPRINTF("start %p end %p\n", dst, dst+size);
+//	DPRINTF("start %p end %p\n", dst, dst+size);
 /*
     DPRINTF("hwram %d ptr %p lwram %d hw %p aft %p sz %d endhw %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
@@ -49,7 +49,7 @@ static uint8_t *bump(Uint8 **ptr, uint32_t size) {
 
 uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t alignedSize) 
 {
-	DPRINTF("level %d type %d size %d ", level, type, alignedSize);
+//	DPRINTF("level %d type %d size %d ", level, type, alignedSize);
 //	if(alignedSize==0)
 //		return (uint8_t*)0;
 	if(level==255)
@@ -99,22 +99,25 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 	}
 	else if(level==0)
 	{
-		uint8_t *dst = (uint8_t *)cs1ram;//0x210000;
+		uint8_t *dst = (uint8_t *)0x20FA00;
 		switch (type) {	
 		case TYPE_BGLVL:
 // vbt : si lwram > 103424 on ecrase des données
 			if (dst + alignedSize > lwram_end)
 				DPRINTF("ERROR33: %d overflow req:%d miss:%d\n", type, alignedSize,
 						(int)lwram_end - (int)dst - alignedSize);
-	DPRINTF("start %p end %p\n", dst, dst+alignedSize);
+//	DPRINTF("start %p end %p\n", dst, dst+alignedSize);
 			return dst;
 		case TYPE_ANDY1:
 			lwram_end -= SAT_ALIGN(alignedSize);
-			DPRINTF("start %p end %p\n", lwram_end, lwram_end+alignedSize);
+//			DPRINTF("%d start %p end %p size %d\n",type, lwram_end, lwram_end+alignedSize, alignedSize);
 			return lwram_end;
 
-		case TYPE_SCRMASKBUF:
 		case TYPE_ANDY:
+			dst = bump(&hwram_work, alignedSize);
+			DPRINTF("connard %d start %p end %p\n",type, dst, dst+alignedSize, alignedSize);
+			return dst;
+		case TYPE_SCRMASKBUF:
 //		case TYPE_RES:
 		case TYPE_BGLVLOBJ:
 ///		case TYPE_MAP: // coupable
