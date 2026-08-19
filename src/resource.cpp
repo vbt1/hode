@@ -698,32 +698,35 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	bool load = false;
 	LvlObjectData *obj = &_resLevelData0x2988Table[num];
 	
-	if(num == 2 || num == 7)
-		all=0;
-	
 	if( obj->animsInfoData!=0 && all==0)
 	{
-		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
+//		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
 		return;
 	}
-	
+// ecran 17 : recharger andy+salamandre si on meurt	
 	if (screenNum == 9 && num == 2)
 	{
 		load = true;
 	}
 	else if (screenNum == 13 && num == 7)
 	{
-emu_printf("ecran 13\n");
 		load = true;
 	}
 	else if (screenNum <= 3)
 	{
 		load = all ? (num <= 3 && num != 2) : (num == 3);
 	}
+	else if(screenNum>=13)
+	{
+		if(num!=2 && num!=7)
+			memset(&_resLevelData0x2988Table[num], 0, sizeof(LvlObjectData));
+		load = (num ==7 && _resLevelData0x2988Table[num].refCount==0);
+	}
 	else if (screenNum >= 4)
 	{
 		load = all ? (num < 7 && num != 2) : (num > 3 && num < 7);
 	}
+
 	
 	if (!load)
 	{	
@@ -766,7 +769,7 @@ emu_printf("ecran 13\n");
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
 	{
-		emu_printf("vbt bad read !!!!!\n");
+		emu_printf("vbt bad read !!!!! sprite %d\n", num);
 		return;
 	}
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
@@ -906,11 +909,17 @@ emu_printf("loadLvlSprite %d all %d\n", levelNum, all);
 //	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
 //emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
-	if(all && screenNum<13)
+	if(screenNum==13)
+		all=1;
+
+	if(all)
 	{	
 	//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
-		memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
-		memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
+		if(screenNum<13)
+		{
+			memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
+			memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
+		}
 		lwram_end = (Uint8 *)0x300000;
 	}
 	_lvlFile->seekAlign(_lvlSpritesOffset);
@@ -920,7 +929,7 @@ emu_printf("loadLvlSprite %d all %d\n", levelNum, all);
 	assert(_lvlHdr.spritesCount <= kMaxSpriteTypes);
 	_lvlFile->read(spr, _lvlHdr.spritesCount * 16);
 //emu_printf("loadLvlSpriteData %d spr %d\n", _lvlHdr.spritesCount,kMaxSpriteTypes);
-	
+
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, screenNum, all, spr + i * 16);
 	}
