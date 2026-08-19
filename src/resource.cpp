@@ -690,23 +690,24 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 
 	if(readSize > size)
 	{
-//		emu_printf("readSize %d %d\n", readSize, size);
+		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
 	uint8_t *ptr = 0;
 
 	bool load = false;
 	LvlObjectData *obj = &_resLevelData0x2988Table[num];
-	
+	/*
 	if( obj->animsInfoData!=0 && all==0)
 	{
 //		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
 		return;
-	}
+	}*/
 // ecran 17 : recharger andy+salamandre si on meurt	
 	if (screenNum == 9 && num == 2)
 	{
-		load = true;
+//		emu_printf("_resLevelData0x2988Table %d\n",_resLevelData0x2988Table[num].framesCount);
+		load = (num ==2 && _resLevelData0x2988Table[num].framesCount==0);
 	}
 	else if (screenNum == 13 && num == 7)
 	{
@@ -720,23 +721,22 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	{
 		if(num!=2 && num!=7)
 			memset(&_resLevelData0x2988Table[num], 0, sizeof(LvlObjectData));
-		load = (num ==7 && _resLevelData0x2988Table[num].refCount==0);
+		load = (num ==7 && _resLevelData0x2988Table[num].framesCount==0);
 	}
 	else if (screenNum >= 4)
 	{
 		load = all ? (num < 7 && num != 2) : (num > 3 && num < 7);
 	}
 
-	
 	if (!load)
 	{	
-//		emu_printf("je n'alloue pas de mémoire screen %d all %d\n",screenNum, all);
+		emu_printf("je n'alloue pas de mémoire screen %d num %d all %d\n",screenNum, num, all);
 		return;
 	}
 
 	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
-	if(num==2 || num==7)
-	emu_printf("vbt malloc sprite %d num %d all %d screen %d\n", size, num, all, screenNum );
+//	if(num==2 || num==7)
+//	emu_printf("vbt malloc sprite %d num %d all %d screen %d\n", size, num, all, screenNum );
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -915,11 +915,11 @@ emu_printf("loadLvlSprite %d all %d\n", levelNum, all);
 	if(all)
 	{	
 	//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
-		if(screenNum<13)
+		/*if(screenNum<9)
 		{
 			memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
 			memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
-		}
+		}*/
 		lwram_end = (Uint8 *)0x300000;
 	}
 	_lvlFile->seekAlign(_lvlSpritesOffset);

@@ -2062,7 +2062,7 @@ void Game::updateBackgroundPsx(int num) {
 	int currentY = 0;
 	int maxHeightInRow = 0;
 	const int screenWidth = 192;
-	
+/*	
 void displayFirstSpriteFrames(Resource *_res, Video *_video, int spriteNum) {
 	LvlObjectData *dat = &_res->_resLevelData0x2988Table[spriteNum];
 	
@@ -2113,7 +2113,7 @@ void displayFirstSpriteFrames(Resource *_res, Video *_video, int spriteNum) {
 		currentX += w;
 	}
 }
-
+*/
 #ifdef OLD_DRAW_SCREEN
 void Game::drawScreen() {
 #ifdef DEBUG
@@ -2289,14 +2289,14 @@ void Game::drawScreen() {
 			}
 		}
 	}
-
+/*
 	currentX = 0;
 	currentY = 0;
 	maxHeightInRow = 0;
 
 for(int i=0;i<kMaxSpriteTypes;i++)
 	displayFirstSpriteFrames(_res, _video, i);
-
+*/
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG
 	unsigned int e12 = g_system->getTimeStamp();
