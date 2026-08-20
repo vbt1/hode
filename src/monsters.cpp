@@ -1254,6 +1254,15 @@ void Game::mstUpdateMonster1ObjectsPosition() {
 	mstUpdateMonstersRect();
 	for (Task *t = _monsterObjects1TasksList; t; t = t->nextPtr) {
 		mstTaskUpdateScreenPosition(t);
+// vbt : ajout pour débug, à  enlever		
+		// AFFICHAGE DES POSITIONS
+/*		for (int i = 0; i < kMaxMonsterObjects1; ++i) {
+			MonsterObject1 *m = &_monsterObjects1Table[i];
+			if (m && m->m46) {
+				emu_printf("Monster #%d: X=%d Y=%d\n", i, m->xMstPos, m->yMstPos);
+			}
+		}		
+*/		
 	}
 }
 

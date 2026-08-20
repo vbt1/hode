@@ -61,8 +61,7 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 
 		_video = new Video();
 	
-		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+34000); // ne pas trop monter
-
+		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+38000); // ne pas trop monter
 		_mstResData = (uint8_t *)allocate_memory(-1, TYPE_RES, 33000);
 		const int frame = Video::W * Video::H;
 
@@ -1056,9 +1055,8 @@ endDir:
 	_plasmaCannonPointsMask = 0;
 	return 1;
 }
-//int done1 = 0;
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
-emu_printf("preloadLevelScreenData num %d\n", num);
+//emu_printf("preloadLevelScreenData num %d\n", num);
 	if(num == kNoScreen)
 		return;
 
@@ -1077,11 +1075,20 @@ emu_printf("preloadLevelScreenData num %d\n", num);
 
 	if(_currentScreen && !_restartLevel)
 	{	
-		emu_printf("chargement partiel - fall %d\n", _fallingAndyFlag);
+//		emu_printf("chargement partiel - fall %d\n", _fallingAndyFlag);
 		_res->loadLvlSprite(_currentLevel, _currentScreen, 0);
 	}
+
+// vbt : ajout, car tous les sprites ne sont pas chargés
+/*	if (!_mstDisabled) {
+		resetMstCode();
+		startMstCode();
+	}	
+*/
 	_restartLevel = false;
 	_res->loadLvlScreenBackgroundData(num);
+
+
 
 #ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {
@@ -1097,6 +1104,7 @@ emu_printf("preloadLevelScreenData num %d\n", num);
 #endif
 }
 
+//int done1 = 0;
 void Game::setLvlObjectPosRelativeToObject(LvlObject *ptr1, int num1, LvlObject *ptr2, int num2) {
 	ptr1->xPos = ptr2->posTable[num2].x - ptr1->posTable[num1].x + ptr2->xPos;
 	ptr1->yPos = ptr2->posTable[num2].y - ptr1->posTable[num1].y + ptr2->yPos;
@@ -1408,7 +1416,7 @@ void Game::setupScreen(uint8_t num) {
 	}
 	i = _res->_screensGrid[num][kPosRightScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-emu_printf("setupScreenLvlObjects1 i %d\n", i);
+//emu_printf("setupScreenLvlObjects1 i %d\n", i);
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -1416,14 +1424,14 @@ emu_printf("setupScreenLvlObjects1 i %d\n", i);
 	}
 	i = _res->_screensGrid[num][kPosBottomScreen];
 	if (i != kNoScreen && prev != i) {
-emu_printf("callLevel_preScreenUpdate1\n");
+//emu_printf("callLevel_preScreenUpdate1\n");
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
 	i = _res->_screensGrid[num][kPosLeftScreen];
 	if (i != kNoScreen && _res->_resLevelData0x2B88SizeTable[i] != 0 && prev != i) {
-emu_printf("setupScreenLvlObjects2 %d\n", i);
+//emu_printf("setupScreenLvlObjects2 %d\n", i);
 		setupScreenLvlObjects(i);
 		callLevel_preScreenUpdate(i);
 		setupScreenMask(i);
@@ -1463,7 +1471,7 @@ void Game::restartLevel() {
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, lwram_end);
 	_restartLevel = true;
-	emu_printf("chargement full\n");
+//	emu_printf("chargement full\n");
 	_res->loadLvlSprite(_currentLevel, _currentScreen, 1);
 	
 	setupAndyLvlObject();
@@ -2011,7 +2019,7 @@ int Game::updateAndyLvlObject() {
 	}
 	// moved to invalid screen (-1), restart
 	if ((_andyObject->flags0 & 0x1F) != 0xB) {
-emu_printf("moved to invalid screen (-1), restart\n");
+//emu_printf("moved to invalid screen (-1), restart\n");
 		playAndyFallingCutscene(0);
 	}
  emu_printf("restartLevel0\n");
@@ -2062,7 +2070,7 @@ void Game::updateBackgroundPsx(int num) {
 	int currentY = 0;
 	int maxHeightInRow = 0;
 	const int screenWidth = 192;
-/*	
+
 void displayFirstSpriteFrames(Resource *_res, Video *_video, int spriteNum) {
 	LvlObjectData *dat = &_res->_resLevelData0x2988Table[spriteNum];
 	
@@ -2113,7 +2121,7 @@ void displayFirstSpriteFrames(Resource *_res, Video *_video, int spriteNum) {
 		currentX += w;
 	}
 }
-*/
+
 #ifdef OLD_DRAW_SCREEN
 void Game::drawScreen() {
 #ifdef DEBUG
@@ -2289,14 +2297,14 @@ void Game::drawScreen() {
 			}
 		}
 	}
-/*
+
 	currentX = 0;
 	currentY = 0;
 	maxHeightInRow = 0;
 
 for(int i=0;i<kMaxSpriteTypes;i++)
 	displayFirstSpriteFrames(_res, _video, i);
-*/
+
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG
 	unsigned int e12 = g_system->getTimeStamp();

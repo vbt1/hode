@@ -697,27 +697,27 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 
 	bool load = false;
 	LvlObjectData *obj = &_resLevelData0x2988Table[num];
-	/*
+	
 	if( obj->animsInfoData!=0 && all==0)
 	{
 //		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
 		return;
-	}*/
+	}
 // ecran 17 : recharger andy+salamandre si on meurt	
 	if (screenNum == 9 && num == 2)
 	{
 //		emu_printf("_resLevelData0x2988Table %d\n",_resLevelData0x2988Table[num].framesCount);
 		load = (num ==2 && _resLevelData0x2988Table[num].framesCount==0);
 	}
-	else if (screenNum == 13 && num == 7)
+/*	else if (screenNum == 13 && num == 7)
 	{
 		load = true;
-	}
+	}*/
 	else if (screenNum <= 3)
 	{
 		load = all ? (num <= 3 && num != 2) : (num == 3);
 	}
-	else if(screenNum>=13)
+	else if(screenNum>=10)
 	{
 		if(num!=2 && num!=7)
 			memset(&_resLevelData0x2988Table[num], 0, sizeof(LvlObjectData));
@@ -730,13 +730,11 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 
 	if (!load)
 	{	
-		emu_printf("je n'alloue pas de mémoire screen %d num %d all %d\n",screenNum, num, all);
+//		emu_printf("je n'alloue pas de mémoire screen %d num %d all %d\n",screenNum, num, all);
 		return;
 	}
 
 	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
-//	if(num==2 || num==7)
-//	emu_printf("vbt malloc sprite %d num %d all %d screen %d\n", size, num, all, screenNum );
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -903,7 +901,7 @@ void Resource::loadLvlData(File *fp) {
 #ifdef USE_LESS_RAM
 void Resource::loadLvlSprite(int levelNum, int screenNum, bool all)
 {
-emu_printf("loadLvlSprite %d all %d\n", levelNum, all);
+emu_printf("loadLvlSprite %d all %d screen %d\n", levelNum, all, screenNum);
 //	const char *levelName = _prefixes[levelNum];
 //Sint32 fileid, fsize;
 //	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
