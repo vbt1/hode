@@ -104,8 +104,11 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 		case TYPE_BGLVL:
 // vbt : si lwram > 103424 on ecrase des données
 			if (dst + alignedSize > lwram_end)
+			{
 				DPRINTF("ERROR33: %d overflow req:%d miss:%d\n", type, alignedSize,
 						(int)lwram_end - (int)dst - alignedSize);
+//				return nullptr;
+			}
 //	DPRINTF("start %p end %p\n", dst, dst+alignedSize);
 			return dst;
 		case TYPE_ANDY1:

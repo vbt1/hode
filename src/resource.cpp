@@ -12,6 +12,7 @@ extern "C" {
 Uint8 * _scrapBuffer;
 Uint8 * _mstResData;
 extern Uint8 *lwram_end;
+extern Uint8 *hwram;
 }
 #include "fileio.h"
 #include "fs.h"
@@ -703,6 +704,7 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 //		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
 		return;
 	}
+//si on retourne sur l'écran 0 c'est possible, tout reinitialiser
 // ecran 17 : recharger andy+salamandre si on meurt	
 	if (screenNum == 9 && num == 2)
 	{
@@ -715,7 +717,13 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	}*/
 	else if (screenNum <= 3)
 	{
-		load = all ? (num <= 3 && num != 2) : (num == 3);
+		if(screenNum=0)
+		{
+			if (_resLevelData0x2988Table[0].framesCount==0 && all==0)
+				load=0;
+		}
+		else
+			load = all ? (num <= 3 && num != 2) : (num == 3);
 	}
 	else if(screenNum>=10)
 	{
@@ -901,7 +909,10 @@ void Resource::loadLvlData(File *fp) {
 #ifdef USE_LESS_RAM
 void Resource::loadLvlSprite(int levelNum, int screenNum, bool all)
 {
-emu_printf("loadLvlSprite %d all %d screen %d\n", levelNum, all, screenNum);
+emu_printf("loadLvlSprite %d all %d screen %d 1hwramw %d %p lwram %d hwram %p endhw %p\n", levelNum, all, screenNum,
+            ((int)hwram_work) - 0x6000000, hwram_work,
+            ((int)current_lwram) - 0x200000, hwram, lwram_end);
+
 //	const char *levelName = _prefixes[levelNum];
 //Sint32 fileid, fsize;
 //	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
@@ -987,6 +998,7 @@ static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, ui
 
 	dat->backgroundCount = *src++;
 	dat->currentBackgroundId = *src++;
+//emu_printf("dat->currentBackgroundId %d\n", dat->currentBackgroundId);
 	dat->maskCount = *src++;
 	dat->currentMaskId = *src++;
 	dat->shadowCount = *src++;
@@ -1011,12 +1023,11 @@ static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, ui
 	}
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
-		dat->dataUnk0Table[i] = (offs != 0) ? ptr + offs : 0;
+//		dat->dataUnk0Table[i] = (offs != 0) ? ptr + offs : 0; // vbt : on vire
 	}
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		dat->backgroundMaskTable[i] = (offs != 0) ? ptr + offs : 0;
-//		emu_printf("dat->backgroundMaskTable[%d] %p\n", i, dat->backgroundMaskTable[i]);
 	}
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;

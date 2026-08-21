@@ -412,9 +412,9 @@ void Game::removeSound(LvlObject *ptr) {
 #endif
 
 void Game::setupBackgroundBitmap() {
-//emu_printf("setupBackgroundBitmap\n");
 	LvlBackgroundData *lvl = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 	const int num = lvl->currentBackgroundId;
+//emu_printf("setupBackgroundBitmap id %d\n", num);
 	const uint8_t *pal = lvl->backgroundPaletteTable[num];
 	lvl->backgroundPaletteId = READ_LE_UINT16(pal); pal += 2;
 	const uint8_t *bmp = lvl->backgroundBitmapTable[num];
@@ -1467,10 +1467,10 @@ void Game::resetScreen() {
 
 void Game::restartLevel() {
 //emu_printf("restartLevel\n");
-    emu_printf("1hwramw %d %p lwram %d hwram %p endhw %p\n",
+/*    emu_printf("1hwramw %d %p lwram %d hwram %p endhw %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, lwram_end);
-	_restartLevel = true;
+*/	_restartLevel = true;
 //	emu_printf("chargement full\n");
 	_res->loadLvlSprite(_currentLevel, _currentScreen, 1);
 	
@@ -2070,7 +2070,7 @@ void Game::updateBackgroundPsx(int num) {
 	int currentY = 0;
 	int maxHeightInRow = 0;
 	const int screenWidth = 192;
-
+/*
 void displayFirstSpriteFrames(Resource *_res, Video *_video, int spriteNum) {
 	LvlObjectData *dat = &_res->_resLevelData0x2988Table[spriteNum];
 	
@@ -2121,7 +2121,7 @@ void displayFirstSpriteFrames(Resource *_res, Video *_video, int spriteNum) {
 		currentX += w;
 	}
 }
-
+*/
 #ifdef OLD_DRAW_SCREEN
 void Game::drawScreen() {
 #ifdef DEBUG
@@ -2297,14 +2297,14 @@ void Game::drawScreen() {
 			}
 		}
 	}
-
+/*
 	currentX = 0;
 	currentY = 0;
 	maxHeightInRow = 0;
 
 for(int i=0;i<kMaxSpriteTypes;i++)
 	displayFirstSpriteFrames(_res, _video, i);
-
+*/
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG
 	unsigned int e12 = g_system->getTimeStamp();
