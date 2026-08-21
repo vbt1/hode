@@ -2,7 +2,7 @@
 #define USE_LESS_RAM 1
 //#define USE_FONT 1
 //#define SECTOR_ALIGNED 1
-//#define PRELOAD_ANDY 1
+#define PRELOAD_ANDY 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -721,12 +721,12 @@ if(_level==0)
 	}*/
 	else if (screenNum <= 3)
 	{
-		if(screenNum=0)
+		/*if(screenNum=0)
 		{
 			if (_resLevelData0x2988Table[0].framesCount==0 && all==0)
 				load=0;
 		}
-		else
+		else*/
 			load = all ? (num <= 3 && num != 2) : (num == 3);
 	}
 	else if(screenNum>=10)
@@ -739,6 +739,7 @@ if(_level==0)
 	{
 		load = all ? (num < 7 && num != 2) : (num > 3 && num < 7);
 	}
+//	load=1;
 }
 
 if(_level==1)
@@ -790,11 +791,11 @@ load=1;
 	
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
 #ifdef PRELOAD_ANDY
-	if(num == 0)
+	if(num == 2)
 	{
 
 		Video *_video = new Video();
-
+//emu_printf("dat->framesCount %d\n", dat->framesCount);
 		for (int i = 0;i<dat->framesCount;i++)	
 		{
 			uint16_t w, h;
@@ -808,7 +809,8 @@ load=1;
 			decodeLvlSpriteData(src, w, h);
 		}
 		position_vram_save = position_vram;
-//		while(1);
+		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);
+		return;
 	}
 #endif
 	const uint32_t allocatedOffsetsSize = size - readSize;

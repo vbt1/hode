@@ -230,7 +230,7 @@ int ss_main() {
 
 	char *dataPath = 0;
 	char *savePath = 0;
-	int level = 1;
+	int level = 0;
 	int checkpoint = 0;
 	bool resume = true; // resume game from 'setup.cfg'
 
