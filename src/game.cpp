@@ -1,6 +1,7 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
 #define USE_LESS_RAM 1
+#define DISPLAY_FIRST_FRAME_BY_SPRITE 1
 //#define DISPLAYANDYANIM 1
 //#define USE_SPRITE 1
 #define OLD_DRAW_SCREEN 1
@@ -11,7 +12,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-//#define FRAME 1
+#define FRAME 1
 
 extern "C" {
 #include <sl_def.h>
@@ -2066,62 +2067,59 @@ void Game::updateBackgroundPsx(int num) {
 }
 #endif
 
+#ifdef DISPLAY_FIRST_FRAME_BY_SPRITE
 	int currentX = 0;
 	int currentY = 0;
 	int maxHeightInRow = 0;
 	const int screenWidth = 192;
-/*
+
 void displayFirstSpriteFrames(Resource *_res, Video *_video, int spriteNum) {
 	LvlObjectData *dat = &_res->_resLevelData0x2988Table[spriteNum];
 	
 	if (dat->framesCount == 0) {
 		return;
 	}
+
+	const int i = 0;
+
+	uint16_t w, h;
+	const uint8_t *src = _res->getLvlSpriteFramePtr(dat, i, &w, &h);
 	
-
-	// Parcourir chaque frame
-//	for (int i = 0; i < dat->framesCount; ++i) {
-	{
-		int i = 0;
-
-		uint16_t w, h;
-		const uint8_t *src = _res->getLvlSpriteFramePtr(dat, i, &w, &h);
-		
-		if (src == nullptr) {
-			return;
-		}
-		
-		// Vérifier si on doit passer à la ligne suivante
-		if (currentX + w >= screenWidth) {
-			currentY += maxHeightInRow;
-			currentX = 0;
-			maxHeightInRow = 0;
-		}
-		
-		// Mettre à jour la hauteur max de la ligne courante
-		if (h > maxHeightInRow) {
-			maxHeightInRow = h;
-		}
-		
-		// Créer une structure Sprite avec les données compressées
-		Sprite spr;
-		spr.bitmapBits = src;
-		spr.w = w;
-		spr.h = h;
-		spr.xPos = currentX;
-		spr.yPos = currentY;
-		spr.num = 0;
-		spr.type = 0;
-		spr.ptr = 0;
-		
-		// Afficher le sprite
-		_video->decodeSPR(&spr, _video->_frontLayer);
-		
-		// Avancer la position X pour le prochain sprite
-		currentX += w;
+	if (src == nullptr) {
+		return;
 	}
+	
+	// Vérifier si on doit passer à la ligne suivante
+	if (currentX + w >= screenWidth) {
+		currentY += maxHeightInRow;
+		currentX = 0;
+		maxHeightInRow = 0;
+	}
+	
+	// Mettre à jour la hauteur max de la ligne courante
+	if (h > maxHeightInRow) {
+		maxHeightInRow = h;
+	}
+	
+	// Créer une structure Sprite avec les données compressées
+	Sprite spr;
+	spr.bitmapBits = src;
+	spr.w = w;
+	spr.h = h;
+	spr.xPos = currentX;
+	spr.yPos = currentY;
+	spr.num = 0;
+	spr.type = 0;
+	spr.ptr = 0;
+	
+	// Afficher le sprite
+	_video->decodeSPR(&spr, _video->_frontLayer);
+	
+	// Avancer la position X pour le prochain sprite
+	currentX += w;
 }
-*/
+#endif
+
 #ifdef OLD_DRAW_SCREEN
 void Game::drawScreen() {
 #ifdef DEBUG
@@ -2297,14 +2295,15 @@ void Game::drawScreen() {
 			}
 		}
 	}
-/*
+
+#ifdef DISPLAY_FIRST_FRAME_BY_SPRITE
 	currentX = 0;
 	currentY = 0;
 	maxHeightInRow = 0;
 
 for(int i=0;i<kMaxSpriteTypes;i++)
 	displayFirstSpriteFrames(_res, _video, i);
-*/
+#endif
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
 #ifdef DEBUG
 	unsigned int e12 = g_system->getTimeStamp();
@@ -2469,7 +2468,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 		_res->_demOffset = 0;
 	} else*/ if (_resumeGame) {
 		const int num = _setupConfig.currentPlayer;
-		level = _setupConfig.players[num].levelNum;
+//		level = _setupConfig.players[num].levelNum;
 		if (level > kLvl_dark) {
 			level = kLvl_dark;
 		}
@@ -2663,8 +2662,6 @@ emu_printf("restartLevel1\n");
 //	frame_y = frame_x = 0;
 
 	uint8_t last_frame_z = 0xFF;
-	char buffer[8];
-	
 	position_vram = position_vram_save;
 
 	while (true) {
@@ -2680,9 +2677,16 @@ emu_printf("restartLevel1\n");
 		if (frame_z != last_frame_z) {
 			last_frame_z = frame_z;
 
-			buffer[0] = '0' + (frame_z / 10);
-			buffer[1] = '0' + (frame_z % 10);
-			buffer[2] = 0;
+			char buffer[3];
+
+			if (frame_z >= 10) {
+				buffer[0] = '1';
+				buffer[1] = '0' + (frame_z - 10);  // 10..15 -> '0'..'5'
+				buffer[2] = '\0';
+			} else {
+				buffer[0] = '0' + frame_z;
+				buffer[1] = '\0';
+			}
 
 			uint32_t *dst = (uint32_t *)((uint8_t *)VDP2_VRAM_A0 + (Video::W - 24));
 			for (int j = 0; j < 16; ++j) {
@@ -3462,10 +3466,10 @@ Level *Game::createLevel() {
 	case 0:
 		_level = Level_rock_create();
 		break;
-/*	case 1:
+	case 1:
 		_level = Level_fort_create();
 		break;
-	case 2:
+/*	case 2:
 		_level = Level_pwr1_create();
 		break;
 	case 3:

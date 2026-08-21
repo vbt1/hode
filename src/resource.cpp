@@ -666,6 +666,7 @@ void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const 
 }
 #endif
 void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t *buf) {
+//	emu_printf("level %d\n", _level);
 //	assert((unsigned int)num < kMaxSpriteTypes);
 	if((unsigned int)num >= kMaxSpriteTypes)
 	{
@@ -706,6 +707,9 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	}
 //si on retourne sur l'écran 0 c'est possible, tout reinitialiser
 // ecran 17 : recharger andy+salamandre si on meurt	
+
+if(_level==0)
+{
 	if (screenNum == 9 && num == 2)
 	{
 //		emu_printf("_resLevelData0x2988Table %d\n",_resLevelData0x2988Table[num].framesCount);
@@ -735,6 +739,41 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	{
 		load = all ? (num < 7 && num != 2) : (num > 3 && num < 7);
 	}
+}
+
+if(_level==1)
+{
+	if (screenNum == 9 && num == 2)
+	{
+//		emu_printf("_resLevelData0x2988Table %d\n",_resLevelData0x2988Table[num].framesCount);
+		load = (num ==2 && _resLevelData0x2988Table[num].framesCount==0);
+	}
+	else if (screenNum <= 3)
+	{
+		if(screenNum=0)
+		{
+			if (_resLevelData0x2988Table[0].framesCount==0 && all==0)
+				load=0;
+		}
+		else
+			load = all ? (num <= 3 && num != 2) : (num == 3);
+	}
+	else if(screenNum>=10)
+	{
+		if(num!=2 && num!=7)
+			memset(&_resLevelData0x2988Table[num], 0, sizeof(LvlObjectData));
+		load = (num ==7 && _resLevelData0x2988Table[num].framesCount==0);
+	}
+	else if (screenNum >= 4)
+	{
+		load = all ? (num < 7 && num != 2) : (num > 3 && num < 7);
+	}
+
+load=1;
+}
+
+
+
 
 	if (!load)
 	{	
