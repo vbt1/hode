@@ -13,6 +13,7 @@ Uint8 * _scrapBuffer;
 Uint8 * _mstResData;
 extern Uint8 *lwram_end;
 extern Uint8 *hwram;
+extern Uint8 *hwram_work;
 }
 #include "fileio.h"
 #include "fs.h"
@@ -655,6 +656,118 @@ void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const 
     }
 }
 #endif
+
+// Apres le decodage VDP2 des frames d'Andy (num==2, andy_vdp2[]), les pixels
+// bruts de framesData ne servent plus a rien : on recompacte animsInfoData
+// (header + table LvlAnimHeader + chaines LvlAnimSeqHeader/LvlAnimSeqFrameHeader,
+// offsets reecrits) + movesData + coordsData + coordsOffsetsTable + hotspotsData
+// dans un buffer plus petit, sans framesData ni framesOffsetsTable, puis on
+// rend l'espace libere a l'arene hwram_work (TYPE_ANDY2).
+//
+// ATTENTION : hwram_work est partage avec TYPE_ANDY / TYPE_SCRMASKBUF /
+// TYPE_BGLVLOBJ / TYPE_MSTAREA (niveau 0, cf sat_mem_checker.cpp). Cette
+// fonction DOIT etre appelee immediatement apres le decodage VDP2, dans le
+// meme appel a loadLvlSpriteData(2, ...), avant que quoi que ce soit d'autre
+// ne reutilise hwram_work.
+//
+// TODO a confirmer : le nombre d'entrees de hotspotsData est suppose egal a
+// dat->hotspotsCount (LvlSprHotspotData, 16 octets chacune) -- a verifier si
+// le vrai compte vient d'un autre champ.
+uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
+	LvlObjectData *dat = &_resLevelData0x2988Table[num];
+	uint8_t *base = dat->animsInfoData; // == ptr d'origine (TYPE_ANDY2)
+
+	// buffer de travail temporaire : taille max = taille d'origine (passee par
+	// l'appelant -- _resLevelData0x2988SizeTable[num] n'est PAS encore a jour
+	// a ce stade de loadLvlSpriteData, ne pas la relire ici), pris dans la
+	// meme arene (juste apres le bloc courant, via le bump pointer)
+	uint8_t *scratch = allocate_memory(_level, TYPE_ANDY2, origSize);
+
+	uint32_t cursor = 0;
+
+	// 1) header fixe
+	memcpy(scratch, base, kLvlAnimHdrOffset);
+	cursor = kLvlAnimHdrOffset;
+
+	// 2) table des LvlAnimHeader
+	const uint32_t animHdrOffset = cursor;
+	LvlAnimHeader *srcAh = (LvlAnimHeader *)(base + kLvlAnimHdrOffset);
+	LvlAnimHeader *dstAh = (LvlAnimHeader *)(scratch + animHdrOffset);
+	memcpy(dstAh, srcAh, dat->hotspotsCount * sizeof(LvlAnimHeader));
+	cursor += dat->hotspotsCount * sizeof(LvlAnimHeader);
+
+	// 3) chaines seq / seq-frame : recopiees, offsets reecrits en absolu par
+	//    rapport au buffer FINAL (base), pas au scratch
+	for (int i = 0; i < dat->hotspotsCount; ++i) {
+		LvlAnimHeader *ah = &dstAh[i];
+		if (ah->seqOffset == 0) continue;
+
+		LvlAnimSeqHeader *srcSeq = (LvlAnimSeqHeader *)(base + ah->seqOffset);
+		const uint32_t seqTableOffset = cursor;
+		LvlAnimSeqHeader *dstSeq = (LvlAnimSeqHeader *)(scratch + seqTableOffset);
+		memcpy(dstSeq, srcSeq, ah->seqCount * sizeof(LvlAnimSeqHeader));
+		cursor += ah->seqCount * sizeof(LvlAnimSeqHeader);
+		ah->seqOffset = seqTableOffset;
+
+		for (int j = 0; j < ah->seqCount; ++j) {
+			LvlAnimSeqHeader *ash = &dstSeq[j];
+			if (ash->offset == 0) continue;
+			LvlAnimSeqFrameHeader *srcFrm = (LvlAnimSeqFrameHeader *)(base + ash->offset);
+			const uint32_t frmTableOffset = cursor;
+			memcpy(scratch + frmTableOffset, srcFrm, ash->count * sizeof(LvlAnimSeqFrameHeader));
+			cursor += ash->count * sizeof(LvlAnimSeqFrameHeader);
+			ash->offset = frmTableOffset;
+		}
+	}
+
+	// 4) movesData
+	const uint32_t movesOffset = cursor;
+	memcpy(scratch + movesOffset, dat->movesData, dat->movesCount * sizeof(LvlSprMoveData));
+	cursor += dat->movesCount * sizeof(LvlSprMoveData);
+
+	// 5) coordsData (longueur variable, comme dans resFixPointersLevelData0x2988)
+	uint32_t coordsDataLen = 0;
+	for (int i = 0; i < dat->coordsCount; ++i) {
+		const int count = dat->coordsData[coordsDataLen];
+		coordsDataLen += count * 4 + 1;
+	}
+	const uint32_t coordsOffset = cursor;
+	memcpy(scratch + coordsOffset, dat->coordsData, coordsDataLen);
+	cursor += coordsDataLen;
+
+	// 5bis) coordsOffsetsTable : a garder (encore utilisee par getLvlSpriteCoordPtr)
+	const uint32_t coordsOffsetsTableOffset = cursor;
+	memcpy(scratch + coordsOffsetsTableOffset, dat->coordsOffsetsTable, dat->coordsCount * sizeof(uint32_t));
+	cursor += dat->coordsCount * sizeof(uint32_t);
+
+	// 6) hotspotsData
+	const uint32_t hotspotsOffset = cursor;
+	memcpy(scratch + hotspotsOffset, dat->hotspotsData, dat->hotspotsCount * sizeof(LvlSprHotspotData));
+	cursor += dat->hotspotsCount * sizeof(LvlSprHotspotData);
+
+	const uint32_t newSize = cursor; // taille finale, sans framesData/framesOffsetsTable
+
+	// 7) rapatriement a l'adresse d'origine : pas de recouvrement possible,
+	//    scratch est physiquement situe apres base dans l'arene
+	memcpy(base, scratch, newSize);
+
+	// 8) mise a jour des pointeurs
+	dat->animsInfoData     = base;
+	dat->movesData          = base + movesOffset;
+	dat->coordsData         = base + coordsOffset;
+	dat->coordsOffsetsTable = base + coordsOffsetsTableOffset;
+	dat->hotspotsData       = base + hotspotsOffset;
+	dat->framesData         = 0;
+	dat->framesOffsetsTable = 0;
+
+	// 9) rendu a l'arene partagee hwram_work : recupere l'espace non utilise
+	//    de l'ancien bloc ET tout le scratch temporaire.
+	hwram_work = base + newSize;
+
+	_resLevelData0x2988SizeTable[num] = newSize;
+	return newSize;
+}
+
 void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t *buf) {
 //	emu_printf("level %d\n", _level);
 //	assert((unsigned int)num < kMaxSpriteTypes);
@@ -804,6 +917,8 @@ else
 			decodeLvlSpriteData(src, w, h);
 		}
 		position_vram_save = position_vram;
+		// pixels deja copies en VDP2 (andy_vdp2[]) : on peut jeter framesData/framesOffsetsTable
+		compactLvlSpriteDataDropFrames(num, size);
 //		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);
 	}
 #endif
@@ -814,7 +929,10 @@ else
 		return;
 	}
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
-	_resLevelData0x2988SizeTable[num] = size;
+	if (num != 2) {
+		// pour num==2, compactLvlSpriteDataDropFrames() a deja mis la taille compactee
+		_resLevelData0x2988SizeTable[num] = size;
+	}
 //emu_printf("vbt sprite num %d framesCount %d dat %p\n", num, dat->framesCount, dat->framesCount, dat);
 }
 

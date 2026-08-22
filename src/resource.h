@@ -761,6 +761,7 @@ struct Resource {
 	
 	void loadLvlSprite(int levelNum, int screenNum, bool all);
 	void loadLvlMst(int levelNum);
+	 uint32_t compactLvlSpriteDataDropFrames(int num, uint32_t origSize);
 };
 
 #endif // RESOURCE_H__

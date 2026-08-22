@@ -2324,6 +2324,7 @@ else
 	maxHeightInRow = 0;
 
 for(int i=0;i<kMaxSpriteTypes;i++)
+	if(i!=2)
 	displayFirstSpriteFrames(_res, _video, i);
 #endif
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
