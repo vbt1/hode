@@ -54,7 +54,7 @@ void *malloc(size_t);
 		TYPE_PAFBUF,	
 		TYPE_RES,
 		TYPE_ANDY1,
-		TYPE_PAFEND1
+		TYPE_ANDY2
 	};
 
 

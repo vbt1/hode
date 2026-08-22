@@ -262,9 +262,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
     uint8_t        flags = (spr->num >> 0xE) & 3;
     const uint16_t spr_w = spr->w;
     const uint8_t  spr_h = spr->h;
-#ifdef PRELOAD_ANDY
-    const bool     compressed = !(spr->ptr->spriteNum == 2 && spr->type == 0);
-#endif
+
 //emu_printf("decodeSPR %d num %d\n",compressed, spr->ptr->spriteNum);
 	if (yOrig >= H) return;
 	else if (yOrig < 0) flags |= kSprClipTop;
@@ -279,26 +277,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 
 	const bool hFlip = (flags & kSprHorizFlip) != 0;
 	const bool vFlip = (flags & kSprVertFlip) != 0;
-#ifdef PRELOAD_ANDY
-	if (!compressed) {
-		src = (uint8_t *)SpriteVRAM + (0x200+andy_vdp2[spr->ptr->currentSprite].cgaddr) * 8;
-		const uint16_t spr_w_padded = (spr_w + 7) & ~7;
-		for (int iy = 0; iy < spr_h; ++iy) {
-			const int dstY = vFlip ? (y2 - iy) : (yOrig + iy);
-			for (int ix = 0; ix < spr_w; ++ix) {
-				const int srcX = hFlip ? (spr_w - 1 - ix) : ix;
-				const int dstX = xOrig + ix;
-				const uint8_t pixel = src[iy * spr_w_padded + srcX];
-				if (dstY >= 0 && dstY < H && dstX >= 0 && dstX < W) {
-					dst[dstY * W + dstX] = pixel;
-//					if (bg && pixel == 0)
-//						bg[dstY * W + dstX] = 0;
-				}
-			}
-		}
-		return;
-	}
-#endif
+
 	/* ---- COMPRESSED ---- */
 	int x = hFlip ? x2 : xOrig;
 	int y = vFlip ? y2 : yOrig;
@@ -475,8 +454,9 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 	if(spr->ptr->spriteNum == 2 && spr->type == 0)
 	{
 		emu_printf("it's andy !! num %d w %d h %d type %d\n", spr->ptr->currentSprite, w, spr_h, spr->type);
-		user_sprite.SRCA = 0x200+andy_vdp2[spr->ptr->currentSprite].cgaddr;
+		user_sprite.SRCA = andy_vdp2[spr->ptr->currentSprite].cgaddr;
 		slSetSprite(&user_sprite, toFIXED2(240));
+		xxxxxxxxxxxxxxxxxx
 	}
 	else
 #endif
@@ -487,7 +467,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 		TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
 		user_sprite.SRCA = tx.CGadr;
 	//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
-		position_vram += size;
+		position_vram += size;xxxxxxxxxxxxxxx
 //		nb_spr++;
 		slSetSprite(&user_sprite, toFIXED2(240));
 		uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
@@ -535,7 +515,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 // vbt pour spritenum==2
 void Video::decodeSPR_ANDY(const Sprite *spr, uint8_t *dst)
 {
-    const uint8_t  *src     = spr->bitmapBits;
+//    const uint8_t  *src     = spr->bitmapBits; // vbt : inutile
     int             x       = 0;
     int             y       = 0;
     uint8_t         flags   = ((uint16_t)spr->num >> 14) & 3; // logical shift
@@ -548,7 +528,6 @@ void Video::decodeSPR_ANDY(const Sprite *spr, uint8_t *dst)
     const uint16_t  w       = (spr_w + 7) & ~7;
 
     const uint16_t size = w * spr_h;
-
 
     SPRITE user_sprite;
     user_sprite.PMOD = CL256Bnk | ECdis | 0x0800;
@@ -576,56 +555,7 @@ void Video::decodeSPR_ANDY(const Sprite *spr, uint8_t *dst)
 		user_sprite.SRCA = 0x200+andy_vdp2[spr->ptr->currentSprite].cgaddr;
 		slSetSprite(&user_sprite, toFIXED2(240));
 	}
-//	else
 #endif
-/*	{
-//		emu_printf("it's not andy !! %d ptr typevbt %d type %d %p\n",spr->ptr->spriteNum, spr->type, spr->ptr->type, spr->ptr);
-		if (position_vram + size >= 0x79000)
-			position_vram = position_vram_save;
-		TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
-		user_sprite.SRCA = tx.CGadr;
-	//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
-		position_vram += size;
-//		nb_spr++;
-		slSetSprite(&user_sprite, toFIXED2(240));
-		uint8_t *dst2 = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
-		memset(dst2, 0x00, size);
-
-		uint8_t *rowBase = dst2;
-
-		while (1) {
-			const int code  = *src++;
-			const int count = code & 0x3F;
-			const int op    = code & 0xC0;
-			uint8_t  *p     = rowBase + x;
-
-			if (op == 0x00) {                // copy
-				for (int i = 0; i < count; ++i) {
-					uint8_t val = src[i];
-					p[i] = val - (val == 0); // branchless 0→255
-				}
-				x   += count;
-				src += count;
-			} else if (op == 0x40) {         // fill
-				const uint8_t val = *src++;
-				memset(p, val == 0 ? 255 : val, count);
-				x += count;
-			} else if (op == 0x80) {         // skip x
-				x += count ? count : *src++;
-			} else {                         // new line
-				if (count == 0) {
-					const int n = *src++;
-					if (n == 0) return;
-					y += n;
-				} else {
-					y += count;
-				}
-				x        = *src++;
-				rowBase  = dst2 + y * w;     // multiply only here
-			}
-		}
-	}
-*/
 }
 
 //------------------------------

@@ -21,7 +21,7 @@ void __cxa_pure_virtual(void) {
 }
 
 void* operator new(size_t size) {
-	emu_printf("new  size %d\n", size);
+//	emu_printf("new  size %d\n", size);
 //    return malloc(size);
 	void *ptr;
 /*	if(size!=8)
@@ -48,7 +48,7 @@ void* operator new(size_t size) {
 	else
 	{
 		ptr = malloc(size);
-	emu_printf("size %d malloc %p\n", size, ptr);
+//	emu_printf("size %d malloc %p\n", size, ptr);
 	}
 	return ptr;
 }

@@ -614,11 +614,9 @@ void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const 
     const uint16_t  spr_w   = (w + 7) & ~7;
 
     const uint16_t size = spr_w * spr_h;
-//    if (position_vram + size >= 0x79000)
-//        position_vram = position_vram_save;
     TEXTURE tx   = TEXDEF(spr_w, spr_h, position_vram);
     uint8_t *dst = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
-//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst, position_vram);
+//	emu_printf("xxx cgaddr %x vram %p pvram %x spr_h %d spr_w %d\n", tx.CGadr << 3,dst, position_vram, spr_h, spr_w);
     position_vram += size;
     memset(dst, 0x00, size);
 
@@ -702,7 +700,7 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 #ifndef PRELOAD_ANDY
 if(_level==0)
 {
-	if (screenNum == 9 && num == 2)
+	if (screenNum == 0 && num == 2)
 	{
 //		emu_printf("_resLevelData0x2988Table %d\n",_resLevelData0x2988Table[num].framesCount);
 		load = (num ==2 && _resLevelData0x2988Table[num].framesCount==0);
@@ -774,7 +772,16 @@ load=1;
 		return;
 	}
 #endif
-	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
+//	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
+if(num==2)
+	ptr = allocate_memory(_level, TYPE_ANDY2, size);
+else if(num<2)
+	ptr = allocate_memory(_level, TYPE_ANDY1, size);
+else
+	ptr = allocate_memory(_level, TYPE_ANDY1, size);	
+// TYPE_ANDY1 lwend
+// TYPE_ANDY hw
+//	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
@@ -793,10 +800,11 @@ load=1;
 			andy_vdp2[i].cgaddr = (position_vram/8);
 			andy_vdp2[i].w = w;
 			andy_vdp2[i].h = h;
+//emu_printf("zzz cgaddr %x i %d vram %x\n", andy_vdp2[i].cgaddr,i, position_vram);
 			decodeLvlSpriteData(src, w, h);
 		}
 		position_vram_save = position_vram;
-		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);
+//		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);
 	}
 #endif
 	const uint32_t allocatedOffsetsSize = size - readSize;

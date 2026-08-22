@@ -2530,6 +2530,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 /*	_cheats = 	kCheatSpectreFireballNoHit | kCheatOneHitPlasmaCannon |	kCheatOneHitSpecialPowers |	kCheatWalkOnLava | kCheatGateNoCrush |
 	kCheatLavaNoHit | kCheatRockShadowNoHit;*/
 	_currentLevel = level;
+	position_vram = 0; // vbt : vire les sprites du menu
 
 // vbt : free menu memory	
 //	current_lwram = (Uint8 *)VBT_L_START;
