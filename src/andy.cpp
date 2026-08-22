@@ -1664,14 +1664,14 @@ else
 sameAnim:
 
 		uint16_t frame1_w, frame1_h;
-#ifdef PRELOAD_ANDY
+/*#ifdef PRELOAD_ANDY
 if(ptr->spriteNum==0 && ptr->type == 8)
 {
 		frame1_w = andy_vdp2[ash->firstFrame].w;
 		frame1_h = andy_vdp2[ash->firstFrame].h;
 }
 else
-#endif
+#endif*/
 {
 		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame1_w, &frame1_h);
 }
@@ -1683,14 +1683,14 @@ else
 		ash = (LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset) + currentAnimFrame;
 
 		uint16_t frame2_w, frame2_h;
-#ifdef PRELOAD_ANDY
+/*#ifdef PRELOAD_ANDY
 if(ptr->spriteNum==0 && ptr->type == 8)
 {
 		frame2_w = andy_vdp2[ash->firstFrame].w;
 		frame2_h = andy_vdp2[ash->firstFrame].h;
 }
 else
-#endif
+#endif*/
 {
 		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame2_w, &frame2_h);
 }
@@ -1731,6 +1731,7 @@ else
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
 //emu_printf("getLvlSpriteFramePtr\n");
+/*
 #ifdef PRELOAD_ANDY
 if(ptr->spriteNum==0 && ptr->type == 8)
 {
@@ -1741,7 +1742,7 @@ if(ptr->spriteNum==0 && ptr->type == 8)
 	ptr->height = andy_vdp2[ash->firstFrame].h;
 }
 else
-#endif
+#endif*/
 {
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 }
