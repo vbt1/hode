@@ -46,7 +46,7 @@ void SYS_Exit(Sint32 code);
 //#define PRELOAD_ANDY 1 
 #ifdef PRELOAD_ANDY
 extern "C" {
-extern SAT_sprite andy_vdp2[284];
+extern SAT_sprite andy_vdp2[457];
 }
 #endif
 // starting level cutscene number
@@ -62,7 +62,7 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 
 		_video = new Video();
 	
-		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+38000); // ne pas trop monter
+		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+30000); // ne pas trop monter
 		_mstResData = (uint8_t *)allocate_memory(-1, TYPE_RES, 33000);
 		const int frame = Video::W * Video::H;
 
@@ -715,8 +715,9 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
 #ifdef PRELOAD_ANDY	
-	if(ptr->spriteNum==0)
+	if(ptr->spriteNum==2)
 	{
+emu_printf("on passe à sprite 2\n");
 	ptr->width = andy_vdp2[ash->firstFrame].w;
 	ptr->height = andy_vdp2[ash->firstFrame].h;
 	}
@@ -1057,7 +1058,7 @@ endDir:
 	return 1;
 }
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
-//emu_printf("preloadLevelScreenData num %d\n", num);
+emu_printf("preloadLevelScreenData num %d\n", num);
 	if(num == kNoScreen)
 		return;
 
@@ -1077,7 +1078,9 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	if(_currentScreen && !_restartLevel)
 	{	
 //		emu_printf("chargement partiel - fall %d\n", _fallingAndyFlag);
+#ifndef PRELOAD_ANDY
 		_res->loadLvlSprite(_currentLevel, _currentScreen, 0);
+#endif
 	}
 
 // vbt : ajout, car tous les sprites ne sont pas chargés
@@ -1468,13 +1471,14 @@ void Game::resetScreen() {
 
 void Game::restartLevel() {
 //emu_printf("restartLevel\n");
-/*    emu_printf("1hwramw %d %p lwram %d hwram %p endhw %p\n",
+    emu_printf("1hwramw %d %p lwram %d hwram %p endhw %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, lwram_end);
-*/	_restartLevel = true;
+	_restartLevel = true;
 //	emu_printf("chargement full\n");
+#ifndef PRELOAD_ANDY
 	_res->loadLvlSprite(_currentLevel, _currentScreen, 1);
-	
+#endif
 	setupAndyLvlObject();
 	clearLvlObjectsList2();
 	clearLvlObjectsList3();
@@ -1544,7 +1548,6 @@ void Game::playAndyFallingCutscene(int type) {
 
 	if (type != 0 && play) {
 //emu_printf("playAndyFallingCutscene loadLvlSprite\n");
-//		_res->loadLvlSprite(_currentLevel, _currentScreen, 1);
 		restartLevel();
 	}
 
@@ -2184,6 +2187,9 @@ void Game::drawScreen() {
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
+if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+	emu_printf("andy1\n");
+	
 				_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
@@ -2208,6 +2214,9 @@ void Game::drawScreen() {
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
+if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+	continue;
+//	emu_printf("andy2\n");
 				_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
@@ -2257,7 +2266,13 @@ void Game::drawScreen() {
 	for (int i = 1; i < 12; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
+if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+{
+				_video->decodeSPR_ANDY(spr, _video->_frontLayer);
+}
+else
 				_video->decodeSPR(spr, _video->_frontLayer);
+
 			}
 		}
 	}
@@ -2284,7 +2299,14 @@ void Game::drawScreen() {
 			if ((spr->num & 0x1000) != 0) {
 //				spr->type = kObjectDataTypeLvlBackgroundSound;
 				if(spr->type != kObjectDataTypeLvlBackgroundSound)
+				{
+					if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+					{
+						emu_printf("andy4\n");
+						continue;
+					}
 					_video->decodeSPR(spr, _video->_frontLayer);
+				}
 				else
 				{
 					if(_currentScreen != redraw_fg)
@@ -2382,13 +2404,13 @@ for(int i = 0; i < dat->framesCount;i++)
 		spr->h = h;
 		sz+=(w*h);
 spr->xPos++;
-                    _video->decodeSPR(spr, _video->_frontLayer);
+                    _video->decodeSPR(spr, _video->_frontLayer); 5
 					slSynch();
 			g_system->sleep(500);
 }
 //emu_printf("vram %d %x\n", sz, sz);
 #endif
-					_video->decodeSPR(spr, _video->_frontLayer);
+					_video->decodeSPR(spr, _video->_frontLayer); 6
 //                } else if (_currentScreen != redraw_fg) {
                 } else {
                     _video->decodeNBG(spr, _video->_frontLayer);

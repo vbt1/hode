@@ -179,6 +179,7 @@ void Level_rock::postScreenUpdate_rock_screen9() {
 			if (_andyObject->xPos > xPos && _andyObject->yPos < 86) {
 #ifdef PAF
 				if (!_paf->_skipCutscenes) {
+emu_printf("lecture video 1\n");
 					_paf->play(1);
 					_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 					_video->_paletteChanged = true;
@@ -191,6 +192,7 @@ void Level_rock::postScreenUpdate_rock_screen9() {
 #ifdef PSX
 				_g->updateBackgroundPsx(1);
 #endif
+emu_printf("on passe à sprite 2\n");
 				_g->setAndySprite(2);
 				_andyObject->xPos = 105;
 				_andyObject->yPos = 52;
@@ -679,14 +681,17 @@ void Level_rock::preScreenUpdate_rock_screen7() {
 void Level_rock::preScreenUpdate_rock_screen9() {
 	switch (_res->_screensState[9].s0) {
 	case 0:
+emu_printf("state 0\n");
 #ifdef PAF
 		if (!_paf->_skipCutscenes) {
 			_paf->preload(1);
+			_paf->play(1);
 		}
 #endif
 		_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 0;
 		break;
 	default:
+emu_printf("state 1\n");
 		_res->_screensState[9].s0 = 1;
 		_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 		break;

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "stdlib.h"
 #define DEBUG 1
+//#define PRELOAD_ANDY 1
 
 extern "C" {
 #include <sgl.h>
@@ -117,7 +118,12 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 			return lwram_end;
 
 		case TYPE_ANDY:
+//			dst = bump(&hwram_work, alignedSize);
+#ifdef PRELOAD_ANDY
+			dst = hwram_work;
+#else
 			dst = bump(&hwram_work, alignedSize);
+#endif
 			DPRINTF("connard %d start %p end %p\n",type, dst, dst+alignedSize, alignedSize);
 			return dst;
 		case TYPE_SCRMASKBUF:

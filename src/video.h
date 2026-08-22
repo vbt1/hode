@@ -71,6 +71,7 @@ struct Video {
 	static void SAT_decodeSPR(const uint8_t *src, uint8_t *dst, uint16_t spr_w, uint16_t spr_h);
 	static void decodeRLE(const uint8_t *src, uint8_t *dst, int size);
 	static void decodeSPR(const Sprite *spr, uint8_t *dst);
+	static void decodeSPR_ANDY(const Sprite *spr, uint8_t *dst);
 //	static void decodeSPR(const Sprite *spr, uint8_t *bg, uint8_t *dst);
 	static void decodeNBG(const Sprite *spr, uint8_t *dst);
 	int computeLineOutCode(int x, int y);

@@ -2,7 +2,7 @@
 #define USE_LESS_RAM 1
 //#define USE_FONT 1
 //#define SECTOR_ALIGNED 1
-#define PRELOAD_ANDY 1
+//#define PRELOAD_ANDY 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -26,9 +26,10 @@ extern Uint32 position_vram_save;
 extern uint8_t *cs1ram;
 //uint8_t *cs1ram = (uint8_t *)0x22402000;
 //uint8_t *save_cs1ram;
-#ifdef PRELOAD_ANDY
-SAT_sprite andy_vdp2[284];
-#endif
+//#ifdef PRELOAD_ANDY
+SAT_sprite andy_vdp2[457];
+//#endif
+int xdone = 0;
 // load and uncompress .sss pcm on level start
 #ifdef SOUND
 static const bool kPreloadSssPcm = false;
@@ -57,16 +58,7 @@ static const char *_prefixes[] = {
 	"DARK",
 	"TEST"
 };
-/*
-static void stringUpperCase(char *p) {
-	while (*p) {
-		if (*p >= 'a' && *p <= 'z') {
-			*p -= 'a' - 'A';
-		}
-		++p;
-	}
-}
-*/
+
 static void make_filename(char *buf, int bufsize, const char *prefix, const char *suffix);
 
 static bool openDat(FileSystem *fs, const char *name, File *f) {
@@ -613,7 +605,7 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 
 	return (dat->framesCount + dat->coordsCount) * sizeof(uint32_t);
 }
-#ifdef PRELOAD_ANDY
+#if 1//PRELOAD_ANDY
 void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const uint8_t h)
 {
     int             x       = 0;
@@ -707,7 +699,7 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	}
 //si on retourne sur l'écran 0 c'est possible, tout reinitialiser
 // ecran 17 : recharger andy+salamandre si on meurt	
-
+#ifndef PRELOAD_ANDY
 if(_level==0)
 {
 	if (screenNum == 9 && num == 2)
@@ -781,7 +773,7 @@ load=1;
 //		emu_printf("je n'alloue pas de mémoire screen %d num %d all %d\n",screenNum, num, all);
 		return;
 	}
-
+#endif
 	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
 
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
@@ -790,27 +782,21 @@ load=1;
 	LvlObjectData *dat = &_resLevelData0x2988Table[num];
 	
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
-#ifdef PRELOAD_ANDY
-	if(num == 2)
+#if 1//PRELOAD_ANDY
+	if(num == 2 && !xdone)
 	{
-
-		Video *_video = new Video();
-//emu_printf("dat->framesCount %d\n", dat->framesCount);
+		xdone=1;
 		for (int i = 0;i<dat->framesCount;i++)	
 		{
 			uint16_t w, h;
 			const uint8_t *src = getLvlSpriteFramePtr(dat, i, &w, &h);
-//			andy_vdp2[i] = (position_vram/8);
 			andy_vdp2[i].cgaddr = (position_vram/8);
 			andy_vdp2[i].w = w;
 			andy_vdp2[i].h = h;
-
-//emu_printf("position_vram %x  %d i %d\n", position_vram, position_vram/8, i);
 			decodeLvlSpriteData(src, w, h);
 		}
 		position_vram_save = position_vram;
 		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);
-		return;
 	}
 #endif
 	const uint32_t allocatedOffsetsSize = size - readSize;
@@ -820,11 +806,8 @@ load=1;
 		return;
 	}
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
-//	_resLevelData0x2988PtrTable[dat->spriteNum] = 0;
-//	_resLvlSpriteDataPtrTable[num] = ptr;
 	_resLevelData0x2988SizeTable[num] = size;
-//	_resLevelData0x2988SizeTable[num] = 0;
-//emu_printf("sprite num %d framesCount %d\n", num, dat->framesCount, dat->framesCount);
+//emu_printf("vbt sprite num %d framesCount %d dat %p\n", num, dat->framesCount, dat->framesCount, dat);
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
@@ -1172,7 +1155,9 @@ bool Resource::isLvlBackgroundDataLoaded(int num) const {
 
 void Resource::incLvlSpriteDataRefCounter(LvlObject *ptr) {
 	LvlObjectData *dat = _resLevelData0x2988PtrTable[ptr->spriteNum];
-	assert(dat);
+//	assert(dat);
+	if(!dat)
+		return;
 	++dat->refCount;
 	ptr->levelData0x2988 = dat;
 }

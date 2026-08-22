@@ -10,7 +10,7 @@
 #include "util.h"
 #ifdef PRELOAD_ANDY
 extern "C" {
-extern SAT_sprite andy_vdp2[284];
+extern SAT_sprite andy_vdp2[457];
 }
 #endif
 // probably rename this to anim.cpp as this updates most LvlObject, not only Andy
@@ -1628,7 +1628,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 
 		uint16_t w, h;
 #ifdef PRELOAD_ANDY
-if(ptr->spriteNum==0)
+if(ptr->spriteNum==2)
 {
 		w = andy_vdp2[ash->firstFrame].w;
 		h = andy_vdp2[ash->firstFrame].h;
