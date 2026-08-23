@@ -5,6 +5,7 @@
 //#define DISPLAYANDYANIM 1
 //#define USE_SPRITE 1
 #define OLD_DRAW_SCREEN 1
+//#define PRELOAD_ANDY 1
 //#define DEBUG 1
 //#define DEBUG2 1
 //#define USE_FONT 1
@@ -62,7 +63,7 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 
 		_video = new Video();
 	
-		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+30000); // ne pas trop monter
+		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+25000); // ne pas trop monter
 		_mstResData = (uint8_t *)allocate_memory(-1, TYPE_RES, 33000);
 		const int frame = Video::W * Video::H;
 
@@ -506,7 +507,7 @@ void Game::addToSpriteList(LvlObject *ptr) {
 			spr->xPos += dataPtr->dxPos;
 		}
 //		if (ptr->bitmapBits)
-		if(ptr->spriteNum==0 || ptr->bitmapBits)
+		if(ptr->spriteNum==0 || ptr->spriteNum==2 || ptr->bitmapBits)
 		{
 // vbt : pour le calcul de l'ombre
 			spr->w = ptr->width;

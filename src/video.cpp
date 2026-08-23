@@ -519,8 +519,8 @@ void Video::decodeSPR_ANDY(const Sprite *spr, uint8_t *dst)
     int             x       = 0;
     int             y       = 0;
     uint8_t         flags   = ((uint16_t)spr->num >> 14) & 3; // logical shift
-    const uint16_t  spr_w   = spr->w;
-    const uint8_t   spr_h   = spr->h;
+    const uint16_t  spr_w   = andy_vdp2[spr->ptr->currentSprite].w;//spr->w;
+    const uint8_t   spr_h   = andy_vdp2[spr->ptr->currentSprite].h;//spr->h;
     const int       xAnchor = spr->xPos;
     const int       yAnchor = spr->yPos;
     const bool      hFlip   = (flags & kSprHorizFlip) != 0;
