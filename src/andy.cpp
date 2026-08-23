@@ -1633,11 +1633,10 @@ if(ptr->spriteNum==2)
 		w = andy_vdp2[ash->firstFrame].w;
 		h = andy_vdp2[ash->firstFrame].h;
 }
-else
+
 #endif
-{
 		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &w, &h);
-}
+
 		ptr->flags1 = ((ptr->flags1 & 0x30) ^ ((asfh->flags & 3) << 4)) | (ptr->flags1 & ~0x30);
 		int type = (ptr->flags1 >> 4) & 3;
 
@@ -1665,15 +1664,15 @@ sameAnim:
 
 		uint16_t frame1_w, frame1_h;
 		// vbt : plus besoin de framesData pour Andy, decodeSPR_ANDY lit andy_vdp2[]
+#ifdef PRELOAD_ANDY
 		if (ptr->spriteNum == 2 && ptr->type == 8)
 		{
 			frame1_w = andy_vdp2[ash->firstFrame].w;
 			frame1_h = andy_vdp2[ash->firstFrame].h;
 		}
-		else
-		{
-			_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame1_w, &frame1_h);
-		}
+#endif
+		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame1_w, &frame1_h);
+
 		++currentAnimFrame;
 		if (currentAnimFrame >= ah->seqCount) {
 			currentAnimFrame = 0;
@@ -1682,15 +1681,15 @@ sameAnim:
 		ash = (LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset) + currentAnimFrame;
 
 		uint16_t frame2_w, frame2_h;
+#ifdef PRELOAD_ANDY
 		if (ptr->spriteNum == 2 && ptr->type == 8)
 		{
 			frame2_w = andy_vdp2[ash->firstFrame].w;
 			frame2_h = andy_vdp2[ash->firstFrame].h;
 		}
-		else
-		{
-			_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame2_w, &frame2_h);
-		}
+#endif
+		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame2_w, &frame2_h);
+
 		int dw = frame2_w - frame1_w;
 		int dh = frame2_h - frame1_h;
 
@@ -1731,16 +1730,13 @@ sameAnim:
 	// vbt : plus besoin de framesData pour Andy (decodeSPR_ANDY lit andy_vdp2[]
 	// directement, spr->bitmapBits est inutilise pour spriteNum==2)
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
-
+#ifdef PRELOAD_ANDY
 	if (ptr->spriteNum == 2 && ptr->type == 8)
 	{
 		ptr->width = andy_vdp2[ash->firstFrame].w;
 		ptr->height = andy_vdp2[ash->firstFrame].h;
 	}
-	else
-	{
-//		ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
-	}
+#endif
 	LvlSprHotspotData *hs = ((LvlSprHotspotData *)dat->hotspotsData) + ash->firstFrame;
 
 	if (_andyUpdatePositionFlag) {

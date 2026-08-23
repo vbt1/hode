@@ -20,7 +20,7 @@ extern "C" {
 
 extern "C" {
 extern Uint32 position_vram;
-extern Uint32 position_vram_save;
+//extern Uint32 position_vram_save;
 //#ifdef PRELOAD_ANDY // ok
 #if 1
 extern SAT_sprite andy_vdp2[457];
@@ -462,8 +462,8 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 #endif
 	{
 //		emu_printf("it's not andy !! %d ptr %p\n",spr->num, spr->ptr);
-		if (position_vram + size >= 0x79000)
-			position_vram = position_vram_save;
+//		if (position_vram + size >= 0x79000)
+//			position_vram = position_vram_save;
 		TEXTURE tx   = TEXDEF(w, spr_h, position_vram);
 		user_sprite.SRCA = tx.CGadr;
 	//	emu_printf("cgaddr %x vram %p pvram %x\n", tx.CGadr << 3,dst2,position_vram);
@@ -519,8 +519,10 @@ void Video::decodeSPR_ANDY(const Sprite *spr, uint8_t *dst)
     int             x       = 0;
     int             y       = 0;
     uint8_t         flags   = ((uint16_t)spr->num >> 14) & 3; // logical shift
-    const uint16_t  spr_w   = andy_vdp2[spr->ptr->currentSprite].w;//spr->w;
-    const uint8_t   spr_h   = andy_vdp2[spr->ptr->currentSprite].h;//spr->h;
+//    const uint16_t  spr_w   = andy_vdp2[spr->ptr->currentSprite].w;//spr->w;
+//    const uint8_t   spr_h   = andy_vdp2[spr->ptr->currentSprite].h;//spr->h;
+    const uint16_t  spr_w   = spr->w;
+    const uint8_t   spr_h   = spr->h;
     const int       xAnchor = spr->xPos;
     const int       yAnchor = spr->yPos;
     const bool      hFlip   = (flags & kSprHorizFlip) != 0;

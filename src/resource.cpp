@@ -23,7 +23,7 @@ extern Uint8 *hwram_work;
 #include "resource.h"
 #include "util.h"
 extern Uint32 position_vram;
-extern Uint32 position_vram_save;
+//extern Uint32 position_vram_save;
 extern uint8_t *cs1ram;
 //uint8_t *cs1ram = (uint8_t *)0x22402000;
 //uint8_t *save_cs1ram;
@@ -1025,7 +1025,7 @@ else
 //emu_printf("zzz cgaddr %x i %d vram %x\n", andy_vdp2[i].cgaddr,i, position_vram);
 			decodeLvlSpriteData(src, w, h);
 		}
-		position_vram_save = position_vram;
+//		position_vram_save = position_vram;
 		// pixels deja copies en VDP2 (andy_vdp2[]) : on peut jeter framesData/framesOffsetsTable
 //		compactLvlSpriteDataDropFrames(num, size);
 //		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);

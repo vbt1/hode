@@ -22,7 +22,7 @@ unsigned char frame_y = 0;
 unsigned char frame_z = 0;
 #endif
 extern Uint32 position_vram;
-extern Uint32 position_vram_save;
+//extern Uint32 position_vram_save;
 extern Uint8 *lwram_end;
 extern Uint8 *hwram;
 extern Uint8 *hwram_work;
@@ -2687,7 +2687,7 @@ emu_printf("restartLevel1\n");
 //	frame_y = frame_x = 0;
 
 	uint8_t last_frame_z = 0xFF;
-	position_vram = position_vram_save;
+//	position_vram = position_vram_save;
 
 	while (true) {
 		const int frameTimeStamp = g_system->getTimeStamp() + _frameMs;
