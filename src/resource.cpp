@@ -619,6 +619,7 @@ void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const 
     TEXTURE tx   = TEXDEF(spr_w, spr_h, position_vram);
     uint8_t *dst = (uint8_t *)SpriteVRAM + (tx.CGadr << 3);
 //	emu_printf("xxx cgaddr %x vram %p pvram %x spr_h %d spr_w %d\n", tx.CGadr << 3,dst, position_vram, spr_h, spr_w);
+//emu_printf("w %d h %d spr_w %d position_vram %d real_vram_addr %p\n", w,h,spr_w,position_vram,dst);
     position_vram += size;
     memset(dst, 0x00, size);
 
@@ -708,14 +709,14 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     uint32_t coordsDataOffset = READ_LE_UINT32(base + 0x20);
     uint32_t coordsOffsetsOffset = READ_LE_UINT32(base + 0x24);
     uint32_t hotspotsDataOffset = READ_LE_UINT32(base + 0x28);
-    
+  /*  
     emu_printf("=== ORIGINAL OFFSETS ===\n");
     emu_printf("moves=0x%x framesData=0x%x framesOffsets=0x%x coordsData=0x%x coordsOffsets=0x%x hotspots=0x%x\n",
                movesDataOffset, framesDataOffset, framesOffsetsOffset,
                coordsDataOffset, coordsOffsetsOffset, hotspotsDataOffset);
     emu_printf("framesCount=%d hotspotsCount=%d movesCount=%d coordsCount=%d\n",
                framesCount, hotspotsCount, movesCount, coordsCount);
-    
+    */
     // ============================================================
     // ÉTAPE 1 : HEADER (0x00 - 0x2B)
     // ============================================================
@@ -743,10 +744,10 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     memcpy(dst + pos, base + 0x2C, animsInfoSize);
     pos += animsInfoSize;
     uint32_t newHotspotsDataOffset = pos;
-    
+/*    
     emu_printf("STEP 2: animsInfoSize=%d pos=0x%x newHotspots=0x%x\n", 
                animsInfoSize, pos, newHotspotsDataOffset);
-    
+*/   
     // ============================================================
     // ÉTAPE 3 : hotspotsData (LvlSprHotspotData[hotspotsCount])
     // ============================================================
@@ -754,10 +755,10 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     memcpy(dst + pos, base + hotspotsDataOffset, hotspotsSize);
     pos += hotspotsSize;
     uint32_t newMovesDataOffset = pos;
-    
+/*    
     emu_printf("STEP 3: hotspotsSize=%d pos=0x%x newMoves=0x%x\n", 
                hotspotsSize, pos, newMovesDataOffset);
-    
+*/    
     // ============================================================
     // ÉTAPE 4 : movesData (LvlSprMoveData[movesCount])
     // ============================================================
@@ -769,10 +770,10 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     memcpy(dst + pos, base + movesDataOffset, movesSize);
     pos += movesSize;
     uint32_t newFramesDataOffset = pos;
-    
+ /*   
     emu_printf("STEP 4: movesSize=%d pos=0x%x newFramesData=0x%x\n", 
                movesSize, pos, newFramesDataOffset);
-    
+*/    
     // ============================================================
     // ÉTAPE 5 : framesData (1 OCTET PAR FRAME)
     // ============================================================
@@ -780,9 +781,9 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     memset(dst + pos, 0, newFramesDataSize);
     pos += newFramesDataSize;
     uint32_t newFramesOffsetsOffset = pos;
-    
+/*    
     emu_printf("STEP 5: framesData size=%d pos=0x%x\n", newFramesDataSize, pos);
-    
+*/    
     // ============================================================
     // ÉTAPE 6 : framesOffsetsTable (framesCount * 4)
     //    Chaque offset pointe vers i * 1
@@ -792,9 +793,9 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
         pos += 4;
     }
     uint32_t newCoordsDataOffset = pos;
-    
+/*    
     emu_printf("STEP 6: framesOffsets size=%d pos=0x%x\n", framesCount * 4, pos);
-    
+*/    
     // ============================================================
     // ÉTAPE 7 : coordsData (si présent)
     // ============================================================
@@ -810,9 +811,9 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
         memcpy(dst + pos, base + coordsDataOffset, coordsDataSize);
         pos += coordsDataSize;
     }
-    
+/*    
     emu_printf("STEP 7: coordsData size=%d pos=0x%x\n", coordsDataSize, pos);
-    
+*/    
     // ============================================================
     // ÉTAPE 8 : coordsOffsetsTable (coordsCount * 4)
     // ============================================================
@@ -824,9 +825,9 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     } else {
         newCoordsOffsetsOffset = 0;
     }
-    
+/*    
     emu_printf("STEP 8: coordsOffsets pos=0x%x\n", pos);
-    
+*/    
     uint32_t usedSize = SAT_ALIGN(pos);
     
     // ============================================================
@@ -838,7 +839,7 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     WRITE_LE_UINT32(dst + 0x20, (coordsDataOffset == 0) ? 0 : newCoordsDataOffset);
     WRITE_LE_UINT32(dst + 0x24, newCoordsOffsetsOffset);
     WRITE_LE_UINT32(dst + 0x28, newHotspotsDataOffset);
-    
+/*    
     emu_printf("=== NEW OFFSETS ===\n");
     emu_printf("hotspots=0x%x (old=0x%x)\n", newHotspotsDataOffset, hotspotsDataOffset);
     emu_printf("moves=0x%x (old=0x%x)\n", newMovesDataOffset, movesDataOffset);
@@ -848,7 +849,7 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     emu_printf("coordsOffsets=0x%x (old=0x%x)\n", newCoordsOffsetsOffset, coordsOffsetsOffset);
     emu_printf("usedSize=%d (origSize=%d)\n", usedSize, origSize);
     emu_printf("=== Memory saved: %d bytes ===\n", origSize - usedSize);
-    
+*/    
     // ============================================================
     // ÉTAPE 10 : Recopier dans base
     // ============================================================
@@ -1027,7 +1028,7 @@ else
 		}
 //		position_vram_save = position_vram;
 		// pixels deja copies en VDP2 (andy_vdp2[]) : on peut jeter framesData/framesOffsetsTable
-//		compactLvlSpriteDataDropFrames(num, size);
+		compactLvlSpriteDataDropFrames(num, size);
 //		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);
 	}
 #endif

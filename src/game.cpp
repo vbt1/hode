@@ -713,19 +713,18 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
-	// vbt : plus besoin de framesData pour Andy (decodeSPR_ANDY lit andy_vdp2[]
-	// directement, spr->bitmapBits est inutilise pour spriteNum==2)
-	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
-
+	// vbt : bitmapBits n'est plus necessaire pour Andy -- decodeSPR_ANDY lit
+	// andy_vdp2[] pour le sprite principal, decodeSPR_ANDY_shadow pour l'ombre
+	// (les deux depuis la VRAM deja decompressee, pas depuis framesData).
 	if (ptr->spriteNum == 2)
 	{
-//		ptr->bitmapBits = 0;
+		ptr->bitmapBits = 0;
 		ptr->width = andy_vdp2[ash->firstFrame].w;
 		ptr->height = andy_vdp2[ash->firstFrame].h;
 	}
-//	else
+	else
 	{
-//		ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
+		ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 	}
 //emu_printf("getLvlSpriteFramePtr %d w %d h %d snum %d\n", ash->firstFrame, ptr->width, ptr->height, ptr->spriteNum);
 
@@ -2175,7 +2174,11 @@ void Game::drawScreen() {
 	for (int i = 1; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-				_video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
+				// vbt : Andy n'a plus de bitmapBits, ombre reconstruite depuis andy_vdp2[]
+				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
+					_video->decodeSPR_ANDY_shadow(spr, _video->_shadowLayer);
+				else
+					_video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
 			}
 		}
 	}
@@ -2188,10 +2191,11 @@ void Game::drawScreen() {
 	for (int i = 1; i < 4; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
-	emu_printf("andy1\n");
-	
-				_video->decodeSPR(spr, _video->_frontLayer);
+				// vbt : Andy se dessine via le sprite materiel VDP2 (andy_vdp2[])
+				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
+					_video->decodeSPR_ANDY(spr, _video->_frontLayer);
+				else
+					_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
 	}
@@ -2231,7 +2235,10 @@ if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
-				_video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
+				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
+					_video->decodeSPR_ANDY_shadow(spr, _video->_shadowLayer);
+				else
+					_video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
 			}
 		}
 	}
@@ -2388,7 +2395,12 @@ void Game::drawScreen() {
         for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
             switch (spr->num & 0x3000) {
             case 0x3000:
-                _video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
+                // vbt : Andy n'a plus de bitmapBits (framesData) -- l'ombre est
+                // reconstruite depuis la VRAM deja decompressee (andy_vdp2[])
+                if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
+                    _video->decodeSPR_ANDY_shadow(spr, _video->_shadowLayer);
+                else
+                    _video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
                 // fallthrough
             case 0x1000:
                 if (spr->type != kObjectDataTypeLvlBackgroundSound) {

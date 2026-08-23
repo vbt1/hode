@@ -560,6 +560,45 @@ void Video::decodeSPR_ANDY(const Sprite *spr, uint8_t *dst)
 #endif
 }
 
+// vbt : ombre d'Andy sans passer par bitmapBits/framesData -- on relit les
+// pixels DEJA decompresses en VRAM VDP1 par decodeLvlSpriteData (resource.cpp)
+// via andy_vdp2[]. Meme convention que decodeLvlSpriteData : 0 = transparent,
+// largeur VRAM alignee a un multiple de 8 (padding), tout octet non nul = pixel
+// oppose -> ecrit tel quel dans dst (_shadowLayer), comme le fait decodeSPR
+// pour les autres sprites.
+void Video::decodeSPR_ANDY_shadow(const Sprite *spr, uint8_t *dst)
+{
+	const int      frame = spr->ptr->currentSprite;
+	const uint16_t spr_w = andy_vdp2[frame].w;
+	const uint8_t  spr_h = andy_vdp2[frame].h;
+	const uint16_t pitch = (spr_w + 7) & ~7; // meme padding que decodeLvlSpriteData
+//	const uint16_t pitch = spr_w;
+	const uint8_t *src   = (const uint8_t *)SpriteVRAM + (andy_vdp2[frame].cgaddr << 3) + 0x1000;
+
+	const int      xOrig = spr->xPos;
+	const int      yOrig = spr->yPos;
+	const uint8_t  flags = ((uint16_t)spr->num >> 14) & 3;
+	const bool     hFlip = (flags & kSprHorizFlip) != 0;
+	const bool     vFlip = (flags & kSprVertFlip)  != 0;
+
+	if (yOrig >= H || yOrig + spr_h <= 0) return;
+	if (xOrig >= W || xOrig + spr_w <= 0) return;
+
+	for (int row = 0; row < spr_h; ++row) {
+		const int y = vFlip ? (yOrig + spr_h - 1 - row) : (yOrig + row);
+		if (y < 0 || y >= H) continue;
+		const uint8_t *srcRow = src + row * pitch;
+		uint8_t *dstRow = dst + y * W;
+		for (int col = 0; col < spr_w; ++col) {
+			const uint8_t val = srcRow[col];
+			if (val == 0) continue; // transparent (cf decodeLvlSpriteData)
+			const int x = hFlip ? (xOrig + spr_w - 1 - col) : (xOrig + col);
+			if (x < 0 || x >= W) continue;
+			dstRow[x] = val;
+		}
+	}
+}
+
 //------------------------------
 
 
@@ -911,4 +950,4 @@ void Video::decodeBackgroundOverlayPsx(const uint8_t *src, int x, int y) {
 		assert(offset == size + 2);
 	}
 }
-#endif
+#endif

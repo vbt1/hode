@@ -114,15 +114,16 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 			return dst;
 		case TYPE_ANDY1:
 			lwram_end -= SAT_ALIGN(alignedSize);
-//			DPRINTF("%d start %p end %p size %d\n",type, lwram_end, lwram_end+alignedSize, alignedSize);
+			DPRINTF("TYPE_ANDY1 %d start %p end %p size %d\n",type, lwram_end, lwram_end+alignedSize, alignedSize);
 			return lwram_end;
 
 		case TYPE_ANDY2:
 			dst = bump(&hwram_work, alignedSize);
+			DPRINTF("TYPE_ANDY2 %d start %p end %p\n",type, dst, dst+alignedSize, alignedSize);
 			return dst;
 		case TYPE_ANDY:
 			dst = bump(&hwram_work, alignedSize);
-			DPRINTF("connard %d start %p end %p\n",type, dst, dst+alignedSize, alignedSize);
+			DPRINTF("TYPE_ANDY %d start %p end %p\n",type, dst, dst+alignedSize, alignedSize);
 			return dst;
 		case TYPE_SCRMASKBUF:
 //		case TYPE_RES:
