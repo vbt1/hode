@@ -1,9 +1,8 @@
 #pragma GCC optimize ("Os")
 #define PAF 1
 #define USE_LESS_RAM 1
-#define DISPLAY_FIRST_FRAME_BY_SPRITE 1
+//#define DISPLAY_FIRST_FRAME_BY_SPRITE 1
 //#define DISPLAYANDYANIM 1
-//#define USE_SPRITE 1
 #define OLD_DRAW_SCREEN 1
 //#define PRELOAD_ANDY 1
 //#define DEBUG 1
@@ -44,12 +43,11 @@ void SYS_Exit(Sint32 code);
 #include "util.h"
 #include "video.h"
 
-//#define PRELOAD_ANDY 1 
-#ifdef PRELOAD_ANDY
+// vbt : andy_vdp2 est utilise directement (sans passer par PRELOAD_ANDY, qui
+// gate aussi le chargement incremental des sprites par ecran plus bas)
 extern "C" {
 extern SAT_sprite andy_vdp2[457];
 }
-#endif
 // starting level cutscene number
 static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
 static uint8_t redraw_fg = 255;
@@ -715,17 +713,19 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 6);
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
-#ifdef PRELOAD_ANDY	
-	if(ptr->spriteNum==2)
-	{
-emu_printf("on passe à sprite 2\n");
-	ptr->width = andy_vdp2[ash->firstFrame].w;
-	ptr->height = andy_vdp2[ash->firstFrame].h;
-	}
-	else
-#endif
-	{
+	// vbt : plus besoin de framesData pour Andy (decodeSPR_ANDY lit andy_vdp2[]
+	// directement, spr->bitmapBits est inutilise pour spriteNum==2)
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
+
+	if (ptr->spriteNum == 2)
+	{
+//		ptr->bitmapBits = 0;
+		ptr->width = andy_vdp2[ash->firstFrame].w;
+		ptr->height = andy_vdp2[ash->firstFrame].h;
+	}
+//	else
+	{
+//		ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 	}
 //emu_printf("getLvlSpriteFramePtr %d w %d h %d snum %d\n", ash->firstFrame, ptr->width, ptr->height, ptr->spriteNum);
 

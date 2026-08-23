@@ -1664,17 +1664,16 @@ else
 sameAnim:
 
 		uint16_t frame1_w, frame1_h;
-/*#ifdef PRELOAD_ANDY
-if(ptr->spriteNum==0 && ptr->type == 8)
-{
-		frame1_w = andy_vdp2[ash->firstFrame].w;
-		frame1_h = andy_vdp2[ash->firstFrame].h;
-}
-else
-#endif*/
-{
-		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame1_w, &frame1_h);
-}
+		// vbt : plus besoin de framesData pour Andy, decodeSPR_ANDY lit andy_vdp2[]
+		if (ptr->spriteNum == 2 && ptr->type == 8)
+		{
+			frame1_w = andy_vdp2[ash->firstFrame].w;
+			frame1_h = andy_vdp2[ash->firstFrame].h;
+		}
+		else
+		{
+			_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame1_w, &frame1_h);
+		}
 		++currentAnimFrame;
 		if (currentAnimFrame >= ah->seqCount) {
 			currentAnimFrame = 0;
@@ -1683,17 +1682,15 @@ else
 		ash = (LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset) + currentAnimFrame;
 
 		uint16_t frame2_w, frame2_h;
-/*#ifdef PRELOAD_ANDY
-if(ptr->spriteNum==0 && ptr->type == 8)
-{
-		frame2_w = andy_vdp2[ash->firstFrame].w;
-		frame2_h = andy_vdp2[ash->firstFrame].h;
-}
-else
-#endif*/
-{
-		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame2_w, &frame2_h);
-}
+		if (ptr->spriteNum == 2 && ptr->type == 8)
+		{
+			frame2_w = andy_vdp2[ash->firstFrame].w;
+			frame2_h = andy_vdp2[ash->firstFrame].h;
+		}
+		else
+		{
+			_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame2_w, &frame2_h);
+		}
 		int dw = frame2_w - frame1_w;
 		int dh = frame2_h - frame1_h;
 
@@ -1731,21 +1728,19 @@ else
 	ptr->flags1 = merge_bits(ptr->flags1, ash->flags1, 8);
 	ptr->currentSprite = ash->firstFrame;
 //emu_printf("getLvlSpriteFramePtr\n");
-/*
-#ifdef PRELOAD_ANDY
-if(ptr->spriteNum==0 && ptr->type == 8)
-{
-//	ptr->bitmapBits = (const uint8_t *)0x99999;
-//	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
-//emu_printf("w %d h %d w2 %d h2 %d tp %d\n", andy_vdp2[ash->firstFrame].w, andy_vdp2[ash->firstFrame].h, ptr->width, ptr->height, ptr->type);
-	ptr->width = andy_vdp2[ash->firstFrame].w;
-	ptr->height = andy_vdp2[ash->firstFrame].h;
-}
-else
-#endif*/
-{
+	// vbt : plus besoin de framesData pour Andy (decodeSPR_ANDY lit andy_vdp2[]
+	// directement, spr->bitmapBits est inutilise pour spriteNum==2)
 	ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
-}
+
+	if (ptr->spriteNum == 2 && ptr->type == 8)
+	{
+		ptr->width = andy_vdp2[ash->firstFrame].w;
+		ptr->height = andy_vdp2[ash->firstFrame].h;
+	}
+	else
+	{
+//		ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
+	}
 	LvlSprHotspotData *hs = ((LvlSprHotspotData *)dat->hotspotsData) + ash->firstFrame;
 
 	if (_andyUpdatePositionFlag) {

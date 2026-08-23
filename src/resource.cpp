@@ -682,8 +682,26 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     if (dat->spriteNum != 2) return 0;
     
     uint8_t *base = dat->animsInfoData;
+    uint8_t *saved_lwram = current_lwram;
+    uint8_t *dst = current_lwram;
+    uint32_t pos = 0;
     
-    // Lire les OFFSETS ORIGINAUX depuis le header
+    // ============================================================
+    // Sauvegarder TOUTES les métadonnées
+    // ============================================================
+    uint8_t unk0 = dat->unk0;
+    uint8_t spriteNum = dat->spriteNum;
+    uint16_t framesCount = dat->framesCount;
+    uint16_t hotspotsCount = dat->hotspotsCount;
+    uint16_t movesCount = dat->movesCount;
+    uint16_t coordsCount = dat->coordsCount;
+    uint8_t refCount = dat->refCount;
+    uint8_t frame = dat->frame;
+    uint16_t anim = dat->anim;
+    
+    // ============================================================
+    // Lire les OFFSETS ORIGINAUX
+    // ============================================================
     uint32_t movesDataOffset = READ_LE_UINT32(base + 0x14);
     uint32_t framesDataOffset = READ_LE_UINT32(base + 0x18);
     uint32_t framesOffsetsOffset = READ_LE_UINT32(base + 0x1C);
@@ -691,123 +709,170 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     uint32_t coordsOffsetsOffset = READ_LE_UINT32(base + 0x24);
     uint32_t hotspotsDataOffset = READ_LE_UINT32(base + 0x28);
     
-    // Sauvegarder les métadonnées du header
-    uint8_t unk0 = base[0x00];
-    uint8_t spriteNum = base[0x01];
-    uint16_t framesCount = READ_LE_UINT16(base + 0x02);
-    uint16_t hotspotsCount = READ_LE_UINT16(base + 0x04);
-    uint16_t movesCount = READ_LE_UINT16(base + 0x06);
-    uint16_t coordsCount = READ_LE_UINT16(base + 0x08);
-    uint8_t refCount = base[0x0A];
-    uint8_t frame = base[0x0B];
-    uint16_t anim = READ_LE_UINT16(base + 0x0C);
-    
-    emu_printf("=== compactLvlSpriteDataDropFrames ===\n");
+    emu_printf("=== ORIGINAL OFFSETS ===\n");
+    emu_printf("moves=0x%x framesData=0x%x framesOffsets=0x%x coordsData=0x%x coordsOffsets=0x%x hotspots=0x%x\n",
+               movesDataOffset, framesDataOffset, framesOffsetsOffset,
+               coordsDataOffset, coordsOffsetsOffset, hotspotsDataOffset);
     emu_printf("framesCount=%d hotspotsCount=%d movesCount=%d coordsCount=%d\n",
                framesCount, hotspotsCount, movesCount, coordsCount);
-    emu_printf("moves=0x%x framesData=0x%x framesOffsets=0x%x coordsOffsets=0x%x hotspots=0x%x\n",
-               movesDataOffset, framesDataOffset, framesOffsetsOffset, coordsOffsetsOffset, hotspotsDataOffset);
-    emu_printf("origSize=%d\n", origSize);
     
     // ============================================================
-    // On va réécrire le buffer en place
+    // ÉTAPE 1 : HEADER (0x00 - 0x2B)
     // ============================================================
-    uint32_t writePos = 0;
+    // Métadonnées
+    dst[pos++] = unk0;
+    dst[pos++] = spriteNum;
+    WRITE_LE_UINT16(dst + pos, framesCount); pos += 2;
+    WRITE_LE_UINT16(dst + pos, hotspotsCount); pos += 2;
+    WRITE_LE_UINT16(dst + pos, movesCount); pos += 2;
+    WRITE_LE_UINT16(dst + pos, coordsCount); pos += 2;
+    dst[pos++] = refCount;
+    dst[pos++] = frame;
+    WRITE_LE_UINT16(dst + pos, anim); pos += 2;
+    pos += 2; // padding 0x0E
+    pos += 4; // padding 0x10
     
-    // 1. HEADER (0x00 - 0x2B)
-    // On réserve la place, on écrira les offsets plus tard
-    writePos += 0x2C;
+    // Réserver la place pour les offsets (0x14 à 0x28)
+    pos += 6 * 4; // 6 offsets de 4 octets
+    // pos = 0x2C
     
-    // 2. animsInfoData (0x2C à hotspotsDataOffset)
+    // ============================================================
+    // ÉTAPE 2 : animsInfoData (0x2C à hotspotsDataOffset)
+    // ============================================================
     uint32_t animsInfoSize = hotspotsDataOffset - 0x2C;
-    // On décale vers le début (writePos = 0x2C)
-    // Comme on écrit en place et que writePos <= hotspotsDataOffset, pas de recouvrement
-    memmove(base + writePos, base + 0x2C, animsInfoSize);
-    writePos += animsInfoSize;
-    uint32_t newHotspotsDataOffset = writePos;
+    memcpy(dst + pos, base + 0x2C, animsInfoSize);
+    pos += animsInfoSize;
+    uint32_t newHotspotsDataOffset = pos;
     
-    // 3. hotspotsData (LvlSprHotspotData)
+    emu_printf("STEP 2: animsInfoSize=%d pos=0x%x newHotspots=0x%x\n", 
+               animsInfoSize, pos, newHotspotsDataOffset);
+    
+    // ============================================================
+    // ÉTAPE 3 : hotspotsData (LvlSprHotspotData[hotspotsCount])
+    // ============================================================
     uint32_t hotspotsSize = movesDataOffset - hotspotsDataOffset;
-    memmove(base + writePos, base + hotspotsDataOffset, hotspotsSize);
-    writePos += hotspotsSize;
-    uint32_t newMovesDataOffset = writePos;
+    memcpy(dst + pos, base + hotspotsDataOffset, hotspotsSize);
+    pos += hotspotsSize;
+    uint32_t newMovesDataOffset = pos;
     
-    // 4. movesData (LvlSprMoveData)
-    uint32_t movesSize = framesOffsetsOffset - movesDataOffset;
-    memmove(base + writePos, base + movesDataOffset, movesSize);
-    writePos += movesSize;
-    uint32_t newFramesDataOffset = writePos;
+    emu_printf("STEP 3: hotspotsSize=%d pos=0x%x newMoves=0x%x\n", 
+               hotspotsSize, pos, newMovesDataOffset);
     
-    // 5. framesData : 1 OCTET PAR FRAME
-    uint32_t newFramesDataSize = framesCount;
-    memset(base + writePos, 0, newFramesDataSize);
-    writePos += newFramesDataSize;
-    uint32_t newFramesOffsetsOffset = writePos;
+    // ============================================================
+    // ÉTAPE 4 : movesData (LvlSprMoveData[movesCount])
+    // ============================================================
+    uint32_t movesSize = framesDataOffset - movesDataOffset;
+    // Si framesDataOffset == 0, on va jusqu'à framesOffsetsOffset
+    if (framesDataOffset == 0) {
+        movesSize = framesOffsetsOffset - movesDataOffset;
+    }
+    memcpy(dst + pos, base + movesDataOffset, movesSize);
+    pos += movesSize;
+    uint32_t newFramesDataOffset = pos;
     
-    // 6. framesOffsetsTable
+    emu_printf("STEP 4: movesSize=%d pos=0x%x newFramesData=0x%x\n", 
+               movesSize, pos, newFramesDataOffset);
+    
+    // ============================================================
+    // ÉTAPE 5 : framesData (1 OCTET PAR FRAME)
+    // ============================================================
+    uint32_t newFramesDataSize = framesCount; // 1 octet par frame
+    memset(dst + pos, 0, newFramesDataSize);
+    pos += newFramesDataSize;
+    uint32_t newFramesOffsetsOffset = pos;
+    
+    emu_printf("STEP 5: framesData size=%d pos=0x%x\n", newFramesDataSize, pos);
+    
+    // ============================================================
+    // ÉTAPE 6 : framesOffsetsTable (framesCount * 4)
+    //    Chaque offset pointe vers i * 1
+    // ============================================================
     for (int i = 0; i < framesCount; i++) {
-        WRITE_LE_UINT32(base + writePos, i * 1);
-        writePos += 4;
+        WRITE_LE_UINT32(dst + pos, i * 1);
+        pos += 4;
+    }
+    uint32_t newCoordsDataOffset = pos;
+    
+    emu_printf("STEP 6: framesOffsets size=%d pos=0x%x\n", framesCount * 4, pos);
+    
+    // ============================================================
+    // ÉTAPE 7 : coordsData (si présent)
+    // ============================================================
+    uint32_t coordsDataSize = 0;
+    if (coordsDataOffset != 0 && coordsCount > 0) {
+        // Calculer la taille réelle de coordsData
+        uint32_t off = 0;
+        for (int i = 0; i < coordsCount; i++) {
+            int count = base[coordsDataOffset + off];
+            off += count * 4 + 1;
+        }
+        coordsDataSize = off;
+        memcpy(dst + pos, base + coordsDataOffset, coordsDataSize);
+        pos += coordsDataSize;
     }
     
-    // 7. coordsData = 0
-    uint32_t newCoordsDataOffset = 0;
+    emu_printf("STEP 7: coordsData size=%d pos=0x%x\n", coordsDataSize, pos);
     
-    // 8. coordsOffsetsTable (si présent)
-    uint32_t newCoordsOffsetsOffset = writePos;
+    // ============================================================
+    // ÉTAPE 8 : coordsOffsetsTable (coordsCount * 4)
+    // ============================================================
+    uint32_t newCoordsOffsetsOffset = pos;
     if (coordsOffsetsOffset != 0 && coordsCount > 0) {
         uint32_t coordsOffsetsSize = coordsCount * sizeof(uint32_t);
-        memmove(base + writePos, base + coordsOffsetsOffset, coordsOffsetsSize);
-        writePos += coordsOffsetsSize;
+        memcpy(dst + pos, base + coordsOffsetsOffset, coordsOffsetsSize);
+        pos += coordsOffsetsSize;
     } else {
         newCoordsOffsetsOffset = 0;
     }
     
-    // 9. RÉÉCRIRE LE HEADER avec les nouveaux offsets
-    // Le header est à base + 0
-    WRITE_LE_UINT32(base + 0x14, newMovesDataOffset);
-    WRITE_LE_UINT32(base + 0x18, newFramesDataOffset);
-    WRITE_LE_UINT32(base + 0x1C, newFramesOffsetsOffset);
-    WRITE_LE_UINT32(base + 0x20, newCoordsDataOffset);
-    WRITE_LE_UINT32(base + 0x24, newCoordsOffsetsOffset);
-    WRITE_LE_UINT32(base + 0x28, newHotspotsDataOffset);
+    emu_printf("STEP 8: coordsOffsets pos=0x%x\n", pos);
     
-    // Réécrire les métadonnées au cas où
-    base[0x00] = unk0;
-    base[0x01] = spriteNum;
-    WRITE_LE_UINT16(base + 0x02, framesCount);
-    WRITE_LE_UINT16(base + 0x04, hotspotsCount);
-    WRITE_LE_UINT16(base + 0x06, movesCount);
-    WRITE_LE_UINT16(base + 0x08, coordsCount);
-    base[0x0A] = refCount;
-    base[0x0B] = frame;
-    WRITE_LE_UINT16(base + 0x0C, anim);
-    base[0x0E] = 0;
-    base[0x0F] = 0;
-    memset(base + 0x10, 0, 4);
+    uint32_t usedSize = SAT_ALIGN(pos);
     
-    uint32_t usedSize = SAT_ALIGN(writePos);
-    
-    // Mettre à jour les pointeurs de dat
-    dat->animsInfoData = base;
-    dat->hotspotsData = (newHotspotsDataOffset == 0) ? 0 : base + newHotspotsDataOffset;
-    dat->movesData = (newMovesDataOffset == 0) ? 0 : base + newMovesDataOffset;
-    dat->framesData = (newFramesDataOffset == 0) ? 0 : base + newFramesDataOffset;
-    dat->framesOffsetsTable = (newFramesOffsetsOffset == 0) ? 0 : base + newFramesOffsetsOffset;
-    dat->coordsData = 0;
-    dat->coordsOffsetsTable = (newCoordsOffsetsOffset == 0) ? 0 : base + newCoordsOffsetsOffset;
-    
-    hwram_work = base + usedSize;
-    _resLevelData0x2988SizeTable[num] = usedSize;
+    // ============================================================
+    // ÉTAPE 9 : Écrire les NOUVEAUX OFFSETS dans le header
+    // ============================================================
+    WRITE_LE_UINT32(dst + 0x14, newMovesDataOffset);
+    WRITE_LE_UINT32(dst + 0x18, newFramesDataOffset);
+    WRITE_LE_UINT32(dst + 0x1C, newFramesOffsetsOffset);
+    WRITE_LE_UINT32(dst + 0x20, (coordsDataOffset == 0) ? 0 : newCoordsDataOffset);
+    WRITE_LE_UINT32(dst + 0x24, newCoordsOffsetsOffset);
+    WRITE_LE_UINT32(dst + 0x28, newHotspotsDataOffset);
     
     emu_printf("=== NEW OFFSETS ===\n");
     emu_printf("hotspots=0x%x (old=0x%x)\n", newHotspotsDataOffset, hotspotsDataOffset);
     emu_printf("moves=0x%x (old=0x%x)\n", newMovesDataOffset, movesDataOffset);
     emu_printf("framesData=0x%x (old=0x%x) size=%d\n", newFramesDataOffset, framesDataOffset, newFramesDataSize);
     emu_printf("framesOffsets=0x%x (old=0x%x)\n", newFramesOffsetsOffset, framesOffsetsOffset);
+    emu_printf("coordsData=0x%x (old=0x%x)\n", (coordsDataOffset == 0) ? 0 : newCoordsDataOffset, coordsDataOffset);
     emu_printf("coordsOffsets=0x%x (old=0x%x)\n", newCoordsOffsetsOffset, coordsOffsetsOffset);
     emu_printf("usedSize=%d (origSize=%d)\n", usedSize, origSize);
     emu_printf("=== Memory saved: %d bytes ===\n", origSize - usedSize);
+    
+    // ============================================================
+    // ÉTAPE 10 : Recopier dans base
+    // ============================================================
+    memcpy(base, dst, usedSize);
+    
+    // ============================================================
+    // ÉTAPE 11 : Mettre à jour les pointeurs de dat
+    // ============================================================
+    dat->animsInfoData = base;
+    dat->hotspotsData = (newHotspotsDataOffset == 0) ? 0 : base + newHotspotsDataOffset;
+    dat->movesData = (newMovesDataOffset == 0) ? 0 : base + newMovesDataOffset;
+    dat->framesData = (newFramesDataOffset == 0) ? 0 : base + newFramesDataOffset;
+    dat->framesOffsetsTable = (newFramesOffsetsOffset == 0) ? 0 : base + newFramesOffsetsOffset;
+    dat->coordsData = (coordsDataOffset == 0) ? 0 : base + newCoordsDataOffset;
+    dat->coordsOffsetsTable = (newCoordsOffsetsOffset == 0) ? 0 : base + newCoordsOffsetsOffset;
+    
+    // NE PAS toucher à framesCount !
+    
+    // ============================================================
+    // ÉTAPE 12 : Restaurer current_lwram
+    // ============================================================
+    current_lwram = saved_lwram;
+    hwram_work = base + usedSize;
+    _resLevelData0x2988SizeTable[num] = usedSize;
     
     return origSize - usedSize;
 }
@@ -962,7 +1027,7 @@ else
 		}
 		position_vram_save = position_vram;
 		// pixels deja copies en VDP2 (andy_vdp2[]) : on peut jeter framesData/framesOffsetsTable
-		compactLvlSpriteDataDropFrames(num, size);
+//		compactLvlSpriteDataDropFrames(num, size);
 //		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);
 	}
 #endif
