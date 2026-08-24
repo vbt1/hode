@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include "stdlib.h"
 #define DEBUG 1
-//#define PRELOAD_ANDY 1
 
 extern "C" {
 #include <sgl.h>
@@ -50,7 +49,7 @@ static uint8_t *bump(Uint8 **ptr, uint32_t size) {
 
 uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t alignedSize) 
 {
-//	DPRINTF("level %d type %d size %d ", level, type, alignedSize);
+	DPRINTF("level %d type %d size %d ", level, type, alignedSize);
 //	if(alignedSize==0)
 //		return (uint8_t*)0;
 	if(level==255)
@@ -119,7 +118,7 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 
 		case TYPE_ANDY2:
 			dst = bump(&hwram_work, alignedSize);
-			DPRINTF("TYPE_ANDY2 %d start %p end %p\n",type, dst, dst+alignedSize, alignedSize);
+			DPRINTF("TYPE_ANDY2 %d start %p end %p size %d\n",type, dst, dst+alignedSize, alignedSize);
 			return dst;
 		case TYPE_ANDY:
 			dst = bump(&hwram_work, alignedSize);

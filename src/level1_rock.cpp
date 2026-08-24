@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define PAF 1
 /*
  * Heart of Darkness engine rewrite
@@ -192,7 +192,6 @@ emu_printf("lecture video 1\n");
 #ifdef PSX
 				_g->updateBackgroundPsx(1);
 #endif
-emu_printf("on passe à sprite 2\n");
 				_g->setAndySprite(2);
 				_andyObject->xPos = 105;
 				_andyObject->yPos = 52;
@@ -200,6 +199,9 @@ emu_printf("on passe à sprite 2\n");
 				_andyObject->frame = 0;
 				_g->setupLvlObjectBitmap(_andyObject);
 				_g->setupScreen(_andyObject->screenNum);
+				lwram_end = (Uint8 *)0x300000;
+				memset(&_res->_resLevelData0x2988Table[0], 0, sizeof(LvlObjectData));
+				memset(&_res->_resLevelData0x2988Table[1], 0, sizeof(LvlObjectData));
 			}
 			break;
 		case 1:
@@ -681,7 +683,6 @@ void Level_rock::preScreenUpdate_rock_screen7() {
 void Level_rock::preScreenUpdate_rock_screen9() {
 	switch (_res->_screensState[9].s0) {
 	case 0:
-emu_printf("state 0\n");
 #ifdef PAF
 		if (!_paf->_skipCutscenes) {
 			_paf->preload(1);
@@ -691,7 +692,6 @@ emu_printf("state 0\n");
 		_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 0;
 		break;
 	default:
-emu_printf("state 1\n");
 		_res->_screensState[9].s0 = 1;
 		_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 		break;

@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define PRELOAD_ANDY 1
 /*
  * Heart of Darkness engine rewrite
@@ -10,7 +10,7 @@
 #include "util.h"
 #ifdef PRELOAD_ANDY
 extern "C" {
-extern SAT_sprite andy_vdp2[457];
+extern SAT_sprite andy_vdp2[499];
 }
 #endif
 // probably rename this to anim.cpp as this updates most LvlObject, not only Andy
@@ -1665,15 +1665,18 @@ sameAnim:
 
 		uint16_t frame1_w, frame1_h;
 		// vbt : plus besoin de framesData pour Andy, decodeSPR_ANDY lit andy_vdp2[]
+#ifdef PRELOAD_ANDY
 		if (ptr->spriteNum == 2 && ptr->type == 8)
 		{
 			frame1_w = andy_vdp2[ash->firstFrame].w;
 			frame1_h = andy_vdp2[ash->firstFrame].h;
 		}
 		else
+#endif
 		{
 			_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame1_w, &frame1_h);
 		}
+
 		++currentAnimFrame;
 		if (currentAnimFrame >= ah->seqCount) {
 			currentAnimFrame = 0;
@@ -1682,12 +1685,14 @@ sameAnim:
 		ash = (LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset) + currentAnimFrame;
 
 		uint16_t frame2_w, frame2_h;
+#ifdef PRELOAD_ANDY
 		if (ptr->spriteNum == 2 && ptr->type == 8)
 		{
 			frame2_w = andy_vdp2[ash->firstFrame].w;
 			frame2_h = andy_vdp2[ash->firstFrame].h;
 		}
 		else
+#endif
 		{
 			_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &frame2_w, &frame2_h);
 		}
@@ -1731,6 +1736,7 @@ sameAnim:
 	// vbt : bitmapBits n'est plus necessaire pour Andy -- decodeSPR_ANDY lit
 	// andy_vdp2[] pour le sprite principal, decodeSPR_ANDY_shadow pour l'ombre
 	// (les deux depuis la VRAM deja decompressee, pas depuis framesData).
+#ifdef PRELOAD_ANDY
 	if (ptr->spriteNum == 2 && ptr->type == 8)
 	{
 		ptr->bitmapBits = 0;
@@ -1738,9 +1744,11 @@ sameAnim:
 		ptr->height = andy_vdp2[ash->firstFrame].h;
 	}
 	else
+#endif
 	{
 		ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 	}
+
 	LvlSprHotspotData *hs = ((LvlSprHotspotData *)dat->hotspotsData) + ash->firstFrame;
 
 	if (_andyUpdatePositionFlag) {

@@ -1,10 +1,10 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define PAF 1
 #define USE_LESS_RAM 1
 //#define DISPLAY_FIRST_FRAME_BY_SPRITE 1
 //#define DISPLAYANDYANIM 1
 #define OLD_DRAW_SCREEN 1
-//#define PRELOAD_ANDY 1
+#define PRELOAD_ANDY 1
 //#define DEBUG 1
 //#define DEBUG2 1
 //#define USE_FONT 1
@@ -46,7 +46,7 @@ void SYS_Exit(Sint32 code);
 // vbt : andy_vdp2 est utilise directement (sans passer par PRELOAD_ANDY, qui
 // gate aussi le chargement incremental des sprites par ecran plus bas)
 extern "C" {
-extern SAT_sprite andy_vdp2[457];
+extern SAT_sprite andy_vdp2[499];
 }
 // starting level cutscene number
 static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
@@ -68,7 +68,7 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 		_video->_shadowLayer             = allocate_memory(-1, TYPE_LAYER, frame + 1);
 		_video->_frontLayer              = allocate_memory(-1, TYPE_LAYER, frame);
 		_video->_backgroundLayer         = allocate_memory(-1, TYPE_LAYER, frame);
-		_video->_backgroundLayer2        = allocate_memory(-1, TYPE_LDIMG, frame);
+		_video->_backgroundLayer2        = allocate_memory(-1, TYPE_LAYER, frame);
 		_video->_shadowScreenMaskBuffer  = allocate_memory(-1, TYPE_LAYER, frame * 2 + 256 * 4); //99k
 		_video->_transformShadowBuffer   = allocate_memory(-1, TYPE_LAYER, frame + 256); //49k
 		_scrapBuffer = _video->_shadowLayer;
@@ -716,6 +716,7 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	// vbt : bitmapBits n'est plus necessaire pour Andy -- decodeSPR_ANDY lit
 	// andy_vdp2[] pour le sprite principal, decodeSPR_ANDY_shadow pour l'ombre
 	// (les deux depuis la VRAM deja decompressee, pas depuis framesData).
+#ifdef PRELOAD_ANDY
 	if (ptr->spriteNum == 2)
 	{
 		ptr->bitmapBits = 0;
@@ -723,9 +724,11 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 		ptr->height = andy_vdp2[ash->firstFrame].h;
 	}
 	else
+#endif
 	{
 		ptr->bitmapBits = _res->getLvlSpriteFramePtr(dat, ash->firstFrame, &ptr->width, &ptr->height);
 	}
+
 //emu_printf("getLvlSpriteFramePtr %d w %d h %d snum %d\n", ash->firstFrame, ptr->width, ptr->height, ptr->spriteNum);
 
 	const int w = ptr->width - 1;
@@ -1058,7 +1061,7 @@ endDir:
 	return 1;
 }
 void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
-emu_printf("preloadLevelScreenData num %d\n", num);
+//emu_printf("preloadLevelScreenData num %d\n", num);
 	if(num == kNoScreen)
 		return;
 
@@ -2175,9 +2178,11 @@ void Game::drawScreen() {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
 				// vbt : Andy n'a plus de bitmapBits, ombre reconstruite depuis andy_vdp2[]
+#ifdef PRELOAD_ANDY
 				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
 					_video->decodeSPR_ANDY_shadow(spr, _video->_shadowLayer);
 				else
+#endif
 					_video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
 			}
 		}
@@ -2192,9 +2197,11 @@ void Game::drawScreen() {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
 				// vbt : Andy se dessine via le sprite materiel VDP2 (andy_vdp2[])
+#ifdef PRELOAD_ANDY
 				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
 					_video->decodeSPR_ANDY(spr, _video->_frontLayer);
 				else
+#endif
 					_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
@@ -2219,10 +2226,12 @@ void Game::drawScreen() {
 	for (int i = 4; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
-	continue;
-//	emu_printf("andy2\n");
-				_video->decodeSPR(spr, _video->_frontLayer);
+#ifdef PRELOAD_ANDY
+				if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+					_video->decodeSPR_ANDY(spr, _video->_frontLayer);
+				else
+#endif
+					_video->decodeSPR(spr, _video->_frontLayer);
 			}
 		}
 	}
@@ -2235,9 +2244,11 @@ if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
 	for (int i = 0; i < 24; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
+#ifdef PRELOAD_ANDY
 				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
 					_video->decodeSPR_ANDY_shadow(spr, _video->_shadowLayer);
 				else
+#endif
 					_video->decodeSPR(spr, /*_video->_backgroundLayer,*/ _video->_shadowLayer);
 			}
 		}
@@ -2274,12 +2285,14 @@ if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
 	for (int i = 1; i < 12; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
-if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
-{
-				_video->decodeSPR_ANDY(spr, _video->_frontLayer);
-}
-else
-				_video->decodeSPR(spr, _video->_frontLayer);
+#ifdef PRELOAD_ANDY
+				if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+				{
+					_video->decodeSPR_ANDY(spr, _video->_frontLayer);
+				}
+				else
+#endif
+					_video->decodeSPR(spr, _video->_frontLayer);
 
 			}
 		}
@@ -2308,12 +2321,12 @@ else
 //				spr->type = kObjectDataTypeLvlBackgroundSound;
 				if(spr->type != kObjectDataTypeLvlBackgroundSound)
 				{
+#ifdef PRELOAD_ANDY
 					if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
-					{
-						emu_printf("andy4\n");
-						continue;
-					}
-					_video->decodeSPR(spr, _video->_frontLayer);
+						_video->decodeSPR_ANDY(spr, _video->_frontLayer);		
+					else
+#endif
+						_video->decodeSPR(spr, _video->_frontLayer);
 				}
 				else
 				{
@@ -2539,13 +2552,12 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 #endif
 //	assert(level < kLvl_test);
 
-//	level = kLvl_fort;
-//	level = 1;
 /*	_cheats = 	kCheatSpectreFireballNoHit | kCheatOneHitPlasmaCannon |	kCheatOneHitSpecialPowers |	kCheatWalkOnLava | kCheatGateNoCrush |
 	kCheatLavaNoHit | kCheatRockShadowNoHit;*/
 	_currentLevel = level;
 	position_vram = 0; // vbt : vire les sprites du menu
-
+	memset(_res->_resLevelData0x2988Table, 0, sizeof(_res->_resLevelData0x2988Table));
+	lwram_end = (Uint8 *)0x300000;
 // vbt : free menu memory	
 //	current_lwram = (Uint8 *)VBT_L_START;
 //emu_printf("createLevel %d\n", _currentLevel);

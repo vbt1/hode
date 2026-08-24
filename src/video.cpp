@@ -1,5 +1,5 @@
 #pragma GCC optimize ("O2")
-////#define PRELOAD_ANDY 1
+#define PRELOAD_ANDY 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -21,9 +21,8 @@ extern "C" {
 extern "C" {
 extern Uint32 position_vram;
 //extern Uint32 position_vram_save;
-//#ifdef PRELOAD_ANDY // ok
-#if 1
-extern SAT_sprite andy_vdp2[457];
+#ifdef PRELOAD_ANDY // ok
+extern SAT_sprite andy_vdp2[499];
 #endif
 extern SAT_sprite _sprData[4];
 //int nb_spr=0;
@@ -513,6 +512,7 @@ void Video::decodeSPR(const Sprite *spr, uint8_t *dst)
 #endif
 //------------------------------
 // vbt pour spritenum==2
+#ifdef PRELOAD_ANDY
 void Video::decodeSPR_ANDY(const Sprite *spr, uint8_t *dst)
 {
 //    const uint8_t  *src     = spr->bitmapBits; // vbt : inutile
@@ -598,7 +598,7 @@ void Video::decodeSPR_ANDY_shadow(const Sprite *spr, uint8_t *dst)
 		}
 	}
 }
-
+#endif
 //------------------------------
 
 

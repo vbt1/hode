@@ -1,8 +1,8 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 #define USE_LESS_RAM 1
 //#define USE_FONT 1
 //#define SECTOR_ALIGNED 1
-//#define PRELOAD_ANDY 1
+#define PRELOAD_ANDY 1
 /*
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
@@ -27,10 +27,11 @@ extern Uint32 position_vram;
 extern uint8_t *cs1ram;
 //uint8_t *cs1ram = (uint8_t *)0x22402000;
 //uint8_t *save_cs1ram;
-//#ifdef PRELOAD_ANDY
-SAT_sprite andy_vdp2[457];
-//#endif
+#ifdef PRELOAD_ANDY
+SAT_sprite andy_vdp2[499];
 int xdone = 0;
+#endif
+
 // load and uncompress .sss pcm on level start
 #ifdef SOUND
 static const bool kPreloadSssPcm = false;
@@ -607,7 +608,7 @@ static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObj
 	return (dat->framesCount + dat->coordsCount) * sizeof(uint32_t);
 }
 
-#if 1//PRELOAD_ANDY
+#ifdef PRELOAD_ANDY
 void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const uint8_t h)
 {
     int             x       = 0;
@@ -675,11 +676,11 @@ void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const 
 // TODO a confirmer : le nombre d'entrees de hotspotsData est suppose egal a
 // dat->hotspotsCount (LvlSprHotspotData, 16 octets chacune) -- a verifier si
 // le vrai compte vient d'un autre champ.
-
+#ifdef PRELOAD_ANDY
 uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     LvlObjectData *dat = &_resLevelData0x2988Table[num];
     
-    if (!dat->framesData) return 0;
+//    if (!dat->framesData) return 0;
     if (dat->spriteNum != 2) return 0;
     
     uint8_t *base = dat->animsInfoData;
@@ -877,7 +878,7 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     
     return origSize - usedSize;
 }
-
+#endif
 void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t *buf) {
 //	emu_printf("level %d\n", _level);
 //	assert((unsigned int)num < kMaxSpriteTypes);
@@ -920,43 +921,16 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	}
 //si on retourne sur l'écran 0 c'est possible, tout reinitialiser
 // ecran 17 : recharger andy+salamandre si on meurt	
-#ifndef PRELOAD_ANDY
+//#ifndef PRELOAD_ANDY
+#if 1 //ndef PRELOAD_ANDY
 if(_level==0)
 {
-	if (screenNum == 0 && num == 2)
-	{
-//		emu_printf("_resLevelData0x2988Table %d\n",_resLevelData0x2988Table[num].framesCount);
-		load = (num ==2 && _resLevelData0x2988Table[num].framesCount==0);
-	}
-/*	else if (screenNum == 13 && num == 7)
-	{
-		load = true;
-	}*/
-	else if (screenNum <= 3)
-	{
-		/*if(screenNum=0)
-		{
-			if (_resLevelData0x2988Table[0].framesCount==0 && all==0)
-				load=0;
-		}
-		else*/
-			load = all ? (num <= 3 && num != 2) : (num == 3);
-	}
-	else if(screenNum>=10)
-	{
-		if(num!=2 && num!=7)
-			memset(&_resLevelData0x2988Table[num], 0, sizeof(LvlObjectData));
-		load = (num ==7 && _resLevelData0x2988Table[num].framesCount==0);
-	}
-	else if (screenNum >= 4)
-	{
-		load = all ? (num < 7 && num != 2) : (num > 3 && num < 7);
-	}
-//	load=1;
+	load = (_resLevelData0x2988Table[num].framesCount==0);
 }
-
 if(_level==1)
 {
+	load = (_resLevelData0x2988Table[num].framesCount==0);
+/*
 	if (screenNum == 9 && num == 2)
 	{
 //		emu_printf("_resLevelData0x2988Table %d\n",_resLevelData0x2988Table[num].framesCount);
@@ -984,6 +958,7 @@ if(_level==1)
 	}
 
 load=1;
+*/
 }
 
 
@@ -995,24 +970,15 @@ load=1;
 		return;
 	}
 #endif
-//	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
-if(num==2)
-	ptr = allocate_memory(_level, TYPE_ANDY2, size);
-else if(num<2)
-	ptr = allocate_memory(_level, TYPE_ANDY1, size);
-else
-	ptr = allocate_memory(_level, TYPE_ANDY1, size);	
-// TYPE_ANDY1 lwend
-// TYPE_ANDY hw
-//	ptr = allocate_memory(_level, (num != 2)?TYPE_ANDY1:TYPE_ANDY, size);
-
+ptr = allocate_memory(_level,(num >= 1 && num <= 3) || num > 5 ? TYPE_ANDY2 : TYPE_ANDY1, size);	
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 
 	LvlObjectData *dat = &_resLevelData0x2988Table[num];
 	
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
-#if 1//PRELOAD_ANDY
+emu_printf("_resLevelData0x2988Table[%d] framesCount %d\n",num,dat->framesCount);
+#ifdef PRELOAD_ANDY
 	if(num == 2 && !xdone)
 	{
 		xdone=1;
@@ -2783,7 +2749,7 @@ if (_mstCodeData == 0)
 }
 
 void Resource::unloadMstData() {
-emu_printf("unloadMstData2\n");
+//emu_printf("unloadMstData2\n");
 	for (int i = 0; i < _mstHdr.walkCodeDataCount; ++i) {
 //		free(_mstWalkCodeData[i].codeData);
 		_mstWalkCodeData[i].codeData = 0;
