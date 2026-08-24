@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define PRELOAD_ANDY 1
 /*
  * Heart of Darkness engine rewrite
@@ -1550,6 +1550,10 @@ void Game::updateAndyObject(LvlObject *ptr) {
 //		emu_printf("ptr->frame %d ah->seqCount %d", ptr->frame, ah->seqCount);
 		return;
 	}
+
+#ifdef PRELOAD_ANDY
+	bool useAndySPR = (_currentLevel == 0 && ptr->spriteNum==2 && ptr->type == 8);
+#endif
 		
 	LvlAnimSeqHeader *ash = ((LvlAnimSeqHeader *)(dat->animsInfoData + ah->seqOffset)) + ptr->frame;
 	LvlAnimSeqFrameHeader *asfh = (LvlAnimSeqFrameHeader *)(dat->animsInfoData + ash->offset);
@@ -1609,6 +1613,7 @@ void Game::updateAndyObject(LvlObject *ptr) {
 		xPos = ptr->posTable[7].x + ptr->xPos;
 		yPos = ptr->posTable[7].y + ptr->yPos;
 	}
+	
 	if (mask) {
 //			emu_printf("assert2 %d %d\n", count , ash->count);
 //		assert(count < ash->count);
@@ -1628,16 +1633,16 @@ void Game::updateAndyObject(LvlObject *ptr) {
 
 		uint16_t w, h;
 #ifdef PRELOAD_ANDY
-if(ptr->spriteNum==2)
-{
-		w = andy_vdp2[ash->firstFrame].w;
-		h = andy_vdp2[ash->firstFrame].h;
-}
-else
+		if(useAndySPR)
+		{
+				w = andy_vdp2[ash->firstFrame].w;
+				h = andy_vdp2[ash->firstFrame].h;
+		}
+		else
 #endif
-{
-		_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &w, &h);
-}
+		{
+			_res->getLvlSpriteFramePtr(dat, ash->firstFrame, &w, &h);
+		}
 		ptr->flags1 = ((ptr->flags1 & 0x30) ^ ((asfh->flags & 3) << 4)) | (ptr->flags1 & ~0x30);
 		int type = (ptr->flags1 >> 4) & 3;
 
@@ -1666,7 +1671,7 @@ sameAnim:
 		uint16_t frame1_w, frame1_h;
 		// vbt : plus besoin de framesData pour Andy, decodeSPR_ANDY lit andy_vdp2[]
 #ifdef PRELOAD_ANDY
-		if (ptr->spriteNum == 2 && ptr->type == 8)
+		if(useAndySPR)
 		{
 			frame1_w = andy_vdp2[ash->firstFrame].w;
 			frame1_h = andy_vdp2[ash->firstFrame].h;
@@ -1686,7 +1691,7 @@ sameAnim:
 
 		uint16_t frame2_w, frame2_h;
 #ifdef PRELOAD_ANDY
-		if (ptr->spriteNum == 2 && ptr->type == 8)
+		if (useAndySPR)
 		{
 			frame2_w = andy_vdp2[ash->firstFrame].w;
 			frame2_h = andy_vdp2[ash->firstFrame].h;
@@ -1737,7 +1742,7 @@ sameAnim:
 	// andy_vdp2[] pour le sprite principal, decodeSPR_ANDY_shadow pour l'ombre
 	// (les deux depuis la VRAM deja decompressee, pas depuis framesData).
 #ifdef PRELOAD_ANDY
-	if (ptr->spriteNum == 2 && ptr->type == 8)
+	if (useAndySPR)
 	{
 		ptr->bitmapBits = 0;
 		ptr->width = andy_vdp2[ash->firstFrame].w;

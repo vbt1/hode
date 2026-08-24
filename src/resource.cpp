@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define USE_LESS_RAM 1
 //#define USE_FONT 1
 //#define SECTOR_ALIGNED 1
@@ -979,7 +979,7 @@ ptr = allocate_memory(_level,(num >= 1 && num <= 3) || num > 5 ? TYPE_ANDY2 : TY
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
 emu_printf("_resLevelData0x2988Table[%d] framesCount %d\n",num,dat->framesCount);
 #ifdef PRELOAD_ANDY
-	if(num == 2 && !xdone)
+	if(num == 2 && _level == 0 && !xdone)
 	{
 		xdone=1;
 		for (int i = 0;i<dat->framesCount;i++)	
@@ -1144,19 +1144,17 @@ emu_printf("loadLvlSprite %d all %d screen %d 1hwramw %d %p lwram %d hwram %p en
 //	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
 //emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
-	if(screenNum==13)
-		all=1;
-
+//	if(screenNum==13)
+//		all=1;
+/*
 	if(all)
 	{	
-	//	memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
-		/*if(screenNum<9)
-		{
-			memset(_resLevelData0x2988SizeTable, 0, kMaxSpriteTypes * 4);
-			memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
-		}*/
+		memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
+		memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
+		memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
 		lwram_end = (Uint8 *)0x300000;
 	}
+*/
 	_lvlFile->seekAlign(_lvlSpritesOffset);
 //	uint8_t spr[kMaxSpriteTypes * 16];
 	uint8_t *spr = (uint8_t *)_scrapBuffer;
@@ -1982,9 +1980,10 @@ uint8_t *ptr=NULL;
 if (_mstCodeData == 0)
 {
 	_mstCodeData = (uint8_t *)allocate_memory (_level, TYPE_MSTCODE, _mstHdr.codeSize * 4);
-//	emu_printf("_mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeSize * 4));
+//	emu_printf("--- _mstCodeData %p end %p\n", _mstCodeData,_mstCodeData +(_mstHdr.codeSize * 4));
 }
-	ptr = _mstResData;/*  = (uint8_t *)allocate_memory(_level, TYPE_RES,
+	ptr = _mstResData;/*  = (uint8_t *)allocate_memory(_level, TYPE_RES, */
+	emu_printf ("_mstResData size %d\n",
 		  _mstHdr.screensCount * sizeof(MstPointOffset)
 		+ _mstHdr.walkBoxDataCount * sizeof(MstWalkBox)
 		+ _mstHdr.walkCodeDataCount * sizeof(MstWalkCode)
@@ -2015,7 +2014,7 @@ if (_mstCodeData == 0)
 		+ _mstHdr.op240DataCount * sizeof(MstOp240Data)
 		+ _mstHdr.unk0x70 * sizeof(uint32_t)
 		+ _mstHdr.op204DataCount * sizeof(MstOp204Data)
-	);*/
+	);
 	_mstPointOffsets = (MstPointOffset*)ptr;
 	ptr += _mstHdr.screensCount * sizeof(MstPointOffset);
 	_mstWalkBoxData = (MstWalkBox*)ptr;

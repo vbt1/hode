@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define PAF 1
 #define USE_LESS_RAM 1
 //#define DISPLAY_FIRST_FRAME_BY_SPRITE 1
@@ -717,7 +717,7 @@ void Game::setupLvlObjectBitmap(LvlObject *ptr) {
 	// andy_vdp2[] pour le sprite principal, decodeSPR_ANDY_shadow pour l'ombre
 	// (les deux depuis la VRAM deja decompressee, pas depuis framesData).
 #ifdef PRELOAD_ANDY
-	if (ptr->spriteNum == 2)
+	if (_currentLevel == 0 && ptr->spriteNum == 2 && ptr->type == 8)
 	{
 		ptr->bitmapBits = 0;
 		ptr->width = andy_vdp2[ash->firstFrame].w;
@@ -2174,12 +2174,15 @@ void Game::drawScreen() {
 		emu_printf("--duration %s : %d\n","decodeSPR1", result);
 #endif
 	memset(_video->_shadowLayer, 0, Video::W * Video::H + 1);
+	
+//	bool useAndySPR = (_currentLevel == 0 && ptr->spriteNum==2 && ptr->type == 8);
+	
 	for (int i = 1; i < 8; ++i) {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
 				// vbt : Andy n'a plus de bitmapBits, ombre reconstruite depuis andy_vdp2[]
 #ifdef PRELOAD_ANDY
-				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
+				if (_currentLevel == 0 && spr->ptr->spriteNum==2 && spr->ptr->type == 8)
 					_video->decodeSPR_ANDY_shadow(spr, _video->_shadowLayer);
 				else
 #endif
@@ -2198,7 +2201,7 @@ void Game::drawScreen() {
 			if ((spr->num & 0x1000) != 0) {
 				// vbt : Andy se dessine via le sprite materiel VDP2 (andy_vdp2[])
 #ifdef PRELOAD_ANDY
-				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
+				if (_currentLevel == 0 && spr->ptr->spriteNum==2 && spr->ptr->type == 8)
 					_video->decodeSPR_ANDY(spr, _video->_frontLayer);
 				else
 #endif
@@ -2227,7 +2230,7 @@ void Game::drawScreen() {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
 #ifdef PRELOAD_ANDY
-				if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+				if(_currentLevel == 0 && spr->ptr->spriteNum==2 && spr->ptr->type == 8)
 					_video->decodeSPR_ANDY(spr, _video->_frontLayer);
 				else
 #endif
@@ -2245,7 +2248,7 @@ void Game::drawScreen() {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x2000) != 0) {
 #ifdef PRELOAD_ANDY
-				if (spr->ptr->type == 8 && spr->ptr->spriteNum == 2)
+				if (_currentLevel == 0 && spr->ptr->spriteNum==2 && spr->ptr->type == 8)
 					_video->decodeSPR_ANDY_shadow(spr, _video->_shadowLayer);
 				else
 #endif
@@ -2286,7 +2289,7 @@ void Game::drawScreen() {
 		for (Sprite *spr = _typeSpritesList[i]; spr; spr = spr->nextPtr) {
 			if ((spr->num & 0x1000) != 0) {
 #ifdef PRELOAD_ANDY
-				if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+				if(_currentLevel == 0 && spr->ptr->spriteNum==2 && spr->ptr->type == 8)
 				{
 					_video->decodeSPR_ANDY(spr, _video->_frontLayer);
 				}
@@ -2322,7 +2325,7 @@ void Game::drawScreen() {
 				if(spr->type != kObjectDataTypeLvlBackgroundSound)
 				{
 #ifdef PRELOAD_ANDY
-					if(spr->ptr->type==8 && spr->ptr->spriteNum == 2)
+					if(_currentLevel == 0 && spr->ptr->spriteNum==2 && spr->ptr->type == 8)
 						_video->decodeSPR_ANDY(spr, _video->_frontLayer);		
 					else
 #endif
@@ -2345,7 +2348,7 @@ void Game::drawScreen() {
 	maxHeightInRow = 0;
 
 for(int i=0;i<kMaxSpriteTypes;i++)
-	if(i!=2)
+//	if(!(i == 2 && _currentLevel == 0))
 	displayFirstSpriteFrames(_res, _video, i);
 #endif
 	g_system->copyRectWidescreen(Video::W, Video::H, _video->_backgroundLayer, _video->_palette);
@@ -3510,7 +3513,11 @@ void Game::callLevel_preScreenUpdate(int num) {
 
 Level *Game::createLevel() {
 	lwram_end = (Uint8 *)0x300000;
-		
+	_currentScreen = 0;
+	memset(_res->_resLevelData0x2988SizeTable, 0, sizeof(_res->_resLevelData0x2988SizeTable));
+	memset(_res->_resLevelData0x2988Table, 0, sizeof(_res->_resLevelData0x2988Table));
+	memset(_res->_resLevelData0x2988PtrTable, 0, sizeof(_res->_resLevelData0x2988PtrTable));
+
 	switch (_currentLevel) {
 	case 0:
 		_level = Level_rock_create();
@@ -3710,6 +3717,7 @@ void Game::lvlObjectType0Init(LvlObject *ptr) {
 	if (_currentLevel == kLvl_rock && _level->_checkpoint >= 5) {
 		num = 2; // sprite without 'plasma cannon'
 	}
+
 	_andyObject = declareLvlObject(ptr->type, num);
 	if(!_andyObject)
 	{

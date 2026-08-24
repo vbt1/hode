@@ -2,7 +2,7 @@
  * Heart of Darkness engine rewrite
  * Copyright (C) 2009-2011 Gregory Montoir (cyx@users.sourceforge.net)
  */
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #include <sys/param.h>
 #include "fileio.h"
 #include "util.h"

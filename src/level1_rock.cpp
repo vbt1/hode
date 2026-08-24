@@ -1,4 +1,4 @@
-#pragma GCC optimize ("O2")
+#pragma GCC optimize ("Os")
 #define PAF 1
 /*
  * Heart of Darkness engine rewrite
