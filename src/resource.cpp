@@ -499,6 +499,7 @@ void Resource::loadLvlScreenObjectData(LvlObject *dat, const uint8_t *src) {
 
 static uint32_t resFixPointersLevelData0x2988(uint8_t *src, uint8_t *ptr, LvlObjectData *dat/*, bool isPsx*/) {
 	uint8_t *base = src;
+	dat->startAddress = src;
 	dat->unk0 = *src++;
 	dat->spriteNum = *src++;
 
@@ -888,8 +889,44 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 		return;
 	}
 
-	static const uint32_t baseOffset = _lvlSpritesOffset;
+
+	uint8_t *ptr = 0;
+
+	bool load = false;
+/*	LvlObjectData *obj = &_resLevelData0x2988Table[num];
 	
+	if( obj->animsInfoData!=0 && all==0)
+	{
+//		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
+		return;
+	}
+*/
+//si on retourne sur l'écran 0 c'est possible, tout reinitialiser
+// ecran 17 : recharger andy+salamandre si on meurt	
+//#ifndef PRELOAD_ANDY
+	if(_level==0)
+	{
+		if(all==0)
+		{
+			xdone = 0;
+			load  = 1;
+		}
+		else
+			load = (_resLevelData0x2988Table[num].framesCount==0);
+	}
+	if(_level==1)
+	{
+		load = (_resLevelData0x2988Table[num].framesCount==0);
+	}
+
+	if (!load)
+	{	
+//		emu_printf("je n'alloue pas de mémoire screen %d num %d all %d\n",screenNum, num, all);
+		return;
+	}
+
+	static const uint32_t baseOffset = _lvlSpritesOffset;
+//emu_printf("_lvlSpritesOffset %d\n",_lvlSpritesOffset);	
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) 
 	{
@@ -906,82 +943,31 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 
 	if(readSize > size)
 	{
-		emu_printf("readSize %d %d\n", readSize, size);
+//		emu_printf("readSize %d %d\n", readSize, size);
 		return;
 	}
-	uint8_t *ptr = 0;
 
-	bool load = false;
-	LvlObjectData *obj = &_resLevelData0x2988Table[num];
+	if(all==1)
+	{
+		ptr = allocate_memory(_level,(num >= 1 && num <= 3) || num > 5 ? TYPE_ANDY2 : TYPE_ANDY1, size);	
+	}
+	else
+	{
+		ptr = (uint8_t*)_resLevelData0x2988Table[num].startAddress; 
+	}
 	
-	if( obj->animsInfoData!=0 && all==0)
-	{
-//		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
-		return;
-	}
-//si on retourne sur l'écran 0 c'est possible, tout reinitialiser
-// ecran 17 : recharger andy+salamandre si on meurt	
-//#ifndef PRELOAD_ANDY
-#if 1 //ndef PRELOAD_ANDY
-if(_level==0)
-{
-	load = (_resLevelData0x2988Table[num].framesCount==0);
-}
-if(_level==1)
-{
-	load = (_resLevelData0x2988Table[num].framesCount==0);
-/*
-	if (screenNum == 9 && num == 2)
-	{
-//		emu_printf("_resLevelData0x2988Table %d\n",_resLevelData0x2988Table[num].framesCount);
-		load = (num ==2 && _resLevelData0x2988Table[num].framesCount==0);
-	}
-	else if (screenNum <= 3)
-	{
-		if(screenNum=0)
-		{
-			if (_resLevelData0x2988Table[0].framesCount==0 && all==0)
-				load=0;
-		}
-		else
-			load = all ? (num <= 3 && num != 2) : (num == 3);
-	}
-	else if(screenNum>=10)
-	{
-		if(num!=2 && num!=7)
-			memset(&_resLevelData0x2988Table[num], 0, sizeof(LvlObjectData));
-		load = (num ==7 && _resLevelData0x2988Table[num].framesCount==0);
-	}
-	else if (screenNum >= 4)
-	{
-		load = all ? (num < 7 && num != 2) : (num > 3 && num < 7);
-	}
-
-load=1;
-*/
-}
-
-
-
-
-	if (!load)
-	{	
-//		emu_printf("je n'alloue pas de mémoire screen %d num %d all %d\n",screenNum, num, all);
-		return;
-	}
-#endif
-ptr = allocate_memory(_level,(num >= 1 && num <= 3) || num > 5 ? TYPE_ANDY2 : TYPE_ANDY1, size);	
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
-
 	LvlObjectData *dat = &_resLevelData0x2988Table[num];
-	
 	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
-emu_printf("_resLevelData0x2988Table[%d] framesCount %d\n",num,dat->framesCount);
+
+//emu_printf("_resLevelData0x2988Table[%d] framesCount %d\n",num,dat->framesCount);
 #ifdef PRELOAD_ANDY
 	if(num == 2 && _level == 0 && !xdone)
 	{
 		xdone=1;
+		position_vram = 0;
+//		emu_printf("position_vram %d\n", position_vram);
 		for (int i = 0;i<dat->framesCount;i++)	
 		{
 			uint16_t w, h;

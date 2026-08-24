@@ -147,6 +147,7 @@ struct LvlObjectData {
 	uint8_t *coordsData; // 0x20
 	uint8_t *coordsOffsetsTable; // 0x24
 	uint8_t *hotspotsData; // 0x28, LvlSprHotspotData
+	uint8_t *startAddress; // vbt : ajout
 };
 
 struct Game;

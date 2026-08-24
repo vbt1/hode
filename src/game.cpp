@@ -55,7 +55,7 @@ static uint8_t redraw_fg = 255;
 Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(dataPath, savePath)
 	{
 		_level = 0;
-		_restartLevel = false;
+//		_restartLevel = false;
 		_res = new Resource(&_fs);
 		_rnd.setSeed();
 
@@ -1077,22 +1077,14 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 		_res->unloadLvlScreenBackgroundData(num);
 	}
 //emu_printf("loadLvlScreenBackgroundData(num) %d\n", num);
-
+#ifndef PRELOAD_ANDY
 	if(_currentScreen && !_restartLevel)
 	{	
 //		emu_printf("chargement partiel - fall %d\n", _fallingAndyFlag);
-#ifndef PRELOAD_ANDY
 		_res->loadLvlSprite(_currentLevel, _currentScreen, 0);
-#endif
 	}
-
-// vbt : ajout, car tous les sprites ne sont pas chargés
-/*	if (!_mstDisabled) {
-		resetMstCode();
-		startMstCode();
-	}	
-*/
 	_restartLevel = false;
+#endif
 	_res->loadLvlScreenBackgroundData(num);
 
 
@@ -1472,16 +1464,17 @@ void Game::resetScreen() {
 	resetWormHoleSprites();
 }
 
-void Game::restartLevel() {
+void Game::restartLevel(bool reload) {
 //emu_printf("restartLevel\n");
     emu_printf("1hwramw %d %p lwram %d hwram %p endhw %p\n",
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, lwram_end);
-	_restartLevel = true;
-//	emu_printf("chargement full\n");
 #ifndef PRELOAD_ANDY
-	_res->loadLvlSprite(_currentLevel, _currentScreen, 1);
+	_restartLevel = true;
 #endif
+	if(reload)
+		_res->loadLvlSprite(_currentLevel, _currentScreen, 0);
+
 	setupAndyLvlObject();
 	clearLvlObjectsList2();
 	clearLvlObjectsList3();
@@ -1550,8 +1543,8 @@ void Game::playAndyFallingCutscene(int type) {
 #endif
 
 	if (type != 0 && play) {
-//emu_printf("playAndyFallingCutscene loadLvlSprite\n");
-		restartLevel();
+emu_printf("playAndyFallingCutscene loadLvlSprite\n");
+		restartLevel(true);
 	}
 
 }
@@ -2030,7 +2023,7 @@ int Game::updateAndyLvlObject() {
 		playAndyFallingCutscene(0);
 	}
  emu_printf("restartLevel0\n");
-	restartLevel();
+	restartLevel(true);
 	return 1;
 }
 
@@ -2710,7 +2703,7 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 //emu_printf("callLevel_initialize\n");
 	callLevel_initialize();
 emu_printf("restartLevel1\n");
-	restartLevel();
+	restartLevel(false);
 //	frame_y = frame_x = 0;
 
 	uint8_t last_frame_z = 0xFF;
@@ -3304,7 +3297,7 @@ void Game::updateInput() {
 //            ((int)current_lwram) - 0x200000, hwram, lwram_end);
 			_currentScreen = _level->getCheckpointData(_level->_checkpoint)->screenNum;
  emu_printf("restartLevel2\n");
-			restartLevel();
+			restartLevel(false);
 		}
 	}	
 	if (inputMask & SYS_INP_UP) {
@@ -3364,7 +3357,7 @@ void Game::levelMainLoop() {
 #endif
 	} else if (_fadePalette && _levelRestartCounter == 0) {
  emu_printf("restartLevel3\n");
-		restartLevel();
+		restartLevel(false);
 	} else {
 		callLevel_postScreenUpdate(_res->_currentScreenResourceNum);
 		if (_currentLeftScreen != kNoScreen) {
