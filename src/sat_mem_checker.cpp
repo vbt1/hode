@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "stdlib.h"
-//#define DEBUG 1
+#define DEBUG 1
 
 extern "C" {
 #include <sgl.h>

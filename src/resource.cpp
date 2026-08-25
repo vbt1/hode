@@ -1152,6 +1152,10 @@ emu_printf("loadLvlSprite %d all %d screen %d 1hwramw %d %p lwram %d hwram %p en
 	for (int i = 0; i < _lvlHdr.spritesCount; ++i) {
 		loadLvlSpriteData(i, screenNum, all, spr + i * 16);
 	}
+
+emu_printf("loadedLvlSprite %d all %d screen %d 1hwramw %d %p lwram %d hwram %p endhw %p\n", levelNum, all, screenNum,
+            ((int)hwram_work) - 0x6000000, hwram_work,
+            ((int)current_lwram) - 0x200000, hwram, lwram_end);
 }
 
 void Resource::loadLvlMst(int levelNum)
@@ -1229,6 +1233,7 @@ static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, ui
 	}
 	for (int i = 0; i < 4; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
+//		emu_printf("backgroundBitmapTable i %d off %d p %p\n", i, offs, ptr + offs);
 		dat->backgroundBitmapTable[i] = (offs != 0) ? ptr + offs : 0;
 	}
 	for (int i = 0; i < 4; ++i) {
@@ -1245,12 +1250,15 @@ static uint32_t resFixPointersLevelData0x2B88(int _level, const uint8_t *src, ui
 	}
 	for (int i = 0; i < 8; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
+//		emu_printf("backgroundAnimationTable i %d off %d p %p\n", i, offs, ptr + offs);
 		dat->backgroundAnimationTable[i] = (offs != 0) ? ptr + offs : 0;
 	}
 	uint32_t offsetsSize = 0;
 	for (int i = 0; i < 8; ++i) {
 		const uint32_t offs = READ_LE_UINT32(src); src += 4;
 		if (offs != 0) {
+//			dat->backgroundLvlObjectDataTable[i] = (LvlObjectData *)malloc(sizeof(LvlObjectData));
+//		emu_printf("backgroundAnimationTable i %d off %d p %p\n", i, offs, ptr + offs);
 			offsetsSize += resFixPointersLevelData0x2988(ptr + offs, offsetsPtr + offsetsSize, &dat->backgroundLvlObjectDataTable[i]/*, isPsx*/);
 		} else {
 			memset(&dat->backgroundLvlObjectDataTable[i],0x00,sizeof(LvlObjectData));
@@ -1269,7 +1277,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 		return;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
-//emu_printf("loadLvlScreenBackgroundData num %d\n", num);
+emu_printf("loadLvlScreenBackgroundData num %d\n", num);
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
 		_lvlFile->seekAlign(baseOffset + num * 16);
@@ -1298,7 +1306,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	}
 	uint8_t *ptr = allocate_memory (_level, TYPE_BGLVL, size);
 	
-//emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
+emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
@@ -1314,7 +1322,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;
 	_resLvlScreenBackgroundDataPtrTable[num] = ptr;
-//emu_printf("_resLevelData0x2B88SizeTable[%d]=%d\n", num,size);
+emu_printf("_resLevelData0x2B88SizeTable[%d]=%d\n", num,size);
 	_resLevelData0x2B88SizeTable[num] = size;
 }
 

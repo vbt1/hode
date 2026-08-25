@@ -71,6 +71,7 @@ static bool openPaf(FileSystem *fs, File *f) {
 }
 
 static void closePaf(FileSystem *fs, File *f) {
+emu_printf("closePaf\n");
 	if (f->_fp) 
 	{ 
 		GFS_NwStop(f->_fp->fid);
@@ -114,17 +115,23 @@ void PafPlayer::preload(int num) {
 
 	if (_file._fp == 0) openPaf(_fs, &_file);
 //	else {
-//		emu_printf("preload %d\n", num);
+		emu_printf("preload %d\n", num);
 //	}
-//	lwram_cut = current_lwram;
+	lwram_cut = current_lwram;
+// vbt : on vire le unload
 	if (_videoNum != num) { unload(_videoNum); _videoNum = num; }
 
 //	_bufferBlock = allocate_memory(-1, TYPE_PAF, kBufferBlockSize);
-	
+emu_printf("_bufferBlock %p end %p\n", _bufferBlock, _bufferBlock+kBufferBlockSize);
+	emu_printf("seek\n");
 	_file.seek(num * 4, SEEK_SET);
+	emu_printf("seek done\n");
 	_videoOffset = _file.readUint32();
+	emu_printf("_videoOffset %d\n", _videoOffset);
+		emu_printf("seek\n");
 	_file.seek(_videoOffset, SEEK_SET);
 	memset(&_pafHdr, 0, sizeof(_pafHdr));
+	emu_printf("readPafHeader\n");
 	if (!readPafHeader()) { unload(); return; }
 
 	uint8_t *buffer = allocate_memory(-1, TYPE_PAF, kPageBufferSize * 4 + 256 * 4);
@@ -155,16 +162,21 @@ void PafPlayer::preload(int num) {
 
 void PafPlayer::play(int num) {
 	slScrAutoDisp(NBG1ON|NBG3ON);
-//	if (!lwram_cut)
+	if (!lwram_cut)
 		lwram_cut = current_lwram;
-//emu_printf("saving lwram %p hwram_work %p\n", lwram_cut, hwram_work);
+//	current_lwram = allocate_memory (0, TYPE_BGLVL, 99999)+100000;
+emu_printf("saving lwram %p hwram_work %p\n", current_lwram, hwram_work);
 //	num=kPafAnimation_CanyonAndyFallingCannon;
 	if (_videoNum != num) preload(num);
-	if (_videoNum == num) { _playedMask |= 1 << num; mainLoop(); }
+	if (_videoNum == num) { 
+	emu_printf("lecture\n");
+	_playedMask |= 1 << num; mainLoop(); 
+		emu_printf("pas de lecture\n");
+	}
 }
 
 void PafPlayer::unload(int num) {
-//emu_printf("restoring lwram %p current_lwram %p hwram_work %p\n", lwram_cut, current_lwram, hwram_work);
+emu_printf("restoring lwram %p current_lwram %p hwram_work %p\n", lwram_cut, current_lwram, hwram_work);
 	if (lwram_cut)
 		current_lwram = lwram_cut;
 //	lwram_cut = 0;

@@ -76,6 +76,7 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 		emu_printf("--hwram_work %p end %p\n", hwram_work_paf, hwram_work);	
 
 #ifdef PAF
+emu_printf("paf player\n");
 	_paf = new PafPlayer(&_fs, _video);
 #endif
 	_cheats = cheats;
@@ -414,7 +415,7 @@ void Game::removeSound(LvlObject *ptr) {
 void Game::setupBackgroundBitmap() {
 	LvlBackgroundData *lvl = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 	const int num = lvl->currentBackgroundId;
-//emu_printf("setupBackgroundBitmap id %d\n", num);
+emu_printf("setupBackgroundBitmap id %d\n", num);
 	const uint8_t *pal = lvl->backgroundPaletteTable[num];
 	lvl->backgroundPaletteId = READ_LE_UINT16(pal); pal += 2;
 	const uint8_t *bmp = lvl->backgroundBitmapTable[num];
@@ -433,12 +434,12 @@ void Game::setupBackgroundBitmap() {
 	} else 
 #endif
 	{
-//emu_printf("decodeLZW %p %p num %d\n", bmp, _video->_backgroundLayer, num);
 #ifdef DEBUG
 	unsigned int s1 = g_system->getTimeStamp();
 #endif	
 //	for(int i=0;i<10;i++)
-	decodeLZW(bmp, _video->_backgroundLayer2);
+	int sz = decodeLZW(bmp, _video->_backgroundLayer2);
+emu_printf("decodeLZW %p %p num %dsz %d\n", bmp, _video->_backgroundLayer2, num, sz);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;

@@ -168,18 +168,24 @@ void Level_rock::postScreenUpdate_rock_screen8() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen9() {
+//emu_printf("preScreenUpdate_rock_screen9\n");
 	int xPos;
 	if (_res->_currentScreenResourceNum == 9) {
 		switch (_res->_screensState[9].s0) {
 		case 0:
 			xPos = 68;
+//emu_printf("_screensState 0\n");	
 			if ((_andyObject->flags0 & 0xE0) != 0) {
 				xPos -= 14;
 			}
+//emu_printf("x %d %d y %d 86\n", _andyObject->xPos , xPos , _andyObject->yPos);
 			if (_andyObject->xPos > xPos && _andyObject->yPos < 86) {
+//emu_printf("andy au bon endroit\n");					
 #ifdef PAF
-				if (!_paf->_skipCutscenes) {
-emu_printf("lecture video 1\n");
+//				if (!_paf->_skipCutscenes) 
+				{
+//emu_printf("lecture video 1\n");
+//					_paf->preload(1);
 					_paf->play(1);
 					_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 					_video->_paletteChanged = true;
@@ -202,6 +208,10 @@ emu_printf("lecture video 1\n");
 				lwram_end = (Uint8 *)0x300000;
 				memset(&_res->_resLevelData0x2988Table[0], 0, sizeof(LvlObjectData));
 				memset(&_res->_resLevelData0x2988Table[1], 0, sizeof(LvlObjectData));
+			}
+			else
+			{
+			emu_printf("andy au mauvais endroit\n");	
 			}
 			break;
 		case 1:
@@ -681,12 +691,13 @@ void Level_rock::preScreenUpdate_rock_screen7() {
 }
 
 void Level_rock::preScreenUpdate_rock_screen9() {
+emu_printf("preScreenUpdate_rock_screen9\n");
 	switch (_res->_screensState[9].s0) {
 	case 0:
-#ifdef PAF
+//#ifdef PAF
+#if 0 // vbt : on ne precharge pas !
 		if (!_paf->_skipCutscenes) {
 			_paf->preload(1);
-			_paf->play(1);
 		}
 #endif
 		_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 0;
@@ -707,7 +718,7 @@ void Level_rock::preScreenUpdate_rock_screen10() {
 		if (!_paf->_skipCutscenes) {
 			_paf->unload(22);
 //emu_printf("_paf->preload(23) screen 10\n");
-//			_paf->preload(23); // vbt : à quoi ca sert ???
+			_paf->preload(23); // vbt : à quoi ca sert ???
 		}
 #endif
 	}

@@ -131,7 +131,7 @@ void init_GFS() { //Initialize GFS system
 }
 
 GFS_FILE *sat_fopen(const char *path, const int position) {
-//emu_printf("-- sat_fopen %s\n", path);	
+emu_printf("-- sat_fopen %s\n", path);	
 	memset(satpath, 0, 25);
 
 	if (path == NULL) 
@@ -148,7 +148,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 	GfsHn fid = NULL;
 	// OPEN FILE
 	fid = GFS_Open(GFS_NameToId((Sint8*)satpath));
-//emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)satpath),fid);
+emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)satpath),fid);
 	
 	if(fid != NULL) { // Opened!
 		Sint32 fsize;
@@ -163,7 +163,10 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 			}
 		}
 
-		if (fp == NULL) {return NULL;}
+		if (fp == NULL) {
+emu_printf("vbt : le pool est saturé !!!!\n");			
+			
+			return NULL;}
 		fp->fid = fid;
 		GFS_GetFileInfo(fid, NULL, NULL, &fsize, NULL);
 		fp->f_size = fsize;
@@ -200,7 +203,7 @@ GFS_FILE *sat_fopen(const char *path, const int position) {
 	}
 	else
 	{
-//		//emu_printf("no fid!!!\n");	
+		//emu_printf("no fid!!!\n");	
 	}
 
 	return fp;
