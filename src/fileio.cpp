@@ -53,11 +53,11 @@ void File::seekAlign(uint32_t pos) {
 
 void File::seek(int pos, int whence) {
 //emu_printf("File::seek %d %d\n", pos, whence);
-Sint32 id, fsize;
-GFS_GetFileInfo(_fp->fid, &id, NULL, &fsize, NULL);
-emu_printf("--- seek fid %d name %s\n",id, GFS_IdToName(id));
+//Sint32 id, fsize;
+//GFS_GetFileInfo(_fp->fid, &id, NULL, &fsize, NULL);
+//emu_printf("--- seek fid %d name %s\n",id, GFS_IdToName(id));
 if(!_fp)
-emu_printf("pas de fichier ouvert\n");
+//emu_printf("pas de fichier ouvert\n");
 
 	if(_fp)
 	{
@@ -199,10 +199,8 @@ uint16_t File::readUint16() {
 }
 
 uint32_t File::readUint32() {
-//("readUint32\n");
 	uint8_t buf[4];
 	read(buf, 4);
-//emu_printf("readUint32 end\n");
 	return READ_LE_UINT32(buf);
 }
 #ifdef SECTOR_ALIGNED

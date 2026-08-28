@@ -398,7 +398,7 @@ void SystemStub_SDL::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
     }
 
     // Wait for the very last line to complete
-//    SCU_DMAWait();
+    SCU_DMAWait();
 
 //    slCachePurge();  // Purge cache to ensure coherency after DMA (SGL function)
 
@@ -768,7 +768,7 @@ inline void timeTick() {
 }
 
 void vblIn (void) {
-////emu_printf("vblIn\n");
+//emu_printf("vblIn\n");
 	// Process input
 //	if(!loadingMap)
 	{

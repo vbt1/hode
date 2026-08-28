@@ -49,7 +49,7 @@ static uint8_t *bump(Uint8 **ptr, uint32_t size) {
 
 uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t alignedSize) 
 {
-	DPRINTF("level %d type %d size %d ", level, type, alignedSize);
+	DPRINTF("level %d type %d size %d\n", level, type, alignedSize);
 //	if(alignedSize==0)
 //		return (uint8_t*)0;
 	if(level==255)
@@ -63,7 +63,7 @@ uint8_t* allocate_memory(const uint8_t level, const uint8_t type, uint32_t align
 //			case TYPE_FONT:
 				return bump(&vdp2ram, alignedSize);
 			case TYPE_PAF:
-			case TYPE_PAFBUF:
+//			case TYPE_PAFBUF: / plus utilisé
 				return bump(&hwram_work_paf, alignedSize);
 			case TYPE_PAFEND:
 			if (alignedSize !=2096)

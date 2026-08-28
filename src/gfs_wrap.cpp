@@ -15,6 +15,7 @@ extern "C" {
 //#define CACHE_SIZE (SECTOR_SIZE * 20)
 #define TOT_SECTOR 8
 #define CACHE_SIZE (SECTOR_SIZE * TOT_SECTOR)
+#define DEBUG_GFS
 
 Uint8 *current_lwram = (Uint8 *)VBT_L_START;
 Uint8 *save_current_lwram;
@@ -51,7 +52,7 @@ void errGfsFunc(void *obj, int ec)
 	
 	texte[49]='\0';
 
-	//emu_printf("%s\n", texte);
+	emu_printf("%s\n", texte);
 
 }
 #endif
@@ -144,6 +145,7 @@ emu_printf("-- sat_fopen %s\n", path);
 
 	Uint16 path_len = strlen(path);
 	strncpy(satpath, path, path_len + 1);
+emu_printf("1vb1 : le pool %p end %p\n", &gfs_file_pool[0] , &gfs_file_pool[OPEN_MAX]);
 
 	GfsHn fid = NULL;
 	// OPEN FILE
@@ -164,7 +166,7 @@ emu_printf("--- satpath %s fileid %d fid %d\n",satpath, GFS_NameToId((Sint8*)sat
 		}
 
 		if (fp == NULL) {
-emu_printf("vbt : le pool est saturé !!!!\n");			
+emu_printf("2vb2 : le pool est saturé !!!!\n");			
 			
 			return NULL;}
 		fp->fid = fid;

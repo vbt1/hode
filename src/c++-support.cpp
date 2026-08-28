@@ -39,7 +39,7 @@ void* operator new(size_t size) {
 	}
 	#if 0
 // vbt : 136 c'est le pafplayer !!!!
-	else if (size==8 || /*size==136 ||*/ size==68 /*|| size==48876*/
+	else if (size==8 || /*size==136 ||*/ size==68 || size==2496
 	)
 	{
 		ptr = (void *)current_lwram;

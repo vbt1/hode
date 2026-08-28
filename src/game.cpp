@@ -46,7 +46,7 @@ void SYS_Exit(Sint32 code);
 // vbt : andy_vdp2 est utilise directement (sans passer par PRELOAD_ANDY, qui
 // gate aussi le chargement incremental des sprites par ecran plus bas)
 extern "C" {
-extern SAT_sprite andy_vdp2[499];
+extern SAT_sprite andy_vdp2[457];
 }
 // starting level cutscene number
 static const uint8_t _cutscenes[] = { 0, 2, 4, 5, 6, 8, 10, 14, 19 };
@@ -56,10 +56,18 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 	{
 		_level = 0;
 //		_restartLevel = false;
+emu_printf("new Resource\n");
 		_res = new Resource(&_fs);
 		_rnd.setSeed();
 
+emu_printf("new Video\n");
 		_video = new Video();
+
+#ifdef PAF
+emu_printf("new PafPlayer\n");
+	_paf = new PafPlayer(&_fs, _video);
+emu_printf("paf player %p video %p fs %p\n", _paf, _video, &_fs);	
+#endif
 	
 		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+25000); // ne pas trop monter
 		_mstResData = (uint8_t *)allocate_memory(-1, TYPE_RES, 33000);
@@ -75,10 +83,6 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 		hwram_work_paf = _video->_shadowLayer;
 		emu_printf("--hwram_work %p end %p\n", hwram_work_paf, hwram_work);	
 
-#ifdef PAF
-emu_printf("paf player\n");
-	_paf = new PafPlayer(&_fs, _video);
-#endif
 	_cheats = cheats;
 #ifdef DEMO
 	_playDemo = false;
@@ -102,7 +106,7 @@ emu_printf("paf player\n");
 	_lvlObjectsList1 = 0;
 	_lvlObjectsList2 = 0;
 	_lvlObjectsList3 = 0;
-	memset(_screenMaskBuffer, 0, sizeof(_screenMaskBuffer));
+	memset(_screenMaskBuffer, 0, (16 * 6) * 24 * 32); //sizeof(_screenMaskBuffer));
 	memset(_shootLvlObjectDataTable, 0, sizeof(_shootLvlObjectDataTable));
 	_mstAndyCurrentScreenNum = -1;
 	_plasmaCannonDirection = 0;
@@ -327,6 +331,7 @@ void Game::loadTransformLayerData(const uint8_t *data) {
 //	_video->_transformShadowBuffer = (uint8_t *)malloc(256 * 192 + 256);
 //	_video->_transformShadowBuffer = allocate_memory (TYPE_SHADWBUF, 256 * 192 + 256);
 	const int size = decodeLZW(data, _video->_transformShadowBuffer);
+
 //	assert(size == 256 * 192);
 	if(size != 256 * 192)
 		return;
@@ -346,6 +351,7 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 		const uint8_t *src = lvl->backgroundMaskTable[i];
 		if (src) {
 			const int decodedSize = decodeLZW(src + 2, dst);
+
 //emu_printf("dst %p sz %d\n",dst, decodedSize);
 			_shadowScreenMasksTable[i].dataSize = READ_LE_UINT32(dst);
 //emu_printf("vbt _shadow src %p %d sz %d\n", src, _shadowScreenMasksTable[i].dataSize, decodedSize);
@@ -438,8 +444,9 @@ emu_printf("setupBackgroundBitmap id %d\n", num);
 	unsigned int s1 = g_system->getTimeStamp();
 #endif	
 //	for(int i=0;i<10;i++)
+//emu_printf("bef decodeLZW\n");
 	int sz = decodeLZW(bmp, _video->_backgroundLayer2);
-emu_printf("decodeLZW %p %p num %dsz %d\n", bmp, _video->_backgroundLayer2, num, sz);
+//emu_printf("decodeLZW %p %p num %dsz %d\n", bmp, _video->_backgroundLayer2, num, sz);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
@@ -599,12 +606,10 @@ void Game::setupScreenMask(uint8_t num) {
 		_res->_screensState[num].s3 = mask;
 		const uint8_t *maskData = _res->getLvlScreenMaskDataPtr(num * 4 + mask);
 		if (maskData) {
-			//emu_printf("setupScreenMask decodeRLE\n");
 			Video::decodeRLE(maskData, _screenTempMaskBuffer, 32 * 24);
 		} else {
 			memset(_screenTempMaskBuffer, 0, 32 * 24);
 		}
-//emu_printf("--- setupScreenMask _screenMaskBuffer\n");
 		uint8_t *p = _screenMaskBuffer + screenMaskOffset(_res->_screensBasePos[num].u, _res->_screensBasePos[num].v);
 		for (int i = 0; i < 24; ++i) {
 			memcpy(p, _screenTempMaskBuffer + i * 32, 32);
@@ -637,6 +642,7 @@ void Game::setScreenMaskRectHelper(int x1, int y1, int x2, int y2, int screenNum
 
 		int index = _res->_resLvlScreenBackgroundDataTable[screenNum].currentMaskId;
 		const uint8_t *p = _res->getLvlScreenMaskDataPtr(screenNum * 4 + index);
+//emu_printf("decodeRLE(p %p, _screenTempMaskBuffer %p vidshad %p %p\n", p, _screenTempMaskBuffer,*_video->_shadowLayer,_video->_shadowLayer);
 		Video::decodeRLE(p, _screenTempMaskBuffer, 32 * 24);
 
 		int h = (y2 - y1 + 7) >> 3;
@@ -1077,7 +1083,7 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 //emu_printf("isLvlBackgroundDataLoaded(num) %d\n", num);
 		_res->unloadLvlScreenBackgroundData(num);
 	}
-//emu_printf("loadLvlScreenBackgroundData(num) %d\n", num);
+emu_printf("loadLvlScreenBackgroundData(num) %d shad %p\n", num,_video->_shadowLayer);
 #ifndef PRELOAD_ANDY
 	if(_currentScreen && !_restartLevel)
 	{	
@@ -1087,6 +1093,7 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	_restartLevel = false;
 #endif
 	_res->loadLvlScreenBackgroundData(num);
+emu_printf("aft loadLvlScreenBackgroundData(num) %d shad %p\n", num,_video->_shadowLayer);
 
 
 
@@ -3314,8 +3321,8 @@ void Game::updateInput() {
 }
 
 void Game::levelMainLoop() {
-//	memset(_typeSpritesList, 0, sizeof(_typeSpritesList));
-	memset(_typeSpritesList, 0, kMaxSpriteTypes * sizeof(Sprite *));
+	memset(_typeSpritesList, 0, sizeof(_typeSpritesList));
+
 	_spritesNextPtr = &_spritesTable[0];
 	for (int i = 0; i < kMaxSprites - 1; ++i) {
 		_spritesTable[i].nextPtr = &_spritesTable[i + 1];

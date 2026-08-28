@@ -132,11 +132,12 @@ int LzwDecoder::decode(uint8_t *dst) {
 				return 0;
 		}
 	}
+//emu_printf("decodeLZW decoded=%d bufsize=73728\n",  p - dst);
 	return p - dst;
 }
 
 int decodeLZW(const uint8_t *src, uint8_t *dst) {
-//emu_printf("decodeLZW %p %p\n", src, dst);
+////emu_printf("decodeLZW %p %p\n", src, dst);
 	memset(&_lzw, 0, sizeof(_lzw));
 	_lzw._buf = src;
 	return _lzw.decode(dst);

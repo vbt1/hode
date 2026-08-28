@@ -28,7 +28,7 @@ extern uint8_t *cs1ram;
 //uint8_t *cs1ram = (uint8_t *)0x22402000;
 //uint8_t *save_cs1ram;
 #ifdef PRELOAD_ANDY
-SAT_sprite andy_vdp2[499];
+SAT_sprite andy_vdp2[457];
 int xdone = 0;
 #endif
 
@@ -75,8 +75,8 @@ static bool openDat(FileSystem *fs, const char *name, File *f) {
 
 static void closeDat(FileSystem *fs, File *f) {
 //emu_printf("closeDat ");
-Sint32 fileid, fsize;
-GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
+//Sint32 fileid, fsize;
+//GFS_GetFileInfo(f->_fp->fid, &fileid, NULL, &fsize, NULL);
 //emu_printf("------ filename %s %d\n", GFS_IdToName(fileid), fileid);
 	if (f->_fp) {
 		fs->closeFile(f->_fp);
@@ -145,8 +145,11 @@ Resource::Resource(FileSystem *fs)
 #endif
 	{
 //emu_printf("_version NOT V1_2\n");
+emu_printf("new File\n");
 		_datFile = new File;
+emu_printf("new File\n");		
 		_lvlFile = new File;
+emu_printf("new File\n");		
 		_mstFile = new File;
 #ifdef SOUND
 		_sssFile = new File;
@@ -342,6 +345,7 @@ void Resource::loadSetupDat() {
 	if(_datHdr.yesNoQuitImage != hintsCount - 3)
 		return;
 	_menuBuffersOffset = _datHdr.hintsImageOffsetTable[_datHdr.yesNoQuitImage + 2];
+	 closeDat(_fs, _datFile);
 }
 #if 0
 bool Resource::loadDatHintImage(int num, uint8_t *dst, uint8_t *pal) {
@@ -380,6 +384,7 @@ bool Resource::loadDatLoadingImage(uint8_t *dst, uint8_t *pal) {
 void Resource::loadDatMenuBuffers() {
 ////emu_printf("loadDatMenuBuffers\n");
 	assert((_datHdr.sssOffset & 0x7FF) == 0);
+	openDat(_fs, _setupDat, _datFile);
 	_datFile->seek(_datHdr.sssOffset, SEEK_SET);
 #ifdef SOUND
 	loadSssData(_datFile, _datHdr.sssOffset);
@@ -402,6 +407,7 @@ void Resource::loadDatMenuBuffers() {
 			_datFile->read(_menuBuffer0, _datHdr.bufferSize0);
 		}
 	}
+	closeDat(_fs, _datFile); 
 }
 
 void Resource::unloadDatMenuBuffers() {
@@ -987,7 +993,7 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	const uint32_t allocatedOffsetsSize = size - readSize;
 	if(allocatedOffsetsSize != readOffsetsSize)
 	{
-		emu_printf("vbt bad read !!!!! sprite %d\n", num);
+		emu_printf("3vb3 bad read !!!!! sprite %d\n", num);
 		return;
 	}
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
@@ -1277,7 +1283,7 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 		return;
 
 	static const uint32_t baseOffset = _lvlBackgroundsOffset;
-emu_printf("loadLvlScreenBackgroundData num %d\n", num);
+//emu_printf("loadLvlScreenBackgroundData num %d\n", num);
 	uint8_t header[3 * sizeof(uint32_t)];
 	if (!buf) {
 		_lvlFile->seekAlign(baseOffset + num * 16);
@@ -2174,7 +2180,7 @@ if (_mstCodeData == 0)
 		msac->nextByValue = fp->readUint32();
 		msac->unk0x1C = fp->readByte();
 		msac->unk0x1D = fp->readByte();
-		msac->unk0x1E = fp->readUint16();
+		/*msac->unk0x1E =*/ fp->readUint16(); // vbt : pas utilisé
 		msac->codeData = fp->readUint32();
 ////emu_printf("msac->codeData %d\n", msac->codeData);
 		bytesRead += 36;

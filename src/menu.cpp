@@ -2,7 +2,7 @@
 extern "C" {
 #include 	<sl_def.h>
 #include	<sega_sys.h>
-#include	<sega_spr.h>
+//#include	<sega_spr.h>
 #include	"gfs_wrap.h"
 #include <stdarg.h>
 #include <string.h>
@@ -414,9 +414,9 @@ void Menu::drawBitmap(const uint8_t *data, uint32_t size, bool setPalette) {
 	} else 
 #endif
 	{
-	//emu_printf("decodeLZW\n");
+	////emu_printf("decodeLZW\n");
 		decodeLZW(data, _video->_frontLayer);
-	//emu_printf("decodeLZW done\n");
+	////emu_printf("decodeLZW done\n");
 		if (setPalette) {
 			g_system->setPalette(data + size, 256, 6);
 		}

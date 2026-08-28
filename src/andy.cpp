@@ -10,7 +10,7 @@
 #include "util.h"
 #ifdef PRELOAD_ANDY
 extern "C" {
-extern SAT_sprite andy_vdp2[499];
+extern SAT_sprite andy_vdp2[457];
 }
 #endif
 // probably rename this to anim.cpp as this updates most LvlObject, not only Andy

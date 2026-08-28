@@ -129,7 +129,7 @@ struct MstScreenArea {
 	uint32_t nextByValue; // 0x18 _mstScreenAreaByValueIndexData
 	uint8_t unk0x1C; // 0x1C _mstScreenAreaByValueIndexData
 	uint8_t unk0x1D; // 0x1D value
-	uint16_t unk0x1E; // 0x1E unused
+//	uint16_t unk0x1E; // 0x1E unused
 	uint32_t codeData; // 0x20, offset _mstCodeData
 }; // sizeof == 36
 

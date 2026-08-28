@@ -95,7 +95,7 @@ struct PafPlayer {
 	uint8_t *_paletteBuffer;
 	bool _paletteChanged;
 	uint8_t *_bufferBlock;//[kBufferBlockSize];
-//	uint8_t *_bufferBlock[kBufferBlockSize];
+//	uint8_t _bufferBlock[kBufferBlockSize];
 	uint8_t *_demuxVideoFrameBlocks;
 	uint8_t *_demuxAudioFrameBlocks;
 /*

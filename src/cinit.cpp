@@ -17,8 +17,8 @@ extern "C" {
 
 #include 	<sl_def.h>
 #include	<sega_sys.h>
-#include	<sega_spr.h>
-#include	<sega_csh.h>
+//#include	<sega_spr.h>
+//#include	<sega_csh.h>
 #include	"gfs_wrap.h"
 #include <stdarg.h>
 #include <string.h>

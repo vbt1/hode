@@ -22,7 +22,7 @@ extern "C" {
 extern Uint32 position_vram;
 //extern Uint32 position_vram_save;
 #ifdef PRELOAD_ANDY // ok
-extern SAT_sprite andy_vdp2[499];
+extern SAT_sprite andy_vdp2[457];
 #endif
 extern SAT_sprite _sprData[4];
 //int nb_spr=0;
@@ -603,9 +603,8 @@ void Video::decodeSPR_ANDY_shadow(const Sprite *spr, uint8_t *dst)
 
 
 void Video::decodeRLE(const uint8_t *src, uint8_t *dst, int size) {
-//	emu_printf("decode RLE\n");
 	uint8_t *dstEnd = dst + size;
-	
+//	emu_printf("decode RLE %p end %p size %d\n", dst, dstEnd, size);	
 	while (dst < dstEnd) {
 		int8_t code = *src++;
 		int count;

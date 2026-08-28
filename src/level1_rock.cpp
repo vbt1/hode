@@ -6,15 +6,16 @@
  */
 
 // rock_hod - "canyon of death"
+extern "C" {
+#include 	<sl_def.h>
+extern Uint8 *lwram_end;
+};
 
 #include "game.h"
 #include "level.h"
 #include "paf.h"
 #include "util.h"
 #include "video.h"
-extern "C" {
-extern Uint8 *lwram_end;
-};
 
 static const CheckpointData _rock_checkpointData[8] = {
 	{  96,  34, 0x300c,  22,  0,  0 },
@@ -82,7 +83,7 @@ struct Level_rock: Level {
 };
 
 Level *Level_rock_create() {
-//emu_printf("Level_rock\n");
+emu_printf("new Level_rock\n");
 	return new Level_rock;
 }
 
@@ -168,25 +169,31 @@ void Level_rock::postScreenUpdate_rock_screen8() {
 }
 
 void Level_rock::postScreenUpdate_rock_screen9() {
-//emu_printf("preScreenUpdate_rock_screen9\n");
+emu_printf("postScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);
 	int xPos;
 	if (_res->_currentScreenResourceNum == 9) {
+emu_printf("1postScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);		
 		switch (_res->_screensState[9].s0) {
 		case 0:
+emu_printf("2postScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);
 			xPos = 68;
-//emu_printf("_screensState 0\n");	
+//emu_printf("_screensState 0\n");
+emu_printf("3postScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);	
 			if ((_andyObject->flags0 & 0xE0) != 0) {
 				xPos -= 14;
 			}
 //emu_printf("x %d %d y %d 86\n", _andyObject->xPos , xPos , _andyObject->yPos);
 			if (_andyObject->xPos > xPos && _andyObject->yPos < 86) {
-//emu_printf("andy au bon endroit\n");					
+emu_printf("4postScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);
+emu_printf("andy au bon endroit %d %d\n", _andyObject->xPos, _andyObject->yPos);					
 #ifdef PAF
 //				if (!_paf->_skipCutscenes) 
 				{
 //emu_printf("lecture video 1\n");
 //					_paf->preload(1);
+emu_printf("5postScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);
 					_paf->play(1);
+emu_printf("6postScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);
 					_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 					_video->_paletteChanged = true;
 				}
@@ -691,7 +698,8 @@ void Level_rock::preScreenUpdate_rock_screen7() {
 }
 
 void Level_rock::preScreenUpdate_rock_screen9() {
-emu_printf("preScreenUpdate_rock_screen9\n");
+emu_printf("preScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);
+
 	switch (_res->_screensState[9].s0) {
 	case 0:
 //#ifdef PAF
@@ -707,6 +715,7 @@ emu_printf("preScreenUpdate_rock_screen9\n");
 		_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 		break;
 	}
+emu_printf("end preScreenUpdate_rock_screen9 shad %p\n",_video->_shadowLayer);
 }
 
 void Level_rock::preScreenUpdate_rock_screen10() {
