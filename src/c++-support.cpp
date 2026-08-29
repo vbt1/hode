@@ -21,7 +21,7 @@ void __cxa_pure_virtual(void) {
 }
 
 void* operator new(size_t size) {
-	emu_printf("new  size %d\n", size);
+//	emu_printf("new  size %d\n", size);
 //    return malloc(size);
 	void *ptr;
 /*	if(size!=8)
@@ -39,7 +39,7 @@ void* operator new(size_t size) {
 	}
 	#if 0
 // vbt : 136 c'est le pafplayer !!!!
-	else if (size==8 || /*size==136 ||*/ size==68 || size==2496
+	else if (/*size==8 ||*/ size==136 /*|| size==68 || size==2496*/
 	)
 	{
 		ptr = (void *)current_lwram;
@@ -51,7 +51,7 @@ void* operator new(size_t size) {
 	else
 	{
 		ptr = malloc(size);
-//	emu_printf("size %d malloc %p\n", size, ptr);
+	emu_printf("size %d malloc %p\n", size, ptr);
 	}
 	return ptr;
 }

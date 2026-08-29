@@ -56,20 +56,16 @@ Game::Game(const char *dataPath, const char *savePath, uint32_t cheats) :  _fs(d
 	{
 		_level = 0;
 //		_restartLevel = false;
-emu_printf("new Resource\n");
 		_res = new Resource(&_fs);
 		_rnd.setSeed();
 
-emu_printf("new Video\n");
 		_video = new Video();
 
 #ifdef PAF
-emu_printf("new PafPlayer\n");
 	_paf = new PafPlayer(&_fs, _video);
-emu_printf("paf player %p video %p fs %p\n", _paf, _video, &_fs);	
 #endif
 	
-		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+25000); // ne pas trop monter
+		hwram_work = allocate_memory(-1, TYPE_HWRAM, 588000+116000+20000); // ne pas trop monter
 		_mstResData = (uint8_t *)allocate_memory(-1, TYPE_RES, 33000);
 		const int frame = Video::W * Video::H;
 
@@ -421,7 +417,6 @@ void Game::removeSound(LvlObject *ptr) {
 void Game::setupBackgroundBitmap() {
 	LvlBackgroundData *lvl = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
 	const int num = lvl->currentBackgroundId;
-emu_printf("setupBackgroundBitmap id %d\n", num);
 	const uint8_t *pal = lvl->backgroundPaletteTable[num];
 	lvl->backgroundPaletteId = READ_LE_UINT16(pal); pal += 2;
 	const uint8_t *bmp = lvl->backgroundBitmapTable[num];
@@ -1072,7 +1067,6 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 	if(num == kNoScreen)
 		return;
 
-//vbtvbtvbtvbt
 	if(_res->isLvlBackgroundDataLoaded(prev))
 	{
 //emu_printf("isLvlBackgroundDataLoaded(prev) %d %p\n", _res->_resLevelData0x2B88SizeTable[prev], _res->_resLevelData0x2B88SizeTable);
@@ -1083,7 +1077,6 @@ void Game::preloadLevelScreenData(uint8_t num, uint8_t prev) {
 //emu_printf("isLvlBackgroundDataLoaded(num) %d\n", num);
 		_res->unloadLvlScreenBackgroundData(num);
 	}
-emu_printf("loadLvlScreenBackgroundData(num) %d shad %p\n", num,_video->_shadowLayer);
 #ifndef PRELOAD_ANDY
 	if(_currentScreen && !_restartLevel)
 	{	
@@ -1093,9 +1086,6 @@ emu_printf("loadLvlScreenBackgroundData(num) %d shad %p\n", num,_video->_shadowL
 	_restartLevel = false;
 #endif
 	_res->loadLvlScreenBackgroundData(num);
-emu_printf("aft loadLvlScreenBackgroundData(num) %d shad %p\n", num,_video->_shadowLayer);
-
-
 
 #ifdef SOUND
 	if (num < _res->_sssPreloadInfosData.count) {
@@ -2692,7 +2682,6 @@ void Game::mainLoop(int level, int checkpoint, bool levelChanged) {
 //emu_printf("initMstCode\n");
 		initMstCode();
 	}
-
 //emu_printf("resetPlasmaCannonState\n");
 	resetPlasmaCannonState();
 	for (int i = 0; i < _res->_lvlHdr.screensCount; ++i) {
@@ -3554,10 +3543,10 @@ Level *Game::createLevel() {
 
 void Game::callLevel_initialize() {
 #ifdef PAF
-//emu_printf("setPointers\n");
+	_level->setPointers(this, _andyObject, _paf, _res, _video);
+#else
 	_level->setPointers(this, _andyObject, NULL, _res, _video);
 #endif
-//emu_printf("initialize %p\n", _level);
 	_level->initialize();
 }
 
@@ -4968,7 +4957,6 @@ void Game::initLvlObjects() {
 	}
 #ifdef USE_LESS_RAM
 //emu_printf("_res->loadLvlSprite(_currentLevel, 1) (num) %d\n", _currentLevel);
-emu_printf("initLvlObjects loadLvlSprite\n"); // vbt : utile sinon ca plante
 	_res->loadLvlSprite(_currentLevel, _currentScreen, 1);
 #endif	
 //	_declaredLvlObjectsList = (LvlObject *)allocate_memory(TYPE_MONSTER, kMaxLvlObjects*sizeof(LvlObject));//[kMaxLvlObjects];

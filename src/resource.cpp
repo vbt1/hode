@@ -1312,7 +1312,6 @@ void Resource::loadLvlScreenBackgroundData(int num, const uint8_t *buf) {
 	}
 	uint8_t *ptr = allocate_memory (_level, TYPE_BGLVL, size);
 	
-emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size);
 	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
 	_lvlFile->read(ptr, readSize);
 	uint8_t hdr[160];
@@ -1328,7 +1327,6 @@ emu_printf("ptr TYPE_BGLVL %p %p rs %d, s%d\n", ptr, ptr+readSize,readSize,size)
 	if(allocatedOffsetsSize != readOffsetsSize)
 		return;
 	_resLvlScreenBackgroundDataPtrTable[num] = ptr;
-emu_printf("_resLevelData0x2B88SizeTable[%d]=%d\n", num,size);
 	_resLevelData0x2B88SizeTable[num] = size;
 }
 

@@ -56,22 +56,22 @@ void File::seek(int pos, int whence) {
 //Sint32 id, fsize;
 //GFS_GetFileInfo(_fp->fid, &id, NULL, &fsize, NULL);
 //emu_printf("--- seek fid %d name %s\n",id, GFS_IdToName(id));
-if(!_fp)
+//if(!_fp)
 //emu_printf("pas de fichier ouvert\n");
 
 	if(_fp)
 	{
 		if (kSeekAbsolutePosition && whence == SEEK_CUR) {
-emu_printf("here\n");
+//emu_printf("here\n");
 //	while(1);
 			pos += sat_ftell(_fp);
 			whence = SEEK_SET;
 		}
-emu_printf("sat_fseek\n");
+//emu_printf("sat_fseek\n");
 		sat_fseek(_fp, pos, whence);
 	}
-	else
-		emu_printf("sat_fseek pas de fp !!!!\n");
+//	else
+//		emu_printf("sat_fseek pas de fp !!!!\n");
 }
 /*
 void File::batchSeek()

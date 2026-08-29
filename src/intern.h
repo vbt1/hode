@@ -55,13 +55,16 @@ inline uint16_t READ_LE_UINT16(const void *ptr) {
 }
 
 inline uint32_t READ_LE_UINT32(const void *ptr) {
-	if (1 && (((uintptr_t)ptr) & 3) != 0) {
+	/*if (1 && (((uintptr_t)ptr) & 3) != 0) {
 		uint32_t value;
 		memcpy(&value, ptr, sizeof(uint32_t));
 		return le32toh(value);
 	} else {
 		return le32toh(*(const uint32_t *)ptr);
-	}
+	}*/
+	    const uint8_t *b = (const uint8_t *)ptr;
+    return (uint32_t)b[0] | ((uint32_t)b[1] << 8) |
+           ((uint32_t)b[2] << 16) | ((uint32_t)b[3] << 24);
 }
 /*
 inline uint16_t READ_LE_UINT16(const void *ptr) {
