@@ -892,8 +892,6 @@ static void mixAudio(void *userdata, int16_t *buf, int len) {
 }
 #endif
 
-//#define SLOT_SIZE      262144   // taille _demuxVideoFrameBlocks = 128 × 2048
-//#define ASYNCH_MAX     145408   //
 #define FRAMES_PER_READ 6
 #define NUM_BUFFERS     2
 #define ASYNCH_MAX     24576 * FRAMES_PER_READ    // cap empirique asynchInit
@@ -999,22 +997,15 @@ void PafPlayer::mainLoop() {
 	ctx.readBuf    = 1;
 	ctx.active     = (_pafHdr.framesCount > 1);
 
-	if(_pafHdr.framesCount !=41)
-	{
-		uint32_t preloadBytes = _pafHdr.preloadFrameBlocksCount * _pafHdr.readBufferSize;
-		int r = _file.batchRead(ctx.buffers[0], preloadBytes);
-		ctx.data        = ctx.buffers[0] + (r - (int)preloadBytes);
-		ctx.blocksCount = _pafHdr.preloadFrameBlocksCount;
-	}
-	else
-	{
-		uint32_t preloadBlocks = _pafHdr.preloadFrameBlocksCount + _pafHdr.frameBlocksCountTable[0];
+	uint32_t preloadBlocks = _pafHdr.preloadFrameBlocksCount;
+	if (_pafHdr.framesCount == 41)
+		preloadBlocks += _pafHdr.frameBlocksCountTable[0];
 
-		uint32_t preloadBytes  = preloadBlocks * _pafHdr.readBufferSize;
-		int r = _file.batchRead(ctx.buffers[0], preloadBytes);
-		ctx.data        = ctx.buffers[0] + (r - (int)preloadBytes);
-		ctx.blocksCount = preloadBlocks;
-	}
+	uint32_t preloadBytes = preloadBlocks * _pafHdr.readBufferSize;
+	int r = _file.batchRead(ctx.buffers[0], preloadBytes);
+
+	ctx.data        = ctx.buffers[0] + (r - (int)preloadBytes);
+	ctx.blocksCount = preloadBlocks;
 
 	ctx.nextWaitFrame = 1;
 	if (ctx.active) {

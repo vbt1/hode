@@ -1131,22 +1131,8 @@ emu_printf("loadLvlSprite %d all %d screen %d 1hwramw %d %p lwram %d hwram %p en
             ((int)hwram_work) - 0x6000000, hwram_work,
             ((int)current_lwram) - 0x200000, hwram, lwram_end);
 
-//	const char *levelName = _prefixes[levelNum];
-//Sint32 fileid, fsize;
-//	GFS_GetFileInfo(_lvlFile->_fp->fid, &fileid, NULL, &fsize, NULL);
-//emu_printf("------ filename %s seek %d\n", GFS_IdToName(fileid), _lvlFile->_fp->f_seek_pos);
 	static const uint32_t baseOffset = _lvlSpritesOffset;
-//	if(screenNum==13)
-//		all=1;
-/*
-	if(all)
-	{	
-		memset(_resLevelData0x2988SizeTable, 0, sizeof(_resLevelData0x2988SizeTable));
-		memset(_resLevelData0x2988Table, 0, sizeof(_resLevelData0x2988Table));
-		memset(_resLevelData0x2988PtrTable, 0, sizeof(_resLevelData0x2988PtrTable));
-		lwram_end = (Uint8 *)0x300000;
-	}
-*/
+
 	_lvlFile->seekAlign(_lvlSpritesOffset);
 //	uint8_t spr[kMaxSpriteTypes * 16];
 	uint8_t *spr = (uint8_t *)_scrapBuffer;
