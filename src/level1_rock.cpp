@@ -183,6 +183,11 @@ void Level_rock::postScreenUpdate_rock_screen9() {
 					_paf->play(1);
 _res->loadLvlSprite(0, _andyObject->screenNum, 0);
 _g->preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
+emu_printf("screen9 before: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
+    _res->_resLvlScreenBackgroundDataTable[9].currentMaskId,
+    _res->_screensState[9].s3,
+    _res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId,
+    _andyObject->xPos, _andyObject->yPos);
 					_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 					_video->_paletteChanged = true;
 				}
@@ -200,7 +205,16 @@ _g->preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceN
 				_andyObject->anim = 232;
 				_andyObject->frame = 0;
 				_g->setupLvlObjectBitmap(_andyObject);
+				
+_res->_screensState[9].s3 = 0xFF;   // force setupScreenMask à redécoder, même si mask==0 inchangé
+_g->setupScreenMask(9);
+
 				_g->setupScreen(_andyObject->screenNum);
+emu_printf("screen9 after: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
+    _res->_resLvlScreenBackgroundDataTable[9].currentMaskId,
+    _res->_screensState[9].s3,
+    _res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId,
+    _andyObject->xPos, _andyObject->yPos);
 //				lwram_end = (Uint8 *)0x300000;
 /*				memset(&_res->_resLevelData0x2988Table[0], 0, sizeof(LvlObjectData));
 				memset(&_res->_resLevelData0x2988Table[1], 0, sizeof(LvlObjectData));*/
