@@ -177,10 +177,12 @@ void Level_rock::postScreenUpdate_rock_screen9() {
 				xPos -= 14;
 			}
 			if (_andyObject->xPos > xPos && _andyObject->yPos < 86) {
-#ifdef PAFX
+#ifdef PAF
 				if (!_paf->_skipCutscenes) 
 				{
 					_paf->play(1);
+_res->loadLvlSprite(0, _andyObject->screenNum, 0);
+_g->preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
 					_res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId = 1;
 					_video->_paletteChanged = true;
 				}
@@ -192,7 +194,6 @@ void Level_rock::postScreenUpdate_rock_screen9() {
 #ifdef PSX
 				_g->updateBackgroundPsx(1);
 #endif
-		_res->loadLvlSprite(0, _andyObject->screenNum, 0);
 				_g->setAndySprite(2);
 				_andyObject->xPos = 105;
 				_andyObject->yPos = 52;
@@ -684,7 +685,7 @@ void Level_rock::preScreenUpdate_rock_screen7() {
 void Level_rock::preScreenUpdate_rock_screen9() {
 	switch (_res->_screensState[9].s0) {
 	case 0:
-#ifdef PAFX
+#ifdef PAF
 		if (!_paf->_skipCutscenes) {
 			_paf->preload(1);
 		}

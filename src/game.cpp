@@ -343,14 +343,14 @@ void Game::unloadTransformLayerData() {
 void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 	uint8_t *dst = _video->_shadowScreenMaskBuffer;
 	for (int i = lvl->currentShadowId; i < lvl->shadowCount; ++i) {
-//emu_printf("backMaskTable %d %p dst %p\n", i, lvl->backgroundMaskTable[i], _video->_shadowScreenMaskBuffer);
+emu_printf("backMaskTable %d %p dst %p\n", i, lvl->backgroundMaskTable[i], _video->_shadowScreenMaskBuffer);
 		const uint8_t *src = lvl->backgroundMaskTable[i];
 		if (src) {
 			const int decodedSize = decodeLZW(src + 2, dst);
 
-//emu_printf("dst %p sz %d\n",dst, decodedSize);
+emu_printf("dst %p sz %d\n",dst, decodedSize);
 			_shadowScreenMasksTable[i].dataSize = READ_LE_UINT32(dst);
-//emu_printf("vbt _shadow src %p %d sz %d\n", src, _shadowScreenMasksTable[i].dataSize, decodedSize);
+emu_printf("vbt _shadow src %p %d sz %d\n", src, _shadowScreenMasksTable[i].dataSize, decodedSize);
 			// header : 20 bytes
 			// projectionData : w * h * sizeof(uint16_t) - for a given (x, y) returns the casted (x, y)
 			// paletteData : 256 (only the first 144 bytes are read)
@@ -365,16 +365,14 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 			const int size = w * h;
 			uint8_t *p = _shadowScreenMasksTable[i].projectionDataPtr + 2;
 
-			//emu_printf("shadow screen mask #%d pos %d,%d dim %d,%d size %d %p next %p\n", i, x, y, w, h, decodedSize, p, p+size);
-
+emu_printf("shadow screen mask #%d pos %d,%d dim %d,%d size %d %p next %p\n", i, x, y, w, h, decodedSize, p, p+size);
 			for (int j = 1; j < size; ++j) {
-//emu_printf("shadow screen j %d/%d\n", j, size);
 				const int16_t offset = (int16_t)READ_LE_UINT16(p - 2) + (int16_t)READ_LE_UINT16(p);
 				// fprintf(stdout, "shadow #%d offset #%d 0x%x 0x%x\n", i, j, READ_LE_UINT16(p), offset);
 				WRITE_LE_UINT16(p, offset);
 				p += 2;
 			}
-//emu_printf("shadow screen\n");
+emu_printf("shadow screen\n");
 #if 0
 			const int shadowPaletteSize = decodedSize - 20 - w * h * sizeof(uint16_t);
 //emu_printf("shadowPaletteSize %d 144\n", shadowPaletteSize);
@@ -383,7 +381,7 @@ void Game::decodeShadowScreenMask(LvlBackgroundData *lvl) {
 #else
 	memcpy(_video->_shadowColorLut, _shadowScreenMasksTable[i].shadowPalettePtr, 144);	
 #endif
-//emu_printf("dst %p %d 144\n", dst, decodedSize);
+emu_printf("dst %p %d 144\n", dst, decodedSize);
 			dst += decodedSize;
 		}
 	}
@@ -439,9 +437,9 @@ void Game::setupBackgroundBitmap() {
 	unsigned int s1 = g_system->getTimeStamp();
 #endif	
 //	for(int i=0;i<10;i++)
-//emu_printf("bef decodeLZW\n");
+emu_printf("bef decodeLZW\n");
 	int sz = decodeLZW(bmp, _video->_backgroundLayer2);
-//emu_printf("decodeLZW %p %p num %dsz %d\n", bmp, _video->_backgroundLayer2, num, sz);
+emu_printf("decodeLZW %p %p num %dsz %d\n", bmp, _video->_backgroundLayer2, num, sz);
 #ifdef DEBUG
 	unsigned int e1 = g_system->getTimeStamp();
 	int result = e1-s1;
@@ -450,7 +448,7 @@ void Game::setupBackgroundBitmap() {
 #endif
 	}
 	if (lvl->shadowCount != 0) {
-//emu_printf("decodeShadowScreenMask\n");
+emu_printf("decodeShadowScreenMask\n");
 #if 1
 		decodeShadowScreenMask(lvl);
 #endif
@@ -590,14 +588,14 @@ void Game::setupScreenPosTable(uint8_t num) {
 }
 
 void Game::setupScreenMask(uint8_t num) {
-//emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroundDataTable[num].currentMaskId);
+emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroundDataTable[num].currentMaskId);
 	if (num == kNoScreen) {
 		return;
 	}
 
 	int mask = _res->_resLvlScreenBackgroundDataTable[num].currentMaskId;
 	if (_res->_screensState[num].s3 != mask) {
-		//emu_printf("setupScreenMask num %d mask %d\n", num, mask);
+		emu_printf("setupScreenMask num %d mask %d\n", num, mask);
 		_res->_screensState[num].s3 = mask;
 		const uint8_t *maskData = _res->getLvlScreenMaskDataPtr(num * 4 + mask);
 		if (maskData) {
@@ -612,9 +610,10 @@ void Game::setupScreenMask(uint8_t num) {
 		}
 	}
 	if (_res->_currentScreenResourceNum == num) {
-			//emu_printf("setupScreenMask setupScreenPosTable\n");
+		emu_printf("setupScreenMask setupScreenPosTable\n");
 		setupScreenPosTable(num);
 	}
+		emu_printf("setupScreenMask end\n");
 }
 
 void Game::resetScreenMask() {
@@ -1434,13 +1433,13 @@ void Game::setupScreen(uint8_t num) {
 		setupScreenMask(i);
 		callLevel_postScreenUpdate(i);
 	}
-//emu_printf("callLevel_postScreenUpdate fin\n");
+emu_printf("callLevel_postScreenUpdate fin\n");
 	callLevel_postScreenUpdate(num);
-//emu_printf("setupBackgroundBitmap fin lw %p cs1 %p\n", current_lwram, cs1ram);
+emu_printf("setupBackgroundBitmap fin lw %p cs1 %p\n", current_lwram, cs1ram);
 	setupBackgroundBitmap();
-//emu_printf("setupScreenMask fin\n");
+emu_printf("setupScreenMask fin\n");
 	setupScreenMask(num);
-//emu_printf("resetDisplay fin\n");
+emu_printf("resetDisplay fin\n");
 	resetDisplay();
 }
 
