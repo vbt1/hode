@@ -180,6 +180,12 @@ void Level_rock::postScreenUpdate_rock_screen9() {
 #ifdef PAF
 				if (!_paf->_skipCutscenes) 
 				{
+emu_printf("before screensGrid[9] top=%d right=%d bottom=%d left=%d\n",
+    _res->_screensGrid[9][kPosTopScreen],
+    _res->_screensGrid[9][kPosRightScreen],
+    _res->_screensGrid[9][kPosBottomScreen],
+    _res->_screensGrid[9][kPosLeftScreen]);
+
 					_paf->play(1);
 _res->loadLvlSprite(0, _andyObject->screenNum, 0);
 _g->preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
@@ -215,6 +221,13 @@ emu_printf("screen9 after: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
     _res->_screensState[9].s3,
     _res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId,
     _andyObject->xPos, _andyObject->yPos);
+	_g->_plasmaCannonFlags &= ~1;
+				
+emu_printf("after screensGrid[9] top=%d right=%d bottom=%d left=%d\n",
+    _res->_screensGrid[9][kPosTopScreen],
+    _res->_screensGrid[9][kPosRightScreen],
+    _res->_screensGrid[9][kPosBottomScreen],
+    _res->_screensGrid[9][kPosLeftScreen]);
 //				lwram_end = (Uint8 *)0x300000;
 /*				memset(&_res->_resLevelData0x2988Table[0], 0, sizeof(LvlObjectData));
 				memset(&_res->_resLevelData0x2988Table[1], 0, sizeof(LvlObjectData));*/

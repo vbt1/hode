@@ -1547,6 +1547,13 @@ emu_printf("playAndyFallingCutscene loadLvlSprite\n");
 }
 
 int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
+	
+    static uint32_t lastFlags = 0xFFFFFFFF;
+    if (_plasmaCannonFlags != lastFlags) {
+        emu_printf("flags changed %d -> %d\n", lastFlags, _plasmaCannonFlags);
+        lastFlags = _plasmaCannonFlags;
+    }
+
 	int8_t ret = 0;
 
 	if ((_plasmaCannonFlags & 1) == 0 && _plasmaCannonDirection == 0) {
@@ -1559,6 +1566,8 @@ int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
 			ptr->screenNum = _res->_screensGrid[num][kPosLeftScreen];
 			ptr->xPos = xPosPrev + Video::W;
 		} else if (xPos > Video::W) {
+    emu_printf("crossRight num=%d grid_right=%d currentScreenRes=%d\n",
+        num, _res->_screensGrid[num][kPosRightScreen], _res->_currentScreenResourceNum);
 			ptr->screenNum = _res->_screensGrid[num][kPosRightScreen];
 			ptr->xPos = xPosPrev - Video::W;
 		}
@@ -1572,13 +1581,13 @@ int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
 			}
 		}
 		if (ptr->screenNum == kNoScreen) {
-			//debug(kDebug_GAME, "Changing screen from -1 to %d, pos=%d,%d (%d,%d)", num, xPos, yPos, xPosPrev, yPosPrev);
+			emu_printf("Changing screen from -1 to %d, pos=%d,%d (%d,%d)\n", num, xPos, yPos, xPosPrev, yPosPrev);
 			ptr->screenNum = num;
 			ptr->xPos = xPosPrev;
 			ptr->yPos = yPosPrev;
 			ret = -1;
 		} else if (ptr->screenNum != num) {
-//			emu_printf("Changing screen from %d to %d, pos=%d,%d\n", num, ptr->screenNum, xPos, yPos);
+			emu_printf("Changing screen from %d to %d, pos=%d,%d\n", num, ptr->screenNum, xPos, yPos);
 			ret = 1;
 			AndyLvlObjectData *data = (AndyLvlObjectData *)getLvlObjectDataPtr(ptr, kObjectDataTypeAndy);
 			data->boundingBox.x1 = ptr->xPos;
@@ -1591,6 +1600,11 @@ int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
 			_currentRightScreen = _res->_screensGrid[_currentScreen][kPosRightScreen];
 //			emu_printf("current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 		}
+	}
+	else
+	{
+	emu_printf("je ne rentre pas dans le bloc (_plasmaCannonFlags & 1) == 0  %d && _plasmaCannonDirection == 0 %d\n", 
+	(_plasmaCannonFlags & 1) == 0, _plasmaCannonDirection == 0);
 	}
 	return ret;
 }
