@@ -490,6 +490,7 @@ int Game::mstBoundingBoxCollides1(int num, int x1, int y1, int x2, int y2) const
 }
 
 int Game::mstBoundingBoxUpdate(int num, int monster1Index, int x1, int y1, int x2, int y2) {
+emu_printf("mstBoundingBoxUpdate(num %d, monster1Index %d, x1 %d, y1 %d, x2 %d, y2 %d) \n", num, monster1Index, x1, y1, x2, y2);
 	if (num == 0xFF) {
 		for (num = 0; num < _mstBoundingBoxesCount; ++num) {
 			if (_mstBoundingBoxesTable[num].monster1Index == 0xFF) {
@@ -5425,10 +5426,11 @@ static uint8_t getLvlObjectFlag(uint8_t type, const LvlObject *o, const LvlObjec
 int Game::mstOp56_specialAction(Task *t, int code, int num) {
 	assert(num < _res->_mstHdr.op204DataCount);
 	const MstOp204Data *op204Data = &_res->_mstOp204Data[num];
-	//debug(kDebug_MONSTER, "mstOp56_specialAction code %d", code);
+	emu_printf("mstOp56_specialAction code %d\n", code);
 	switch (code) {
 	case 0:
 		if (!_specialAnimFlag && setAndySpecialAnimation(0x71) != 0) {
+	emu_printf("_plasmaCannonFlags mstOp56_specialAction\n");
 			_plasmaCannonFlags |= 1;
 			if (_andyObject->spriteNum == 0) {
 				_mstCurrentAnim = op204Data->arg0 & 0xFFFF;

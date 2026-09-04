@@ -414,6 +414,10 @@ void Game::removeSound(LvlObject *ptr) {
 
 void Game::setupBackgroundBitmap() {
 	LvlBackgroundData *lvl = &_res->_resLvlScreenBackgroundDataTable[_res->_currentScreenResourceNum];
+	
+emu_printf("bgPalTable[0]=%p bgBmpTable[0]=%p bgid=%d\n",
+    lvl->backgroundPaletteTable[0], lvl->backgroundBitmapTable[0], lvl->currentBackgroundId);
+	
 	const int num = lvl->currentBackgroundId;
 	const uint8_t *pal = lvl->backgroundPaletteTable[num];
 	lvl->backgroundPaletteId = READ_LE_UINT16(pal); pal += 2;
@@ -453,9 +457,11 @@ emu_printf("decodeShadowScreenMask\n");
 		decodeShadowScreenMask(lvl);
 #endif
 	}
+	emu_printf("avant pal bytes: %d %d %d %d %d %d\n", pal[0], pal[1], pal[2], pal[3], pal[4], pal[5]);
 	for (int i = 0; i < 256 * 3; ++i) {
 		_video->_displayPaletteBuffer[i] = pal[i];// << 8;
 	}
+	emu_printf("apres pal bytes: %d %d %d %d %d %d\n", pal[0], pal[1], pal[2], pal[3], pal[4], pal[5]);
 	_video->_paletteChanged = true;
 }
 
@@ -1263,7 +1269,7 @@ void Game::setupAndyLvlObject() {
 	_currentLeftScreen = _res->_screensGrid[_currentScreen][kPosLeftScreen];
 	_currentRightScreen = _res->_screensGrid[_currentScreen][kPosRightScreen];
 
-//emu_printf("init current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
+emu_printf("init current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 
 	ptr->frame = 0;
 	setupLvlObjectBitmap(ptr);
@@ -1674,6 +1680,7 @@ void Game::setAndyLvlObjectPlasmaCannonKeyMask() {
 	if (_actionDirectionKeyMaskIndex != 0) {
 		if (_actionDirectionKeyMaskIndex == 0xA4 && !_fadePalette) { // game over
 			_levelRestartCounter = 10;
+	emu_printf("_plasmaCannonFlags _levelRestartCounter =10\n");
 			_plasmaCannonFlags |= 1;
 		} else {
 			if (_andyObject->spriteNum == 2 && _actionDirectionKeyMaskIndex >= 16) {
@@ -3305,7 +3312,7 @@ void Game::updateInput() {
 //    emu_printf("0hwramw %d %p lwram %d hwram %p endhw %p\n",
 //            ((int)hwram_work) - 0x6000000, hwram_work,
 //            ((int)current_lwram) - 0x200000, hwram, lwram_end);
-			_currentScreen = _level->getCheckpointData(_level->_checkpoint)->screenNum;
+//			_currentScreen = _level->getCheckpointData(_level->_checkpoint)->screenNum; // vbt : inutile
  emu_printf("restartLevel2\n");
 			restartLevel(false);
 		}

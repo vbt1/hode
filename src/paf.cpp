@@ -153,6 +153,12 @@ void PafPlayer::preload(int num) {
 }
 
 void PafPlayer::play(int num) {
+	
+uint32_t total = kPageBufferSize*4 + 256*4 + 256*3 + kBufferBlockSize
+    + _pafHdr.maxVideoFrameBlocksCount * _pafHdr.readBufferSize;
+emu_printf("paf1 range start=%p end=%p total=%d\n",
+    hwram_work_paf, hwram_work_paf + total, total);  
+	
 	slScrAutoDisp(NBG1ON|NBG3ON);
 	if (!lwram_cut)
 		lwram_cut = current_lwram;

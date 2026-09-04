@@ -28,21 +28,20 @@ struct Video {
 
 //	static const uint8_t _fontCharactersTable[39 * 2];
 
+	uint8_t _palette[256 * 3];
+	uint8_t _displayPaletteBuffer[256 * 3];
+	bool _paletteChanged;
+	bool _displayShadowLayer;
 	uint8_t *_shadowLayer;
 	uint8_t *_frontLayer;
 	uint8_t *_backgroundLayer;
 	uint8_t *_backgroundLayer2;
 //	uint8_t *_shadowColorLookupTable;
+	uint8_t _fadePaletteBuffer[256 * 3];
 	uint8_t *_shadowScreenMaskBuffer;
 	uint8_t *_transformShadowBuffer;
-	bool _paletteChanged;
-	bool _displayShadowLayer;
 	uint8_t _transformShadowLayerDelta;
 	uint8_t _shadowColorLut[144];
-	uint8_t _palette[256 * 3];
-	uint8_t _displayPaletteBuffer[256 * 3];
-	uint8_t _fadePaletteBuffer[256 * 3];
-
 #ifdef USE_FONT
 	const uint8_t *_font;
 #endif
