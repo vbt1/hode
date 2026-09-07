@@ -601,7 +601,7 @@ emu_printf("setupScreenMask num %d mask %d\n", num, _res->_resLvlScreenBackgroun
 
 	int mask = _res->_resLvlScreenBackgroundDataTable[num].currentMaskId;
 	if (_res->_screensState[num].s3 != mask) {
-		emu_printf("setupScreenMask num %d mask %d\n", num, mask);
+		emu_printf("setupScreenMask2 num %d mask %d\n", num, mask);
 		_res->_screensState[num].s3 = mask;
 		const uint8_t *maskData = _res->getLvlScreenMaskDataPtr(num * 4 + mask);
 		if (maskData) {
@@ -1445,7 +1445,7 @@ emu_printf("setupBackgroundBitmap fin lw %p cs1 %p\n", current_lwram, cs1ram);
 	setupBackgroundBitmap();
 emu_printf("setupScreenMask fin\n");
 	setupScreenMask(num);
-emu_printf("resetDisplay fin\n");
+//emu_printf("resetDisplay fin\n");
 	resetDisplay();
 }
 

@@ -490,7 +490,7 @@ int Game::mstBoundingBoxCollides1(int num, int x1, int y1, int x2, int y2) const
 }
 
 int Game::mstBoundingBoxUpdate(int num, int monster1Index, int x1, int y1, int x2, int y2) {
-emu_printf("mstBoundingBoxUpdate(num %d, monster1Index %d, x1 %d, y1 %d, x2 %d, y2 %d) \n", num, monster1Index, x1, y1, x2, y2);
+//emu_printf("mstBoundingBoxUpdate(num %d, monster1Index %d, x1 %d, y1 %d, x2 %d, y2 %d) \n", num, monster1Index, x1, y1, x2, y2);
 	if (num == 0xFF) {
 		for (num = 0; num < _mstBoundingBoxesCount; ++num) {
 			if (_mstBoundingBoxesTable[num].monster1Index == 0xFF) {

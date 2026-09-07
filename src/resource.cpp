@@ -914,7 +914,6 @@ void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t
 	{
 		if(all==0)
 		{
-			xdone = 0;
 			load  = 1;
 		}
 		else

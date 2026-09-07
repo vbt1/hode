@@ -190,8 +190,8 @@ emu_printf("before screensGrid[9] top=%d right=%d bottom=%d left=%d\n",
 emu_printf("addrs plasmaFlags=%p screenMaskBuf=%p andyObj=%p res=%p video=%p\n",
     &_g->_plasmaCannonFlags, _g->_screenMaskBuffer, _g->_andyObject, _g->_res, _g->_video);
 
-//					_paf->play(1);
-_res->loadLvlSprite(0, _andyObject->screenNum, 0);
+					_paf->play(1);
+//_res->loadLvlSprite(0, _andyObject->screenNum, 0);
 _g->preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
 emu_printf("screen9 before: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
     _res->_resLvlScreenBackgroundDataTable[9].currentMaskId,
@@ -211,44 +211,16 @@ emu_printf("screen9 before: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
 				_g->updateBackgroundPsx(1);
 #endif
 				_g->setAndySprite(2);
-/*				_andyObject->xPos = 105;
-				_andyObject->yPos = 52;
-				_andyObject->anim = 232;
-				_andyObject->frame = 0;
-*/
-				_g->setupLvlObjectBitmap(_andyObject);
-  // vbt à remettre			
-_res->_screensState[9].s3 = 0xFF;   // force setupScreenMask à redécoder, même si mask==0 inchangé
-_g->setupScreenMask(9);
-
-				_g->setupScreen(_andyObject->screenNum);
-/*
-emu_printf("screen9 after: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
-    _res->_resLvlScreenBackgroundDataTable[9].currentMaskId,
-    _res->_screensState[9].s3,
-    _res->_resLvlScreenBackgroundDataTable[9].currentBackgroundId,
-    _andyObject->xPos, _andyObject->yPos);
- // vbt à remettre
-*/
-/*			
-emu_printf("after screensGrid[9] top=%d right=%d bottom=%d left=%d\n",
-    _res->_screensGrid[9][kPosTopScreen],
-    _res->_screensGrid[9][kPosRightScreen],
-    _res->_screensGrid[9][kPosBottomScreen],
-    _res->_screensGrid[9][kPosLeftScreen]);
-*/
-//				lwram_end = (Uint8 *)0x300000;
-/*				memset(&_res->_resLevelData0x2988Table[0], 0, sizeof(LvlObjectData));
-				memset(&_res->_resLevelData0x2988Table[1], 0, sizeof(LvlObjectData));*/
 				_andyObject->xPos = 105;
 				_andyObject->yPos = 52;
 				_andyObject->anim = 232;
 				_andyObject->frame = 0;
-				
-//_g->_actionDirectionKeyMaskIndex = 0;
-//_g->_specialAnimFlag = false;
-//_g->_plasmaCannonFlags &= ~1;
-//_g->_mstAndyRectNum = 0xFF;
+				_g->setupLvlObjectBitmap(_andyObject);
+				_g->setupScreen(_andyObject->screenNum);
+				_res->loadLvlSprite(0, _andyObject->screenNum, 0);
+
+_res->_screensState[9].s3 = 0xFF;   // force setupScreenMask à redécoder, même si mask==0 inchangé
+				_g->setupScreenMask(_andyObject->screenNum);
 			}
 			break;
 		case 1:
