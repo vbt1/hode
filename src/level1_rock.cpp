@@ -192,6 +192,8 @@ emu_printf("addrs plasmaFlags=%p screenMaskBuf=%p andyObj=%p res=%p video=%p\n",
 
 					_paf->play(1);
 //_res->loadLvlSprite(0, _andyObject->screenNum, 0);
+emu_printf("watch mstAndyRectNum=%p currentScreen=%p plasmaFlags=%p andyObj=%p\n",
+    &_g->_mstAndyRectNum, &_g->_currentScreen, &_g->_plasmaCannonFlags, _g->_andyObject);
 _g->preloadLevelScreenData(_andyObject->screenNum, _res->_currentScreenResourceNum);
 emu_printf("screen9 before: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
     _res->_resLvlScreenBackgroundDataTable[9].currentMaskId,
@@ -221,6 +223,8 @@ emu_printf("screen9 before: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
 
 _res->_screensState[9].s3 = 0xFF;   // force setupScreenMask à redécoder, même si mask==0 inchangé
 				_g->setupScreenMask(_andyObject->screenNum);
+emu_printf("b watch mstAndyRectNum=%p currentScreen=%p plasmaFlags=%p andyObj=%p\n",
+    &_g->_mstAndyRectNum, &_g->_currentScreen, &_g->_plasmaCannonFlags, _g->_andyObject);
 			}
 			break;
 		case 1:
