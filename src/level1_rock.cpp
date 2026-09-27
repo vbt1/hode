@@ -217,18 +217,109 @@ emu_printf("screen9 before: mask=%d s3=%d bgid=%d andy x=%d y=%d\n",
 				_andyObject->yPos = 52;
 				_andyObject->anim = 232;
 				_andyObject->frame = 0;
+
+emu_printf("bef andyState2 plasmaDir=%d mstAndyRect=%d actionIdx=%d specialAnimFlag=%d pos3=%d,%d pos6=%d,%d pos7=%d,%d\n",
+    _g->_plasmaCannonDirection, _g->_mstAndyRectNum,
+    _g->_actionDirectionKeyMaskIndex, _g->_specialAnimFlag,
+    _andyObject->posTable[3].x, _andyObject->posTable[3].y,
+    _andyObject->posTable[6].x, _andyObject->posTable[6].y,
+    _andyObject->posTable[7].x, _andyObject->posTable[7].y);
+
+emu_printf("bef andySt fg0=%d fg1=%d anm=%d frm=%d lvl2988=%p "
+           "unk0=%d sprNum=%d frmsCnt=%d htspsCnt=%d mvsCnt=%d crdsCnt=%d refCnt=%d frm=%d anm=%d "
+           "anmsInf=%p mves=%p frms=%p frmsOf=%p crds=%p crdsOf=%p htspts=%p stAdr=%p\n",
+    _andyObject->flags0, _andyObject->flags1,
+    _andyObject->anim, _andyObject->frame,
+    _andyObject->levelData0x2988,
+    _andyObject->levelData0x2988->unk0,
+    _andyObject->levelData0x2988->spriteNum,
+    _andyObject->levelData0x2988->framesCount,
+    _andyObject->levelData0x2988->hotspotsCount,
+    _andyObject->levelData0x2988->movesCount,
+    _andyObject->levelData0x2988->coordsCount,
+    _andyObject->levelData0x2988->refCount,
+    _andyObject->levelData0x2988->frame,
+    _andyObject->levelData0x2988->anim,
+    _andyObject->levelData0x2988->animsInfoData,
+    _andyObject->levelData0x2988->movesData,
+    _andyObject->levelData0x2988->framesData,
+    _andyObject->levelData0x2988->framesOffsetsTable,
+    _andyObject->levelData0x2988->coordsData,
+    _andyObject->levelData0x2988->coordsOffsetsTable,
+    _andyObject->levelData0x2988->hotspotsData,
+    _andyObject->levelData0x2988->startAddress);
+
 				_g->setupLvlObjectBitmap(_andyObject);
 				_g->setupScreen(_andyObject->screenNum);
+/*
+    uint8_t unk0 = _andyObject->levelData0x2988->unk0;
+    uint8_t spriteNum = _andyObject->levelData0x2988->spriteNum;
+    uint16_t framesCount = _andyObject->levelData0x2988->framesCount;
+    uint16_t hotspotsCount = _andyObject->levelData0x2988->hotspotsCount;
+    uint16_t movesCount = _andyObject->levelData0x2988->movesCount;
+    uint16_t coordsCount = _andyObject->levelData0x2988->coordsCount;
+    uint8_t refCount = _andyObject->levelData0x2988->refCount;
+    uint8_t frame = _andyObject->levelData0x2988->frame;
+    uint16_t anim = _andyObject->levelData0x2988->anim;
+    uint8_t *framesOffsetsTable = _andyObject->levelData0x2988->framesOffsetsTable;
+    uint8_t *coordsData = _andyObject->levelData0x2988->coordsData;
+    uint8_t *coordsOffsetsTable = _andyObject->levelData0x2988->coordsOffsetsTable;
+*/	
 				_res->loadLvlSprite(0, _andyObject->screenNum, 0);
+/*
+	_andyObject->levelData0x2988->unk0 = unk0;
+	_andyObject->levelData0x2988->spriteNum = spriteNum;
+	_andyObject->levelData0x2988->framesCount = framesCount;
+	_andyObject->levelData0x2988->hotspotsCount = hotspotsCount;
+	_andyObject->levelData0x2988->movesCount = movesCount;
+	_andyObject->levelData0x2988->coordsCount = coordsCount;
+	_andyObject->levelData0x2988->refCount = refCount;
+	_andyObject->levelData0x2988->frame = frame;
+	_andyObject->levelData0x2988->anim = anim;
+    _andyObject->levelData0x2988->framesOffsetsTable = framesOffsetsTable;
+    _andyObject->levelData0x2988->coordsData = coordsData;
+    _andyObject->levelData0x2988->coordsOffsetsTable = coordsOffsetsTable;
+*/
+emu_printf("aft andyState2 plasmaDir=%d mstAndyRect=%d actionIdx=%d specialAnimFlag=%d pos3=%d,%d pos6=%d,%d pos7=%d,%d\n",
+    _g->_plasmaCannonDirection, _g->_mstAndyRectNum,
+    _g->_actionDirectionKeyMaskIndex, _g->_specialAnimFlag,
+    _andyObject->posTable[3].x, _andyObject->posTable[3].y,
+    _andyObject->posTable[6].x, _andyObject->posTable[6].y,
+    _andyObject->posTable[7].x, _andyObject->posTable[7].y);
 
+emu_printf("aft andySt fg0=%d fg1=%d anm=%d frm=%d lvl2988=%p "
+           "unk0=%d sprNum=%d frmsCnt=%d htspsCnt=%d mvsCnt=%d crdsCnt=%d refCnt=%d frm=%d anm=%d "
+           "anmsInf=%p mves=%p frms=%p frmsOf=%p crds=%p crdsOf=%p htspts=%p stAdr=%p\n",
+    _andyObject->flags0, _andyObject->flags1,
+    _andyObject->anim, _andyObject->frame,
+    _andyObject->levelData0x2988,
+    _andyObject->levelData0x2988->unk0,
+    _andyObject->levelData0x2988->spriteNum,
+    _andyObject->levelData0x2988->framesCount,
+    _andyObject->levelData0x2988->hotspotsCount,
+    _andyObject->levelData0x2988->movesCount,
+    _andyObject->levelData0x2988->coordsCount,
+    _andyObject->levelData0x2988->refCount,
+    _andyObject->levelData0x2988->frame,
+    _andyObject->levelData0x2988->anim,
+    _andyObject->levelData0x2988->animsInfoData,
+    _andyObject->levelData0x2988->movesData,
+    _andyObject->levelData0x2988->framesData,
+    _andyObject->levelData0x2988->framesOffsetsTable,
+    _andyObject->levelData0x2988->coordsData,
+    _andyObject->levelData0x2988->coordsOffsetsTable,
+    _andyObject->levelData0x2988->hotspotsData,
+    _andyObject->levelData0x2988->startAddress);
+
+//_andyObject->levelData0x2988->refCount=0;
 _res->_screensState[9].s3 = 0xFF;   // force setupScreenMask à redécoder, même si mask==0 inchangé
 				_g->setupScreenMask(_andyObject->screenNum);
-emu_printf("b watch mstAndyRectNum=%p currentScreen=%p plasmaFlags=%p andyObj=%p\n",
-    &_g->_mstAndyRectNum, &_g->_currentScreen, &_g->_plasmaCannonFlags, _g->_andyObject);
+//emu_printf("b watch mstAndyRectNum=%p currentScreen=%p plasmaFlags=%p andyObj=%p\n",
+//    &_g->_mstAndyRectNum, &_g->_currentScreen, &_g->_plasmaCannonFlags, _g->_andyObject);
 			}
 			break;
 		case 1:
-		emu_printf("postScreenUpdate_rock_screen9 case 1\n");
+//		emu_printf("postScreenUpdate_rock_screen9 case 1\n");
 			_g->_plasmaCannonFlags |= 2;
 			break;
 		}

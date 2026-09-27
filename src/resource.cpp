@@ -684,20 +684,22 @@ void Resource::decodeLvlSpriteData(const uint8_t  *src, const uint16_t w, const 
 // dat->hotspotsCount (LvlSprHotspotData, 16 octets chacune) -- a verifier si
 // le vrai compte vient d'un autre champ.
 #ifdef PRELOAD_ANDY
-uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
+uint32_t Resource::compactLvlSpriteDataDropFrames(int num, const uint8_t *srcBase, uint8_t *dstBase) {
     LvlObjectData *dat = &_resLevelData0x2988Table[num];
-    
-//    if (!dat->framesData) return 0;
     if (dat->spriteNum != 2) return 0;
-    
-    uint8_t *base = dat->animsInfoData;
+
+    // Comportement d'origine (1er chargement) : source = dat->animsInfoData,
+    // brouillon = current_lwram, résultat recopié sur place dans base.
+    // Comportement "réparation" (rechargement) : source = buffer de secours
+    // fraîchement relu, résultat écrit DIRECTEMENT dans dstBase (l'emplacement
+    // compacté persistant existant), sans passer par current_lwram.
+    const bool repairMode = (dstBase != 0);
+
+    uint8_t *base = repairMode ? (uint8_t*)srcBase : dat->animsInfoData;
     uint8_t *saved_lwram = current_lwram;
-    uint8_t *dst = current_lwram;
+    uint8_t *dst = repairMode ? dstBase : current_lwram;
     uint32_t pos = 0;
-    
-    // ============================================================
-    // Sauvegarder TOUTES les métadonnées
-    // ============================================================
+
     uint8_t unk0 = dat->unk0;
     uint8_t spriteNum = dat->spriteNum;
     uint16_t framesCount = dat->framesCount;
@@ -707,28 +709,15 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     uint8_t refCount = dat->refCount;
     uint8_t frame = dat->frame;
     uint16_t anim = dat->anim;
-    
-    // ============================================================
-    // Lire les OFFSETS ORIGINAUX
-    // ============================================================
+
     uint32_t movesDataOffset = READ_LE_UINT32(base + 0x14);
     uint32_t framesDataOffset = READ_LE_UINT32(base + 0x18);
     uint32_t framesOffsetsOffset = READ_LE_UINT32(base + 0x1C);
     uint32_t coordsDataOffset = READ_LE_UINT32(base + 0x20);
     uint32_t coordsOffsetsOffset = READ_LE_UINT32(base + 0x24);
     uint32_t hotspotsDataOffset = READ_LE_UINT32(base + 0x28);
-  /*  
-    emu_printf("=== ORIGINAL OFFSETS ===\n");
-    emu_printf("moves=0x%x framesData=0x%x framesOffsets=0x%x coordsData=0x%x coordsOffsets=0x%x hotspots=0x%x\n",
-               movesDataOffset, framesDataOffset, framesOffsetsOffset,
-               coordsDataOffset, coordsOffsetsOffset, hotspotsDataOffset);
-    emu_printf("framesCount=%d hotspotsCount=%d movesCount=%d coordsCount=%d\n",
-               framesCount, hotspotsCount, movesCount, coordsCount);
-    */
-    // ============================================================
+
     // ÉTAPE 1 : HEADER (0x00 - 0x2B)
-    // ============================================================
-    // Métadonnées
     dst[pos++] = unk0;
     dst[pos++] = spriteNum;
     WRITE_LE_UINT16(dst + pos, framesCount); pos += 2;
@@ -740,76 +729,46 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     WRITE_LE_UINT16(dst + pos, anim); pos += 2;
     pos += 2; // padding 0x0E
     pos += 4; // padding 0x10
-    
-    // Réserver la place pour les offsets (0x14 à 0x28)
-    pos += 6 * 4; // 6 offsets de 4 octets
+    pos += 6 * 4; // place pour les 6 offsets (0x14 à 0x28)
     // pos = 0x2C
-    
-    // ============================================================
-    // ÉTAPE 2 : animsInfoData (0x2C à hotspotsDataOffset)
-    // ============================================================
+
+    // ÉTAPE 2 : animsInfoData
     uint32_t animsInfoSize = hotspotsDataOffset - 0x2C;
     memcpy(dst + pos, base + 0x2C, animsInfoSize);
     pos += animsInfoSize;
     uint32_t newHotspotsDataOffset = pos;
-/*    
-    emu_printf("STEP 2: animsInfoSize=%d pos=0x%x newHotspots=0x%x\n", 
-               animsInfoSize, pos, newHotspotsDataOffset);
-*/   
-    // ============================================================
-    // ÉTAPE 3 : hotspotsData (LvlSprHotspotData[hotspotsCount])
-    // ============================================================
+
+    // ÉTAPE 3 : hotspotsData
     uint32_t hotspotsSize = movesDataOffset - hotspotsDataOffset;
     memcpy(dst + pos, base + hotspotsDataOffset, hotspotsSize);
     pos += hotspotsSize;
     uint32_t newMovesDataOffset = pos;
-/*    
-    emu_printf("STEP 3: hotspotsSize=%d pos=0x%x newMoves=0x%x\n", 
-               hotspotsSize, pos, newMovesDataOffset);
-*/    
-    // ============================================================
-    // ÉTAPE 4 : movesData (LvlSprMoveData[movesCount])
-    // ============================================================
+
+    // ÉTAPE 4 : movesData
     uint32_t movesSize = framesDataOffset - movesDataOffset;
-    // Si framesDataOffset == 0, on va jusqu'à framesOffsetsOffset
     if (framesDataOffset == 0) {
         movesSize = framesOffsetsOffset - movesDataOffset;
     }
     memcpy(dst + pos, base + movesDataOffset, movesSize);
     pos += movesSize;
     uint32_t newFramesDataOffset = pos;
- /*   
-    emu_printf("STEP 4: movesSize=%d pos=0x%x newFramesData=0x%x\n", 
-               movesSize, pos, newFramesDataOffset);
-*/    
-    // ============================================================
-    // ÉTAPE 5 : framesData (1 OCTET PAR FRAME)
-    // ============================================================
-    uint32_t newFramesDataSize = framesCount; // 1 octet par frame
+
+    // ÉTAPE 5 : framesData (1 octet par frame)
+    uint32_t newFramesDataSize = framesCount;
     memset(dst + pos, 0, newFramesDataSize);
     pos += newFramesDataSize;
     uint32_t newFramesOffsetsOffset = pos;
-/*    
-    emu_printf("STEP 5: framesData size=%d pos=0x%x\n", newFramesDataSize, pos);
-*/    
-    // ============================================================
-    // ÉTAPE 6 : framesOffsetsTable (framesCount * 4)
-    //    Chaque offset pointe vers i * 1
-    // ============================================================
+
+    // ÉTAPE 6 : framesOffsetsTable
     for (int i = 0; i < framesCount; i++) {
         WRITE_LE_UINT32(dst + pos, i * 1);
         pos += 4;
     }
     uint32_t newCoordsDataOffset = pos;
-/*    
-    emu_printf("STEP 6: framesOffsets size=%d pos=0x%x\n", framesCount * 4, pos);
-*/    
-    // ============================================================
-    // ÉTAPE 7 : coordsData (si présent)
-    // ============================================================
+
+    // ÉTAPE 7 : coordsData
     uint32_t coordsDataSize = 0;
     if (coordsDataOffset != 0 && coordsCount > 0) {
-        // Calculer la taille réelle de coordsData
         uint32_t off = 0;
         for (int i = 0; i < coordsCount; i++) {
             int count = base[coordsDataOffset + off];
@@ -819,12 +778,8 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
         memcpy(dst + pos, base + coordsDataOffset, coordsDataSize);
         pos += coordsDataSize;
     }
-/*    
-    emu_printf("STEP 7: coordsData size=%d pos=0x%x\n", coordsDataSize, pos);
-*/    
-    // ============================================================
-    // ÉTAPE 8 : coordsOffsetsTable (coordsCount * 4)
-    // ============================================================
+
+    // ÉTAPE 8 : coordsOffsetsTable
     uint32_t newCoordsOffsetsOffset = pos;
     if (coordsOffsetsOffset != 0 && coordsCount > 0) {
         uint32_t coordsOffsetsSize = coordsCount * sizeof(uint32_t);
@@ -833,174 +788,193 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     } else {
         newCoordsOffsetsOffset = 0;
     }
-/*    
-    emu_printf("STEP 8: coordsOffsets pos=0x%x\n", pos);
-*/    
+
     uint32_t usedSize = SAT_ALIGN(pos);
-    
-    // ============================================================
-    // ÉTAPE 9 : Écrire les NOUVEAUX OFFSETS dans le header
-    // ============================================================
+
+    // ÉTAPE 9 : écrire les nouveaux offsets dans le header
     WRITE_LE_UINT32(dst + 0x14, newMovesDataOffset);
     WRITE_LE_UINT32(dst + 0x18, newFramesDataOffset);
     WRITE_LE_UINT32(dst + 0x1C, newFramesOffsetsOffset);
     WRITE_LE_UINT32(dst + 0x20, (coordsDataOffset == 0) ? 0 : newCoordsDataOffset);
     WRITE_LE_UINT32(dst + 0x24, newCoordsOffsetsOffset);
     WRITE_LE_UINT32(dst + 0x28, newHotspotsDataOffset);
-/*    
-    emu_printf("=== NEW OFFSETS ===\n");
-    emu_printf("hotspots=0x%x (old=0x%x)\n", newHotspotsDataOffset, hotspotsDataOffset);
-    emu_printf("moves=0x%x (old=0x%x)\n", newMovesDataOffset, movesDataOffset);
-    emu_printf("framesData=0x%x (old=0x%x) size=%d\n", newFramesDataOffset, framesDataOffset, newFramesDataSize);
-    emu_printf("framesOffsets=0x%x (old=0x%x)\n", newFramesOffsetsOffset, framesOffsetsOffset);
-    emu_printf("coordsData=0x%x (old=0x%x)\n", (coordsDataOffset == 0) ? 0 : newCoordsDataOffset, coordsDataOffset);
-    emu_printf("coordsOffsets=0x%x (old=0x%x)\n", newCoordsOffsetsOffset, coordsOffsetsOffset);
-    emu_printf("usedSize=%d (origSize=%d)\n", usedSize, origSize);
-    emu_printf("=== Memory saved: %d bytes ===\n", origSize - usedSize);
-*/    
-    // ============================================================
-    // ÉTAPE 10 : Recopier dans base
-    // ============================================================
-    memcpy(base, dst, usedSize);
-    
-    // ============================================================
-    // ÉTAPE 11 : Mettre à jour les pointeurs de dat
-    // ============================================================
-    dat->animsInfoData = base;
-    dat->hotspotsData = (newHotspotsDataOffset == 0) ? 0 : base + newHotspotsDataOffset;
-    dat->movesData = (newMovesDataOffset == 0) ? 0 : base + newMovesDataOffset;
-    dat->framesData = (newFramesDataOffset == 0) ? 0 : base + newFramesDataOffset;
-    dat->framesOffsetsTable = (newFramesOffsetsOffset == 0) ? 0 : base + newFramesOffsetsOffset;
-    dat->coordsData = (coordsDataOffset == 0) ? 0 : base + newCoordsDataOffset;
-    dat->coordsOffsetsTable = (newCoordsOffsetsOffset == 0) ? 0 : base + newCoordsOffsetsOffset;
-    
-    // NE PAS toucher à framesCount !
-    
-    // ============================================================
-    // ÉTAPE 12 : Restaurer current_lwram
-    // ============================================================
-    current_lwram = saved_lwram;
-    hwram_work = base + usedSize;
-    _resLevelData0x2988SizeTable[num] = usedSize;
-    
-    return origSize - usedSize;
+
+    if (!repairMode) {
+        // Comportement d'origine : recopier le brouillon (current_lwram) sur place dans base.
+        memcpy(base, dst, usedSize);
+        dst = base;
+    }
+    // En mode réparation, dst == dstBase est déjà la destination finale : rien à recopier.
+
+    // ÉTAPE 11 : mettre à jour les pointeurs de dat
+    dat->animsInfoData = dst;
+    dat->hotspotsData = (newHotspotsDataOffset == 0) ? 0 : dst + newHotspotsDataOffset;
+    dat->movesData = (newMovesDataOffset == 0) ? 0 : dst + newMovesDataOffset;
+    dat->framesData = (newFramesDataOffset == 0) ? 0 : dst + newFramesDataOffset;
+    dat->framesOffsetsTable = (newFramesOffsetsOffset == 0) ? 0 : dst + newFramesOffsetsOffset;
+    dat->coordsData = (coordsDataOffset == 0) ? 0 : dst + newCoordsDataOffset;
+    dat->coordsOffsetsTable = (newCoordsOffsetsOffset == 0) ? 0 : dst + newCoordsOffsetsOffset;
+
+    if (!repairMode) {
+        // ÉTAPE 12 : restaurer current_lwram (uniquement pertinent au 1er chargement,
+        // où dst était un brouillon temporaire pris sur current_lwram)
+        current_lwram = saved_lwram;
+        hwram_work = base + usedSize;
+        _resLevelData0x2988SizeTable[num] = usedSize;
+    }
+    // En mode réparation : dstBase est déjà réservé depuis longtemps, de taille usedSize
+    // identique (mêmes données source), donc ni current_lwram ni hwram_work ni
+    // _resLevelData0x2988SizeTable n'ont besoin d'être retouchés.
+
+    return usedSize;
 }
 #endif
-void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t *buf) {
-//	emu_printf("level %d\n", _level);
-//	assert((unsigned int)num < kMaxSpriteTypes);
-	if((unsigned int)num >= kMaxSpriteTypes)
-	{
-//emu_printf("loadLvlSpriteData assert %d %d\n", num, kMaxSpriteTypes);
+
+void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t *buf)
+{
+	if ((unsigned int)num >= kMaxSpriteTypes)
 		return;
-	}
 
+	LvlObjectData *dat = &_resLevelData0x2988Table[num];
 
-	uint8_t *ptr = 0;
-
-	bool load = false;
-/*	LvlObjectData *obj = &_resLevelData0x2988Table[num];
-	
-	if( obj->animsInfoData!=0 && all==0)
+// Cas particulier : réparation d'Andy (spriteNum 2)...
+	// Détermine si le sprite doit être chargé.
+	if (_level == 0)
 	{
-//		emu_printf("incremental %d déja chargé %p\n",num, obj->animsInfoData);
-		return;
-	}
-*/
-//si on retourne sur l'écran 0 c'est possible, tout reinitialiser
-// ecran 17 : recharger andy+salamandre si on meurt	
-//#ifndef PRELOAD_ANDY
-	if(_level==0)
-	{
-		if(all==0)
+		if (!all)
 		{
-			load  = 1;
+			// Ne recharger QUE le sprite d'Andy ; les autres (monstres) ne
+			// doivent pas être retouchés pendant qu'une tâche MST les pilote.
+			if (dat->spriteNum != 2)
+				return;
 		}
-		else
-			load = (_resLevelData0x2988Table[num].framesCount==0);
+		else if (dat->framesCount != 0)
+		{
+			return;
+		}
 	}
-	if(_level==1)
+	else if (_level == 1)
 	{
-		load = (_resLevelData0x2988Table[num].framesCount==0);
+		if (dat->framesCount != 0)
+			return;
 	}
-
-	if (!load)
-	{	
-//		emu_printf("je n'alloue pas de mémoire screen %d num %d all %d\n",screenNum, num, all);
+	else
+	{
 		return;
 	}
 
 	static const uint32_t baseOffset = _lvlSpritesOffset;
-//emu_printf("_lvlSpritesOffset %d\n",_lvlSpritesOffset);	
 	uint8_t header[3 * sizeof(uint32_t)];
-	if (!buf) 
+
+	if (!buf)
 	{
 		_lvlFile->seekAlign(baseOffset + num * 16);
 		_lvlFile->read(header, sizeof(header));
 		buf = header;
 	}
+
 	const uint32_t offset = READ_LE_UINT32(&buf[0]);
 	const uint32_t size = READ_LE_UINT32(&buf[4]);
-	if (size == 0) {
+
+	if (size == 0)
 		return;
-	}
+
 	const uint32_t readSize = READ_LE_UINT32(&buf[8]);
 
-	if(readSize > size)
-	{
-//		emu_printf("readSize %d %d\n", readSize, size);
+	if (readSize > size)
 		return;
-	}
 
-	if(all==1)
+	// Cas particulier : réparation d'Andy (spriteNum 2) après un évènement
+	// qui a pu corrompre la mémoire (ex : lecture vidéo PAF).
+	//
+	// Andy est déjà compacté depuis le 1er chargement (xdone==1) :
+	// on ne touche JAMAIS dat->startAddress.
+
+	const bool repairAndy =
+		(num == 2 && _level == 0 && !all && xdone);
+	
+	// Capturer l'emplacement persistant AVANT tout refixage : c'est lui qui
+	// doit rester la destination finale, pas le buffer de secours temporaire.
+	uint8_t *persistentAndyDst = repairAndy ? dat->animsInfoData : 0;
+	
+	uint8_t *ptr;
+
+	if (repairAndy)
 	{
-		ptr = allocate_memory(_level,(num >= 1 && num <= 3) || num > 5 ? TYPE_ANDY2 : TYPE_ANDY1, size);	
+		ptr = allocate_memory(-1, TYPE_PAF, size);
+
+		if (!ptr)
+		{
+			emu_printf("loadLvlSpriteData: pas de buffer de secours pour réparer sprite %d\n", num);
+			return;
+		}
+	}
+	else if (all)
+	{
+		ptr = allocate_memory(_level, (num >= 1 && num <= 3) || num > 5 ? TYPE_ANDY2 : TYPE_ANDY1, size);
 	}
 	else
 	{
-		ptr = (uint8_t*)_resLevelData0x2988Table[num].startAddress; 
+		ptr = (uint8_t *)dat->startAddress;
 	}
-	
-	_lvlFile->seek(/*_isPsx ? _lvlSssOffset + offset :*/ offset, SEEK_SET);
-	_lvlFile->read(ptr, readSize);
-	LvlObjectData *dat = &_resLevelData0x2988Table[num];
-	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat /*, _isPsx*/);
 
-//emu_printf("_resLevelData0x2988Table[%d] framesCount %d\n",num,dat->framesCount);
+	// Lecture commune aux différents cas :
+	// seul le buffer destination (ptr) change.
+	_lvlFile->seek(offset, SEEK_SET);
+	_lvlFile->read(ptr, readSize);
+
+	const uint32_t readOffsetsSize = resFixPointersLevelData0x2988(ptr, ptr + readSize, dat);
+	// À partir d'ici, dat->animsInfoData == ptr (le buffer temporaire) — normal,
+	// c'est corrigé juste après par la compaction pour repairAndy.
+
 #ifdef PRELOAD_ANDY
-	if(num == 2 && _level == 0 && !xdone)
+	if (num == 2 && _level == 0 && !xdone)
 	{
-		xdone=1;
+		xdone = 1;
 		position_vram = 0;
-//		emu_printf("position_vram %d\n", position_vram);
-		for (int i = 0;i<dat->framesCount;i++)	
+
+		for (int i = 0; i < dat->framesCount; i++)
 		{
 			uint16_t w, h;
 			const uint8_t *src = getLvlSpriteFramePtr(dat, i, &w, &h);
-			andy_vdp2[i].cgaddr = (position_vram/8);
+			andy_vdp2[i].cgaddr = position_vram / 8;
 			andy_vdp2[i].w = w;
 			andy_vdp2[i].h = h;
-//emu_printf("zzz cgaddr %x i %d vram %x\n", andy_vdp2[i].cgaddr,i, position_vram);
 			decodeLvlSpriteData(src, w, h);
 		}
-//		position_vram_save = position_vram;
-		// pixels deja copies en VDP2 (andy_vdp2[]) : on peut jeter framesData/framesOffsetsTable
-		compactLvlSpriteDataDropFrames(num, size);
-//		emu_printf("position_vram %x  %d\n", position_vram, position_vram/8);
+
+		// Pixels déjà copiés en VDP2 (andy_vdp2[]) :
+		// on peut jeter framesData/framesOffsetsTable.
+		compactLvlSpriteDataDropFrames(num, 0, 0);
 	}
 #endif
+
 	const uint32_t allocatedOffsetsSize = size - readSize;
-	if(allocatedOffsetsSize != readOffsetsSize)
+
+	if (allocatedOffsetsSize != readOffsetsSize)
 	{
 		emu_printf("3vb3 bad read !!!!! sprite %d\n", num);
 		return;
 	}
+
+	if (repairAndy)
+	{
+		// ptr = données brutes fraîches (buffer de secours).
+		// persistentAndyDst = capturé AVANT resFixPointersLevelData0x2988,
+		// c'est le vrai emplacement compacté persistant d'origine.
+		compactLvlSpriteDataDropFrames(num, ptr, persistentAndyDst);
+		_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
+		return;
+	}
+
 	_resLevelData0x2988PtrTable[dat->spriteNum] = dat;
-	if (num != 2) {
-		// pour num==2, compactLvlSpriteDataDropFrames() a deja mis la taille compactee
+
+	if (num != 2)
+	{
+		// Pour num == 2, compactLvlSpriteDataDropFrames()
+		// a déjà mis la taille compactée.
 		_resLevelData0x2988SizeTable[num] = size;
 	}
-//emu_printf("vbt sprite num %d framesCount %d dat %p\n", num, dat->framesCount, dat->framesCount, dat);
 }
 
 const uint8_t *Resource::getLvlScreenMaskDataPtr(int num) const {
