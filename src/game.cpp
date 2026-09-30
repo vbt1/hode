@@ -1607,11 +1607,11 @@ int8_t Game::updateLvlObjectScreen(LvlObject *ptr) {
 //			emu_printf("current %d left %d right %d\n", _currentScreen, _currentLeftScreen, _currentRightScreen);
 		}
 	}
-	else
-	{
-	emu_printf("je ne rentre pas dans le bloc (_plasmaCannonFlags & 1) == 0  %d && _plasmaCannonDirection == 0 %d\n", 
-	(_plasmaCannonFlags & 1) == 0, _plasmaCannonDirection == 0);
-	}
+//	else
+//	{
+//	emu_printf("je ne rentre pas dans le bloc (_plasmaCannonFlags & 1) == 0  %d && _plasmaCannonDirection == 0 %d\n", 
+//	(_plasmaCannonFlags & 1) == 0, _plasmaCannonDirection == 0);
+//	}
 	return ret;
 }
 

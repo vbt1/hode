@@ -1106,6 +1106,8 @@ void Game::executeMstCode() {
 			while ((this->*(t->run))(t) == 0);
 		}
 	}
+//emu_printf("mstLogicCounter=%d specialAnimFlag=%d\n",
+//    _executeMstLogicCounter, _specialAnimFlag);
 }
 
 void Game::mstWalkPathUpdateIndex(MstWalkPath *walkPath, int index) {
@@ -6978,7 +6980,22 @@ int Game::mstTask_monsterWait6(Task *t) {
 		m->goalPos_x1 = _mstAndyLevelPosX + m->goalDistance_x1;
 		m->goalPos_x2 = _mstAndyLevelPosX + m->goalDistance_x2;
 	}
-	return mstMonster1AdvanceHorizontalGoal(t, m);
+	mstMonster1SetGoalHorizontal(m);
+	if (_xMstPos2 < m->m49Unk1->unk8) {
+		if (_xMstPos2 > 0) {
+			while (--m->indexUnk49Unk1 >= 0) {
+				m->m49Unk1 = &m->m49->data1[m->indexUnk49Unk1];
+				if (_xMstPos2 >= m->m49Unk1->unkC) {
+					goto set_am;
+				}
+			}
+		}
+		return mstTaskStopMonster1(t, m);
+	}
+set_am:
+	const uint8_t *ptr = _res->_mstMonsterInfos + m->m49Unk1->offsetMonsterInfo;
+	mstLvlObjectSetActionDirection(m->o16, ptr, ptr[3], m->goalDirectionMask);
+	return 1;
 }
 
 int Game::mstTask_monsterWait7(Task *t) {

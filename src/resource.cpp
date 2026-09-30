@@ -886,6 +886,7 @@ uint32_t Resource::compactLvlSpriteDataDropFrames(int num, uint32_t origSize) {
     return origSize - usedSize;
 }
 #endif
+
 void Resource::loadLvlSpriteData(int num, int screenNum, bool all, const uint8_t *buf) {
 //	emu_printf("level %d\n", _level);
 //	assert((unsigned int)num < kMaxSpriteTypes);
