@@ -1,4 +1,4 @@
-#pragma GCC optimize ("Os")
+#pragma GCC optimize ("O2")
 //#define DEBUG 1
 //#define DEBUG2 1
 /*
@@ -946,7 +946,7 @@ static void pafSwapBatch(PafAsyncCtx &ctx, File &file, const PafHeader &hdr) {
 	int r = file.asynchWait(ctx.buffers[ctx.readBuf], (Sint32)ctx.totalBytes);
 	ctx.data       = ctx.buffers[ctx.readBuf] + (r - (int)ctx.totalBytes);
 	ctx.readBuf    = 1 - ctx.readBuf;
-
+ 
 	int next = ctx.nextWaitFrame + FRAMES_PER_READ;
 	if (next < (int)hdr.framesCount) {
 		uint32_t nextBC = 0;
@@ -976,9 +976,10 @@ static void pafDemuxBlocks(PafAsyncCtx &ctx, const PafHeader &hdr,
 	ctx.blocksCount = 0;
 }
 
+
 void PafPlayer::mainLoop() {
 	_file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
-
+ 
 	for (int i = 0; i < 4; ++i)
 		memset(_pageBuffers[i], 0, kPageBufferSize);
 	memset(_paletteBuffer, 0, 256 * 3);
@@ -986,35 +987,37 @@ void PafPlayer::mainLoop() {
 	_paletteChanged    = true;
 	_currentPageBuffer = 0;
 	int currentFrameBlock = 0;
-
+ 
 	PafAsyncCtx ctx;
 	ctx.buffers[0] = (uint8_t *)allocate_memory(-1, TYPE_PAF, BUFFER_SIZE);
 	ctx.buffers[1] = (uint8_t *)allocate_memory(-1, TYPE_MENU, BUFFER_SIZE);
 	current_lwram +=  ASYNCH_MAX;
-
+ 
 	ctx.readBuf    = 1;
 	ctx.active     = (_pafHdr.framesCount > 1);
-
+ 
+	// MODIF : comme l'original, la frame 0 lit preload + table[0]
+	// pour toutes les videos (plus de test framesCount == 41).
 	const uint32_t preloadBlocks = _pafHdr.preloadFrameBlocksCount
 	                             + _pafHdr.frameBlocksCountTable[0];
-
+ 
 	uint32_t preloadBytes = preloadBlocks * _pafHdr.readBufferSize;
 	int r = _file.batchRead(ctx.buffers[0], preloadBytes);
-
+ 
 	ctx.data        = ctx.buffers[0] + (r - (int)preloadBytes);
 	ctx.blocksCount = preloadBlocks;
-
+ 
 	ctx.nextWaitFrame = 1;
 	if (ctx.active) {
 		ctx.totalBytes = calcNextBatch(_pafHdr, 1, ctx.nextBlocksCount);
 		_file.asynchInit(ctx.buffers[ctx.readBuf], ctx.totalBytes);
 	}
-
+ 
 #ifdef DEBUG
 	static uint8_t last_frame_z = 0xFF;
 	static char dbgbuf[8];
 #endif
-
+ 
 #ifdef DEBUG2
 	uint32_t t_async    = 0;
 	uint32_t t_memcpy   = 0;
@@ -1024,7 +1027,7 @@ void PafPlayer::mainLoop() {
 #endif
 	const uint32_t frameMs   = 100;
 	uint32_t       frameTime = g_system->getTimeStamp();
-
+ 
 	for (int i = 0; i < (int)_pafHdr.framesCount; ++i) {
 #ifdef DEBUG2
 		uint32_t t0 = g_system->getTimeStamp();
@@ -1035,6 +1038,9 @@ void PafPlayer::mainLoop() {
 		uint32_t t1 = g_system->getTimeStamp();
 		t_async += t1 - t0;
 #endif
+		// MODIF : on ne demuxe que les blocs de CETTE frame (comme l'original),
+		// pas ceux des 6 frames du lot, pour ne pas ecraser le ring.
+		// i == 0 : preload (deja inclus table[0]) ; i >= 1 : table[i].
 		ctx.blocksCount = (i == 0) ? preloadBlocks
 		                           : _pafHdr.frameBlocksCountTable[i];
 		pafDemuxBlocks(ctx, _pafHdr, _demuxVideoFrameBlocks, currentFrameBlock);
@@ -1058,7 +1064,7 @@ void PafPlayer::mainLoop() {
 			g_system->setPalette(_paletteBuffer, 256, 6);
 			g_system->updateScreen(false);
 		}
-
+ 
 #ifdef DEBUG2
 		uint32_t t5 = g_system->getTimeStamp();
 		t_pal += t5 - t4;
@@ -1067,7 +1073,7 @@ void PafPlayer::mainLoop() {
 			t_async = t_memcpy = t_decode = t_copyrect = t_pal = 0;
 		}
 #endif
-
+ 
 #ifdef DEBUG
 		if (frame_z != last_frame_z) {
 			last_frame_z = frame_z;
@@ -1081,10 +1087,10 @@ void PafPlayer::mainLoop() {
 		 || g_system->inp.keyPressed(SYS_INP_ESC)
 		 || g_system->inp.keyPressed(SYS_INP_RUN))
 			break;
-
+ 
 		++_currentPageBuffer;
 		_currentPageBuffer &= 3;
-
+ 
 		frameTime += frameMs;
 		uint32_t now = g_system->getTimeStamp();
 		if (frameTime > now)
