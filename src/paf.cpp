@@ -945,7 +945,6 @@ FORCE_INLINE uint32_t calcNextBatch(const PafHeader &hdr, int start,
 static void pafSwapBatch(PafAsyncCtx &ctx, File &file, const PafHeader &hdr) {
 	int r = file.asynchWait(ctx.buffers[ctx.readBuf], (Sint32)ctx.totalBytes);
 	ctx.data       = ctx.buffers[ctx.readBuf] + (r - (int)ctx.totalBytes);
-	ctx.blocksCount = ctx.nextBlocksCount;  // blocs du batch qu'on vient de recevoir
 	ctx.readBuf    = 1 - ctx.readBuf;
 
 	int next = ctx.nextWaitFrame + FRAMES_PER_READ;
@@ -979,12 +978,6 @@ static void pafDemuxBlocks(PafAsyncCtx &ctx, const PafHeader &hdr,
 
 void PafPlayer::mainLoop() {
 	_file.seek(_videoOffset + _pafHdr.startOffset, SEEK_SET);
-//	if(!_paletteBuffer)
-//	_paletteBuffer = allocate_memory(-1, TYPE_PAF, 256 * 3);
-//	emu_printf("_paletteBuffer %p\n", _paletteBuffer);
-//	if(!_bufferBlock)
-//	_bufferBlock = allocate_memory(-1, TYPE_PAF, kBufferBlockSize);
-//	emu_printf("_bufferBlock1 %p end %p\n", _bufferBlock, _bufferBlock+kBufferBlockSize);
 
 	for (int i = 0; i < 4; ++i)
 		memset(_pageBuffers[i], 0, kPageBufferSize);
@@ -995,17 +988,15 @@ void PafPlayer::mainLoop() {
 	int currentFrameBlock = 0;
 
 	PafAsyncCtx ctx;
-//	ctx.buffers[0] = (uint8_t *)hwram_work_paf;
 	ctx.buffers[0] = (uint8_t *)allocate_memory(-1, TYPE_PAF, BUFFER_SIZE);
 	ctx.buffers[1] = (uint8_t *)allocate_memory(-1, TYPE_MENU, BUFFER_SIZE);
 	current_lwram +=  ASYNCH_MAX;
-	
+
 	ctx.readBuf    = 1;
 	ctx.active     = (_pafHdr.framesCount > 1);
 
-	uint32_t preloadBlocks = _pafHdr.preloadFrameBlocksCount;
-	if (_pafHdr.framesCount == 41)
-		preloadBlocks += _pafHdr.frameBlocksCountTable[0];
+	const uint32_t preloadBlocks = _pafHdr.preloadFrameBlocksCount
+	                             + _pafHdr.frameBlocksCountTable[0];
 
 	uint32_t preloadBytes = preloadBlocks * _pafHdr.readBufferSize;
 	int r = _file.batchRead(ctx.buffers[0], preloadBytes);
@@ -1044,6 +1035,8 @@ void PafPlayer::mainLoop() {
 		uint32_t t1 = g_system->getTimeStamp();
 		t_async += t1 - t0;
 #endif
+		ctx.blocksCount = (i == 0) ? preloadBlocks
+		                           : _pafHdr.frameBlocksCountTable[i];
 		pafDemuxBlocks(ctx, _pafHdr, _demuxVideoFrameBlocks, currentFrameBlock);
 #ifdef DEBUG2
 		uint32_t t2 = g_system->getTimeStamp();
@@ -1066,7 +1059,6 @@ void PafPlayer::mainLoop() {
 			g_system->updateScreen(false);
 		}
 
-
 #ifdef DEBUG2
 		uint32_t t5 = g_system->getTimeStamp();
 		t_pal += t5 - t4;
@@ -1085,19 +1077,11 @@ void PafPlayer::mainLoop() {
 		}
 		_video->drawString(dbgbuf, (Video::W - 24), 0, 2, (uint8 *)VDP2_VRAM_A0);
 #endif
-//emu_printf("fps %d\n", frame_z);
-/*
-char txt[2];
-sprintf(txt,"%02d", frame_z);
-slPrint((char *)txt,slLocate(10,2));
-*/
 		if (g_system->inp.quit
 		 || g_system->inp.keyPressed(SYS_INP_ESC)
 		 || g_system->inp.keyPressed(SYS_INP_RUN))
 			break;
-/*
-		frame_x++;
-*/
+
 		++_currentPageBuffer;
 		_currentPageBuffer &= 3;
 
@@ -1114,7 +1098,6 @@ slPrint((char *)txt,slLocate(10,2));
 	}
 	if (ctx.active)
 		_file.asynchWait(ctx.buffers[ctx.readBuf], (Sint32)ctx.totalBytes);
-//emu_printf("unload no params\n");
 	unload();
 	closePaf(_fs, &_file);
 }
